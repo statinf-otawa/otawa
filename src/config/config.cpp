@@ -58,7 +58,6 @@ using namespace otawa;
  * @li --list-ilps, --ilp -- list ILP solver plugins available
  * @li --libs -- output linkage C++ flags
  * @li --list-loaders, --loader list loader plugins available
- * @li --modules, --list-modules list available modules
  * @li --prefix	output the prefix directory of OTAWA
  * @li --procs, --list-procs -- list available processor collections
  * @li --version -- output the current version
@@ -92,7 +91,6 @@ public:
 	 * @param path	Added path.
 	 */
 	void addRPath(elm::system::Path path) {
-		//cerr << "DEBUG: path=" << path << ", prefix=" << MANAGER.prefixPath() << io::endl;
 		sys::Path prefix = MANAGER.prefixPath();
 		if(_origin && path.subPathOf(prefix))
 			path = sys::Path(_ << "\\$ORIGIN") / path.toString().substring(prefix.toString().length() + 1);
@@ -127,52 +125,6 @@ private:
 	bool _origin;
 };
 
-// Module classes
-class Module {
-public:
-	template <class T>
-	class Make {
-	public:
-		typedef typename T::Make M;
-		inline M& doc(const string& doc) { mod->_doc = doc; return *static_cast<M *>(this); }
-		inline M& require(Module *req) { mod->reqs.add(req); return *static_cast<M *>(this); }
-		inline operator Module *(void) const { return mod; }
-	protected:
-		inline Make(T *_mod): mod(_mod) { }
-		T *mod;
-	};
-
-	inline const string& name(void) const { return _name; }
-	inline const string& doc(void) const { return _doc; }
-	inline const genstruct::Vector<Module *>& requirements(void) const { return reqs; }
-	virtual ~Module(void) { }
-	virtual void adjust(::Configuration& config) = 0;
-protected:
-	Module(const string& name): _name(name) {  }
-private:
-	string _name;
-	string _doc;
-	genstruct::Vector<Module *> reqs;
-};
-
-class Proc: public Module {
-public:
-	class Make: public Module::Make<Proc> {
-	public:
-		inline Make(const string& name): Module::Make<Proc>(new Proc(name))  { }
-		inline Make& path(const string& path) { mod->_path = path; return *this; }
-	};
-
-	Proc(const string& name): Module(name) { }
-	virtual void adjust(::Configuration& config) {
-		sys::Path path = config.prefix.append("lib/otawa/proc").append(_path);
-		config.libs << " " << path.append(sys::System::getPluginFileName(name()));
-		config.addRPath(path);
-	}
-private:
-	string _path;
-};
-
 // Main class
 class Config: public option::Manager {
 public:
@@ -190,7 +142,6 @@ public:
 		ilp				(SwitchOption::Make(*this).cmd("--list-ilps").cmd("--ilp")			.description("list ILP solver plugins available")),
 		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
 		loader			(SwitchOption::Make(*this).cmd("--list-loaders").cmd("--loader")	.description("list loader plugins available")),
-		modules			(SwitchOption::Make(*this).cmd("--list-modules").cmd("--modules")	.description("list available modules")),
 		prefix			(SwitchOption::Make(*this).cmd("--prefix")							.description("output the prefix directory of OTAWA")),
 		procs			(SwitchOption::Make(*this).cmd("--list-procs").cmd("--procs")		.description("list available processor collections")),
 		show_version	(SwitchOption::Make(*this).cmd("--version")							.description("output the current version")),
@@ -217,27 +168,18 @@ public:
 		if(orpath)
 			config.setOrigin(true);
 
-		// close the list of modules
-		genstruct::Vector<Module *> cmods;
-		for(int i = 0; i < mods.length(); i++)
-			if(!cmods.contains(mods[i])) {
-				Module *mod = mods[i];
-				cmods.add(mod);
-				const genstruct::Vector<Module *>& reqs = mod->requirements();
-				for(int i = 0; i < reqs.length(); i++)
-					if(!cmods.contains(reqs[i]))
-						cmods.add(reqs[i]);
-			}
-
-		// perform adjustment according to the modules
-		for(int i = 0; i < cmods.length(); i++)
-			cmods[i]->adjust(config);
-
 		// perform adjustment according to the plugins
 		for(int i = 0; i < plugs.length(); i++) {
+
+			// adjust output
 			Path path = plugs[i]->path();
 			config.libs << ' ' << path;
 			config.addRPath(path.parent());
+
+			// handle dependencies
+			for(sys::Plugin::DepIter dep = plugs[i]->dependencies(); dep; dep++)
+				if(!plugs.contains(*dep))
+					plugs.add(*dep);
 		}
 
 		// load the ELD
@@ -261,9 +203,6 @@ public:
 			show("loader");
 		if(procs)
 			show("proc", true);
-		if(modules)
-			for(HashTable<string, Module *>::Iterator mod(modmap); mod; mod++)
-				cout << '[' << mod->name() << "]\n" << mod->doc() << io::endl << io::endl;
 		if(scripts)
 			cout  << getScriptDir();
 		if(list_scripts)
@@ -279,19 +218,11 @@ public:
 
 protected:
 	virtual void process(string arg) {
-
-		// add module information
-		if(modmap.exists(arg))
-			mods.add(modmap.get(arg, 0));
-
-		// look for a matching plugin
-		else {
-			ProcessorPlugin *plugin = ProcessorPlugin::get(arg);
-			if(plugin)
-				plugs.add(plugin);
-			else
-				throw OptionException(_ << " plugin " << arg << " cannot be found!");
-		}
+		ProcessorPlugin *plugin = ProcessorPlugin::get(arg);
+		if(plugin)
+			plugs.add(plugin);
+		else
+			throw OptionException(_ << " plugin " << arg << " cannot be found!");
 	}
 
 private:
@@ -329,10 +260,6 @@ private:
 	 */
 	Path getScriptDir() {
 		return config.prefix.append("share/Otawa/scripts");
-	}
-
-	void add(Module *mod) {
-		modmap.put(mod->name(), mod);
 	}
 
 	/**
@@ -402,9 +329,7 @@ private:
 					cout << file->path().basePart().namePart() << io::endl;
 	}
 
-	HashTable<string, Module *> modmap;
-	genstruct::Vector<Module *> mods;
-	genstruct::Vector<ProcessorPlugin *> plugs;
+	genstruct::Vector<sys::Plugin *> plugs;
 	::Configuration config;
 	option::ValueOption<string> eld;
 	SwitchOption
@@ -415,7 +340,6 @@ private:
 		ilp,
 		libs,
 		loader,
-		modules,
 		prefix,
 		procs,
 		show_version,
