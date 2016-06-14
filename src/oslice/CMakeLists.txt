@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib:${ORIGIN}/../lib/otawa/proc/otawa:${ORIGIN}/../lib/otawa/otawa")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../..:${ORIGIN}/../../otawa/proc/otawa:${ORIGIN}/../../otawa/otawa")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
