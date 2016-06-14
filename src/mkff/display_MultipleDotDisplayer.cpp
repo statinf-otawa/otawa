@@ -52,4 +52,16 @@ void MultipleDotDecorator::displayBasicBlock(CFG *graph, BasicBlock *block, disp
 	content.setURL("");
 }
 
+/**
+ */
+void MultipleDotDecorator::decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const {
+	if(!edge->source()->isBasic()
+	|| !edge->sink()->isBasic())
+		style.line.style = display::LineStyle::DASHED;
+	else if(edge->isTaken())
+		label << "taken";
+	else if(edge->isBoth())
+		label << "both";
+}
+
 }} // namespace otawa { namespace display {

@@ -46,6 +46,7 @@
 #include <otawa/data/clp/features.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/dfa/State.h>
+#include <otawa/proc/ProcessorPlugin.h>
 #include <elm/log/Log.h>
 
 using namespace elm;
@@ -3362,7 +3363,21 @@ State *Manager::state(void) {
  * @return	True if @ref Manager::NEW_INST is set, false else.
  */
 
+class Plugin: public ProcessorPlugin {
+public:
+	typedef elm::genstruct::Table<AbstractRegistration * > procs_t;
+
+	Plugin(void): ProcessorPlugin("otawa::clp", Version(0, 1, 0), OTAWA_PROC_VERSION) { }
+	virtual procs_t& processors (void) const { return procs_t::EMPTY; };
+};
+
+
 }	// clp
 
 } //otawa
+
+
+otawa::clp::Plugin otawa_clp_plugin;
+ELM_PLUGIN(otawa_clp_plugin, OTAWA_PROC_HOOK);
+
 

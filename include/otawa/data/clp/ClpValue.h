@@ -198,7 +198,7 @@ typedef enum {
 		 * Perform a widening to the infinite (to be filtred later)
 		 * @param val the value of the next iteration state
 		*/
-		void widening(const Value& val);
+		Value& widening(const Value& val);
 		/**
 		 * Perform a widening, knowing flow facts for the loop
 		 * @param val the value of the next iteration state

@@ -152,6 +152,8 @@ void CFGDecorator::decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyl
 		style.line.style = display::LineStyle::DASHED;
 	else if(edge->isTaken())
 		label << "taken";
+	else if(edge->isBoth())
+		label << "both";
 }
 
 /**

@@ -14,6 +14,7 @@ extern p::feature LIGHT_SLICER_FEATURE;
 extern p::feature COND_BRANCH_COLLECTOR_FEATURE;
 extern p::feature UNKNOWN_TARGET_COLLECTOR_FEATURE;
 extern p::feature LIVENESS_FEATURE;
+extern p::feature INSTRUCTION_COLLECTOR_FEATURE;
 
 extern Identifier<String> SLICED_CFG_OUTPUT_PATH;
 extern Identifier<String> SLICING_CFG_OUTPUT_PATH;
@@ -22,6 +23,14 @@ extern Identifier<int> SLICE_DEBUG_LEVEL;
 extern Identifier<bool> CFG_OUTPUT;
 extern Identifier<InstSet*> SET_OF_REMAINED_INSTRUCTIONS;
 extern Identifier<bool> ENABLE_LIGHT_SLICING;
+extern Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING;
+
+extern Identifier<dfa::MemorySet::t* > MEM_BB_END_IN;
+extern Identifier<BitVector> REG_BB_END_IN;
+extern Identifier<dfa::MemorySet::t*> MEM_BB_BEGIN_OUT;
+extern Identifier<BitVector> REG_BB_BEGIN_OUT;
+
+
 
 class Manager {
 public:

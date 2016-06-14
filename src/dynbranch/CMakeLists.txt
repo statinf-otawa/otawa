@@ -1,7 +1,7 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../..")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib:${ORIGIN}/../lib/otawa/proc/otawa:${ORIGIN}/../lib/otawa/otawa")
 set(CMAKE_MACOSX_RPATH true)
 
-set(branch_SOURCES
+set(SOURCES
     dynbranch_DynamicBranching.cpp
     dynbranch_GlobalAnalysis.cpp
     dynbranch_GlobalAnalysisProblem.cpp
@@ -12,10 +12,11 @@ set(branch_SOURCES
 )
 
 include_directories(".")
-include_directories("../../include")
 
-add_library(dynbranch SHARED ${branch_SOURCES})
+add_library(dynbranch SHARED ${SOURCES})
 set_property(TARGET dynbranch PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-target_link_libraries(dynbranch otawa)
-install(TARGETS dynbranch DESTINATION "${PROCDIR}/otawa")
+target_link_libraries(dynbranch clp)
+
+install(TARGETS dynbranch DESTINATION "${PLUGDIR}/otawa")
+install(FILES dynbranch.eld DESTINATION "${PLUGDIR}/otawa")

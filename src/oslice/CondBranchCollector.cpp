@@ -8,6 +8,7 @@ Registration<CondBranchCollector> CondBranchCollector::reg(
 	"otawa::oslice::CondBranchCollector", Version(1, 0, 0),
 	p::require, &COLLECTED_CFG_FEATURE,
 	p::provide, &COND_BRANCH_COLLECTOR_FEATURE,
+	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
 	p::end
 );
 
@@ -73,6 +74,7 @@ Registration<UnknownTargetCollector> UnknownTargetCollector::reg(
 	"otawa::oslice::UnknownTargetCollector", Version(1, 0, 0),
 	p::require, &COLLECTED_CFG_FEATURE,
 	p::provide, &UNKNOWN_TARGET_COLLECTOR_FEATURE,
+	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
 	p::end
 );
 

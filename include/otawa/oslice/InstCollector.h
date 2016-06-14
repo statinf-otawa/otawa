@@ -9,14 +9,15 @@ namespace otawa { namespace oslice {
 
 class InstCollector: public otawa::Processor {
 public:
-	InstCollector(AbstractRegistration& _reg);
+	InstCollector(AbstractRegistration& _reg = reg);
+	static Registration<InstCollector> reg;
 
 protected:
 	// called by the children
 	virtual void configure(const PropList &props);
 	// implemented by each children
 	void collectInterestedInstructions(const CFGCollection& coll, interested_instructions_t* interestedInstructions);
-	virtual bool interested(Inst* i) = 0;
+	virtual bool interested(Inst* i);
 	interested_instructions_t *interestedInstructionsLocal;
 
 

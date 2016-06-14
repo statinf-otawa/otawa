@@ -690,9 +690,6 @@ protected:
 		for(edge_list_table_t::Iterator eltti(edge_list_table); eltti; eltti++, cfgIndex++) { // for each CFG
 			CFGMaker* cfgMaker = cfgMakers[cfgIndex];
 			bb_map_t* bb_map = bb_map_table[cfgIndex];
-			for(bb_map_t::KeyIterator xyz(*bb_map); xyz; xyz++) {
-			}
-
 			for(edge_list_t::Iterator elti(**eltti); elti; elti++) {
 				Block* sourceBlock = 0;
 				if(bb_map->hasKey((*elti).fst))
