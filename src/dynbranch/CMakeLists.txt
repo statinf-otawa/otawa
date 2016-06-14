@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../..")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib:${ORIGIN}/../lib/otawa/proc/otawa:${ORIGIN}/../lib/otawa/otawa")
 set(CMAKE_MACOSX_RPATH true)
 
 set(SOURCES
@@ -16,7 +16,7 @@ include_directories(".")
 add_library(dynbranch SHARED ${SOURCES})
 set_property(TARGET dynbranch PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-#target_link_libraries(dynbranch otawa)
+target_link_libraries(dynbranch clp)
 
 install(TARGETS dynbranch DESTINATION "${PLUGDIR}/otawa")
 install(FILES dynbranch.eld DESTINATION "${PLUGDIR}/otawa")

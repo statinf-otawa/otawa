@@ -175,7 +175,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 
 	initIdentifiersForEachBB(coll);
 
-	LivenessChecker::buildReverseSynthLink(coll);
+	//LivenessChecker::buildReverseSynthLink(coll);
 
 	// get a list of interested instruction
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);

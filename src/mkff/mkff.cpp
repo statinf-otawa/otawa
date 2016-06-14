@@ -910,7 +910,11 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 			// STEP: dynamic branch analysis
 			// to ensure that the unknown block does not generate top values which wipes out the whole state
-			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
+			// clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = true;
+			DynIdentifier<bool> CLP_UNKOWN_BLOCK_EVALUATION("otawa::clp::UNKOWN_BLOCK_EVALUATION");
+			CLP_UNKOWN_BLOCK_EVALUATION(props) = true;
+
+
 			// set it to false so the branch targets will be detected
 			// otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace()) = false;
 			DynIdentifier<bool> newBranchTargetFound("otawa::dynbranch::NEW_BRANCH_TARGET_FOUND");
@@ -922,7 +926,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			// the loop goes on searching new branch target when there is a new target found
 			//branchDetected = otawa::dynbranch::NEW_BRANCH_TARGET_FOUND(workspace());
 			branchDetected = newBranchTargetFound(workspace());
-			clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = false;
+
+			// clp::UNKOWN_BLOCK_EVALUATION(workspace()->process()) = false;
+			CLP_UNKOWN_BLOCK_EVALUATION(props) = false;
 
 			iteration++;
 		} while(branchDetected);

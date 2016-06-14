@@ -48,5 +48,8 @@ public:
 
 } }		// otawa::cg
 
-otawa::dynbranch::Plugin OTAWA_PROC_HOOK;
-otawa::dynbranch::Plugin& otawa_dynbranch = OTAWA_PROC_HOOK;
+//otawa::dynbranch::Plugin OTAWA_PROC_HOOK;
+//otawa::dynbranch::Plugin& otawa_dynbranch = OTAWA_PROC_HOOK;
+
+otawa::dynbranch::Plugin otawa_dynbranch_plugin;
+ELM_PLUGIN(otawa_dynbranch_plugin, OTAWA_PROC_HOOK);
