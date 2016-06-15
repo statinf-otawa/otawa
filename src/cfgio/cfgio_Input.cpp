@@ -500,6 +500,15 @@ static Identifier<Option<xom::String> > SYNTH_TARGET("");
  * @ingroup cfgio
  */
 class Input: public Processor {
+
+	// inner class
+	class CafeBabeInst: public otawa::Inst {
+	public:
+		virtual kind_t kind(void) { return 0; }
+		virtual Address address(void) const { return Address(0xCAFEBABE); }
+		virtual t::uint32 size(void) const { return 4; }
+	} *cafebabeInst;
+
 	typedef avl::Map<xom::String, Block *> bb_map_t;
 	//typedef genstruct::HashTable<xom::String, Block *> bb_map_t;
 	typedef Vector<bb_map_t*> bb_map_table_t;
@@ -509,7 +518,9 @@ private:
 
 public:
 	static p::declare reg;
-	Input(p::declare& r = reg): Processor(r) { }
+	Input(p::declare& r = reg): Processor(r) {
+		cafebabeInst = new CafeBabeInst();
+	}
 
 protected:
 
@@ -582,6 +593,8 @@ protected:
 			if(bb_elts->size() == 0)
 				raiseError(celt, _ << "no BB in CFG " << *cfgID);
 
+			Vector<Block*> basicBlocksInOrder;
+
 			Inst* firstInst = &otawa::Inst::null;
 			for(int j = 0; j < bb_elts->size(); j++) {
 				// get information, e.g.
@@ -605,27 +618,30 @@ protected:
 					if(bbAddress)
 						*bbAddress >> address;
 					Inst* currentInst = ws->process()->findInstAt(Address(address));
+
+					if(!currentInst && address == 0xCAFEBABE) {
+						currentInst = cafebabeInst;
+					}
+					else // instruction not found
+						assert(currentInst);
+
 					insts.add(currentInst);
 					if((firstInst == &otawa::Inst::null) && currentInst) {
 						firstInst = currentInst;
 					}
 				}
 
+				// now we create the block
 				Block *nbb;
-				if(insts.count()) {
+				if(insts.count()) { // if there are some instructions inside the block, then it is a normal BB
 					nbb = new BasicBlock(insts.detach());
+					basicBlocksInOrder.push(nbb);
 				}
-				else {
+				else { // otherwise, we treat the block as Synth Block
+					nbb = new SynthBlock(); // a basic block without instruction
 					Option<xom::String> callID = bb_elt->getAttributeValue("call");
-					if(callID) {
-						nbb = new SynthBlock(); // a basic block without instruction
+					if(callID) { // if the block has callID, which is the target of the call, then we mark it
 						SYNTH_TARGET(nbb) = callID;
-					}
-					else {
-						// this block suppose to be empty for other use.
-						//insts.add(&otawa::Inst::null);
-						//nbb = new BasicBlock(insts.detach());
-						nbb = new SynthBlock();
 					}
 				}
 
@@ -640,10 +656,10 @@ protected:
 			cfgMakers.add(maker);
 
 			// add basic block in order ...
-			for(bb_map_t::Iterator bmpti(*bb_map); bmpti; bmpti++) {
-				if(bmpti->isBasic())
-					maker->add(*bmpti);
-			}
+			// we don't add the Synth Blocks now because the id of the Synth Blocks are after the Basic Blocks
+			// to have the same fashion of id numbering of the original and reconstructed CFG, we add the BB first.
+			for(Vector<Block*>::Iterator vbbi(basicBlocksInOrder); vbbi; vbbi++)
+				maker->add(*vbbi);
 
 			bb_map->put(*exitID, maker->exit()); // put the exit in the map
 
@@ -694,8 +710,11 @@ protected:
 				Block* sourceBlock = 0;
 				if(bb_map->hasKey((*elti).fst))
 					sourceBlock = bb_map->get((*elti).fst);
-				else
-					sourceBlock = cfgMaker->unknown();
+				else {
+					// sourceBlock = cfgMaker->unknown();
+					sourceBlock = new SynthBlock();
+					cfgMaker->add(sourceBlock);
+				}
 
 				Block* targetBlock = 0;
 				if(bb_map->hasKey((*elti).snd))
@@ -706,8 +725,15 @@ protected:
 					cfgMaker->add(targetBlock);
 				}
 
-
-				cfgMaker->add(sourceBlock, targetBlock, new Edge()); // build the edge
+				// build the edge
+				if(	sourceBlock->isEntry() || targetBlock->isExit() ||
+				(sourceBlock->isBasic() && sourceBlock->toBasic()->first() == cafebabeInst) ||
+				(targetBlock->isBasic() && targetBlock->toBasic()->first() == cafebabeInst) ||
+				(sourceBlock->isBasic() && targetBlock->isBasic() && sourceBlock->toBasic()->last()->nextInst() == targetBlock->toBasic()->first())) {
+					cfgMaker->add(sourceBlock, targetBlock, new Edge(Edge::NOT_TAKEN));
+				}
+				else
+					cfgMaker->add(sourceBlock, targetBlock, new Edge(Edge::TAKEN));
 			} // for each Edge
 		} // For each CFG
 
