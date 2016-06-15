@@ -64,7 +64,7 @@ public:
 		case ALWAYS_MISS:
 		case NOT_CLASSIFIED:	return WEIGHT(_lb->bb());
 		case FIRST_MISS:		{
-									BasicBlock *parent = otawa::ENCLOSING_LOOP_HEADER(_lb);
+									Block *parent = otawa::ENCLOSING_LOOP_HEADER(_lb);
 									if(!parent)
 										return 1;
 									else
@@ -91,7 +91,7 @@ private:
 
 class BranchPredictionEvent: public Event {
 public:
-	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var, BasicBlock *wbb)
+	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var, Block *wbb)
 		: Event(inst), _var(var), _cost(cost), _occ(occ), _wbb(wbb) { }
 
 	virtual kind_t kind(void) const { return BRANCH; }
@@ -118,7 +118,7 @@ private:
 	ilp::Var *_var;
 	ot::time _cost;
 	occurrence_t _occ;
-	BasicBlock *_wbb;
+	Block *_wbb;
 };
 
 
@@ -151,7 +151,7 @@ public:
 		case cache::ALWAYS_MISS:
 		case cache::NOT_CLASSIFIED:	return WEIGHT(_bb);
 		case cache::FIRST_MISS:		{
-										BasicBlock *parent = otawa::ENCLOSING_LOOP_HEADER(_bb);
+										Block *parent = otawa::ENCLOSING_LOOP_HEADER(_bb);
 										if(!parent)
 											return 1;
 										else
@@ -252,14 +252,15 @@ ot::time StandardEventBuilder::costOf(Address addr, bool write) {
 
 /**
  */
-void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	if(bb->isEnd())
+void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	if(b->isEnd())
 		return;
 
 	// process instruction stage L1
-	if(has_il1) {
+	if(has_il1 && b->isBasic()) {
+		BasicBlock *bb = b->toBasic();
 		const genstruct::AllocatedTable<LBlock* >& blocks = **BB_LBLOCKS(bb);
-		BasicBlock::InstIter inst(bb);
+		BasicBlock::InstIter inst = bb->insts();
 		for(int i = 0; i < blocks.count(); i++) {
 
 			// find the instruction
@@ -284,7 +285,8 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	}
 
 	// process data stage L1
-	if(has_dl1) {
+	if(has_dl1 && b->isBasic()) {
+		BasicBlock *bb = b->toBasic();
 
 		Pair<int, dcache::BlockAccess *> blocks = dcache::DATA_BLOCKS(bb);
 		for(int i = 0; i < blocks.fst; i++) {
@@ -325,20 +327,21 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 	}
 
 	// process branch prediction
-	if(has_branch) {
-		Inst *binst = bb->controlInst();
+	if(has_branch && b->isBasic()) {
+		BasicBlock *bb = b->toBasic();
+		Inst *binst = bb->control();
 		if(binst && binst->isConditional()) {
 			switch(branch::CATEGORY(bb)) {
 
 			// simple case of default prediction
 			case branch::ALWAYS_D:
-				for(BasicBlock::OutIterator out(bb); out; out++) {
+				for(Block::EdgeIter out = bb->outs(); out; out++) {
 					occurrence_t occ;
-					if(out->kind() == Edge::NOT_TAKEN)
+					if(out->isNotTaken())
 						occ = ALWAYS;
 					else
 						occ = NEVER;
-					Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), occ, 0, bb);
+					Event *event = new BranchPredictionEvent(out->target()->toBasic()->first(), bht->getCondPenalty(), occ, 0, bb);
 					if(logFor(LOG_BB))
 						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 					EVENT(*out).add(event);
@@ -358,7 +361,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
 
 
 
-void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, BasicBlock *wbb) {
+void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, Block *wbb) {
 
 	// x^MP_i = \sum{(i, j) in N} x^MP_(i,j)
 	static string msg = "branch prediction relation to edges";
@@ -367,12 +370,18 @@ void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, BasicBlock *
 	c->addLeft(1, branch::MISSPRED_VAR(bb));
 
 	// traverse the successors
-	for(BasicBlock::OutIterator out(bb); out; out++) {
+	for(Block::EdgeIter out = bb->outs(); out; out++) {
 		string name;
 		if(_explicit)
-			name = _ << "x_mp_" << out->source()->number() << "_" << out->target()->number();
+			name = _ << "x_mp_" << out->source()->index() << "_" << out->target()->index();
 		ilp::Var *var = sys->newVar(name);
-		Event *event = new BranchPredictionEvent(out->target()->firstInst(), bht->getCondPenalty(), SOMETIMES, var, wbb);
+		Inst *tinst = 0;
+		if(out->sink()->isBasic())
+			tinst = out->sink()->toBasic()->first();
+		else if(out->sink()->isSynth())
+			tinst = out->sink()->toSynth()->callee()->first();
+		ASSERT(tinst);
+		Event *event = new BranchPredictionEvent(tinst, bht->getCondPenalty(), SOMETIMES, var, wbb);
 		if(logFor(LOG_BB))
 			log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 		EVENT(*out).add(event);

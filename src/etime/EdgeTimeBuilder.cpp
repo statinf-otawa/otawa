@@ -339,15 +339,66 @@ void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
 	events.clear();
 }
 
+template <class I>
+inline int count(I i) {
+	int c = 0;
+	while(i) {
+		c++;
+		i++;
+	}
+	return c;
+}
 
 /**
  */
-void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
-	if(bb->isEnd())
+void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+
+	// nothing to with an end or a synthetic block
+	if(!b->isBasic())
 		return;
-	for(BasicBlock::InIterator in(bb); in; in++) {
-		edge = in;
-		processEdge(ws, cfg);
+	BasicBlock *bb = b->toBasic();
+
+	// process each primary edge
+	for(Block::EdgeIter in = bb->ins(); in; in++) {
+		typedef genstruct::Vector<Pair<BasicBlock *, Edge *> > comps_t;
+		comps_t comps;
+		genstruct::Vector<Edge *> todo;
+
+		// close all predecessor BB
+		todo.add(in);
+		while(todo) {
+			Edge *e = todo.pop();
+			if(e->source()->isBasic())
+				comps.add(pair(e->source()->toBasic(), e));
+			else if(e->source()->isEntry())
+				for(CFG::CallerIter c = cfg->callers(); c; c++)
+					for(Block::EdgeIter ce = c->ins(); ce; ce++)
+						todo.push(ce);
+			else {
+				SynthBlock *sb = e->source()->toSynth();
+				if(!sb->callee() || count(sb->callee()->callers()) > 1) {
+					comps.clear();
+					break;
+				}
+				for(Block::EdgeIter ce = sb->callee()->exit()->ins(); ce; ce++)
+					todo.push(ce);
+			}
+		}
+
+		// perform the computations
+		if(!comps) {
+			source = 0;
+			edge = in;
+			target = bb;
+			processEdge(ws, cfg);
+		}
+		else
+			for(comps_t::Iterator comp(comps); comp; comp++) {
+				source = (*comp).fst;
+				edge = (*comp).snd;
+				target = bb;
+				processEdge(ws, cfg);
+			}
 	}
 }
 
@@ -386,21 +437,6 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	bnode = 0;
 	seq = new ParExeSequence();
 
-	// compute source
-	source = edge->source();
-	if(source->isEntry()) {
-		if(CALLED_BY(source->cfg()).exists())
-			source = CALLED_BY(source->cfg())->source();
-		else
-			source = 0;
-	}
-
-	// compute target
-	if(edge->kind() == Edge::CALL)
-		target = edge->calledCFG()->firstBB();
-	else
-		target = edge->target();
-
 	// collect and sort events
 	all_events.clear();
 	if(source)
@@ -413,13 +449,13 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// fill the prefix
 		if(source)
-			for(BasicBlock::InstIterator inst(source); inst; inst++) {
+			for(BasicBlock::InstIter inst = source->insts(); inst; inst++) {
 				ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
 				seq->addLast(par_exe_inst);
 			}
 
 		// fill the current block
-		for(BasicBlock::InstIterator inst(target); inst; inst++) {
+		for(BasicBlock::InstIter inst = target->insts(); inst; inst++) {
 			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
 			seq->addLast(par_exe_inst);
 		}
@@ -612,7 +648,7 @@ void EdgeTimeBuilder::processSequence(void) {
 
 		// dump it if needed
 		if(_do_output_graphs)
-			outputGraph(graph, target->number(), source->number(), mask, _ << source << " -> " << target << " (cost = " << cost << ")");
+			outputGraph(graph, target->index(), source->index(), mask, _ << source << " -> " << target << " (cost = " << cost << ")");
 
 		// add the new time
 		bool done = false;
@@ -779,7 +815,7 @@ void EdgeTimeBuilder::displayConfs(const genstruct::Vector<ConfigSet>& confs, co
 ParExeNode *EdgeTimeBuilder::getBranchNode(void) {
 	ASSERT(source);
 	if(!bnode) {
-		Inst *binst = source->controlInst();
+		Inst *binst = source->control();
 		for(ParExeSequence::Iterator pinst(*seq); pinst; pinst++)
 			if(pinst->inst() == binst) {
 				for(ParExeInst::NodeIterator node(*pinst); node; node++)
@@ -1149,8 +1185,8 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 		StringBuffer buf;
 		buf << "e_";
 		if(source)
-			buf << source->number() << "_";
-		buf << target->number() << "_" << target->cfg()->label() << "_hts";
+			buf << source->index() << "_";
+		buf << target->index() << "_" << target->cfg()->label() << "_hts";
 		hts_name = buf.toString();
 	}
 	ilp::Var *x_hts = sys->newVar(hts_name);

@@ -45,10 +45,10 @@ public:
 protected:
 	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb);
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
 
 private:
-	void handleVariableBranchPred(BasicBlock *bb, BasicBlock *wbb);
+	void handleVariableBranchPred(BasicBlock *bb, Block *wbb);
 	ot::time costOf(Address addr, bool write = false);
 
 	const hard::Memory *mem;
