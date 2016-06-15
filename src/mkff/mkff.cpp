@@ -733,9 +733,9 @@ void Command::generateCFGs(String path, int type) {
 		else {
 			ag = new display::DisplayedCFG(**cfg);
 			if(type & GeneratedCFGType::COLORED)
-				d = new display::MKFFDotDecorator(workspace(), true, nosource);
+				d = new mkff::MKFFDotDecorator(workspace(), true, nosource);
 			else
-				d = new display::MKFFDotDecorator(workspace(), false, nosource);
+				d = new mkff::MKFFDotDecorator(workspace(), false, nosource);
 				//d = new display::MultipleDotDecorator(workspace());
 		}
 

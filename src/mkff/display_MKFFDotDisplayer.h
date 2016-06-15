@@ -24,7 +24,9 @@
 #include <otawa/display/CFGDisplayer.h>
 #include <otawa/display/InlinedCFGDisplayer.h>
 
-namespace otawa { namespace display {
+using namespace otawa;
+
+namespace mkff {
 
 class MKFFDotDecorator: public display::CFGDecorator {
 public:
@@ -44,6 +46,6 @@ private:
 	bool noSource;
 }; // class MKFFDotDecorator: public display::CFGDecorator {
 
-}} // namespace otawa { namespace display {
+} // namespace mkff
 
 #endif	// OTAWA_DISPLAY_MKFF_DOT_DISPLAYER_H

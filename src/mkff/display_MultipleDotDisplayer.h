@@ -23,7 +23,9 @@
 
 #include <otawa/display/CFGDisplayer.h>
 
-namespace otawa { namespace display {
+using namespace otawa;
+
+namespace mkff {
 
 class MultipleDotDecorator: public display::CFGDecorator {
 public:
@@ -32,9 +34,9 @@ protected:
 	virtual void displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const;
 	virtual void displayEndBlock(CFG *graph, Block *block, display::Text& content, display::VertexStyle& style) const;
 	virtual void displayBasicBlock(CFG *graph, BasicBlock *block, display::Text& content, display::VertexStyle& style) const;
-	virtual void decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const;
+	virtual void decorate(CFG *graph, otawa::Edge *edge, display::Text& label, display::EdgeStyle& style) const;
 }; // class MultipleDotDecorator: public display::CFGDecorator {
 
-}} // namespace otawa { namespace display {
+} // namespace mkff
 
 #endif	// OTAWA_DISPLAY_MULTIPLE_DOT_DISPLAYER_H
