@@ -21,8 +21,8 @@ add_library(dcache SHARED ${SOURCES})
 set_property(TARGET dcache PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 target_link_libraries(dcache ${LIBELM})
-target_link_libraries(dcache otawa)
+target_link_libraries(dcache otawa clp)
 
 # installation
 install(TARGETS dcache DESTINATION "${PROCDIR}/otawa")
-
+install(FILES dcache.eld DESTINATION "${PROCDIR}/otawa")
