@@ -30,8 +30,6 @@
 #include <ilcplex/ilocplex.h>
 #include <sstream>
 
-extern otawa::ilp::ILPPlugin& cplex_plugin;
-
 namespace otawa { namespace cplex {
 
 class OStreamBuf: public streambuf {
@@ -63,7 +61,7 @@ public:
 
 	/**
 	 */
-	System(void): vals(0), result(0) {
+	System(ilp::ILPPlugin *plugin): vals(0), result(0), _plugin(plugin) {
 	}
 
 	/**
@@ -90,7 +88,7 @@ public:
 	/**
 	 */
 	virtual ilp::ILPPlugin *plugin(void) {
-		return &cplex_plugin;
+		return _plugin;
 	}
 
 	/**
@@ -193,6 +191,7 @@ private:
     IloNumArray *vals;
 	double result;
     elm::string last_message;
+    ilp::ILPPlugin *_plugin;
 };
 
 // Plugin class
@@ -203,12 +202,13 @@ public:
 
 	// ILPPlugin overload
 	virtual ilp::System *newSystem(void) {
-		return new System();
+		return new System(this);
 	}
 
 };
 
 } }		// otawa::cplex
 
-ELM_PLUGIN(otawa::cplex::Plugin, OTAWA_ILP_HOOK);
+otawa::cplex::Plugin otawa_cplex;
+ELM_PLUGIN(otawa_cplex, OTAWA_ILP_HOOK);
 int cplex_plugin;
