@@ -30,7 +30,7 @@
 using namespace elm;
 using namespace otawa;
 
-namespace otawa { namespace display {
+namespace mkff {
 
 void MKFFDotDecorator::displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const {
 	display::CFGDecorator::displaySynthBlock(g, b, content, style);
@@ -84,4 +84,4 @@ void MKFFDotDecorator::displayAssembly(CFG *graph, BasicBlock *block, display::T
 	} // end for each instructions
 }
 
-}} // namespace otawa { namespace display {
+} // namespace mkff

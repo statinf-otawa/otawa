@@ -244,7 +244,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 			// first block: do not forget edge with entry!
 			if(first) {
 				first = false;
-				m.add(m.entry(), v, new Edge());
+				m.add(m.entry(), v, new Edge(Edge::NOT_TAKEN));
 			}
 
 			// process basic block
@@ -254,7 +254,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 			if(bb) {
 				Inst *i = bb->control();
 
-				// conditional or call case -> sequential edge
+				// conditional or call case -> sequential edge (not taken)
 				if(!i || i->isConditional())
 					seq(m, bb, bb);
 
@@ -263,7 +263,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 					// return case
 					if(isReturn(i))
-						m.add(bb, m.exit(), new Edge());
+						m.add(bb, m.exit(), new Edge(Edge::TAKEN));
 
 					// not a call: build simple edges
 					else if(!isCall(i)) {
@@ -272,12 +272,12 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 						// no target: unresolved branch
 						if(!ts)
-							m.add(bb, m.unknown(), new Edge());
+							m.add(bb, m.unknown(), new Edge(Edge::TAKEN));
 
 						// create edges
 						else
 							for(genstruct::Vector<Inst *>::Iterator t(ts); t; t++)
-								m.add(bb, BB(t), new Edge());
+								m.add(bb, BB(t), new Edge(Edge::TAKEN));
 					}
 
 					// a call
@@ -289,7 +289,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						if(!ts) {
 							Block *b = new SynthBlock();
 							m.add(b);
-							m.add(bb, b, new Edge());
+							m.add(bb, b, new Edge(Edge::TAKEN));
 							seq(m, bb, b);
 						}
 
@@ -301,16 +301,16 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 									SynthBlock *cb = new SynthBlock();
 									CFGMaker& cm = maker(c);
 									m.call(cb, cm);
-									m.add(bb, cb, new Edge());
+									m.add(bb, cb, new Edge(Edge::TAKEN));
 									seq(m, bb, cb);
 									one = true;
 								}
 							if(!one && !i->isConditional())
 								seq(m, bb, bb);
 						}
-					}
+					} // end else: a call
 
-				}
+				} // end if(i && !IGNORE_CONTROL(i)) {
 			}
 		}
 }

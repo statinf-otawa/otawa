@@ -30,7 +30,7 @@
 using namespace elm;
 using namespace otawa;
 
-namespace otawa { namespace display {
+namespace mkff {
 
 void MultipleDotDecorator::displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const {
 	display::CFGDecorator::displaySynthBlock(g, b, content, style);
@@ -54,7 +54,7 @@ void MultipleDotDecorator::displayBasicBlock(CFG *graph, BasicBlock *block, disp
 
 /**
  */
-void MultipleDotDecorator::decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const {
+void MultipleDotDecorator::decorate(CFG *graph, otawa::Edge *edge, display::Text& label, display::EdgeStyle& style) const {
 	if(!edge->source()->isBasic()
 	|| !edge->sink()->isBasic())
 		style.line.style = display::LineStyle::DASHED;
@@ -64,4 +64,4 @@ void MultipleDotDecorator::decorate(CFG *graph, otawa::Edge *edge, Text& label, 
 		label << "both";
 }
 
-}} // namespace otawa { namespace display {
+} // namespace mkff

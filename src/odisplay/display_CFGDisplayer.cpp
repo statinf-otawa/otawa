@@ -281,4 +281,15 @@ void CFGDecorator::displayProps(CFG *g, BasicBlock *b, Text& content) const {
 					<< "\t" << *p;
 }
 
+/**
+ *
+ */
+void CFGDecorator::setDisplayOptions(bool _da, bool _dsl, bool _dp, Color _sc, Color _lc) {
+	display_assembly = _da;
+	display_source_line = _dsl;
+	display_props = _dp;
+	source_color = _sc;
+	label_color = _lc;
+}
+
 } }		// otawa::display

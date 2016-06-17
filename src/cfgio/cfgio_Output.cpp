@@ -75,7 +75,7 @@ Identifier<Path> OUTPUT("otawa::cfgio::OUTPUT");
 
 /**
  * @class Output
- * Output the current CFG collection in XML matching the DTA ${OTAWA_HOME}/share/Otawa/dtd/cfg.dtd .
+ * Output the current CFG collection in XML matching the DTD ${OTAWA_HOME}/share/Otawa/dtd/cfg.dtd .
  *
  * @par Configuration
  * @li @ref INCLUDE -- include the identifier whose name is given in the output.

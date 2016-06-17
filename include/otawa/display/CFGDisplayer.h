@@ -83,6 +83,8 @@ public:
 	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Vertex& vertex, Text& content, VertexStyle& style) const;
 	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Edge& edge, Text& label, EdgeStyle& style) const;
 
+	void setDisplayOptions(bool _da = true, bool _dsl = true, bool _dp = false, Color _sc = Color("darkgreen"), Color _lc = Color("blue"));
+
 protected:
 	virtual void displayEndBlock(CFG *graph, Block *block, Text& content, VertexStyle& style) const;
 	virtual void displaySynthBlock(CFG *graph, SynthBlock *block, Text& content, VertexStyle& style) const;

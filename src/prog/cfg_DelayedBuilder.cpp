@@ -410,7 +410,8 @@ void DelayedBuilder::buildEdges(CFG *cfg, CFGMaker& maker) {
 				for(Block::EdgeIter edge = b->outs(); edge; edge++) {
 
 					// not taken
-					if(edge->isNotTaken() == Edge::NOT_TAKEN) {
+					//if(edge->isNotTaken() == Edge::NOT_TAKEN) {
+					if(edge->isNotTaken()) {
 						Block *nop = makeNOp(bb->first());
 						makeEdge(vb, nop, edge->flags());
 						Block *vtarget = get(edge->target());
