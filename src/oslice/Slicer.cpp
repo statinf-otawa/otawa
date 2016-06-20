@@ -95,6 +95,13 @@ protected:
 			content << display::left;
 		} // end for each instructions
 	}
+
+	virtual void displayProps(CFG *g, BasicBlock *b, display::Text& content) const {
+		for(PropList::Iter p(b); p; p++)
+			if(p->id()->name())
+				content << display::begin(display::BOLD) << p->id()->name() << display::begin(display::BOLD)
+						<< "\t!!!!!!" << *p;
+	}
 private:
 	int showSlicing;
 };
@@ -395,7 +402,9 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 				TO_REMOVE(*v).remove();
 				continue;
 			}
-			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge(e->flags()));
+			Block* source = bmap.get(e->source());
+			Block* target = bmap.get(e->sink());
+			maker.add(source, target, new Edge(e->flags()));
 		} // end for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
 
 		 // linking the artificial edge
@@ -406,7 +415,9 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "In CFG " << v->cfg() << ", " << (*plti).fst->index() << " to " << v->index() << io::endl;
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is created due to BB removal" << io::endl;
 				}
-				maker.add(bmap.get((*plti).fst), bmap.get(*v), new Edge((*plti).snd));
+				Block* source = bmap.get((*plti).fst);
+				Block* target = bmap.get(*v);
+				maker.add(source, target, new Edge((*plti).snd));
 			}
 			delete edgeSources;
 		}
@@ -763,7 +774,7 @@ void Slicer::slicing(void) {
 		// incoming edges exited in the original CFG
 		for (Block::EdgeIter in = b->ins(); in; in++) { // just to be safe not to remove the element during iter ops.
 			// if the edge is not marked as removed, then we add the source of the edge to the list of predecessor
-			if(!TO_REMOVE(*in)) {
+			if(!TO_REMOVE(*in) && in->source() != b) {
 				predecessors.add(pair(in->source(),in->flags()));
 				// mark the incoming edge removed
 				TO_REMOVE(*in) = true;
@@ -780,8 +791,9 @@ void Slicer::slicing(void) {
 		if(edgeSources) {
 			for(predecessor_list_t::Iterator in(*edgeSources); in; in++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
-					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from BB " << (*in).fst->index() << " to " << b->index() << io::endl;
-				predecessors.add(*in);
+					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from " << (*in).fst << " to " << b << io::endl;
+				if((*in).fst != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
+					predecessors.add(*in);
 				// remove the current block from the successors of the its predecessor
 				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*in).fst);
 				if(edgeTargets)
@@ -795,11 +807,11 @@ void Slicer::slicing(void) {
 		// now we process the out-going edges
 		for (Block::EdgeIter out = b->outs(); out; out++) { // just to be safe not to remove the element during iter ops.
 			// if the edge is not yet marked removed, then we add the sink of the edge to sucessors
-			if(!TO_REMOVE(*out))
+			if(!TO_REMOVE(*out) && out->target() != b)
 				successors.add(out->sink());
 			TO_REMOVE(*out) = true;
 			if(_debugLevel & DISPLAY_CFG_CREATION)
-				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge " << *out << io::endl;
+				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to " << *out << io::endl;
 		}
 		// now we process the successors of the current block due to the removals of the other blocks
 		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(b);
@@ -807,7 +819,8 @@ void Slicer::slicing(void) {
 			for(Vector<Block*>::Iterator out(*edgeTargets); out; out++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
-				successors.add(*out);
+				if(out != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
+					successors.add(*out);
 				// remove the current block from the list of the predecessors of its successor
 				predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*out);
 				if(edgeSources) {

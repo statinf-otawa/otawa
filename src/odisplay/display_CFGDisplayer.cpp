@@ -277,8 +277,8 @@ void CFGDecorator::displayAssembly(CFG *graph, BasicBlock *block, Text& content)
 void CFGDecorator::displayProps(CFG *g, BasicBlock *b, Text& content) const {
 	for(PropList::Iter p(b); p; p++)
 		if(p->id()->name())
-			content << display::begin(display::BOLD) << p->id()->name() << display::begin(display::BOLD)
-					<< "\t" << *p;
+			content << display::begin(display::BOLD) << p->id()->name() << display::end(display::BOLD)
+					<< "\t" << *p << display::left;
 }
 
 /**

@@ -481,6 +481,9 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 		HAI_TRACE("\t\tunion of inputs = " << in);
 		outputProcessing();
 		HAI_TRACE("\t\toutput = " << out);
+
+		if(!current->isExit() && workList->isEmpty())
+			ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
 	}
 
     // json debugging finalization
