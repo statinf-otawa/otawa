@@ -41,7 +41,7 @@ protected:
 
 private:
 	typedef genstruct::Vector<dfa::BitSet *> loops_t;
-	void reduce(CFGMaker& G, loops_t& L);
+	bool reduce(CFGMaker& G, loops_t& L);
 	Block *clone(CFGMaker& G, Block *b, bool duplicate = false);
 	void computeInLoops(CFGMaker& maker, loops_t& L);
 
