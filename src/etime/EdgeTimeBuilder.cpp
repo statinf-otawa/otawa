@@ -339,16 +339,6 @@ void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
 	events.clear();
 }
 
-template <class I>
-inline int count(I i) {
-	int c = 0;
-	while(i) {
-		c++;
-		i++;
-	}
-	return c;
-}
-
 /**
  */
 void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {

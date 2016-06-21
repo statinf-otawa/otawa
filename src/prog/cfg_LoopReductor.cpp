@@ -87,7 +87,7 @@ Identifier<dfa::BitSet*> LoopReductor::IN_LOOPS("otawa::LoopReductor::IN_LOOPS",
 
 #ifdef DO_DEBUG
 	static Identifier<bool> TO_DUMP("", false);
-	static void displayCFG(WorkSpace *ws, CFG *cfg, cstring tag) {
+	static void displayCFG(WorkSpace *ws, CFG *cfg, string tag) {
 		static display::Provider *prov = 0;
 		if(!prov)
 			prov = display::Provider::get();
@@ -130,27 +130,35 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 			for(Block::EdgeIter e = v->outs(); e; e++)
 				maker.add(map.get(v), map.get(e->sink()), new Edge(e->flags()));
 
-		// find loops
+		// iterate until irreducible loops are processed
 		genstruct::Vector<dfa::BitSet *> L;
-		computeInLoops(maker, L);
+		bool reduced;
+		int it = 0;
+		do {
+			if(logFor(LOG_FUN))
+				log << "\t\tPASS " << it << io::endl;
+			computeInLoops(maker, L);
+			reduced = reduce(maker, L);
+	#		ifdef DO_DEBUG
+				if(TO_DUMP(maker))
+					displayCFG(ws, g, _ << "old-" << it);
+	#		endif
 
-		// split nodes
-		reduce(maker, L);
-#		ifdef DO_DEBUG
-			if(TO_DUMP(maker))
-				displayCFG(ws, g, "old");
-#		endif
+			// cleanup
+			for(CFG::BlockIter v = maker.blocks(); v; v++) {
+				delete IN_LOOPS(v);
+				v->removeProp(IN_LOOPS);
+			}
+			for(loops_t::Iterator l(L); l; l++)
+				delete l;
+
+			it++;
+			//if(it > 3)
+			//	break;
+		} while(reduced);
 		if(logFor(LOG_FUN) && g->count() != maker.count())
-			log << "\t\tirreducible loops of " << *g << " ("<< g->count() << " blocks)"
-				<< " removed (" << maker.count() << " blocks)\n";
-
-		// cleanup
-		for(loops_t::Iterator l(L); l; l++)
-			delete l;
-		for(CFG::BlockIter v = maker.blocks(); v; v++) {
-			delete IN_LOOPS(v);
-			v->removeProp(IN_LOOPS);
-		}
+			log << "\t\tirreducible loops of " << *g << " removed (before: "
+				<< g->count() << " blocks, after: " << maker.count() << " blocks)\n";
 	}
 
 }
@@ -229,8 +237,9 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
  * Reduce irregular loops.
  * @param G		Graph to process.
  * @param L		List of header loops.
+ * @return		True if an irregular loop has been reduced, false else.
  */
-void LoopReductor::reduce(CFGMaker& G, loops_t& L) {
+bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 	// for l ∈ L do
 	for(loops_t::Iterator l(L); l; l++)
@@ -329,10 +338,13 @@ void LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			for(dfa::BitSet::Iterator v(*bs); v; v++) {
 
 				// for (v, w)  ∈ E do
-				for(Block::EdgeIter e = G.at(v)->outs(); e; e++)
+				for(Block::EdgeIter e = G.at(v)->outs(); e; e++) {
 
 					// E' ← E' ∪ { (σ(v), σ(w)) }
 					G.add(map[e->source()->index()], map[e->sink()->index()], new Edge(e->flags()));
+					if(logFor(LOG_BLOCK))
+						log << "\t\t\tadd edge " << map[e->source()->index()] << " -> " << map[e->sink()->index()] << io::endl;
+				}
 			}
 
 			// for v ∈ l \ { bh } do
@@ -349,14 +361,22 @@ void LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 							// E' ← E' ∪ { (σ(w), σ(v)) }; D ← D ∪ { (w, v) }
 							G.add(map[w->index()], map[v->index()], new Edge(e->flags()));
 							D.add(e);
+							if(logFor(LOG_BLOCK))
+								log << "\t\t\tadd edge " << map[w->index()] << " -> " << map[v->index()] << io::endl;
 						}
 			}
 
 			// E' ← E' \ D
-			for(genstruct::Vector<Edge *>::Iterator e(D); e; e++)
+			for(genstruct::Vector<Edge *>::Iterator e(D); e; e++) {
+				if(logFor(LOG_BLOCK))
+					log << "\t\t\tremove edge " << *e << io::endl;
 				delete e;
+			}
+
+			return true;
 		}
 
+	return false;
 }
 
 typedef genstruct::Vector<Pair<Block *, Block::EdgeIter> > stack_t;
@@ -375,6 +395,14 @@ static void displayStack(stack_t& S) {
 	cerr << "]";
 }
 #endif
+
+
+static inline bool mostlyIncludes(dfa::BitSet& SS, dfa::BitSet& IL, Block *w) {
+	SS.add(w->index());
+	bool res = SS.includes(IL);
+	SS.remove(w->index());
+	return res;
+}
 
 
 /**
@@ -458,7 +486,7 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 			}
 
 			// else if IL(w) ⊆ S then -- path join
-			else if(SS.includes(**IN_LOOPS(w))) {
+			else if(mostlyIncludes(SS, **IN_LOOPS(w), w)) {
 				DEBUG("join found at " << w->index() << io::endl);
 
 				// if ∃ h = last{u ∈ S ∧ u ∈ IL(w)} then
@@ -472,11 +500,13 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 
 			// irreducible loop
 			else {
+				DEBUG("IL(" << w->index() << ") = " << **IN_LOOPS(w) << io::endl);
 				DEBUG("irreducible found at " << w->index() << io::endl);
 
 				// if ∃h = last{u ∈ S ∧ u ∈ IL(w) } then
 				int h;
 				for(h = S.length() - 1; h >= 0 && !IN_LOOPS(w)->contains(S[h].fst->index()); h--);
+				DEBUG("h = " << S[h] << io::endl);
 				if(h >= 0)
 
 					// for u ∈ S[h, w] do IL(u) ← IL[h]
@@ -486,20 +516,28 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 				// IL(w) ← IL(w) ∪ { w }
 				IN_LOOPS(w)->add(w->index());
 
-				// let l = ∪{l ∈ L ∧ l ∩ IL(w) ≠ ∅ } l in
-				// L ← { l ∈ L ∧ l ∩ l = ∅ } ∪ { l }
-				dfa::BitSet *hs = new dfa::BitSet(G.count());
-				hs->add(w->index());
+				// let nh = IL(w) \ S in
+				dfa::BitSet nh = dfa::BitSet(**IN_LOOPS(w));
+				nh.remove(SS);
+
+				// let wl = ∪{l ∈ L ∧ l ∩ nh ≠ ∅ } l ∪ { w } in
+				// L ← { l ∈ L ∧ l ∩ wl = ∅ } ∪ { wl }
+				dfa::BitSet *wl = new dfa::BitSet(nh);
 				int j = 0;
-				for(int i = 0; i < L.length(); i++)
-					if(L[i]->meets(**IN_LOOPS(w))) {
-						hs->add(*L[i]);
+				for(int i = 0; i < L.length(); i++) {
+					if(L[i]->meets(nh)) {
+						wl->add(*L[i]);
+						DEBUG("merge with loop " << i << ": " << *L[i] << ": " << *wl << "\n");
 						delete L[i];
 					}
-					else
+					else {
+						DEBUG("merge with loop " << i << ": " << *L[i] << " -> no\n");
 						L[j++] = L[i];
-					L.setLength(j);
-				L.add(hs);
+					}
+				}
+				L.setLength(j);
+				L.add(wl);
+				DEBUG("adding loop " << *wl << io::endl);
 			}
 		}
 	}
