@@ -609,6 +609,13 @@ void EdgeTimeBuilder::processSequence(void) {
 	if(events.isEmpty()) {
 		ot::time cost = graph->analyze();
 		this->genForOneCost(cost, edge, events);
+		// dump it if needed
+		if(_do_output_graphs){
+			if (source)
+				outputGraph(graph, target->index(), source->index(), 0, _ << source << " -> " << target << " (cost = " << cost << ")");
+			else
+				outputGraph(graph, target->index(), 0, 0, _ << target << " (cost = " << cost << ")");
+		}
 		delete graph;
 		return;
 	}
