@@ -47,6 +47,7 @@ namespace otawa {
     int _index;
   public:
     inline Resource(elm::String name, resource_type_t type, int index) : _name(name), _type(type), _index(index) {}
+    virtual inline ~Resource() {}
     inline elm::String name() {return _name;}
     inline resource_type_t type() {return _type;}
     inline int index() {return _index;}
@@ -94,9 +95,6 @@ namespace otawa {
   public:
     inline RegResource(elm::String name, otawa::hard::RegBank * reg_bank, int reg_index, int index)
 	: Resource(name,REG, index), _reg_bank(reg_bank), _reg_index(reg_index) {}
-    inline ~RegResource() {
-      _using_instructions.clear();
-    }
     inline otawa::hard::RegBank * regBank() {return _reg_bank;}
     inline int regIndex() {return _reg_index;}
     inline void addUsingInst(ParExeInst * inst) {
