@@ -142,7 +142,7 @@ Segment::~Segment(void) {
 
 /**
  * @var Segment::INITIALIZED;
- * Segment flags denoting an initialzied segment.
+ * Segment flags denoting an initialized segment.
  */
 
 
