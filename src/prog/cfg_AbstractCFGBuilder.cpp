@@ -201,6 +201,13 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const genstruct::FragTable<In
 					break;
 				}
 			}
+		else {
+			Inst *i = *e;
+			while (!i->isBundleEnd()) {
+				i = i->nextInst();
+				insts.add(i);
+			}
+		}
 
 		// create the basic block
 		BasicBlock *v = new BasicBlock(insts.detach());
