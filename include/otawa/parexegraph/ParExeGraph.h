@@ -47,7 +47,7 @@ namespace otawa {
 		inline ParExeException(string message): otawa::Exception(message) { }
 	};
 
-	typedef enum code_part_t {
+	typedef enum code_part {
 		PROLOGUE,			// in one of the basic block's predecessors
 		BLOCK,				// in the basic block under analysis
 		EPILOGUE,			// in one of the basic block's successors
@@ -75,7 +75,7 @@ namespace otawa {
 
 	public:
 		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index)
-			: _inst(inst), _bb(bb), _part(part), _index(index), _exec_node(NULL), _first_fu_node(NULL), _last_fu_node(NULL) {}
+			: _inst(inst), _bb(bb), _part(part), _index(index), _fetch_node(NULL), _exec_node(NULL), _first_fu_node(NULL), _last_fu_node(NULL) {}
 
 		// set/get information on the instruction
 		inline Inst * inst()  {return _inst;}
@@ -241,6 +241,7 @@ namespace otawa {
 		// set/get information related to the graph
 		inline ParExeSequence *getSequence(void) const { return _sequence; }
 		inline ParExeNode * firstNode(){return _first_node;}
+		inline ParExeNode *lastNode(){return _last_node;}
 		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);
 		inline int numResources() {return _resources.length();}
 		inline Resource *resource(int index){return _resources[index];}
@@ -261,15 +262,15 @@ namespace otawa {
 		void findContendingNodes();
 		void createSequenceResources();
 		int analyze();
-		void initDelays();
+		virtual void initDelays();
 		void clearDelays();
 		void restoreDefaultLatencies();
 		void setDefaultLatencies(TimingContext *tctxt);
 		void setLatencies(TimingContext *tctxt);
-		void propagate();
+		virtual void propagate();
 		void analyzeContentions();
 		int cost();
-		int delta(ParExeNode *a, Resource *res);
+		virtual int delta(ParExeNode *a, Resource *res);
 
 		// tracing
 		void dump(elm::io::Output& dotFile, const string& info = "");
@@ -345,7 +346,7 @@ namespace otawa {
 		elm::String _name;											// name of the node (for tracing)
 //		elm::genstruct::AllocatedTable<int> * _d;					// delays wrt availabilities of resources
 //		elm::genstruct::AllocatedTable<bool> * _e;					// dependence on availabilities of resources
-		elm::genstruct::AllocatedTable<int> * _delay;				// dependence and delays wrt availabilities of resources
+		elm::genstruct::Vector<int> * _delay;				// dependence and delays wrt availabilities of resources
 	protected:
 		elm::genstruct::Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)
 		elm::genstruct::Vector<ParExeNode *> _contenders;																	// ==== STILL USEFUL?
@@ -358,12 +359,10 @@ namespace otawa {
 			: ParExeGraph::GenNode((otawa::graph::Graph *) graph),
 			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
 			int num = graph->numResources();
-			_delay = new elm::genstruct::AllocatedTable<int>(num);
-			for (int k=0 ; k<graph->numInstructions() ; k++) {
-				StringBuffer _buffer;
-				_buffer << stage->name() << "(I" << inst->index() << ")";
-				_name = _buffer.toString();
-			}
+			_delay = new elm::genstruct::Vector<int>(num);
+			StringBuffer _buffer;
+			_buffer << stage->name() << "(I" << inst->index() << ")";
+			_name = _buffer.toString();
 			if (!graph->firstNode())
 				graph->_first_node = this;
 			if (inst->codePart() == PROLOGUE)
@@ -383,7 +382,10 @@ namespace otawa {
 		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
 		inline elm::String name(void) { return _name; }
 		inline int delay(int index) {return (*_delay)[index];}
-		inline void setDelay(int index, int value) { (*_delay)[index] = value; }
+		inline void setDelay(int index, int value) { 
+			while (index >= _delay->length()) _delay->add(-1);
+			(*_delay)[index] = value;
+		}
 		inline void initContenders(int size) {_possible_contenders = new BitVector(size); }									// ==== STILL USEFUL?
 		inline int lateContenders(void) {return _late_contenders; }															// ==== STILL USEFUL?
 		inline void setLateContenders(int num) { _late_contenders = num; }													// ==== STILL USEFUL?

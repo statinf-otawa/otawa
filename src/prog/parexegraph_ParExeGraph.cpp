@@ -109,7 +109,7 @@ int ParExeGraph::analyze() {
     if (_last_prologue_node)
 		wcc = cost();
     else{
-		wcc = _last_node->delay(0);  // resource 0 is BLOCK_START
+		wcc = _last_node->delay(0) + _last_node->latency();  // resource 0 is BLOCK_START
     }
     return(wcc);
 }
@@ -1043,28 +1043,29 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 			first_line = false;
 			dotFile << "{ ";
 		}
+		else
+			dotFile << " | ";
 		dotFile << res->name();
 		if (i < width-1){
-			dotFile << " | ";
 			i++;
 		}
 		else {
-			dotFile << "} ";
+			dotFile << " }";
 			i = 0;
 		}
     }
     if (i!= 0)
-		dotFile << "} ";
-    dotFile << "} ";
-    dotFile << "\"] ; \n";
+		dotFile << " }";
+    dotFile << " }";
+    dotFile << "\"];\n";
 
     // display instruction sequence
-    dotFile << "\"code\" [shape=record, label= \"\\l";
-    bool in_block = true;
+    dotFile << "\"code\" [shape=record, label= \"";
+    bool in_prologue = true;
     BasicBlock *bb = 0;
     for (InstIterator inst(_sequence) ; inst ; inst++) {
-		if(inst->codePart() == BLOCK && in_block) {
-			in_block = false;
+		if(inst->codePart() == BLOCK && in_prologue) {
+			in_prologue = false;
 			dotFile << "------\\l";
 		}
     	BasicBlock *cbb = inst->basicBlock();
@@ -1073,17 +1074,49 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     		dotFile << bb << "\\l";
     	}
     	dotFile << "I" << inst->index() << ": ";
-		dotFile << "0x" << ot::address(inst->inst()->address()) << ":  ";
+		dotFile << "0x" << ot::address(inst->inst()->address()) << ": ";
 		escape(dotFile, elm::_ << inst->inst());
 		dotFile << "\\l";
     }
-    dotFile << "\"] ; \n";
+    dotFile << "\"];\n";
 
     // edges between info, legend, code
     if(info)
     	dotFile << "\"info\" -> \"legend\";\n";
-    dotFile << "\"legend\" -> \"code\";\n";
+    dotFile << "\"legend\" -> \"code\";\n\n";
 
+    // display _prev_node if connected
+	for (Successor node(_first_node); node; ++node) {
+		if (node->inst()->index() != -1)
+			continue;
+
+		dotFile << "\"" << node->stage()->name() << "I" << node->inst()->index()
+				<< "\" [group=" << node->stage()->index()
+				<< ", shape=record, style=\"dotted\", label=\""
+				<< node->stage()->name() << "(I" << node->inst()->index()
+				<< ")\\<" << node->latency() << "\\>| { ";
+
+		int i = 0;
+		int num = _resources.length();
+		while (i < num) {
+			int j = 0;
+			dotFile << "{ ";
+			while (j < width && i < num) {
+				if (node->delay(i) >= 0)
+					dotFile << node->delay(i);
+				if (j < width - 1 && i < num - 1)
+					dotFile << " | ";
+				i++;
+				j++;
+			}
+			dotFile << " }";
+			if (i < num)
+				dotFile << " | ";
+		}
+
+		dotFile << " }\"];\n";
+	}
+    
     // display nodes
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		// dump nodes
@@ -1097,40 +1130,105 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 		for (InstNodeIterator node(inst) ; node ; node++) {
 			dotFile << "\"" << node->stage()->name();
 			dotFile << "I" << node->inst()->index() << "\"";
-			dotFile << " [shape=record, ";
+			dotFile << " [group=" << node->stage()->index() << ", shape=record, ";
 			if (node->inst()->codePart() == BLOCK)
 				dotFile << "color=blue, ";
 			dotFile << "label=\"" << node->stage()->name();
-			dotFile << "(I" << node->inst()->index() << ") [" << node->latency() << "]\\l";
-			escape(dotFile, elm::_ << inst->inst());
-			dotFile << "| { ";
+			dotFile << "(I";
+			// dump the whole bundle
+			InstIterator it = inst;
+			for (; it->inst()->isBundle(); ++it)
+				dotFile << it->index() << ", I";
+			dotFile << it->index() << ")\\<" << node->latency() << "\\>\\l";
+			// dump the whole bundle
+			for (it = inst; it->inst()->isBundle(); ++it)
+				escape(dotFile, elm::_ << it->inst() << "\\l");
+			escape(dotFile, elm::_ << it->inst() << "\\l");
+            dotFile << "| { ";
 			int i=0;
 			int num = _resources.length();
 			while (i < num) {
 				int j=0;
 				dotFile << "{ ";
-				while ( j<width ) {
-					if ( (i<num) && (j<num) ) {
-						if (node->delay(i)>=0)
-							dotFile << node->delay(i);
-					}
-					if (j<width-1)
+				while (j<width && i<num) {
+					if (node->delay(i)>=0)
+						dotFile << node->delay(i);
+					if (j<width-1 && i<num-1)
 						dotFile << " | ";
 					i++;
 					j++;
 				}
-				dotFile << "} ";
+				dotFile << " }";
 				if (i<num)
 					dotFile << " | ";
 			}
-			dotFile << "} ";
-			dotFile << "\"] ; \n";
+			dotFile << " }";
+			dotFile << "\"];\n";
 		}
 		dotFile << "\n";
     }
 
+    // display _prev_node edges if connected
+	for (Successor node(_first_node); node; ++node) {
+		if (node->inst()->index() != -1)
+			continue;
+
+		for (Successor next(node.item()); next; next++) {
+			// display edges
+			dotFile << "\"" << node->stage()->name() << "I"
+					<< node->inst()->index() << "\" -> \""
+					<< next->stage()->name() << "I" << next->inst()->index()
+					<< "\"";
+
+			// display attributes
+			bool first;
+			dumpAttrBegin(dotFile, first);
+
+			// latency if any
+			if (next.edge()->latency() || next.edge()->name()) {
+				dumpAttr(dotFile, first);
+				dotFile << "label=\"";
+				if (next.edge()->name())
+					dotFile << escape(next.edge()->name());
+				if (next.edge()->latency()) {
+					if (next.edge()->name())
+						dotFile << " (";
+					dotFile << next.edge()->latency();
+					if (next.edge()->name())
+						dotFile << ')';
+				}
+				dotFile << "\"";
+			}
+
+			// edge style
+			switch (next.edge()->type()) {
+			case ParExeEdge::SOLID:
+				if (node->inst()->index() == next->inst()->index()) {
+					dumpAttr(dotFile, first);
+					dotFile << "minlen=4";
+				}
+				break;
+			case ParExeEdge::SLASHED:
+				dumpAttr(dotFile, first);
+				dotFile << "style=dotted";
+				if (node->inst()->index() == next->inst()->index()) {
+					dumpAttr(dotFile, first);
+					dotFile << "minlen=4";
+				}
+				break;
+			default:
+				break;
+			}
+
+			// dump attribute end
+			dumpAttrEnd(dotFile, first);
+			dotFile << ";\n";
+		}
+		dotFile << "\n";
+	}
+    
     // display edges
-    int group_number = 0;
+    //int group_number = _microprocessor->pipeline()->numStages();
     for (InstIterator inst(_sequence) ; inst ; inst++) {
 		// dump edges
 		for (InstNodeIterator node(inst) ; node ; node++) {
@@ -1139,6 +1237,9 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 					 ||
 					 (node->stage()->category() != ParExeStage::EXECUTE)
 					 || (node->inst()->index() == next->inst()->index()) ) {
+                    // don't display edge to _prev_node
+					if (next->inst()->index() == - 1)
+						continue;
 
 					// display edges
 					dotFile << "\"" << node->stage()->name();
@@ -1177,7 +1278,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 						break;
 					case ParExeEdge::SLASHED:
 						dumpAttr(dotFile, first);
-						dotFile << " style=dotted";
+						dotFile << "style=dotted";
 						if (node->inst()->index() == next->inst()->index()) {
 							dumpAttr(dotFile, first);
 							dotFile << "minlen=4";
@@ -1192,7 +1293,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 					dotFile << ";\n";
 
 					// group
-					if ((node->inst()->index() == next->inst()->index())
+					/*if ((node->inst()->index() == next->inst()->index())
 						|| ((node->stage()->index() == next->stage()->index())
 							&& (node->inst()->index() == next->inst()->index()-1)) ) {
 						dotFile << "\"" << node->stage()->name();
@@ -1200,7 +1301,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 						dotFile << "\"" << next->stage()->name();
 						dotFile << "I" << next->inst()->index() << "\" [group=" << group_number << "] ;\n";
 						group_number++;
-					}
+					}*/
 				}
 			}
 		}
