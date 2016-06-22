@@ -236,7 +236,8 @@ public:
 		READ,
 		WRITE,
 		USE,
-		RELEASE
+		RELEASE,
+		BRANCH
 	} kind_t;
 
 	inline Step(void): _kind(NONE) { }
@@ -244,6 +245,7 @@ public:
 	inline Step(FunctionalUnit *fu): _kind(FU) { arg.fu = fu; }
 	inline Step(kind_t kind, const hard::Register *reg): _kind(kind) { ASSERT(kind == READ || kind == WRITE); arg.reg = reg; }
 	inline Step(kind_t kind, hard::Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
+	inline Step(kind_t kind): _kind(kind) { ASSERT(kind == BRANCH); }
 
 	inline kind_t kind(void) const { return _kind; }
 	inline Stage *stage(void) const { ASSERT(_kind == STAGE); return arg.stage; }
