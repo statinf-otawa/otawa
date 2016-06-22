@@ -206,8 +206,8 @@ public:
 	class VertexMap: public genstruct::AllocatedTable<T> {
 	public:
 		inline VertexMap(Graph& graph): genstruct::AllocatedTable<T>(graph.count()), g(graph), set(graph.count()) { }
-		inline Option<const Vertex &> get(Vertex key) const { if(hasKey(key)) return some((*this)[key->index]); else return none; }
-		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index]; else return def; }
+		inline Option<const Vertex &> get(Vertex key) const { if(hasKey(key)) return some((*this)[key->index()]); else return none; }
+		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index()]; else return def; }
 		inline bool hasKey(Vertex key) const { return set.bit(key->index()); }
 		void put(Vertex key, const T &value) { set(key->index(), value); set.set(key->index()); }
 		void remove(Vertex key) { set.clear(key->index()); }
