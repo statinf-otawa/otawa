@@ -437,7 +437,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		void GraphBBTime<G>::outputGraph(G* graph, int bb_number, int context_index, int case_index, const string& info){
 		elm::StringBuffer buffer;
 		buffer << _graphs_dir_name << "/";
-		buffer << "b" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
+		buffer << graph->lastNode()->inst()->basicBlock()->cfg()->name() << "-bb" << bb_number << "-ctxt" << context_index << "-case" << case_index << ".dot";
 		elm::io::OutFileStream dotStream(buffer.toString());
 		elm::io::Output dotFile(dotStream);
 		graph->dump(dotFile, info);
