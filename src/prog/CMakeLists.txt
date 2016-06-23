@@ -48,6 +48,8 @@ set(libotawa_SOURCES
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
 
+	"icache.cpp"
+
 	"ilp_AbstractSystem.cpp"
 	"ilp_Constraint.cpp"
 	"ilp_Expression.cpp"

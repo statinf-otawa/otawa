@@ -131,7 +131,7 @@ Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CAC
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<bool> PSEUDO_UNROLLING("otawa::PSEUDO_UNROLLING", true);
+Identifier<bool> PSEUDO_UNROLLING("otawa::PSEUDO_UNROLLING", false);
 
 
 /**
@@ -314,18 +314,16 @@ void ACSBuilder::configure(const PropList &props) {
 	level = FIRSTMISS_LEVEL(props);
 	unrolling = PSEUDO_UNROLLING(props);
 	must_entry = CACHE_ACS_MUST_ENTRY(props);
-
 	pers_entry = CACHE_ACS_PERS(props);
+}
+
+void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	if(logFor(LOG_FUN)) {
 		log << "\tlevel = " << level << io::endl;
 		log << "\tunrolling = " << unrolling << io::endl;
 		log << "\tmust_entry = " << must_entry << io::endl;
 		log << "\tpers_entry = " << pers_entry << io::endl;
 	}
-}
-
-void ACSBuilder::processWorkSpace(WorkSpace *fw) {
-	//int i;
 
 	FIRSTMISS_LEVEL(fw) = level;
 	// Build the vectors for receiving the ACS...
