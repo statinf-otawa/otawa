@@ -1302,7 +1302,6 @@ void Value::ne(uintn_t k) {
  * (and rebuilding a new CLP value).
  */
 int Value::and_threshold = 8;
-int Value::countX = 0;
 
 /**
  * Perform AND on the current value.
