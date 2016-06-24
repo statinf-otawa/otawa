@@ -30,7 +30,7 @@
 #include <elm/sys/Directory.h>
 #include <elm/sys/System.h>
 #include <elm/ini.h>
-#include <elm/util/AutoDestructor.h>
+#include <elm/util/UniquePtr.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/proc/ProcessorPlugin.h>
 
@@ -235,7 +235,7 @@ private:
 		try {
 
 			// get the list of dependencies
-			AutoDestructor<ini::File> file(ini::File::load(*eld));
+			UniquePtr<ini::File> file(ini::File::load(*eld));
 			ini::Section *sect = file->get("elm-plugin");
 			if(!sect)
 				throw option::OptionException(_ << "no eld-plugin section in " << *eld);

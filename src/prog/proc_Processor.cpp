@@ -370,32 +370,12 @@ void Processor::init(const PropList& props) {
  */
 
 
-// Only for the deprecation warning
-static bool deprecated;
-
-/**
- * Process the given workspace.
- * @param fw	Workspace to process.
- * @deprecated	Use @ref processWorkSpace() instead.
- */
-void Processor::processFrameWork(WorkSpace *fw) {
-	deprecated = false;
-}
-
-
 /**
  * Process the given framework.
  * @param fw	Framework to process.
  * @deprecated	Use @ref processWorkSpace() instead.
  */
 void Processor::processWorkSpace(WorkSpace *fw) {
-
-	// Only to keep compatility (03/05/07)
-	deprecated = true;
-	processFrameWork(fw);
-	if(deprecated)
-		warn(_ << "WARNING: the use of processFrameWork() is deprecated."
-			<< "Use processWorkSpace() instead.");
 }
 
 

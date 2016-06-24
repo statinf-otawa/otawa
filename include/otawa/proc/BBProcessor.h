@@ -45,11 +45,11 @@ private:
 template <class T>
 class BBRemover: public BBCleaner {
 public:
-	inline BBRemover(WorkSpace *ws, Identifier<T>& identifier)
+	inline BBRemover(WorkSpace *ws, AbstractIdentifier& identifier)
 		: BBCleaner(ws), id(identifier) { }
 protected:
-	Identifier<T>& id;
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb)
+	AbstractIdentifier& id;
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb)
 		{ bb->removeProp(id); }
 };
 
@@ -63,7 +63,7 @@ public:
 	virtual ~BBDeletor(void) { }
 protected:
 	Identifier<T *>& id;
-	virtual void clean(WorkSpace *ws, CFG *cfg, BasicBlock *bb)
+	virtual void clean(WorkSpace *ws, CFG *cfg, Block *bb)
 		{ T *p = id(bb); if(p) delete p; BBRemover<T>::clean(ws, cfg, bb); }
 };
 

@@ -147,9 +147,6 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 	virtual void collectStats(WorkSpace *ws);
 
-	// Deprecated
-	virtual void processFrameWork(WorkSpace *fw);
-
 	template <class T> T *track(const AbstractFeature& feature, T *object)
 		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)

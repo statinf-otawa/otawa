@@ -22,7 +22,7 @@
 #include <elm/avl/Map.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/genstruct/HashTable.h>
-#include <elm/util/AutoDestructor.h>
+#include <elm/util/UniquePtr.h>
 #include <elm/xom.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
@@ -570,7 +570,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 	xom::Element *top = doc->getRootElement();
 	if(top->getLocalName() != "cfg-collection")
 		raiseError(top, "bad top level element");
-	AutoDestructor<xom::Elements> cfg_elts = top->getChildElements("cfg");
+	UniquePtr<xom::Elements> cfg_elts(top->getChildElements("cfg"));
 	if(cfg_elts->size() == 0)
 		raiseError(top, "no CFG");
 
@@ -610,7 +610,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 			raiseError(eelt, _ << "exitID " << *exitID << " used at least two times.");
 
 		// build the BBs
-		AutoDestructor<xom::Elements> bb_elts = celt->getChildElements("bb");
+		UniquePtr<xom::Elements> bb_elts(celt->getChildElements("bb"));
 		if(bb_elts->size() == 0)
 			raiseError(celt, _ << "no BB in CFG " << *cfgID);
 
@@ -629,7 +629,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 			// build the basic block
 			// first we collect the instructions
-			AutoDestructor<xom::Elements> inst_elts = bb_elt->getChildElements("inst");
+			UniquePtr<xom::Elements> inst_elts(bb_elt->getChildElements("inst"));
 			Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
 			for(int k = 0; k < inst_elts->size(); k++) {
 				// <inst address="0x0020099c" file="cover.c" line="232"/>
@@ -685,7 +685,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		bb_map->put(*exitID, maker->exit()); // put the exit in the map
 
 		// collect the Edges
-		AutoDestructor<xom::Elements> edge_elts = celt->getChildElements("edge");
+		UniquePtr<xom::Elements> edge_elts(celt->getChildElements("edge"));
 		if(edge_elts->size() == 0)
 			raiseError(celt, _ << "no Edge in CFG " << *cfgID);
 
