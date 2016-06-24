@@ -31,6 +31,8 @@ add_subdirectory(odec)
 add_subdirectory(odisplay)
 add_subdirectory(dcache)
 add_subdirectory(oslice)
+add_subdirectory(icat3)
+
 
 # graphviz
 if(DOT)

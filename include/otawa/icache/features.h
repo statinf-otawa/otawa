@@ -33,9 +33,9 @@ class Inst;
 namespace icache {
 
 typedef enum kind_t {
-	NONE,
-	FETCH,
-	PREFETCH
+	NONE = 0,
+	FETCH = 1,
+	PREFETCH = 2
 } kind_t;
 
 class Access: public PropList {
@@ -53,6 +53,8 @@ private:
 	Inst *_inst;
 	Address _addr;
 };
+
+io::Output& operator<<(io::Output& out, const Access& acc);
 
 extern p::feature ACCESSES_FEATURE;
 extern p::id<Bag<Access> > ACCESSES;

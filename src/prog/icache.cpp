@@ -31,6 +31,39 @@ namespace otawa { namespace icache {
 
 using namespace elm;
 
+
+/**
+ * @class Access
+ * Represents an access to the instruction cache. This access may be
+ * classified:
+ * @li NONE - convenient value representing no access,
+ * @li FETCH - a cache block is actually accessed,
+ * @li PREFETCH - a cache is possibly accessed (result of a speculative prefetch policy).
+ *
+ * For both FETCH and PREFETCH, the @ref address() is meaningful while for NONE,
+ * it is always null.
+ *
+ * To get the the access of a program, the feature @ref ACCESSES_FEATURE must be required.
+ *
+ * @ingroup icache
+ */
+
+
+io::Output& operator<<(io::Output& out, const Access& acc) {
+	static cstring labels[] = {
+		"no access",
+		"fetch",
+		"prefetch"
+	};
+	out << labels[acc.kind()];
+	if(acc.kind() != NONE)
+		out << ' ' << acc.address();
+	return out;
+}
+
+
+/**
+ */
 class AccessBuilder: public BBProcessor {
 public:
 	static p::declare reg;
@@ -64,14 +97,19 @@ protected:
 			return;
 
 		// split the BB in block accesses
-		BasicBlock::InstIter i;
+		BasicBlock::InstIter i(bb);
 		if(i) {
 			accs.add(Access(FETCH, i, i->address()));
 			i++;
+			if(logFor(LOG_BLOCK))
+				log << "\t\t\t" << accs.top() << io::endl;
 		}
 		for(; i; i++)
-			if(icache->offset(i->address()) == 0)
+			if(icache->offset(i->address()) == 0) {
 				accs.add(Access(FETCH, i, i->address()));
+				if(logFor(LOG_BLOCK))
+					log << "\t\t\t" << accs.top() << io::endl;
+			}
 
 		// build the property
 		ACCESSES(bb) = accs;
@@ -100,7 +138,7 @@ p::declare AccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(
  * @par Properties
  * @li @ref ACCESSES
  */
-p::feature ACCESSES_FEATURE("otawa::icache::ACCESSES_FEATURE", p::make<BBProcessor>());
+p::feature ACCESSES_FEATURE("otawa::icache::ACCESSES_FEATURE", AccessBuilder::reg);
 
 
 
