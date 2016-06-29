@@ -68,7 +68,7 @@ static bool isBlockStart(Inst *i) {
 
 
 /**
- * Test if, for the given instruction, the control can flows
+ * Test if, for the given instruction, the control can flow
  * after (conditional branch, function call).
  * @param i		Instruction to look in.
  * @return		True if flow can continue, false else.
@@ -161,9 +161,10 @@ void AbstractCFGBuilder::scanCFG(Inst *e, genstruct::FragTable<Inst *>& bbs) {
 
 		// push sequence if required
 		if(canFlowAfter(i)) {
-			while(!i->isBundleEnd())
-				i = workspace()->findInstAt(i->topAddress());
-			Inst *n = workspace()->findInstAt(i->topAddress());
+			Inst *n = i;
+			while(!n->isBundleEnd())
+				n = workspace()->findInstAt(n->topAddress());
+			n = workspace()->findInstAt(n->topAddress());
 			if(n)
 				todo.push(n);
 		}
