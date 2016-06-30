@@ -23,9 +23,9 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
-#include <otawa/sgraph/DiGraph.h>
-#include <otawa/prop/PropList.h>
 #include <otawa/prog/Inst.h>
+#include <otawa/prop/PropList.h>
+#include <otawa/sgraph/DiGraph.h>
 
 using namespace elm;
 
@@ -117,7 +117,7 @@ private:
 
 class BasicBlock: public Block {
 public:
-	BasicBlock(const Table<Inst *>& insts);
+	BasicBlock(const genstruct::Table<Inst *>& insts);
 	~BasicBlock(void);
 
 	inline Address address(void) const { return first()->address(); }
@@ -135,6 +135,27 @@ public:
 		inline InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
+
+	class BasicEdge {
+	public:
+		inline BasicEdge(void): v(0), w(0), e(0) { }
+		inline BasicEdge(BasicBlock *source, Edge *edge, BasicBlock *sink)
+			: v(source), w(sink), e(edge) { }
+		inline BasicBlock *source(void) const { return v; }
+		inline BasicBlock *sink(void) const { return w; }
+		inline Edge *edge(void) const { return e; }
+	private:
+		BasicBlock *v, *w;
+		Edge *e;
+	};
+
+	class BasicIter: public genstruct::Vector<BasicEdge>::Iterator {
+	public:
+		BasicIter(BasicBlock *bb);
+	private:
+		genstruct::Vector<BasicEdge> es;
+	};
+	inline BasicIter basicIns(void) { return BasicIter(this); }
 
 private:
 	DeletableTable<Inst *> _insts;

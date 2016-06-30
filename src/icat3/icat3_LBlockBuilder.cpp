@@ -53,7 +53,7 @@ LBlock::LBlock(Address address, int index): _address(address), _index(index) {
  * @param cache		Current instruction cache.
  */
 LBlockCollection::LBlockCollection(int sets, const hard::Cache *cache)
-	: Bag< Bag<LBlock> >(sets), _cache(cache) { }
+	: Bag<LBlockSet>(sets), _cache(cache) { }
 
 
 /**

@@ -153,6 +153,10 @@ protected:
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, const Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T, Identifier<T> >& ref)
+		{ addCleaner(feature, new Remover<T>(ref)); }
+	template <class T> void track(const AbstractFeature& feature, const Ref<T, const Identifier<T> >& ref)
+		{ addCleaner(feature, new Remover<T>(ref)); }
 
 	// internal use only
 	virtual void requireDyn(WorkSpace *ws, const PropList& props);

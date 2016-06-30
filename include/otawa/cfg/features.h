@@ -32,14 +32,12 @@ namespace elm { namespace genstruct { template <class T> class Tree; } }
 namespace otawa {
 
 // Pre-declarations
-class BasicBlock;
-class CFG;
 class CFGCollector;
 class CFGInfo;
-class Edge;
 class LoopUnroller;
 class SESERegion;
 typedef elm::genstruct::Tree<SESERegion*> PSTree;
+namespace sgraph { class Edge; }
 
 // CFGCollection Class
 class CFGCollection {
@@ -168,6 +166,10 @@ public:
 };
 namespace dfa { class BitSet; }
 extern Identifier<PostDomInfo *> PDOM_INFO;
+
+// Primary predecessor
+extern p::feature BASIC_PREDECESSOR_FEATURE;
+extern p::id<Bag<BasicBlock::BasicEdge> > BASIC_PREDECESSORS;
 
 } // otawa
 

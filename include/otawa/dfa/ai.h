@@ -214,7 +214,7 @@ public:
 	inline CFGGraph(CFG *cfg): _cfg(cfg) { }
 
 	// BiDiGraph concept
-	typedef BasicBlock *vertex_t;
+	typedef Block *vertex_t;
 	typedef Edge *edge_t;
 
 	inline vertex_t entry(void) const { return _cfg->entry(); }
@@ -222,27 +222,24 @@ public:
 	inline vertex_t sinkOf(edge_t e) const { return e->target(); }
 	inline vertex_t sourceOf(edge_t e) const { return e->source(); }
 
-	class Predecessor: public BasicBlock::InIterator {
+	class Predecessor: public Block::EdgeIter {
 	public:
-		inline Predecessor(const CFGGraph& graph, vertex_t v): BasicBlock::InIterator(v) { }
-		inline Predecessor(const Predecessor& p): BasicBlock::InIterator(p) { }
+		inline Predecessor(const CFGGraph& graph, vertex_t v): Block::EdgeIter(v->ins()) { }
 	};
 
-	class Successor: public BasicBlock::OutIterator {
+	class Successor: public Block::EdgeIter {
 	public:
-		inline Successor(const CFGGraph& graph, vertex_t v): BasicBlock::OutIterator(v) { }
-		inline Successor(const Successor& p): BasicBlock::OutIterator(p) { }
+		inline Successor(const CFGGraph& graph, vertex_t v): Block::EdgeIter(v->outs()) { }
 	};
 
-	class Iterator: public CFG::BBIterator {
+	class Iterator: public CFG::BlockIter {
 	public:
-		inline Iterator(const CFGGraph& g): CFG::BBIterator(g._cfg) { }
-		inline Iterator(const Iterator& i): CFG::BBIterator(i) { }
+		inline Iterator(const CFGGraph& g): CFG::BlockIter(g._cfg->blocks()) { }
 	};
 
 	// Indexed concept
-	inline int index(vertex_t v) const { return v->number(); }
-	inline int count(void) const { return _cfg->countBB(); }
+	inline int index(vertex_t v) const { return v->index(); }
+	inline int count(void) const { return _cfg->count(); }
 
 private:
 	CFG *_cfg;
@@ -257,13 +254,19 @@ private:
 template <class D, class G>
 class ArrayStore {
 public:
+	typedef D domain_t;
+	typedef G graph_t;
 	typedef typename D::t t;
 	typedef typename G::vertex_t vertex_t;
 	typedef typename G::edge_t edge_t;
 
 	ArrayStore(D& dom, G& graph): _dom(dom), _graph(graph), map(new typename D::t[_graph.count()]) {
-		for(int i = 0; i < graph.count(); i++)
-			map[i] = dom.bot();
+		clear();
+	}
+
+	void clear(void) {
+		for(int i = 0; i < _graph.count(); i++)
+			_dom.copy(map[i], _dom.bot());
 	}
 
 	inline void set(vertex_t v, t s) { map[_graph.index(v)] = s; }
@@ -276,6 +279,8 @@ public:
 	inline t get(vertex_t v) const { return map[_graph.index(v)]; }
 
 	inline t get(edge_t e) const { return map[_graph.index(_graph.sourceOf(e))]; }
+
+	inline D& domain(void) const { return _dom; }
 
 private:
 	D& _dom;
@@ -290,13 +295,13 @@ private:
 template <class D, class G>
 class EdgeStore {
 public:
+	typedef D domain_t;
+	typedef G graph_t;
 	typedef typename D::t t;
 	typedef typename G::vertex_t vertex_t;
 	typedef typename G::edge_t edge_t;
 
 	EdgeStore(D& dom, G& graph): _dom(dom), _graph(graph) {
-		for(typename G::Successor e(_graph, _graph.entry()); e; e++)
-			map.put(*e, _dom.init());
 	}
 
 	void set(vertex_t v, t s) {
@@ -304,16 +309,23 @@ public:
 			map.put(*e, s);
 	}
 
-	inline void set(edge_t e, t s) { map.put(e, s); }
+	inline void set(edge_t e, const t& s) { map.put(e, s); }
 
 	t get(vertex_t v) const {
 		t s = _dom.bot();
 		for(typename G::Successor e(_graph, v); e; e++)
-			s = _dom.join(s, map.get(e, _dom.bot()));
+			_dom.join(s, map.get(e, _dom.bot()));
 		return s;
 	}
 
-	inline t get(edge_t e) { return map.get(e, _dom.bot()); }
+	inline const t& get(edge_t e) { return map.get(e, _dom.bot()); }
+
+	inline D& domain(void) const { return _dom; }
+	inline G& graph(void) const { return _graph; }
+
+	void reset(void) {
+		map.clear();
+	}
 
 private:
 	D& _dom;

@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CFG class implementation
  *
  *	This file is part of OTAWA
@@ -22,6 +21,7 @@
 
 #include <elm/util/array.h>
 #include <otawa/cfg/CFG.h>
+#include <otawa/cfg/features.h>
 #include <otawa/prog/File.h>
 
 namespace otawa {
@@ -544,7 +544,33 @@ int BasicBlock::count(void) const {
 /**
  * @class BasicBlock::InstIter;
  * Iterator for instruction of a basic block.
- * @ingroup cfg
+ */
+
+/**
+ * @class BasicIter
+ * Iterator on the basic edges of a block (that is only edges
+ * that link a basic block to the current one, that is neither
+ * synthetic block, nor end blocks).
+ */
+
+BasicBlock::BasicIter::BasicIter(BasicBlock *bb): genstruct::Vector<BasicEdge>::Iterator(es) {
+	if(bb->hasProp(BASIC_PREDECESSORS)) {
+		const Bag<BasicBlock::BasicEdge>& bag = BASIC_PREDECESSORS(bb);
+		for(int i = 0; i < bag.count(); i++)
+			es.add(bag[i]);
+	}
+	else
+		for(Block::EdgeIter e = bb->ins(); e; e++)
+			es.add(BasicEdge(e->source()->toBasic(), e, bb));
+}
+
+
+/**
+ * @fn BasicIter BasicBlock::basicIns(void) const;
+ * Get the list of basic input edges of the current basic block.
+ * @warning This method is effective only if the @ref BASIC_PREDECESSOR_FEATURE
+ * has been required.
+ * @return	Iterator on the list of input edges.
  */
 
 

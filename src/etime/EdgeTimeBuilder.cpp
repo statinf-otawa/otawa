@@ -289,6 +289,7 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(WEIGHT_FEATURE)
 	.require(EVENTS_FEATURE)
+	.require(BASIC_PREDECESSOR_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -348,6 +349,15 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		return;
 	BasicBlock *bb = b->toBasic();
 
+	// use each basic edge
+	for(BasicBlock::BasicIter e = bb->basicIns(); e; e++) {
+		source = (*e).source();
+		edge = (*e).edge();
+		target = (*e).sink();
+		processEdge(ws, cfg);
+	}
+
+#if 0
 	// process each primary edge
 	for(Block::EdgeIter in = bb->ins(); in; in++) {
 		typedef genstruct::Vector<Pair<BasicBlock *, Edge *> > comps_t;
@@ -390,6 +400,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				processEdge(ws, cfg);
 			}
 	}
+#	endif
 }
 
 

@@ -49,7 +49,7 @@ Identifier<cstring> INCLUDE("otawa::cfgio::INCLUDE", 0);
  * output of instructions in basic blocks.
  * @ingroup cfgio
  */
-Identifier<bool> NO_INSTS("otawa::cfgio::NO_INSTS", false);
+Identifier<bool> NO_INSTS("otawa::cfgio::NO_INSTS", true);
 
 
 /**
