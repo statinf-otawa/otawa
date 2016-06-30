@@ -56,7 +56,7 @@ public:
 	inline Vertex(void): idx(0) { }
 	inline int index(void) const { return idx; }
 
-	typedef edges_t::iter EdgeIter;
+	typedef edges_t::Iter EdgeIter;
 	inline EdgeIter ins(void) const { return EdgeIter(_ins); }
 	inline EdgeIter outs(void) const { return EdgeIter(_outs); }
 	inline int countIns(void) const { return _ins.count(); }

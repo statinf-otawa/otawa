@@ -222,7 +222,7 @@ Provider *Provider::get(cstring name) {
 	if(name) {
 
 		// look in the list
-		for(List<Provider *>::iter p(provs); p; p++)
+		for(List<Provider *>::Iter p(provs); p; p++)
 			if(p->name() == name)
 				return p;
 
@@ -257,7 +257,7 @@ Provider *Provider::get(output_mode_t out) {
 
 	// any provider available?
 	if(provs) {
-		for(List<Provider *>::iter p(provs); p; p++)
+		for(List<Provider *>::Iter p(provs); p; p++)
 			if(p->accepts(out))
 				return p;
 		return 0;

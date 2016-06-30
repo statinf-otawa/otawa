@@ -192,7 +192,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 				// add delayed edge
 				if(i == start && current->hasProp(DELAYED_EDGE)) {
-					for(List<Pair<Block *, Edge *> >::iter d(DELAYED_EDGE(current)); d; d++)
+					for(List<Pair<Block *, Edge *> >::Iter d(DELAYED_EDGE(current)); d; d++)
 						clone((*d).fst, (*d).snd, new_bb);
 					current->removeProp(DELAYED_EDGE);
 				}
