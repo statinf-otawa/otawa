@@ -48,11 +48,26 @@ static Identifier<bool> MARKER("", false);
 // Marker for multiple paths
 static Identifier <Inst *> FROM("", 0);
 
+/**
+ * Find end instruction of the bundle containing the given instruction.
+ * @param i		Instruction in the bundle.
+ * @return		Bundle end instruction.
+ */
+static Inst *bundleEnd(Inst *i) {
+	while(!i->isBundleEnd()) {
+		Inst *l = i;
+		i = i->nextInst();
+		if(!i)
+			return l;
+	}
+	return i;
+}
+
 // ODec application class
 class ODec: public Application {
 public:
 	ODec(void):
-		Application("ODec", Version(1, 0, 0),
+		Application("ODec", Version(1, 1, 0),
 			"Test the decoding of instruction of a program", "H. Cassé <casse@irit.fr>",
 			"Copyright (c) 2012 - IRIT UPS")
 	{
@@ -67,6 +82,8 @@ protected:
 			for(File::SymIter sym(file); sym; sym++) {
 				if(sym->kind() == Symbol::FUNCTION || sym->kind() == Symbol::LABEL) {
 					Inst *inst = workspace()->findInstAt(sym->address());
+					if(isVerbose())
+						cerr << "INFO: found code symbol " << sym->name() << " (" << sym->address() << ")\n";
 					if(inst) {
 						SYMBOL(inst).add(*sym);
 						switch(sym->kind()) {
@@ -98,9 +115,9 @@ protected:
 			for(File::SymIter sym(file); sym; sym++)
 				if(sym->kind() == Symbol::FUNCTION) {
 					if(IGNORE_ENTRY(sym))
-						cerr << "\n\nINFO: ignoring function symbol \"" << sym->name() << "\"\n";
+						cerr << "INFO: ignoring function symbol \"" << sym->name() << "\"\n";
 					else {
-						cerr << "\n\nENTRY: processing function \"" << sym->name() << " at " << sym->address() << io::endl;
+						cerr << "ENTRY: processing function \"" << sym->name() << " at " << sym->address() << io::endl;
 						Inst *inst = ws->findInstAt(sym->address());
 						if(inst)
 							processEntry(ws, sym->address());
@@ -114,7 +131,7 @@ protected:
 		for(Process::FileIter file(workspace()->process()); file; file++) {
 			cout << "FILE: " << file->name() << io::endl;
 			for(File::SegIter seg(file); seg; seg++) {
-				cout << "SEGMENT: " << seg->name() << io::endl;
+				cout << "SEGMENT: " << seg->name();
 				for(Segment::ItemIter item(seg); item; item++) {
 					Inst *inst = item->toInst();
 					if(inst) {
@@ -160,14 +177,14 @@ private:
 			if(!inst) {
 				if(!source)
 					cerr << "ERROR: unconsistant binary: no code segment at " << address << " from symbol\n";
-				if(source->topAddress() == address)
-					cerr << "ERROR: unconsistant binary: no code segment at " << address << " after instruction at " << source->address() << io::endl;
+				if(bundleEnd(source)->topAddress() == address)
+					cerr << "ERROR: unconsistant binary: no code segment at " << address << " after instruction at " << bundleEnd(source)->address() << io::endl;
 				else
-					cerr << "ERROR: unconsistant binary: no code segment at " << address << "  target of branch at " << source->address() << io::endl;
+					cerr << "ERROR: unconsistant binary: no code segment at " << address << " target of branch at " << source->address() << io::endl;
 				return 0;
 			}
 			else if(inst->isUnknown()) {
-				cerr << "ERROR: ERROR: unknown instruction at " << address << ": ";
+				cerr << "ERROR: unknown instruction at " << address << ": ";
 				int cnt = ws->process()->instSize();
 				if(!cnt)
 					cnt = 4;
@@ -211,6 +228,7 @@ private:
 
 			// Follow the instruction until a branch
 			address_t next;
+			Inst *control = NULL;
 			while(inst && !MARKER(inst)) {
 				if(isVerbose()) {
 					cerr << "process " << inst->address() << " : ";
@@ -218,6 +236,8 @@ private:
 					cerr << ": " << inst << io::endl;
 				}
 				if(inst->isControl())
+					control = inst;
+				if (control && inst->isBundleEnd())
 					break;
 				next = inst->topAddress();
 				inst = getInst(ws, next, inst);
@@ -236,7 +256,7 @@ private:
 				continue;
 
 			// Record target and next
-			if(inst->isConditional()) {
+			if(control->isConditional()) {
 				if(isVerbose())
 					cerr << "put(" << inst->topAddress() << ")" << io::endl;
 				Inst *ti = getInst(ws, inst->topAddress(), inst);
@@ -247,10 +267,10 @@ private:
 					todo.put(ti);
 				}
 			}
-			if(!inst->isReturn() && !IS_RETURN(inst)) {
+			if(!control->isReturn() && !IS_RETURN(control)) {
 				Inst *target = 0;
 				try {
-					target = inst->target();
+					target = control->target();
 					if(!target)
 						continue;
 				}
@@ -265,11 +285,11 @@ private:
 				}
 				else if(!target) {
 					bool one = false;
-					for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++) {
+					for(Identifier<Address>::Getter target(control, BRANCH_TARGET); target; target++) {
 						one = true;
-						Inst *ti = getInst(ws, target, inst);
+						Inst *ti = getInst(ws, target, control);
 						if(!ti) {
-							cerr << "ERROR: broken target from " << inst->address() << " to " << *target << io::endl;
+							cerr << "ERROR: broken target from " << control->address() << " to " << *target << io::endl;
 							continue;
 						}
 						FROM(ti).add(first_inst);
@@ -278,14 +298,14 @@ private:
 							cerr << "put(" << target << ")\n";
 					}
 					if(!one)
-						cerr << "WARNING: no target for branch at " << inst->address() << io::endl;
+						cerr << "WARNING: no target for branch at " << control->address() << io::endl;
 				}
-				if(inst->isCall() && (!target || !NO_RETURN(target))) {
+				if(control->isCall() && (!target || !NO_RETURN(target))) {
 					if(isVerbose())
 						cerr << "put(" << inst->topAddress() << ")\n";
-					Inst *ti = getInst(ws, inst->topAddress(), inst);
+					Inst *ti = getInst(ws, inst->topAddress(), control);
 					if(!ti) {
-						cerr << "ERROR: broken target from " << inst->address() << " to " << *target << io::endl;
+						cerr << "ERROR: broken target from " << control->address() << " to " << *target << io::endl;
 						continue;
 					}
 					FROM(ti).add(first_inst);
