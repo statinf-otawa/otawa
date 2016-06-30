@@ -33,14 +33,16 @@ using namespace elm;
 // LBlocks
 class LBlock {
 public:
-	LBlock(void): _index(-1) { }
-	LBlock(Address address, int index);
+	LBlock(void): _index(-1), _set(-1) { }
+	LBlock(Address address, int index, int set);
 	inline Address address(void) const { return _address; }
 	inline int index(void) const { return _index; }
+	inline int set(void) const { return _set; }
 
 private:
 	Address _address;
 	int _index;
+	int _set;
 };
 
 class LBlockCollection;
@@ -122,6 +124,14 @@ extern p::id<Container<ACS> > MUST_STATE;
 extern p::id<Container<ACSStack> > PERS_STATE;
 extern p::id<Container<ACS> > MAY_STATE;
 
+typedef enum category_t {
+	NO_CAT = 0,
+	AH = 1,
+	PERS = 2,
+	AM = 3,
+	NC = 4
+} category_t;
+io::Output& operator<<(io::Output& out, category_t cat);
 extern p::feature EDGE_EVENTS_FEATURE;
 
 } }		// otawa::icat3

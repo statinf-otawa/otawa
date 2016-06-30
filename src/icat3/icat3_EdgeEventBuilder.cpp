@@ -1,0 +1,212 @@
+/*
+ *	icat3::EdgEventBuilder class implementation
+ *	Copyright (c) 2016, IRIT UPS.
+ *
+ *	This file is part of OTAWA
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+ *	02110-1301  USA
+ */
+
+#include <otawa/cfg.h>
+#include <otawa/etime/features.h>
+#include <otawa/hard/Memory.h>
+#include <otawa/icache/features.h>
+#include <otawa/ipet.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/program.h>
+#include "features.h"
+#include "MustPersDomain.h"
+
+namespace otawa { namespace icat3 {
+
+io::Output& operator<<(io::Output& out, category_t cat) {
+	static cstring labels[] = {
+		"none",
+		"AH",
+		"PERS",
+		"AM",
+		"NC"
+	};
+	ASSERT(0 < cat && cat <= NC);
+	out << labels[cat];
+	return out;
+}
+
+
+class ICacheEvent: public etime::Event {
+public:
+	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, Block *b, Block *head = 0)
+		: Event(acc.instruction()), _cost(cost), _acc(acc), _b(b), _cat(cat), _head(head) {	}
+
+	virtual etime::kind_t kind(void) const { return etime::FETCH; }
+	virtual ot::time cost(void) const { return _cost; }
+	virtual etime::type_t type(void) const { return etime::BLOCK; }
+
+	virtual etime::occurrence_t occurrence(void) const {
+		switch(_cat) {
+		case AH:	return etime::NEVER;
+		case PERS:	return etime::SOMETIMES;
+		case AM:	return etime::ALWAYS;
+		case NC:	return etime::SOMETIMES;
+		default:	ASSERT(0); return etime::SOMETIMES;
+		}
+	}
+
+	virtual cstring name(void) const { return "L1 instruction cache"; }
+
+	virtual string detail(void) const { return _ << _cat; }
+
+	virtual int weight(void) const {
+		switch(_cat) {
+		case AH:	return 0;
+		case AM:
+		case NC:	return WEIGHT(_b);
+		case PERS:	{
+						Block *parent = otawa::ENCLOSING_LOOP_HEADER(_head);
+						if(!parent)
+								return 1;
+							else
+								return WEIGHT(parent);
+					}
+		default:	ASSERT(0); return 0;
+		}
+	}
+
+	virtual bool isEstimating(bool on) {
+		return on && _cat == PERS;	// only when on = true!
+	}
+
+	virtual void estimate(ilp::Constraint *cons, bool on) {
+		cons->addRight(1, ipet::VAR(_head));
+	}
+
+private:
+	ot::time _cost;
+	const icache::Access& _acc;
+	Block *_b;
+	category_t _cat;
+	Block *_head;
+};
+
+
+class EdgeEventBuilder: public Processor {
+public:
+	static p::declare reg;
+	EdgeEventBuilder(void): Processor(reg), coll(0) { }
+
+protected:
+
+	virtual void setup(WorkSpace *ws) {
+	}
+
+	virtual void processWorkSpace(WorkSpace *ws) {
+
+		// gather needed information
+		coll = icat3::LBLOCKS(ws);
+		ASSERT(coll);
+		const CFGCollection *cfgs = *otawa::INVOLVED_CFGS(ws);
+		ASSERT(cfgs);
+		mem = hard::MEMORY(ws);
+		ASSERT(mem);
+
+		// process basic blocks
+		for(int set = 0; set < coll->cache()->setCount(); set++)
+			if((*coll)[set].count() > 0)
+				for(CFGCollection::BBIterator b(cfgs); b; b++)
+					if(b->isBasic()) {
+						for(BasicBlock::BasicIter e = b->toBasic()->basicIns(); e; e++)
+							;	// process(e, set);
+					}
+	}
+
+private:
+
+	bool use(const PropList *b, int set) {
+		const Bag<icache::Access>& accs = icache::ACCESSES(b);
+		for(int i = 0; i < accs.count(); i++)
+			if(LBLOCK(accs[i])->set() == set)
+				return true;
+		return false;
+	}
+
+	void make(const BasicBlock::BasicEdge& e, int set) {
+		MustPersDomain::t a = mustpers->bot();
+
+		// process the source
+		if(e.source() && use(e.source(), set)) {
+			for(Block::EdgeIter i = e.source()->ins(); i; i++)
+				mustpers->join(a, (*MUST_STATE(i))[set]);
+			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set);
+		}
+
+		// process the edge
+		/*if(use(e.edge(), set))
+			make(e.e)*/
+
+		// process the
+	}
+
+	void make(Block *b, PropList& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set) {
+		for(int i = 0; i < accs.count(); i++) {
+			const icache::Access& acc = accs[i];
+			LBlock *lb = LBLOCK(acc);
+			if(lb->set() != set)
+				continue;
+			etime::Event *ev;
+			if(0 <= acs[lb->index()] && acs[lb->index()] < A)
+				ev = new ICacheEvent(acc, 0, AH, b);
+			else {
+				const hard::Bank *bnk = mem->get(lb->address());
+				ASSERT(bnk);
+				ev = new ICacheEvent(acc, bnk->latency(), NC, b);
+			}
+			etime::EVENT(site).add(ev);
+			mustpers->update(acc, acs);
+		}
+	}
+
+	const LBlockCollection *coll;
+	MustPersDomain *mustpers;
+	int A;
+	const hard::Memory *mem;
+};
+
+p::declare EdgeEventBuilder::reg = p::init("otawa::icat3::EdgeEventBuilder", Version(1, 0, 0))
+	.extend<BBProcessor>()
+	.make<EdgeEventBuilder>()
+	.provide(EDGE_EVENTS_FEATURE)
+	.require(LBLOCKS_FEATURE)
+	.require(MUST_PERS_ANALYSIS_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.require(COLLECTED_CFG_FEATURE);
+
+
+/**
+ * This feature ensures that event are build from MUST/PERS and/or MAY analysis
+ * of the instruction cache. The events are generated from the classification
+ * of instruction accesses as Always-Hit, Always-Hit, Persistent or Not-Classified.
+ * These events are compatible with events of @ref etime.
+ *
+ * The events are all added to the edge for instructions from the source block and
+ * from the sink block. This improves the precision considering that an instruction
+ * cache blocks often spans over successive basic blocks.
+ */
+p::feature EDGE_EVENTS_FEATURE("otawa::icat3::EDGE_EVENTS_FEATURE", p::make<EdgeEventBuilder>());
+
+} }	// otawa::icat3
+
+
+

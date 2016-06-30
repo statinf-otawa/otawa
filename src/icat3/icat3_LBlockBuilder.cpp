@@ -37,7 +37,7 @@ namespace otawa { namespace icat3 {
  * in the current program.
  */
 
-LBlock::LBlock(Address address, int index): _address(address), _index(index) {
+LBlock::LBlock(Address address, int index, int set): _address(address), _index(index), _set(set) {
 }
 
 
@@ -66,6 +66,7 @@ public:
 protected:
 
 	typedef genstruct::HashTable<Address, LBlock *> map_t;
+	typedef genstruct::Vector<genstruct::Vector<LBlock> > lblocks_t;
 
 	virtual void processWorkSpace(WorkSpace *ws) {
 
@@ -95,7 +96,7 @@ protected:
 
 		// build the blocks
 		LBlockCollection *coll = new LBlockCollection(cache->setCount(), cache);
-		genstruct::Vector<LBlock> vecs[cache->setCount()];
+		lblocks_t vecs(cache->setCount());
 		track(LBLOCKS_FEATURE, LBLOCKS(ws) = coll);
 		map_t map;
 
@@ -119,7 +120,7 @@ protected:
 			(*coll)[i] << vecs[i];
 	}
 
-	void collect(map_t& map, Bag<icache::Access>& bag, genstruct::Vector<LBlock> vecs[], const hard::Cache *cache) {
+	void collect(map_t& map, Bag<icache::Access>& bag, lblocks_t& vecs, const hard::Cache *cache) {
 		for(int i = 0; i < bag.count(); i++)
 			switch(bag[i].kind()) {
 			case icache::NONE:
@@ -130,7 +131,7 @@ protected:
 					LBlock *lb = map.get(a, 0);
 					if(!lb) {
 						int set = cache->set(a);
-						vecs[set].add(LBlock(a, vecs[set].count()));
+						vecs[set].add(LBlock(a, vecs[set].count(), set));
 						lb = &vecs[set].top();
 						map.put(a, lb);
 						if(logFor(LOG_BLOCK))

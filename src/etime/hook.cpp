@@ -198,8 +198,8 @@ int Event::weight(void) const {
 
 
 /**
- * Add an estimation of the event at the left of the given constraint.
- * If the event is considered on, it should an overestimation.
+ * Add an estimation of the event count at the left of the given constraint.
+ * If the event is considered on, it should be an overestimation.
  * If the event is considered off, it should be an underestimation.
  *
  * May be overridden to provide specific behavior for the actual event.
