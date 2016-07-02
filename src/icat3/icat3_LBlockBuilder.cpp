@@ -97,6 +97,7 @@ protected:
 		// build the blocks
 		LBlockCollection *coll = new LBlockCollection(cache->setCount(), cache);
 		lblocks_t vecs(cache->setCount());
+		vecs.setLength(cache->setCount());
 		track(LBLOCKS_FEATURE, LBLOCKS(ws) = coll);
 		map_t map;
 

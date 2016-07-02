@@ -553,15 +553,42 @@ int BasicBlock::count(void) const {
  * synthetic block, nor end blocks).
  */
 
-BasicBlock::BasicIter::BasicIter(BasicBlock *bb): genstruct::Vector<BasicEdge>::Iterator(es) {
-	if(bb->hasProp(BASIC_PREDECESSORS)) {
-		const Bag<BasicBlock::BasicEdge>& bag = BASIC_PREDECESSORS(bb);
-		for(int i = 0; i < bag.count(); i++)
-			es.add(bag[i]);
+/**
+ */
+BasicBlock::BasicIns::BasicIns(BasicBlock *bb) {
+	for(EdgeIter i = bb->ins(); i; i++)
+		wl.push(pair(*i, *i));
+	e = BasicEdge(0, 0, bb);
+	next();
+}
+
+/**
+ */
+void BasicBlock::BasicIns::next(void) {
+	while(wl) {
+		Pair<Edge *, Edge *> p = wl.pop();
+
+		// simple edge
+		if(p.fst->source()->isBasic()) {
+			e = BasicEdge(p.fst->source()->toBasic(), p.fst, e.sink());
+			return;
+		}
+
+		// function entry
+		else if(p.fst->source()->isEntry())
+			for(CFG::CallerIter c = p.fst->source()->cfg()->callers(); c; c++)
+				for(Block::EdgeIter i = c->ins(); i; i++)
+					wl.push(pair(*i, *i));
+
+		// function return
+		else {
+			SynthBlock *sb = p.fst->source()->toSynth();
+			if(sb->callee())
+				for(Block::EdgeIter i = sb->callee()->exit()->ins(); i; i++)
+					wl.push(pair(*i, p.fst));
+		}
 	}
-	else
-		for(Block::EdgeIter e = bb->ins(); e; e++)
-			es.add(BasicEdge(e->source()->toBasic(), e, bb));
+	e = BasicEdge();
 }
 
 

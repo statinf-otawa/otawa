@@ -167,10 +167,6 @@ public:
 namespace dfa { class BitSet; }
 extern Identifier<PostDomInfo *> PDOM_INFO;
 
-// Primary predecessor
-extern p::feature BASIC_PREDECESSOR_FEATURE;
-extern p::id<Bag<BasicBlock::BasicEdge> > BASIC_PREDECESSORS;
-
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

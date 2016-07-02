@@ -30,6 +30,7 @@ class MustPersDomain {
 public:
 	typedef ACS t;
 
+	MustPersDomain(const LBlockCollection& coll, int set);
 	MustPersDomain(const LBlockCollection& coll, int set, const t& init);
 	inline const ACS& bot(void) const { return _bot; }
 	inline const ACS& top(void) const { return _top; }

@@ -88,11 +88,13 @@ public:
 private:
 	Inst *_inst;
 };
+io::Output& operator<<(io::Output& out, Event *event);
 
 // event feature
 extern p::feature STANDARD_EVENTS_FEATURE;
 extern p::feature EVENTS_FEATURE;
 extern Identifier<Event *> EVENT;
+extern Identifier<Event *> PREFIX_EVENT;
 
 // configuration feature
 extern Identifier<bool> PREDUMP;

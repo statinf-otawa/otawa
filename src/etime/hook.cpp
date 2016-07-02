@@ -64,6 +64,7 @@ p::feature STANDARD_EVENTS_FEATURE("otawa::etime::STANDARD_EVENTS_FEATURE", new 
  *
  * @par Properties
  * @li @ref EVENT
+ * @li @ref PREFIX_EVENT
  *
  * @par Default Processor
  * @li @ref StandardEventBuilder
@@ -74,17 +75,34 @@ p::feature EVENTS_FEATURE("otawa::etime::EVENTS_FEATURE", new Maker<StandardEven
 
 
 /**
- * Allows to hook an event to a basic block.
+ * Allows to hook an event to a basic block
+ * or to an edge.
  *
  * @par Feature
  * @li @ref STANDARD_EVENTS_FEATURE
  *
  * @par Hooks
  * @li @ref BasicBlock
+ * @li @ref Edge
  *
  * @ingroup etime
  */
 Identifier<Event *> EVENT("otawa::etime::EVENT", 0);
+
+
+/**
+ * Allows to hook an event to an edge and consider it as part
+ * of the prefix of the edge time.
+ *
+ * @par Feature
+ * @li @ref STANDARD_EVENTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Edge
+ *
+ * @ingroup etime
+ */
+Identifier<Event *> PREFIX_EVENT("otawa::etime::PREFIX_EVENT", 0);
 
 
 /**
@@ -209,6 +227,15 @@ int Event::weight(void) const {
  * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
  */
 void Event::estimate(ilp::Constraint *cons, bool on) {
+}
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Event *event) {
+	out << event->inst()->address() << " " << event->name()
+		<< " (" << event->detail() << ")";
+	return out;
 }
 
 

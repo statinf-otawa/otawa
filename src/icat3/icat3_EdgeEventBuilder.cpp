@@ -105,7 +105,7 @@ private:
 class EdgeEventBuilder: public Processor {
 public:
 	static p::declare reg;
-	EdgeEventBuilder(void): Processor(reg), coll(0) { }
+	EdgeEventBuilder(void): Processor(reg), coll(0), mustpers(0), A(0), mem(0) { }
 
 protected:
 
@@ -117,6 +117,7 @@ protected:
 		// gather needed information
 		coll = icat3::LBLOCKS(ws);
 		ASSERT(coll);
+		A = coll->A();
 		const CFGCollection *cfgs = *otawa::INVOLVED_CFGS(ws);
 		ASSERT(cfgs);
 		mem = hard::MEMORY(ws);
@@ -124,12 +125,19 @@ protected:
 
 		// process basic blocks
 		for(int set = 0; set < coll->cache()->setCount(); set++)
-			if((*coll)[set].count() > 0)
+			if((*coll)[set].count() > 0) {
+				if(logFor(LOG_FUN))
+					log << "\tprocessing set " << set << io::endl;
+				MustPersDomain mustpers_inst(*coll, set);
+				mustpers = &mustpers_inst;
 				for(CFGCollection::BBIterator b(cfgs); b; b++)
-					if(b->isBasic()) {
-						for(BasicBlock::BasicIter e = b->toBasic()->basicIns(); e; e++)
-							;	// process(e, set);
-					}
+					if(b->isBasic())
+						for(BasicBlock::BasicIns e(b->toBasic()); e; e++) {
+							if(logFor(LOG_BLOCK))
+								log << "\t\tbasic edge " << (*e).source() << ", " << (*e).edge() << ", " << (*e).sink() << io::endl;
+							make(e, set);
+						}
+			}
 	}
 
 private:
@@ -149,17 +157,18 @@ private:
 		if(e.source() && use(e.source(), set)) {
 			for(Block::EdgeIter i = e.source()->ins(); i; i++)
 				mustpers->join(a, (*MUST_STATE(i))[set]);
-			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set);
+			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 		}
 
 		// process the edge
-		/*if(use(e.edge(), set))
-			make(e.e)*/
+		if(e.edge() && use(e.edge(), set))
+			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, true);
 
 		// process the
+		make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
 	}
 
-	void make(Block *b, PropList& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set) {
+	void make(Block *b, PropList& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
 		for(int i = 0; i < accs.count(); i++) {
 			const icache::Access& acc = accs[i];
 			LBlock *lb = LBLOCK(acc);
@@ -173,7 +182,16 @@ private:
 				ASSERT(bnk);
 				ev = new ICacheEvent(acc, bnk->latency(), NC, b);
 			}
-			etime::EVENT(site).add(ev);
+			if(prefix) {
+				if(logFor(LOG_INST))
+					log << "\t\t\tprefix event " << ev << io::endl;
+				etime::PREFIX_EVENT(site).add(ev);
+			}
+			else {
+				if(logFor(LOG_INST))
+					log << "\t\t\tblock event " << ev << io::endl;
+				etime::EVENT(site).add(ev);
+			}
 			mustpers->update(acc, acs);
 		}
 	}

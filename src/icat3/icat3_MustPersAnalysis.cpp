@@ -198,7 +198,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		{ x }
+#define AI_DEBUG(x)		//{ x }
 
 template <class S>
 class SimpleControler {
@@ -303,6 +303,17 @@ MustPersDomain::MustPersDomain(const LBlockCollection& coll, int set, const t& i
 		_init(init)
 	{ }
 
+MustPersDomain::MustPersDomain(const LBlockCollection& coll, int set)
+	:	n(coll[set].count()),
+		_bot(n, BOT_AGE),
+		_top(n, coll.A()),
+		_set(set),
+		_coll(coll),
+		A(coll.A()),
+		tmp(n),
+		_init(_top)
+	{ }
+
 void MustPersDomain::join(ACS& t, const ACS& s) {
 	for (int i = 0; i < n; i++)
 		t[i] = max(t[i], s[i]);
@@ -402,17 +413,18 @@ protected:
 
 		// prepare containers
 		for(CFGCollection::BBIterator b(cfgs); b; b++)
-			for(Block::EdgeIter e = b->outs(); e; e++)
-				track(MUST_PERS_ANALYSIS_FEATURE, MUST_STATE(e) = Container<ACS>(*coll));
+			for(Block::EdgeIter e = b->outs(); e; e++) {
+				(*MUST_STATE(e)).configure(*coll);
+				track(MUST_PERS_ANALYSIS_FEATURE, MUST_STATE(e));
+			}
 
 		// compute ACS
 		for(int i = 0; i < coll->cache()->setCount(); i++) {
-			if(logFor(LOG_FUN))
-				log << "\tanalyzing set " << i << io::endl;
-			if((*coll)[i].count())
+			if((*coll)[i].count()) {
+				if(logFor(LOG_FUN))
+					log << "\tanalyzing set " << i << io::endl;
 				processSet(i);
-			else if(logFor(LOG_BLOCK))
-				log << "\t\tno l-block!\n";
+			}
 		}
 	}
 
@@ -476,8 +488,28 @@ p::id<Container<ACS> > PERS_INIT("otawa::icat3::PERS_INIT");
  */
 p::feature MUST_PERS_ANALYSIS_FEATURE("otawa::icat3::MUST_PERS_ANALYSIS_FEATURE", p::make<MustPersAnalysis>());
 
-/*extern p::id<Container<ACS> > MUST_STATE;
-extern p::id<Container<ACSStack> > PERS_STATE;*/
+/**
+ * Properties giving the ACS for the MUST analysis at a particular
+ * program point.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ *
+ * @par Feature
+ * @li @ref MUST_PERS_ANALYSIS_FEATURE
+ */
+p::id<Container<ACS> > MUST_STATE("otawa::icat3::MUST_STATE");
 
+/**
+ * Properties giving the ACS for the PERS analysis at a particular
+ * program point.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ *
+ * @par Feature
+ * @li @ref MUST_PERS_ANALYSIS_FEATURE
+ */
+p::id<Container<ACSStack> > PERS_STATE("otawa::icat3::PERS_STATE");
 
 } }		// otawa::icat3

@@ -73,6 +73,7 @@ public:
 	inline elm::Option<T> get(const PropList& list) const;
 	inline const T& get(const PropList& list, const T& def) const;
 	inline T& ref(PropList& list) const;
+	inline T *addr(PropList& list) const;
 	inline const T& use(const PropList& list) const;
 	inline const T& value(const PropList& list) const;
 	inline Ref<T, Identifier> value(PropList& list) const;
@@ -87,6 +88,7 @@ public:
 	inline elm::Option<T> get(const PropList *list) const { return get(*list); }
 	inline const T& get(const PropList *list, const T& def) const { return get(*list, def); }
 	inline T& ref(PropList *list) const { return ref(*list); }
+	inline T *addr(PropList *list) const { return addr(*list); }
 	inline const T& use(const PropList *list) const { return use(*list); }
 	inline const T& value(const PropList *list) const { return value(*list); }
 	inline Ref<T, Identifier<T> > value(PropList *list) const { return value(*list); }
@@ -209,6 +211,16 @@ inline T& Identifier<T>::ref(PropList& list) const {
 		list.addProp(_prop);
 	}
 	return _prop->value();
+}
+
+template <class T>
+inline T *Identifier<T>::addr(PropList& list) const {
+	GenericProperty<T> *_prop = (GenericProperty<T> *)list.getProp(this);
+	if(!_prop) {
+		_prop = GenericProperty<T>::make(this, def);
+		list.addProp(_prop);
+	}
+	return &_prop->value();
 }
 
 

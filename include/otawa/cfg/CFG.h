@@ -149,13 +149,17 @@ public:
 		Edge *e;
 	};
 
-	class BasicIter: public genstruct::Vector<BasicEdge>::Iterator {
+	class BasicIns: public PreIterator<BasicIns, BasicEdge> {
 	public:
-		BasicIter(BasicBlock *bb);
+		BasicIns(BasicBlock *bb);
+		inline bool ended(void) const { return !e.sink(); }
+		inline const BasicEdge& item(void) const { return e; }
+		void next(void);
 	private:
-		genstruct::Vector<BasicEdge> es;
+		BasicEdge e;
+		genstruct::Vector<Pair<Edge *, Edge *> > wl;
 	};
-	inline BasicIter basicIns(void) { return BasicIter(this); }
+	inline BasicIns basicIns(void) { return BasicIns(this); }
 
 private:
 	DeletableTable<Inst *> _insts;

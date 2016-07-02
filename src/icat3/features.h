@@ -104,15 +104,12 @@ private:
 };
 
 template <class T>
-class Container {
+class Container: public AllocTable<T> {
 public:
-	inline Container(void): vals(0) { }
-	inline Container(const LBlockCollection& c): vals(new T[c.sets()]) { }
-	inline ~Container(void) { if(vals) delete [] vals; }
-	inline T& operator[](int i) { return vals[i]; }
-	inline const T& operator[](int i) const { return vals[i]; }
-private:
-	T *vals;
+	inline Container(void) { }
+	inline Container(const LBlockCollection& c): elm::AllocTable<T>(new T[c.sets()]) { }
+	inline Container(const Container& c): elm::AllocTable<T>(c) { }
+	inline void configure(const LBlockCollection& c) { AllocTable<T>::set(c.sets(), new T[c.sets()]); }
 };
 
 extern p::id<Container<ACS> > MUST_INIT;

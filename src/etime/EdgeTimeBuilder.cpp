@@ -289,7 +289,6 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(WEIGHT_FEATURE)
 	.require(EVENTS_FEATURE)
-	.require(BASIC_PREDECESSOR_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -350,10 +349,20 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	BasicBlock *bb = b->toBasic();
 
 	// use each basic edge
-	for(BasicBlock::BasicIter e = bb->basicIns(); e; e++) {
+	bool one = false;
+	for(BasicBlock::BasicIns e(bb); e; e++) {
 		source = (*e).source();
 		edge = (*e).edge();
 		target = (*e).sink();
+		processEdge(ws, cfg);
+		one = true;
+	}
+
+	// first block: no predecessor
+	if(!one) {
+		source = 0;
+		edge = 0;
+		target = bb;
 		processEdge(ws, cfg);
 	}
 
@@ -441,7 +450,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	// collect and sort events
 	all_events.clear();
 	if(source)
-		sortEvents(all_events, source, IN_PREFIX);
+		sortEvents(all_events, source, IN_PREFIX, edge);
 	sortEvents(all_events, target, IN_BLOCK, edge);
 
 	// usual simple case: few events
@@ -745,7 +754,10 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
 	set_t set;
 	for(Identifier<Event *>::Getter event(bb, EVENT); event; event++)
 		set.add(pair(*event, place));
-	if(edge)
+	if(place == IN_PREFIX)
+		for(Identifier<Event *>::Getter event(edge, PREFIX_EVENT); event; event++)
+			set.add(pair(*event, IN_EDGE));
+	else
 		for(Identifier<Event *>::Getter event(edge, EVENT); event; event++)
 			set.add(pair(*event, IN_EDGE));
 	for(set_t::Iterator e(set); e; e++)
