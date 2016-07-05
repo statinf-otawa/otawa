@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}:${ORIGIN}/../..")
+set(CMAKE_INSTALL_RPATH "${ORIGIN};${ORIGIN}/../..")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 

@@ -8,7 +8,8 @@ file(READ "VERSION" VERSION)
 if(NOT APPLE)
 	set(ORIGIN $ORIGIN)
 else()
-	set(ORIGIN @executable_path)
+	set(ORIGIN @loader_path)
+	set(CMAKE_MACOSX_RPATH true)
 endif()
 
 # installation level
