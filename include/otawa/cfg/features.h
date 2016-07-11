@@ -130,6 +130,16 @@ extern Identifier<Block*> ENCLOSING_LOOP_HEADER;
 extern Identifier<Block*> LOOP_EXIT_EDGE;
 extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
+class LoopIter: public PreIterator<LoopIter, Block *> {
+public:
+	inline LoopIter(void): h(0) { }
+	inline LoopIter(Block *b): h(LOOP_HEADER(b) ? b : ENCLOSING_LOOP_HEADER(b)) { }
+	inline bool ended(void) const { return !h; }
+	inline Block *item(void) const { return h; }
+	inline void next(void) { h = ENCLOSING_LOOP_HEADER(h); }
+private:
+	Block *h;
+};
 
 // CONDITIONAL_RESTRUCTURED_FEATURE
 extern p::feature CONDITIONAL_RESTRUCTURED_FEATURE;

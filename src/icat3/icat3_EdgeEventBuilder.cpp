@@ -156,7 +156,7 @@ private:
 		// process the source
 		if(e.source() && use(e.source(), set)) {
 			for(Block::EdgeIter i = e.source()->ins(); i; i++)
-				mustpers->join(a, (*MUST_STATE(i))[set]);
+				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
 			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 		}
 
@@ -175,7 +175,8 @@ private:
 			if(lb->set() != set)
 				continue;
 			etime::Event *ev;
-			if(0 <= acs[lb->index()] && acs[lb->index()] < A)
+			age_t age = mustpers->must(acs)[lb->index()];
+			if(0 <= age && age < A)
 				ev = new ICacheEvent(acc, 0, AH, b);
 			else {
 				const hard::Bank *bnk = mem->get(lb->address());

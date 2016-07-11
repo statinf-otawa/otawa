@@ -3,10 +3,13 @@ set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall")
 
 add_library(icat3 SHARED
+	icat3_EdgeEventBuilder.cpp
 	icat3_hook.cpp
 	icat3_LBlockBuilder.cpp
+	icat3_MustDomain.cpp
+	icat3_MustPersDomain.cpp
 	icat3_MustPersAnalysis.cpp
-	icat3_EdgeEventBuilder.cpp)
+	icat3_PersDomain.cpp)
 set_property(TARGET icat3 PROPERTY PREFIX "")
 target_link_libraries(icat3 ${LIBELM})
 target_link_libraries(icat3 otawa)

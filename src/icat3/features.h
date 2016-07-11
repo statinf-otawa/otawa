@@ -91,12 +91,23 @@ class ACSStack {
 public:
 	ACSStack(void);
 	ACSStack(int n);
+	ACSStack(const ACS& a);
+	inline ACSStack(const ACSStack& a) { copy(a); }
 	inline const genstruct::Vector<ACS>& stack(void) const { return _stack; }
 	inline genstruct::Vector<ACS>& stack(void) { return _stack; }
 	inline const ACS& whole(void) const { return _whole; }
 	inline ACS& whole(void) { return _whole; }
 	inline bool isBottom(void) const { return _bot; }
 	inline void setBottom(bool bot) { _bot = bot; }
+	void print(int set, const LBlockCollection& coll, io::Output& out = cout) const;
+	inline int depth(void) const { return _stack.length(); }
+	inline const ACS& get(int i) const { return _stack[i]; }
+	inline ACS& get(int i) { return _stack[i]; }
+	inline const ACS& operator[](int i) const { return get(i); }
+	inline ACS& operator[](int i) { return get(i); }
+	inline void push(const ACS& a) { _stack.add(a); }
+	inline void pop(void) { _stack.setLength(_stack.length() - 1); }
+	void copy(const ACSStack& a);
 private:
 	bool _bot;
 	ACS _whole;

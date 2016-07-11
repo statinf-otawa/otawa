@@ -22,37 +22,106 @@
 #ifndef OTAWA_ICAT3_MUSTPERSDOMAIN_H_
 #define OTAWA_ICAT3_MUSTPERSDOMAIN_H_
 
+#include <otawa/cfg.h>
+#include <otawa/icache/features.h>
 #include "features.h"
 
 namespace otawa { namespace icat3 {
 
-class MustPersDomain {
+class MustDomain {
 public:
 	typedef ACS t;
 
-	MustPersDomain(const LBlockCollection& coll, int set);
-	MustPersDomain(const LBlockCollection& coll, int set, const t& init);
-	inline const ACS& bot(void) const { return _bot; }
-	inline const ACS& top(void) const { return _top; }
-	inline const ACS& init(void) const { return _init; }
-	inline void copy(ACS& t, const ACS& s) { t.copy(s); }
-	inline void print(const ACS& a, io::Output& out) { a.print(_set, _coll, out); }
-	void join(ACS& t, const ACS& s);
-	inline bool contains(const ACS& t, int i) { return(t[i] != BOT_AGE); }
-	void fetch(ACS& t, int b);
-	void update(const icache::Access& access, ACS& a);
-	void update(const Bag<icache::Access>& accs, ACS& a);
-	void update(Block *v, Edge *e, ACS& a);
-	bool equals(const ACS& a, const ACS& b);
+	MustDomain(const LBlockCollection& coll, int set, const t *init);
+	inline const t& bot(void) const { return _bot; }
+	inline const t& top(void) const { return _top; }
+	inline const t& init(void) const { return _init; }
+	inline void copy(t& d, const t& s) { d.copy(s); }
+	inline void print(const t& a, io::Output& out) { a.print(_set, _coll, out); }
+	void join(t& d, const t& s);
+	inline bool contains(const t& a, int i) { return(a[i] != BOT_AGE); }
+	void fetch(t& a, const LBlock *lb);
+	void update(const icache::Access& access, t& a);
+	void update(const Bag<icache::Access>& accs, t& a);
+	void update(Block *v, Edge *e, t& a);
+	bool equals(const t& a, const t& b);
 
 private:
 	int n;
-	ACS _bot, _top;
+	t _bot, _top;
 	hard::Cache::set_t _set;
 	const LBlockCollection& _coll;
 	int A;
+	const t& _init;
+	t tmp;
+};
+
+class PersDomain {
+public:
+	typedef ACSStack t;
+
+	PersDomain(const LBlockCollection& coll, int set, const ACS *init);
+	inline const t& bot(void) const { return _bot; }
+	inline const t& top(void) const { return _top; }
+	inline const t& init(void) const { return _init; }
+	inline void copy(t& d, const t& s) { d.copy(s); }
+	void print(const t& a, io::Output& out);
+	void join(t& d, const t& s);
+	void fetch(LBlock *b, ACS& a);
+	void update(const icache::Access& access, t& a);
+	void update(const Bag<icache::Access>& accs, t& a);
+	void update(Block *v, Edge *e, t& a);
+	bool equals(const t& a, const t& b);
+
+private:
+	void join(ACS& d, const ACS& s);
+	void update(const icache::Access& access, ACS& a);
+	bool equals(const ACS& a1, const ACS& a2);
+	void enter(t& a);
+	void leave(t& a);
+
+	int n;
+	t _bot, _top;
+	hard::Cache::set_t _set;
+	const LBlockCollection& _coll;
+	int A;
+	t _init;
 	ACS tmp;
-	const ACS& _init;
+};
+
+
+class MustPersDomain {
+public:
+	typedef struct t {
+		inline t(void) { }
+		inline t(const t& a): must(a.must), pers(a.pers) { }
+		inline t(int n): must(n), pers(n) { }
+		inline t(const MustDomain::t& _must, const PersDomain::t& _pers): must(_must), pers(_pers) { }
+		MustDomain::t must;
+		PersDomain::t pers;
+	} t;
+
+	MustPersDomain(const LBlockCollection& coll, int set, const MustDomain::t *must_init = 0, const ACS *pers_init = 0);
+	inline const t& bot(void) const { return _bot; }
+	inline const t& top(void) const { return _top; }
+	inline const t& init(void) const { return _init; }
+	inline void copy(t& d, const t& s) { d.must.copy(s.must); }
+	void print(const t& a, io::Output& out);
+	void join(t& d, const t& s);
+	inline bool contains(const t& a, int i) { return(a.must[i] != BOT_AGE); }
+	void update(const icache::Access& access, t& a);
+	void update(const Bag<icache::Access>& accs, t& a);
+	void update(Block *v, Edge *e, t& a);
+	bool equals(const t& a, const t& b);
+	inline const MustDomain::t& must(const t& a) { return a.must; }
+	inline const PersDomain::t& pers(const t& a) { return a.pers; }
+
+private:
+	MustDomain _must;
+	PersDomain _pers;
+	int n;
+	t _bot, _top;
+	t _init;
 };
 
 } }		// otawa::icat3

@@ -120,10 +120,51 @@ ACSStack::ACSStack(void): _bot(true) {
 }
 
 /**
- * Build an ACS stack.
+ * Build an ACS stack with top value.
  * @param n		Number of l-blocks.
  */
-ACSStack::ACSStack(int n): _bot(true), _whole(n) {
+ACSStack::ACSStack(int n): _bot(false), _whole(n) {
+}
+
+/**
+ * Initialize an ACS stack.
+ * @param a		ACS used to initializet the top-level.
+ */
+ACSStack::ACSStack(const ACS& a): _bot(false), _whole(a) {
+
+}
+
+/**
+ * Copy the given ACS stack to the current ACS stack.
+ * @param a		ACS stack to copy.
+ */
+void ACSStack::copy(const ACSStack& a) {
+	if(a.isBottom()) {
+		_bot = true;
+		_stack.clear();
+	}
+	else {
+		_bot = false;
+		_whole.copy(a._whole);
+		_stack.setLength(a._stack.length());
+		for(int i = 0; i < _stack.length(); i++)
+			_stack[i].copy(a._stack[i]);
+	}
+}
+
+
+/**
+ * Print the given ACS stack.
+ * @param set	Current set.
+ * @param coll	Current L-Block collection.
+ * @param out	Output to use (default cout).
+ */
+void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) const {
+	if(isBottom())
+		out << "_";
+	else {
+		// TODO
+	}
 }
 
 
@@ -291,96 +332,6 @@ private:
 };
 
 
-
-MustPersDomain::MustPersDomain(const LBlockCollection& coll, int set, const t& init)
-	:	n(coll[set].count()),
-		_bot(n, BOT_AGE),
-		_top(n, coll.A()),
-		_set(set),
-		_coll(coll),
-		A(coll.A()),
-		tmp(n),
-		_init(init)
-	{ }
-
-MustPersDomain::MustPersDomain(const LBlockCollection& coll, int set)
-	:	n(coll[set].count()),
-		_bot(n, BOT_AGE),
-		_top(n, coll.A()),
-		_set(set),
-		_coll(coll),
-		A(coll.A()),
-		tmp(n),
-		_init(_top)
-	{ }
-
-void MustPersDomain::join(ACS& t, const ACS& s) {
-	for (int i = 0; i < n; i++)
-		t[i] = max(t[i], s[i]);
-}
-
-void MustPersDomain::fetch(ACS& t, int b) {
-	if(contains(t, b)) {
-		for(int i = 0; i < n; i++) {
-			if(t[i] < t[b] && t[i] != BOT_AGE)
-				t[i]++;
-		}
-	}
-	else {
-		for (int i = 0; i < n; i++) {
-			if(t[i] != BOT_AGE)
-				t[i]++;
-			if(t[i] == A)
-				t[i] = BOT_AGE;
-		}
-	}
-	t[b] = 0;
-}
-
-void MustPersDomain::update(const icache::Access& access, ACS& a) {
-	switch(access.kind()) {
-
-	case icache::FETCH:
-		if(_coll.cache()->set(access.address()) == _set)
-			fetch(a, LBLOCK(access)->index());
-		break;
-
-	case icache::PREFETCH:
-		if(_coll.cache()->set(access.address()) == _set) {
-			copy(tmp, a);
-			fetch(a, LBLOCK(access)->index());
-			join(a, tmp);
-		}
-		break;
-
-	case icache::NONE:
-		break;
-
-	default:
-		ASSERT(false);
-	}
-}
-
-void MustPersDomain::update(const Bag<icache::Access>& accs, ACS& a) {
-	for(int i = 0; i < accs.size(); i++)
-		update(accs[i], a);
-}
-
-void MustPersDomain::update(Block *v, Edge *e, ACS& a) {
-	const Bag<icache::Access>& va = icache::ACCESSES(v);
-	update(va, a);
-	const Bag<icache::Access>& ea = icache::ACCESSES(e);
-	update(ea, a);
-}
-
-bool MustPersDomain::equals(const ACS& a, const ACS& b) {
-	for(int i = 0; i < n; i++)
-		if(a[i] != b[i])
-			return false;
-	return true;
-}
-
-
 /**
  */
 class MustPersAnalysis: public Processor {
@@ -415,6 +366,7 @@ protected:
 		for(CFGCollection::BBIterator b(cfgs); b; b++)
 			for(Block::EdgeIter e = b->outs(); e; e++) {
 				(*MUST_STATE(e)).configure(*coll);
+				(*PERS_STATE(e)).configure(*coll);
 				track(MUST_PERS_ANALYSIS_FEATURE, MUST_STATE(e));
 			}
 
@@ -431,7 +383,7 @@ protected:
 	void processSet(int set) {
 
 		// perform the computation
-		MustPersDomain d(*coll, set, init_must ? (*init_must)[set] : d.top());
+		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0);
 		CFGCollectionGraph g(*cfgs);
 		typedef ai::EdgeStore<MustPersDomain, CFGCollectionGraph> store_t;
 		typedef SimpleControler<store_t> controler_t;
@@ -442,8 +394,10 @@ protected:
 
 		// store the result
 		for(CFGCollection::BBIterator b(cfgs); b; b++)
-			for(Block::EdgeIter e = b->outs(); e; e++)
-				(*MUST_STATE(e))[set] = s.get(e);
+			for(Block::EdgeIter e = b->outs(); e; e++) {
+				(*MUST_STATE(e))[set] = d.must(s.get(e));
+				(*PERS_STATE(e))[set] = d.pers(s.get(e));
+			}
 	}
 
 	const LBlockCollection *coll;

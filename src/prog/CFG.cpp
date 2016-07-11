@@ -560,6 +560,8 @@ BasicBlock::BasicIns::BasicIns(BasicBlock *bb) {
 		wl.push(pair(*i, *i));
 	e = BasicEdge(0, 0, bb);
 	next();
+	if(!e.sink())
+		e = BasicEdge(0, bb->ins(), bb);
 }
 
 /**
