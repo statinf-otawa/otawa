@@ -122,8 +122,9 @@ ACSStack::ACSStack(void): _bot(true) {
 /**
  * Build an ACS stack with top value.
  * @param n		Number of l-blocks.
+ * @param d		Default age.
  */
-ACSStack::ACSStack(int n): _bot(false), _whole(n) {
+ACSStack::ACSStack(int n, age_t d): _bot(false), _whole(n, d) {
 }
 
 /**
@@ -243,7 +244,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		//{ x }
+#define AI_DEBUG(x)		{ x }
 
 template <class S>
 class SimpleControler {

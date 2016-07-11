@@ -90,7 +90,7 @@ io::Output& operator<<(io::Output& out, const ACS& a);
 class ACSStack {
 public:
 	ACSStack(void);
-	ACSStack(int n);
+	ACSStack(int n, age_t d = BOT_AGE);
 	ACSStack(const ACS& a);
 	inline ACSStack(const ACSStack& a) { copy(a); }
 	inline const genstruct::Vector<ACS>& stack(void) const { return _stack; }

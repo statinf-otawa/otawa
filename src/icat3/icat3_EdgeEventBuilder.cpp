@@ -90,6 +90,8 @@ public:
 	}
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
+		ASSERT(on);
+		ASSERT(_cat == PERS)
 		cons->addRight(1, ipet::VAR(_head));
 	}
 
@@ -159,13 +161,15 @@ private:
 				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
 			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 		}
+		else
+			mustpers->join(a, mustpers->init());
 
 		// process the edge
 		if(e.edge() && use(e.edge(), set))
 			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, true);
 
 		// process the
-		make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
+		make(e.sink(), *e.edge(), icache::ACCESSES(e.sink()), a, set, false);
 	}
 
 	void make(Block *b, PropList& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {

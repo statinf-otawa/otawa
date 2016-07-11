@@ -45,7 +45,7 @@ namespace otawa { namespace icat3 {
 PersDomain::PersDomain(const LBlockCollection& coll, int set, const ACS *init)
 :	n(coll[set].count()),
 	_bot(),
-	_top(coll[set].count()),
+	_top(coll[set].count(), coll.cache()->wayCount()),
 	_set(set),
 	_coll(coll),
 	A(coll.cache()->wayCount()),

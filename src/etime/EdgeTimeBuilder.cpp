@@ -441,7 +441,7 @@ void EdgeTimeBuilder::clean(ParExeGraph *graph) {
  */
 void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	if(logFor(Processor::LOG_BLOCK))
-		log << "\t\t\t" << edge << io::endl;
+		log << "\t\t\t" << source << ", " << edge << ", " << target << io::endl;
 
 	// initialize the sequence
 	bnode = 0;
@@ -577,9 +577,9 @@ void EdgeTimeBuilder::processSequence(void) {
 	// log used events
 	if(logFor(LOG_BB))
 		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
-			log << "\t\t\t\t" << (*e).fst->inst()->address() << " -> "
-				 << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
-				 << (*e).snd << io::endl;
+			log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address()
+				<< " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
+				<< (*e).snd << io::endl;
 
 	// build the graph
 	PropList props;
@@ -752,14 +752,20 @@ EventCollector *EdgeTimeBuilder::get(Event *event) {
 void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge) {
 	typedef avl::Set<event_t, EventComparator> set_t;
 	set_t set;
+
+	// events in the current block
 	for(Identifier<Event *>::Getter event(bb, EVENT); event; event++)
 		set.add(pair(*event, place));
+
+	//
 	if(place == IN_PREFIX)
 		for(Identifier<Event *>::Getter event(edge, PREFIX_EVENT); event; event++)
-			set.add(pair(*event, IN_EDGE));
+			set.add(pair(*event, IN_PREFIX));
 	else
 		for(Identifier<Event *>::Getter event(edge, EVENT); event; event++)
 			set.add(pair(*event, IN_EDGE));
+
+	// generate the ordered list of events
 	for(set_t::Iterator e(set); e; e++)
 		events.push(*e);
 }
@@ -1258,7 +1264,7 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 		static string msg = "complex constraint for times";
 		ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
 		for(int i = 0; i < events.length(); i++)
-			if(com & (1 << i))
+			if((com & (1 << i)) && events[i].fst->isEstimating(true))
 				events[i].fst->estimate(c, true);
 		c->addRight(1, x_hts);
 	}
