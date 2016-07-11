@@ -48,6 +48,19 @@ MustPersDomain::MustPersDomain(const LBlockCollection& coll, int set, const Must
 	{ }
 
 /**
+ * Print the join state (MUST, PERS).
+ * @param a		Value to display.
+ * @param out	Output to use.
+ */
+void MustPersDomain::print(const t& a, io::Output& out) const {
+	out << '(';
+	_must.print(a.must, out);
+	out << ", ";
+	_pers.print(a.pers, out);
+	out << ')';
+}
+
+/**
  * Join two ACS.
  * @param a	ACS to join in.
  * @param b	ACS to join with.

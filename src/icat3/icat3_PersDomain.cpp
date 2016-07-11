@@ -58,7 +58,7 @@ PersDomain::PersDomain(const LBlockCollection& coll, int set, const ACS *init)
  * @param a		ACS to print.
  * @param out	Output to use.
  */
-void PersDomain::print(const t& a, io::Output& out) {
+void PersDomain::print(const t& a, io::Output& out) const {
 	a.print(_set, _coll, out);
 }
 

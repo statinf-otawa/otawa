@@ -37,7 +37,7 @@ public:
 	inline const t& top(void) const { return _top; }
 	inline const t& init(void) const { return _init; }
 	inline void copy(t& d, const t& s) { d.copy(s); }
-	inline void print(const t& a, io::Output& out) { a.print(_set, _coll, out); }
+	inline void print(const t& a, io::Output& out) const { a.print(_set, _coll, out); }
 	void join(t& d, const t& s);
 	inline bool contains(const t& a, int i) { return(a[i] != BOT_AGE); }
 	void fetch(t& a, const LBlock *lb);
@@ -65,7 +65,7 @@ public:
 	inline const t& top(void) const { return _top; }
 	inline const t& init(void) const { return _init; }
 	inline void copy(t& d, const t& s) { d.copy(s); }
-	void print(const t& a, io::Output& out);
+	void print(const t& a, io::Output& out) const;
 	void join(t& d, const t& s);
 	void fetch(LBlock *b, ACS& a);
 	void update(const icache::Access& access, t& a);
@@ -105,8 +105,8 @@ public:
 	inline const t& bot(void) const { return _bot; }
 	inline const t& top(void) const { return _top; }
 	inline const t& init(void) const { return _init; }
-	inline void copy(t& d, const t& s) { d.must.copy(s.must); }
-	void print(const t& a, io::Output& out);
+	inline void copy(t& d, const t& s) { d.must.copy(s.must); d.pers.copy(s.pers); }
+	void print(const t& a, io::Output& out) const;
 	void join(t& d, const t& s);
 	inline bool contains(const t& a, int i) { return(a.must[i] != BOT_AGE); }
 	void update(const icache::Access& access, t& a);

@@ -163,7 +163,11 @@ void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) con
 	if(isBottom())
 		out << "_";
 	else {
-		// TODO
+		_whole.print(set, coll, out);
+		for(int i = 0; i < _stack.length(); i++) {
+			out << '|';
+			_stack[i].print(set, coll, out);
+		}
 	}
 }
 
@@ -262,32 +266,37 @@ public:
 		AI_DEBUG(cerr << "DEBUG: examining " << e << io::endl;)
 
 		// join of predecessors
-		if(v == g.entry())
+		if(v == g.entry()) {
 			d.copy(tmp, d.init());
-		else
+			AI_DEBUG(cerr << "DEBUG:\t\tinitial vertex!\n";)
+		}
+		else {
 			d.copy(tmp, d.bot());
-		for(typename graph_t::Predecessor pe(g, v); pe; pe++) {
-			const t& v = s.get(pe);
-			AI_DEBUG(cerr << "DEBUG:     input of " << *pe << ": " << v << io::endl;)
-			d.join(tmp, v);
-			AI_DEBUG(cerr << "DEBUG:     result in " << tmp << io::endl;)
+			for(typename graph_t::Predecessor pe(g, v); pe; pe++) {
+				const t& v = s.get(pe);
+				//AI_DEBUG(cerr << "DEBUG:     input of " << *pe << ": "; d.print(v, cerr); cerr << io::endl;)
+				d.join(tmp, v);
+				//AI_DEBUG(cerr << "DEBUG:     result in "; d.print(tmp, cerr); cerr << io::endl;)
+			}
 		}
 
 		// update
+		AI_DEBUG(cerr << "DEBUG:\t\tin  state: "; d.print(tmp, cerr); cerr << io::endl;)
 		d.update(v, e, tmp);
-		AI_DEBUG(cerr << "DEBUG:     new  state: "; d.print(tmp, cerr); cerr << io::endl;)
-		AI_DEBUG(cerr << "DEBUG:     prev state: "; d.print(s.get(e), cerr); cerr << io::endl;)
+		AI_DEBUG(cerr << "DEBUG:\t\tnew  state: "; d.print(tmp, cerr); cerr << io::endl;)
+		AI_DEBUG(cerr << "DEBUG:\t\tprev state: "; d.print(s.get(e), cerr); cerr << io::endl;)
 
 		// any change?
 		bool update = !d.equals(tmp, s.get(e));
 		if(update) {
-			AI_DEBUG(cerr << "DEBUG:     put in wl!\n";)
 			s.set(e, tmp);
+			AI_DEBUG(cerr << "DEBUG:\t\t" << e << " updated!\n";)
 		}
 		return update;
 	}
 
 	inline graph_t graph(void) const { return g; }
+	inline const typename S::domain_t& domain(void) const { return d; }
 
 private:
 	typename S::domain_t& d;

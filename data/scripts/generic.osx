@@ -75,7 +75,10 @@ to be provided:
 	<step processor="otawa::Virtualizer"/>
 
 	<!-- cache analysis -->
-	<step require="otawa::ipet::CACHE_SUPPORT_FEATURE"/>
+	<!-- step require="otawa::ipet::CACHE_SUPPORT_FEATURE"/ -->
+	<xsl:if test="$cache!=''">
+		<step require="otawa::icat3::EDGE_EVENTS_FEATURE"/>
+	</xsl:if>
 
 	<!-- timing analysis -->
 	<step require="otawa::etime::EDGE_TIME_FEATURE"/>
