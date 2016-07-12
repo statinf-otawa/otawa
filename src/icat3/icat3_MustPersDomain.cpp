@@ -86,8 +86,10 @@ void MustPersDomain::update(const icache::Access& o, t& a) {
  * @param a		Acces to update.
  */
 void MustPersDomain::update(const Bag<icache::Access>& os, t& a) {
-	for(int i = 0; i < os.size(); i++)
-		update(os[i], a);
+	for(int i = 0; i < os.size(); i++) {
+		_must.update(os[i], a.must);
+		_pers.update(os[i], a.pers);
+	}
 }
 
 /**
@@ -97,10 +99,8 @@ void MustPersDomain::update(const Bag<icache::Access>& os, t& a) {
  * @param a		ACS to update.
  */
 void MustPersDomain::update(Block *v, Edge *e, t& a) {
-	const Bag<icache::Access>& os = icache::ACCESSES(v);
-	update(os, a);
-	const Bag<icache::Access>& os2 = icache::ACCESSES(v);
-	update(os2, a);
+	_must.update(v, e, a.must);
+	_pers.update(v, e, a.pers);
 }
 
 /**

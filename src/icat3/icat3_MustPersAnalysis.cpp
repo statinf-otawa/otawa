@@ -275,9 +275,9 @@ public:
 			d.copy(tmp, d.bot());
 			for(typename graph_t::Predecessor pe(g, v); pe; pe++) {
 				const t& v = s.get(pe);
-				//AI_DEBUG(cerr << "DEBUG:     input of " << *pe << ": "; d.print(v, cerr); cerr << io::endl;)
+				AI_DEBUG(cerr << "DEBUG:     input of " << *pe << ": "; d.print(v, cerr); cerr << io::endl;)
 				d.join(tmp, v);
-				//AI_DEBUG(cerr << "DEBUG:     result in "; d.print(tmp, cerr); cerr << io::endl;)
+				AI_DEBUG(cerr << "DEBUG:     result in "; d.print(tmp, cerr); cerr << io::endl;)
 			}
 		}
 
@@ -320,7 +320,7 @@ public:
 		wl.put(g.entry());
 		while(wl) {
 			vertex_t v = wl.get();
-			AI_DEBUG(cerr << "\nDEBUG: processing " << v << io::endl;)
+			AI_DEBUG(cerr << "DEBUG: processing " << v << io::endl;)
 			for(typename graph_t::Successor e(g, v); e; e++) {
 				bool update = c.update(e);
 				if(update) {
@@ -332,6 +332,7 @@ public:
 				}
 
 			}
+			AI_DEBUG(cerr << io::endl;)
 		}
 	}
 
@@ -418,6 +419,7 @@ protected:
 p::declare MustPersAnalysis::reg = p::init("otawa::icat3::MustPersAnalysis", Version(1, 0, 0))
 	.require(LBLOCKS_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
+	.require(LOOP_INFO_FEATURE)
 	.provide(MUST_PERS_ANALYSIS_FEATURE)
 	.make<MustPersAnalysis>();
 

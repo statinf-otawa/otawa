@@ -45,7 +45,7 @@ namespace otawa { namespace icat3 {
 PersDomain::PersDomain(const LBlockCollection& coll, int set, const ACS *init)
 :	n(coll[set].count()),
 	_bot(),
-	_top(coll[set].count(), coll.cache()->wayCount()),
+	_top(coll[set].count(), BOT_AGE),
 	_set(set),
 	_coll(coll),
 	A(coll.cache()->wayCount()),
@@ -126,12 +126,15 @@ void PersDomain::update(const icache::Access& o, ACS& a) {
 		ASSERT(false);
 		break;
 	case icache::FETCH:
-		fetch(LBLOCK(o), a);
+		if(_coll.cache()->set(o.address()) == _set)
+			fetch(LBLOCK(o), a);
 		break;
 	case icache::PREFETCH:
-		tmp = a;
-		fetch(LBLOCK(o), a);
-		join(a, tmp);
+		if(_coll.cache()->set(o.address()) == _set) {
+			tmp = a;
+			fetch(LBLOCK(o), a);
+			join(a, tmp);
+		}
 		break;
 	}
 }
@@ -142,7 +145,6 @@ void PersDomain::update(const icache::Access& o, ACS& a) {
  * @param s		Source ACS stack.
  */
 void PersDomain::join(t& d, const t& s) {
-	ASSERT(d.depth() == s.depth());
 	// J_mp(d, s) =
 
 	// d		if s = ⊥
@@ -193,7 +195,7 @@ void PersDomain::update(Block *v, Edge *e, t& a) {
 	// update source and edge
 	const Bag<icache::Access>& os = icache::ACCESSES(v);
 	update(os, a);
-	const Bag<icache::Access>& os2 = icache::ACCESSES(v);
+	const Bag<icache::Access>& os2 = icache::ACCESSES(e);
 	update(os2, a);
 
 	// handle enter/leave from loops
