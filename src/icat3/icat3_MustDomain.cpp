@@ -73,7 +73,6 @@ void MustDomain::join(t& d, const t& s) {
  */
 void MustDomain::fetch(t& a, const LBlock *lb) {
 	int b = lb->index();
-	cerr << "DEBUG: fetch " << a << io::endl;
 
 	// U(a, b) = a' s.t. ∀ b' ∈ B_s
 	for(int i = 0; i < n; i++)

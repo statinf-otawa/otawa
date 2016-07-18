@@ -409,6 +409,10 @@ protected:
 				(*MUST_STATE(e))[set] = d.must(s.get(e));
 				(*PERS_STATE(e))[set] = d.pers(s.get(e));
 			}
+
+		for(CFGCollection::BBIterator b(cfgs); b; b++)
+			for(Block::EdgeIter e = b->outs(); e; e++)
+				MustPersDomain::t v((*MUST_STATE(e))[set], (*PERS_STATE(e))[set]);
 	}
 
 	const LBlockCollection *coll;

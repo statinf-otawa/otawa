@@ -193,7 +193,7 @@ const hard::FunctionalUnit *Event::fu(void) const {
 
 /**
  * Ask for support of overestimation for the event when activated (on is true)
- * or desactivated (on is false).
+ * or deactivated (on is false).
  *
  * May be overridden according to the actual event. As a default, return false.
  * @param on	Test for event activated, or not activated.
@@ -216,9 +216,9 @@ int Event::weight(void) const {
 
 
 /**
- * Add an estimation of the event count at the left of the given constraint.
- * If the event is considered on, it should be an overestimation.
- * If the event is considered off, it should be an underestimation.
+ * Add an estimation of the event count at the right of the given constraint.
+ * If the event is considered on, the left value must be an overestimation.
+ * If the event is considered off, the left value must be an underestimation.
  *
  * May be overridden to provide specific behavior for the actual event.
  * As a default, do nothing.

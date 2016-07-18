@@ -92,7 +92,9 @@ public:
 	virtual void estimate(ilp::Constraint *cons, bool on) {
 		ASSERT(on);
 		ASSERT(_cat == PERS)
-		cons->addRight(1, ipet::VAR(_head));
+		for(Block::EdgeIter i = _head->ins(); i; i++)
+			if(!BACK_EDGE(*i))
+				cons->addLeft(1, ipet::VAR(i));
 	}
 
 private:
@@ -153,50 +155,76 @@ private:
 	}
 
 	void make(const BasicBlock::BasicEdge& e, int set) {
-		MustPersDomain::t a = mustpers->bot();
 
-		// process the source
-		if(e.source() && use(e.source(), set)) {
+		// prepare ACS
+		MustPersDomain::t a = mustpers->bot();
+		if(e.source())
 			for(Block::EdgeIter i = e.source()->ins(); i; i++)
 				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
-			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
-		}
 		else
 			mustpers->join(a, mustpers->init());
+
+		// process the source
+		if(e.source() && use(e.source(), set))
+			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 
 		// process the edge
 		if(e.edge() && use(e.edge(), set))
 			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, true);
 
 		// process the
+		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
 		make(e.sink(), *e.edge(), icache::ACCESSES(e.sink()), a, set, false);
 	}
 
-	void make(Block *b, PropList& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
+	void make(Block *b, Edge& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
 		for(int i = 0; i < accs.count(); i++) {
+
+			// obtain the access
 			const icache::Access& acc = accs[i];
 			LBlock *lb = LBLOCK(acc);
 			if(lb->set() != set)
 				continue;
-			etime::Event *ev;
+
+			// compute the category
+			category_t cat = NC;
+			Block *ch = 0;
 			age_t age = mustpers->must(acs)[lb->index()];
 			if(0 <= age && age < A)
-				ev = new ICacheEvent(acc, 0, AH, b);
+				cat = AH;
 			else {
+				LoopIter h(b);
+				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0; i--, h++) {
+					age = mustpers->pers(acs).stack()[i][lb->index()];
+					if(0 <= age && age < A) {
+						ch = h;
+						cat = PERS;
+						break;
+					}
+				}
+			}
+
+			// if required, obtain the time
+			time_t t = 0;
+			if(cat != AH) {
 				const hard::Bank *bnk = mem->get(lb->address());
 				ASSERT(bnk);
-				ev = new ICacheEvent(acc, bnk->latency(), NC, b);
+				t = bnk->latency();
 			}
+
+			// build the event
+			etime::Event *e = new ICacheEvent(acc, t, cat, b, ch);
 			if(prefix) {
 				if(logFor(LOG_INST))
-					log << "\t\t\tprefix event " << ev << io::endl;
-				etime::PREFIX_EVENT(site).add(ev);
+					log << "\t\t\tprefix event " << e << io::endl;
+				etime::PREFIX_EVENT(site).add(e);
 			}
 			else {
 				if(logFor(LOG_INST))
-					log << "\t\t\tblock event " << ev << io::endl;
-				etime::EVENT(site).add(ev);
+					log << "\t\t\tblock event " << e << io::endl;
+				etime::EVENT(site).add(e);
 			}
+			//cerr << "DEBUG: OBSERVE: " << site.sink() << " <- " << site.source() << ": " << set << ": " << e << io::endl;
 			mustpers->update(acc, acs);
 		}
 	}
