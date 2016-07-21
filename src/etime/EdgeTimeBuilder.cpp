@@ -630,9 +630,10 @@ void EdgeTimeBuilder::processSequence(void) {
 		ot::time cost = graph->analyze();
 		this->genForOneCost(cost, edge, events);
 		// dump it if needed
-		if(_do_output_graphs){
+		if(_do_output_graphs) {
 			if (source)
-				outputGraph(graph, target->index(), source->index(), 0, _ << source << " -> " << target << " (cost = " << cost << ")");
+				outputGraph(graph, target->index(), source->index(), 0,
+						_ << source << " -> " << target << " (cost = " << cost << ")");
 			else
 				outputGraph(graph, target->index(), 0, 0, _ << target << " (cost = " << cost << ")");
 		}
@@ -664,9 +665,13 @@ void EdgeTimeBuilder::processSequence(void) {
 		ot::time cost = graph->analyze();
 
 		// dump it if needed
-		if(_do_output_graphs)
-			outputGraph(graph, target->index(), source->index(), mask, _ << source << " -> " << target << " (cost = " << cost << ")");
-
+		if(_do_output_graphs) {
+			if (source)
+				outputGraph(graph, target->index(), source->index(), mask,
+						_ << source << " -> " << target << " (cost = " << cost << ")");
+			else
+				outputGraph(graph, target->index(), 0, mask, _ << target << " (cost = " << cost << ")");
+		}
 		// add the new time
 		bool done = false;
 		for(int j = 0; j < confs.length(); j++)
@@ -971,7 +976,7 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 		set.push(confs[i]);
 
 	// computation
-	for(p = 1; p < confs.length(); p++) {
+	for(p = 1; p <= confs.length(); p++) {
 
 		// update set and values
 		set.pop(confs[p - 1]);
@@ -1036,7 +1041,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		set.push(confs[i]);
 
 	// computation
-	for(int p = 1; p < confs.length(); p++) {
+	for(int p = 1; p <= confs.length(); p++) {
 
 		// update set and values
 		set.pop(confs[p - 1]);

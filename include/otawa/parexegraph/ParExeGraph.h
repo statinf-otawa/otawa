@@ -227,9 +227,9 @@ namespace otawa {
 		ParExeNode *_first_node;									// first node in the graph
 		ParExeNode *_last_prologue_node;																					// ====== REALLY USEFUL? (used in analyze())
 		ParExeNode *_last_node;																								// ====== REALLY USEFUL? (used in analyze())
+		int _cache_line_size;																								// ====== REALLY USEFUL?
 	private:
 		ParExeSequence * _sequence;									// sequence of instructions related to the graph
-		int _cache_line_size;																								// ====== REALLY USEFUL?
 		int _capacity;																										// ====== REALLY USEFUL? (used in analyze())
 		int _branch_penalty;																								// ====== REALLY USEFUL?
 

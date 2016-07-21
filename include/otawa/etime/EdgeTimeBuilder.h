@@ -69,8 +69,12 @@ private:
 
 	class EventComparator {
 	public:
-		static int compare (const event_t& e1, const event_t& e2)
-			{ return e1.fst->inst()->address().compare(e2.fst->inst()->address()); }
+		static int compare (const event_t& e1, const event_t& e2) {
+			int res = e1.fst->inst()->address().compare(e2.fst->inst()->address());
+			if (!res)
+				res = e1.fst - e2.fst;
+			return res;
+		}
 	};
 
 	void apply(Event *event, ParExeInst *inst);

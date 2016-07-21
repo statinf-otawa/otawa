@@ -170,7 +170,7 @@ private:
 
 		// process the edge
 		if(e.edge() && use(e.edge(), set))
-			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, true);
+			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
 
 		// process the
 		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
