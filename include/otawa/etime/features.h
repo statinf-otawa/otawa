@@ -33,30 +33,40 @@ namespace ilp {
 }	// ilp
 namespace hard {
 	class FunctionalUnit;
+	class PipelineUnit;
 	class Stage;
 }
 class Inst;
 
 namespace etime {
 
-typedef enum {
+typedef enum kind_t {
 	NONE,
 	FETCH,	// no argument
 	MEM,	// no argument
 	BRANCH,	// no argument
+	CUSTOM,	// unit argument
+
+	// deprecated
 	STAGE,	// stage argument
 	FU		// FU argument
 } kind_t;
 
-typedef enum {
+typedef enum occurence_t {
 	NEVER = 0,
 	SOMETIMES = 1,
 	ALWAYS = 2
 } occurrence_t;
 
 typedef enum type_t {
-	EDGE,
-	BLOCK
+	LOCAL = 0,
+	AFTER = 1,
+	NOT_BEFORE = 2,
+
+	// deprecated
+	EDGE = AFTER,
+	BLOCK = LOCAL,
+
 } type_t;
 
 
@@ -74,7 +84,11 @@ public:
 	virtual type_t type(void) const = 0;
 	virtual occurrence_t occurrence(void) const;
 	virtual cstring name(void) const;
-	virtual string detail(void) const = 0;
+	virtual string detail(void) const;
+	virtual Pair<Inst *, const hard::PipelineUnit *> related(void) const;
+	virtual const hard::PipelineUnit *unit(void) const;
+
+	// deprecated
 	virtual const hard::Stage *stage(void) const;
 	virtual const hard::FunctionalUnit *fu(void) const;
 

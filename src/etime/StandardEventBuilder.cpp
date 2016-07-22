@@ -96,7 +96,7 @@ public:
 
 	virtual kind_t kind(void) const { return BRANCH; }
 	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return EDGE; }
+	virtual type_t type(void) const { return AFTER; }
 	virtual occurrence_t occurence(void) const { return _occ; }
 	virtual cstring name(void) const { return "branch prediction"; }
 	virtual string detail(void) const { return ""; }

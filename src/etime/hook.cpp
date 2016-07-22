@@ -45,6 +45,108 @@ namespace otawa { namespace etime {
  * the CFG into blocks.
  */
 
+
+/**
+ * @enum kind_t
+ * Defines the type of events, mainly which hardware
+ * feature causes the event.
+ * @ingroup etime
+ */
+
+/**
+ * @var kind_t NONE
+ * Special null event kind.
+ */
+
+/**
+ * @var kind_t FETCH
+ * Event arising on the fetch stage of the instruction.
+ */
+
+/**
+ * @var kind_t MEM
+ * Event arising on the stage performing access to memory for data.
+ */
+
+/**
+ * @var kind_t BRANCH;
+ * Event arising on the stage performing the branch.
+ */
+
+/**
+ * @var kind_t CUSTOM;
+ * Event arising on a particular stage / functional unit
+ * provided by Event::unit().
+ */
+
+/**
+ * @var kind_t STAGE
+ * @deprecated use @ref CUSTOM instead.
+ */
+
+/**
+ * @var kind_t FU
+ * @deprecated use @ref CUSTOM instead.
+ */
+
+
+/**
+ * @enum occurence_t
+ * Represents the type of occurence of the event.
+ */
+
+/**
+ * @var occurence_t NEVER
+ * The event never happens and the even is mainly here for information.
+ */
+
+/**
+ * @var occurence_t SOMETIMES
+ * The event sometimes happen. The method Event::estimate()
+ * provides an estimation of the frequency of the event.
+ */
+
+/**
+ * @var occurence_t ALWAYS
+ * The event always happens and the event object provides
+ * mainly the Event::cost() (in cycles) of the event.
+ */
+
+
+/**
+ * @enum type_t
+ * Define the type of application of the event in the
+ * pipeline execution.
+ */
+
+/**
+ * @var type_t LOCAL
+ * The cost is only applied to the stage duration where the event arises.
+ */
+
+/**
+ * @var type_t AFTER
+ * The event cost means that the stage event starts after a particular stage end
+ * provided by Event::related() method.
+ */
+
+/**
+ * @var type_t NOT_BEFORE
+ * The event cost means that the stage event starts at the same time as a particular stage
+ * provided by Event::related() method.
+ */
+
+/**
+ * @var type_t EDGE
+ * @deprecated	Same as @ref AFTER.
+ */
+
+/**
+ * @var type_t BLOCK
+ * @deprecated	Same as @ref BLOCK.
+ */
+
+
 /**
  * This feature ensures that events of the following analyses has been hooked to the task basic blocks:
  * @li L1 instruction cache by category,
@@ -227,6 +329,34 @@ int Event::weight(void) const {
  * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
  */
 void Event::estimate(ilp::Constraint *cons, bool on) {
+}
+
+
+/**
+ * For an AFTER or NOT_BEFORE event, gives the pair (instruction, stage)
+ * the event is relative to.
+ * @return	The (instruction, stage) the event is relative to.
+ */
+Pair<Inst *, const hard::PipelineUnit *> Event::related(void) const {
+	return pair(null<Inst>(), null<const hard::PipelineUnit>());
+}
+
+
+/**
+ * For CUSTOM kind, gives the unit the event applies to.
+ * @param	Unit the event applies to.
+ */
+const hard::PipelineUnit *Event::unit(void) const {
+	return null<hard::PipelineUnit>();
+}
+
+
+/**
+ * Get details about the event to display to the human user.
+ * @return	Human readable details about the event.
+ */
+string Event::detail(void) const {
+	return "";
 }
 
 
