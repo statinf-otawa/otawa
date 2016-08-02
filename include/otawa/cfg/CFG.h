@@ -136,11 +136,11 @@ public:
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 
-	class BundleIter: public PreIterator<BundleIter, Inst *> {
+	class BundleIter: public PreIterator<BundleIter, Inst *const> {
 	public:
 		inline BundleIter(void) { }
 		inline BundleIter(const BasicBlock *bb): _iter(bb) { }
-		inline Inst * const item(void) const {return _iter.item(); }
+		inline Inst *const &item(void) const { return _iter.item(); }
 		inline bool ended(void) const { return _iter.ended(); }
 		inline void next(void) { while(!ended() && item()->isBundle()) _iter.next(); _iter.next(); }
 	private:
