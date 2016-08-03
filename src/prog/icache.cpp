@@ -57,7 +57,7 @@ io::Output& operator<<(io::Output& out, const Access& acc) {
 	};
 	out << labels[acc.kind()];
 	if(acc.kind() != NONE)
-		out << ' ' << acc.address();
+		out << " to " << acc.address() << " from I(" << acc.instruction()->address() << ")";
 	return out;
 }
 
@@ -91,25 +91,49 @@ protected:
 			return;
 		BasicBlock *bb = b->toBasic();
 
-		// is it cached (assuming a BB does span over several banks)?
+		// is it cached (assuming a BB does not span over several banks)?
 		const hard::Bank *bank = mem->get(bb->address());
 		if(!bank->isCached())
 			return;
 
 		// split the BB in block accesses
-		BasicBlock::InstIter i(bb);
-		if(i) {
-			accs.add(Access(FETCH, i, i->address()));
-			i++;
-			if(logFor(LOG_BLOCK))
+		BasicBlock::BundleIter i(bb);
+		Address last_block;
+		Inst *last_bundle = 0;
+		BasicBlock::BundleIter bundle(bb);
+		if (bundle) {
+			// First bundle access
+			accs.add(icache::Access(icache::FETCH, bundle, bundle->address()));
+			last_block = icache->round(bundle->address());
+			last_bundle = bundle;
+			bundle++;
+			if (logFor(LOG_BLOCK))
 				log << "\t\t\t" << accs.top() << io::endl;
 		}
-		for(; i; i++)
-			if(icache->offset(i->address()) == 0) {
-				accs.add(Access(FETCH, i, i->address()));
-				if(logFor(LOG_BLOCK))
+		for (; bundle; ++bundle) {
+			if (icache->round(bundle->address() - 1) != last_block) {
+				// Last bundle crossed cache block boundary
+				last_block = icache->round(bundle->address() - 1);
+				accs.add(icache::Access(icache::FETCH, last_bundle, last_block));
+				if (logFor(LOG_BLOCK))
 					log << "\t\t\t" << accs.top() << io::endl;
 			}
+			if (icache->round(bundle->address()) != last_block) {
+				// Bundle starts in a new block
+				last_block = icache->round(bundle->address());
+				accs.add(icache::Access(icache::FETCH, bundle, last_block));
+				if (logFor(LOG_BLOCK))
+					log << "\t\t\t" << accs.top() << io::endl;
+			}
+			last_bundle = bundle;
+		}
+		if (last_bundle && icache->round(bb->topAddress() - 1) != last_block) {
+			// Last bundle of the BB crossed cache block boundary
+			accs.add(icache::Access(icache::FETCH, last_bundle,
+							icache->round(bb->last()->address())));
+			if (logFor(LOG_BLOCK))
+				log << "\t\t\t" << accs.top() << io::endl;
+		}
 
 		// build the property
 		ACCESSES(bb) = accs;
