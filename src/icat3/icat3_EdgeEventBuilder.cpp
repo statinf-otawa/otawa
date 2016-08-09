@@ -48,12 +48,13 @@ io::Output& operator<<(io::Output& out, category_t cat) {
 
 class ICacheEvent: public etime::Event {
 public:
-	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, Block *b, Block *head = 0)
-		: Event(acc.instruction()), _cost(cost), _acc(acc), _b(b), _cat(cat), _head(head) {	}
+	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, Block *b, Block *head = 0,
+			etime::type_t type = etime::LOCAL, rel_t rel = pair(null<Inst>(), null<const hard::PipelineUnit>()))
+		: Event(acc.instruction()), _cost(cost), _acc(acc), _b(b), _cat(cat), _head(head), _type(type), _rel(rel) {	}
 
 	virtual etime::kind_t kind(void) const { return etime::FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
-	virtual etime::type_t type(void) const { return etime::BLOCK; }
+	virtual etime::type_t type(void) const { return _type; }
 
 	virtual etime::occurrence_t occurrence(void) const {
 		switch(_cat) {
@@ -67,7 +68,7 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << _cat; }
+	virtual string detail(void) const { return _ << _cat << " access to " << _acc.address(); }
 
 	virtual int weight(void) const {
 		switch(_cat) {
@@ -97,12 +98,18 @@ public:
 				cons->addLeft(1, ipet::VAR(i));
 	}
 
+	virtual rel_t related(void) const { return _rel; }
+	virtual inline void relate(const rel_t &rel) { _rel = rel; }
+	virtual inline void setType(etime::type_t type) { _type = type; }
+
 private:
 	ot::time _cost;
 	const icache::Access& _acc;
 	Block *_b;
 	category_t _cat;
 	Block *_head;
+	etime::type_t _type;
+	rel_t _rel;
 };
 
 
@@ -194,7 +201,7 @@ private:
 				cat = AH;
 			else {
 				LoopIter h(b);
-				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0; i--, h++) {
+				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
 					age = mustpers->pers(acs).stack()[i][lb->index()];
 					if(0 <= age && age < A) {
 						ch = h;

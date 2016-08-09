@@ -73,6 +73,7 @@ typedef enum type_t {
 // Event class
 class Event: public PropList {
 public:
+	typedef Pair<Inst *, const hard::PipelineUnit *> rel_t;
 
 	Event(Inst *inst);
 	virtual ~Event(void);
@@ -87,6 +88,9 @@ public:
 	virtual string detail(void) const;
 	virtual Pair<Inst *, const hard::PipelineUnit *> related(void) const;
 	virtual const hard::PipelineUnit *unit(void) const;
+
+	virtual void relate(const rel_t &rel);
+	virtual void setType(type_t type);
 
 	// deprecated
 	virtual const hard::Stage *stage(void) const;

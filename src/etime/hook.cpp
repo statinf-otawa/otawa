@@ -337,8 +337,27 @@ void Event::estimate(ilp::Constraint *cons, bool on) {
  * the event is relative to.
  * @return	The (instruction, stage) the event is relative to.
  */
-Pair<Inst *, const hard::PipelineUnit *> Event::related(void) const {
+Event::rel_t Event::related(void) const {
 	return pair(null<Inst>(), null<const hard::PipelineUnit>());
+}
+
+
+/**
+ * For an AFTER or NOT_BEFORE event, update the pair (instruction, stage)
+ * the event is relative to.
+ * @param rel	The (instruction, stage) the event is relative to.
+ */
+void Event::relate(const rel_t &rel) {
+	throw MessageException("Not implemented!");
+}
+
+
+/**
+ * Update the type of the event
+ * @param type	Type to be updated to
+ */
+void Event::setType(type_t type) {
+	throw MessageException("Not implemented!");
 }
 
 

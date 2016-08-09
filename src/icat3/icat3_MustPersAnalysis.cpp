@@ -244,7 +244,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		{ x }
+#define AI_DEBUG(x)		//{ x }
 
 template <class S>
 class SimpleControler {

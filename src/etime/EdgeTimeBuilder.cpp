@@ -874,9 +874,59 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 	switch(event->kind()) {
 
-	case FETCH:
-		inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
+	case FETCH: {
+		switch (event->type()) {
+		case LOCAL:
+			inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
+			break;
+
+		case AFTER:
+		case NOT_BEFORE: {
+			// Edge type depends on the event type
+			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ?
+					ParExeEdge::SOLID : ParExeEdge::SLASHED;
+
+			// Find the related ParExeInst
+			ParExeInst *rel_inst = 0;
+			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it)
+				if(inst_it->inst() == event->related().fst) {
+					rel_inst = *inst_it;
+					break;
+				}
+			ASSERTP(rel_inst, "related instruction (" << event->related().fst->address()
+					<< ") not found in the sequence");
+
+			// Find the related ParExeNode
+			bool found = false;
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+				if(rel_node->stage()->unit() == event->related().snd) {
+					found = true;
+
+					// Add cost to the edge between the related node and the fetch code
+					bool edge_found = false;
+					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+						if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
+							succ.edge()->setLatency(succ.edge()->latency() + event->cost());
+							edge_found = true;
+							break;
+						}
+					if (!edge_found)
+						throw otawa::Exception(_ << "edge from related stage "
+								<< event->related().snd << " not found");
+
+					break;
+				}
+			if(!found)
+				throw otawa::Exception(_ << "related stage " << event->related().snd << " not found");
+			break;
+		}
+
+		default:
+			ASSERTP(0, _ << "unsupported event type " << event->type());
+		}
+
 		break;
+	}
 
 	case MEM: {
 			bool found = false;
@@ -913,9 +963,58 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	switch(event->kind()) {
 
-	case FETCH:
-		inst->fetchNode()->setLatency(inst->fetchNode()->latency() - event->cost());
+	case FETCH: {
+		switch (event->type()) {
+		case LOCAL:
+			inst->fetchNode()->setLatency(inst->fetchNode()->latency() - event->cost());
+			break;
+
+		case AFTER:
+		case NOT_BEFORE: {
+			// Edge type depends on the event type
+			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ?
+					ParExeEdge::SOLID : ParExeEdge::SLASHED;
+
+			// Find the related ParExeInst
+			ParExeInst *rel_inst = 0;
+			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it)
+				if(inst_it->inst() == event->related().fst) {
+					rel_inst = *inst_it;
+					break;
+				}
+			ASSERTP(rel_inst, "related instruction (" << event->related().fst->address()
+					<< ") not found in the sequence");
+
+			// Find the related ParExeNode
+			bool found = false;
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+				if(rel_node->stage()->unit() == event->related().snd) {
+					found = true;
+
+					// Add cost to the edge between the related node and the fetch code
+					bool edge_found = false;
+					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+						if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
+							succ.edge()->setLatency(succ.edge()->latency() - event->cost());
+							edge_found = true;
+							break;
+						}
+					if (!edge_found)
+						throw otawa::Exception(_ << "edge from related stage "
+								<< event->related().snd << " not found");
+
+					break;
+				}
+			if(!found)
+				throw otawa::Exception(_ << "related stage " << event->related().snd << " not found");
+			break;
+		}
+
+		default:
+			ASSERTP(0, _ << "unsupported event type " << event->type());
+		}
 		break;
+	}
 
 	case MEM:
 		for(ParExeInst::NodeIterator node(inst); node; node++)
