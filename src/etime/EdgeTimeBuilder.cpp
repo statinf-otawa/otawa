@@ -1166,7 +1166,8 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		if(x_hts > weight)
 			x_hts = weight;
 		ot::time cost = x_hts * confs.top().time() + (weight - x_hts) * confs[p - 1].time();
-		cerr << "\t\t\t p = " << p << ", cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
+		if (isVerbose())
+			log << "\t\t\t p = " << p << ", cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
 
 		// look for best cost
 		if(cost < best_cost) {
@@ -1175,7 +1176,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		}
 	}
 	if (logFor(LOG_BB))
-		cerr << "\t\t\tbest_p = " << best_p << io::endl;
+		log << "\t\t\tbest_p = " << best_p << io::endl;
 
 	// look in the split
 	ConfigSet hts;
