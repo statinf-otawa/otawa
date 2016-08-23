@@ -55,6 +55,8 @@ class WideningListener {
 		results = new typename Problem::Domain**[col->count()];
 		if (store_out)
 		  	results_out = new typename Problem::Domain**[col->count()];
+		else
+			results_out = NULL;
 		for (int i = 0; i < col->count();  i++) {
 			CFG *cfg = col->get(i); 
 			results[i] = new typename Problem::Domain*[cfg->count()];
@@ -90,6 +92,8 @@ class WideningListener {
 	
 	void fixPointReached(const WideningFixPoint<WideningListener > *fp, Block*bb );
 	
+	template <class GC> inline void collect(const GC* gc) const;
+
 	inline Problem& getProb() {
 		return(prob);
 	}
@@ -130,6 +134,26 @@ template <class Problem >
 void WideningListener<Problem>::fixPointReached(const WideningFixPoint<WideningListener> *fp, Block*bb ) {
 }
 	
+
+template <class Problem> template<class GC>
+inline void WideningListener<Problem>::collect(const GC *gc) const {
+	if(!fw)
+		return;
+	int totalState = 0;
+	const CFGCollection *col = INVOLVED_CFGS(fw);
+	for (int ci = 0; col && (ci < col->count());  ci++) {
+		CFG *cfg = col->get(ci);
+		for (int j = 0; j < cfg->count(); j++){
+			totalState = results[ci][j]->collect(gc, totalState);
+			if (results_out) {
+				elm::cout << "collecting OUT_STATE for " << cfg << ", " << cfg->at(j) << io::endl;
+				elm::cout << cfg << cfg->at(j) << io::endl;
+			}
+			// keep the state of each out-edge
+		} // for each BB
+	} // for each CFG
+}
+
 } } }	// otawa::dfa::hai
 
 #endif // OTAWA_DFA_HAI_WIDENINGLISTENER_H_

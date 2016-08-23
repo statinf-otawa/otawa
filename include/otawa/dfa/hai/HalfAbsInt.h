@@ -84,6 +84,7 @@ public:
 		typename FixPoint::Domain *entdom = 0, Block *start_bb = 0);
 	inline typename FixPoint::Domain backEdgeUnion(Block *bb);
 	inline typename FixPoint::Domain entryEdgeUnion(Block *bb);
+	template <class GC> inline void collect(const GC* gc) const;
 
 private:
 	FixPoint& fp;
@@ -108,6 +109,28 @@ private:
 	void outputProcessing(void);
 	void addSuccessors(void);
 };
+
+
+
+template <class FixPoint> template<class GC>
+inline void HalfAbsInt<FixPoint>::collect(const GC *gc) const {
+	in.collect(gc, 0);
+	out.collect(gc, 0);
+
+	// need to collect fix point state for BB who has it
+	const CFGCollection *col = INVOLVED_CFGS(ws);
+	for (int ci = 0; ci < col->count();  ci++) {
+		CFG *cfg = col->get(ci);
+		for (int j = 0; j < cfg->count(); j++) {
+			Block *b = cfg->at(j);
+			typename FixPoint::FixPointState* fps = FIXPOINT_STATE(b);
+			if(fps != 0) {
+				(fps->headerState).collect(gc);
+			}
+
+		} // for each BB
+	} // for each CFG
+}
 
 template <class FixPoint>
 Identifier<typename FixPoint::FixPointState*> HalfAbsInt<FixPoint>::FIXPOINT_STATE("", 0);
@@ -250,13 +273,13 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 			// The values of the entry edges are not needed anymore
 	    	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
 	    		// TODO no more needed
-	    		if(inedge->sink()->isSynth())
-					continue;
+//	    		if(inedge->sink()->isSynth())
+//					continue;
 				/* TODO fix when inlined virtualization will be re-activated
 	    		if(HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 					continue;*/
-	    		else if(!Dominance::dominates(current, inedge->source()))
-					fp.unmarkEdge(*inedge);
+//	    		else if(!Dominance::dominates(current, inedge->source()))
+				fp.unmarkEdge(*inedge);
 	    	}
 	    	if (HAI_BYPASS_TARGET(current))
 	    		fp.unmarkEdge(current);
@@ -482,8 +505,13 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 		outputProcessing();
 		HAI_TRACE("\t\toutput = " << out);
 
-		if(!current->isExit() && workList->isEmpty())
-			ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
+		if(!current->isExit() && workList->isEmpty()) {
+			// now we need to check the out-going edge
+			for(Block::EdgeIter bei=current->outs(); bei; bei++) {
+				if(bei->target() != current)
+					ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
+			}
+		}
 	}
 
     // json debugging finalization

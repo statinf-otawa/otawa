@@ -42,7 +42,6 @@ namespace otawa { namespace dfa { namespace hai {
 
 template <class Listener>
 class WideningFixPoint {
-	
 	// Types
 	public:
 	typedef typename Listener::Problem Problem;
@@ -106,6 +105,8 @@ class WideningFixPoint {
 	inline void fixPointReached(Block* bb) const;
 	inline void enterContext(Domain &dom, Block* bb, hai_context_t ctx) const;
 	inline void leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const;
+	template <class GC> inline int collect(Block* bb, const GC* gc) const;
+	template <class GC> inline int collect2(Block* bb, const GC* gc) const;
 #	ifdef HAI_JSON
 		inline void dumpJSON(const Domain& dom, json::Saver& saver) { prob.dumpJSON(dom, saver); }
 #	endif
@@ -247,6 +248,41 @@ inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
 		HAI_TRACE("to " << dom);
 }
 
+template <class Listener> template<class GC>
+inline int WideningFixPoint<Listener>::collect(Block* bb, const GC *gc) const {
+	typename Listener::Problem::Domain* s = *STATE(bb);
+	if (s != 0)
+		assert(0); // see if some block with this but we forget to collect
+
+	// mark all the states on edge going out from bb
+	int i = 0;
+	for(Block::EdgeIter out = bb->outs(); out; out++) {
+		typename Listener::Problem::Domain* s = *STATE(*out);
+		if (s != 0) {
+			s->collect(gc);
+			i++;
+		}
+	}
+	return i;
+}
+
+template <class Listener> template<class GC>
+inline int WideningFixPoint<Listener>::collect2(Block* bb, const GC *gc) const {
+	typename Listener::Problem::Domain* s = *STATE(bb);
+	if (s != 0)
+		assert(0); // see if some block with this but we forget to collect
+
+	// mark all the states on edge going out from bb
+	int i = 0;
+	for(Block::EdgeIter out = bb->ins(); out; out++) {
+		typename Listener::Problem::Domain* s = *STATE(*out);
+		if (s != 0) {
+			s->collect(gc);
+			i++;
+		}
+	}
+	return i;
+}
 	
 } } } // otawa::dfa::hai
 

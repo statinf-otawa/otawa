@@ -26,7 +26,7 @@
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prog/sem.h>
-#include "State.h"
+#include <otawa/dfa/State.h>
 
 #define GLOBAL_MEMORY_LOADER true
 
@@ -35,9 +35,10 @@ using namespace otawa;
 
 namespace otawa { namespace dynbranch {
 
+
 class GlobalAnalysisProblem {
 public:
-	typedef State Domain;
+	typedef FastStateWrapper Domain;
 	GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain & entry);
 	~GlobalAnalysisProblem(void);
 
@@ -52,6 +53,7 @@ public:
 	void update(Domain& out, const Domain& in, Block *b);
 	void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
 	void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	inline Vector<PotentialValue>* getTempRegs() { return _tempRegs; }
 
 	inline void printTempRegs(string begin = "", string end="") {
 		int j = 0;
@@ -87,8 +89,9 @@ private:
 
 };
 
+
 // need to implement when necessary
-inline bool operator==(const Domain& a, const Domain& b) {
+inline bool operator==(const GlobalAnalysisProblem::Domain& a, const GlobalAnalysisProblem::Domain& b) {
 	assert(0);
 }
 

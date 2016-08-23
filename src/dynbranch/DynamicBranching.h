@@ -32,7 +32,6 @@
 #include <otawa/data/clp/ClpPack.h>
 #include <otawa/data/clp/features.h>
 #include "PotentialValue.h"
-#include "GlobalAnalysis.h"
 #include "MemType.h"
 
 // TODO	Move it in separate file.

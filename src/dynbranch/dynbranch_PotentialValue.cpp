@@ -18,99 +18,145 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include "PotentialValue.h"
+
 #include <otawa/dynbranch/features.h>
 #include <include/otawa/proc/Monitor.h>
+#include <sys/resource.h>
+#include <malloc.h>
+#include "PotentialValue.h"
+#include "State.h"
+#include "GlobalAnalysisProblem.h"
+#include "GC.h"
+
+//bool collectDebug = true;
+
+
 
 namespace otawa { namespace dynbranch {
 
 //Identifier<potential_value_list_t*> DYNBRANCH_POTENTIAL_VALUE_LIST("");
 
+// these three potential values will stay in the heap outside the garbage collection
 PotentialValue PotentialValue::bot(false);
 PotentialValue PotentialValue::top(true);
 PotentialValue PotentialValue::DEFAULT(false);
+PotentialValue* PotentialValue::tempPVAlloc = 0;
+
 unsigned int PotentialValue::MAGIC = 0;
+MyGC* PotentialValue::pvgc = 0;
+
 #ifdef SAFE_MEM_ACCESS
 SLList<PotentialValueMem*> PotentialValue::potentialValueCollector;
 #else
-SLList<PotentialValue*> PotentialValue::potentialValueCollector;
+//SLList<PotentialValue*> PotentialValue::potentialValueCollector;
 #endif
 
-PotentialValue::PotentialValue(bool _top): bTop(_top), Set<elm::t::uint32>() {
-	magic = MAGIC;
-#ifdef SAFE_MEM_ACCESS
-	pvm = 0; // not going to add into potentialValueCollector...
+//int PotentialValue::countX = 0;
+//int PotentialValue::countY = 0;
+
+//#define SHOWSHOW
+//PotentialValue::PotentialValue(bool _top): bTop(_top), Set<elm::t::uint32>(pvgc) {
+PotentialValue::PotentialValue(bool _top): bTop(_top), Vector<elm::t::uint32>(pvgc, 0) {
+	//magic = MAGIC;
+/*
+#ifdef SHOWSHOW
+	countX++;
+	if(countX%1000000 == 0) {
+		elm::cout << "PotentialValue created count: " << countX << ", size = " << sizeof(*this) << io::endl;
+		struct mallinfo info;
+
+		info = mallinfo();
+
+		printf ("total allocated space:  %ul bytes\n", info.uordblks);
+		printf ("total free space:       %ul bytes\n", info.fordblks);
+	}
 #endif
+*/
 }
 
-PotentialValue::PotentialValue(const PotentialValue & cpv) : Set<elm::t::uint32>(cpv) {
-	magic = MAGIC;
+//PotentialValue::PotentialValue(const PotentialValue & cpv) : Set<elm::t::uint32>(cpv, pvgc) {
+PotentialValue::PotentialValue(const PotentialValue & cpv) :  Vector<elm::t::uint32>(pvgc, cpv) {
+	// note: when a potentialvalue is created through the copy constructor, the tab is not initialized.
+	// we need to call the constructor of Set and then Vector to initialize the tab
+	// reminder: PotentialValue does not allocate memory for the tab hence the size of PV only includes the pointer to the tab
+//WILLIE_BEGIN_FASTSTATE_GC(
+//	elm::cout << __SOURCE_INFO__ << "pv copy constr. is called, source pv size = " << cpv.count() << "/" << cpv.capacity() << " (allocation is finished before this line)" << io::endl;
+//)WILLIE_END()
+//	countX++;
+
+
 	bTop = cpv.bTop;
-#ifdef SAFE_MEM_ACCESS
-	pvm = new PotentialValueMem();
-	pvm->pv = this;
-	pvm->status = true;
-	potentialValueCollector.add(pvm);
-#else
-	potentialValueCollector.add(this);
-#endif
 }
 
 //PotentialValue::~PotentialValue() { ~Set<elm::t::uint32>(); memset(this, 0, sizeof(PotentialValue)); }
 
 PotentialValue::~PotentialValue() {
-	magic = 0;
+//	magic = 0;
+//#ifdef SHOWSHOW
+//	countY++;
+//	if(countY%1000000 == 0) {
+//		elm::cout << "PotentialValue destroyed count: " << countY << ", size = " << sizeof(*this) << io::endl;
+//
+//	}
+//#endif
 #ifdef SAFE_MEM_ACCESS
 	if(pvm)
 		pvm->status = false;
 #endif
-	~Set<elm::t::uint32>();
+//	~Set<elm::t::uint32>();
 }
 
 PotentialValue& PotentialValue::operator=(const PotentialValue& a) {
-	// need this for FastState because the memory are initialized as chars but not as the objects
-	// (!)LESSON LEARNT: when calling =, the target (this) may not be initialized yet,
-	// which means the capacity is 0, this is a big nono, hence we we grow the capacity with the same size of a
-
-	// ok someone has to be dirty
-	// FIXME: possible memory leakage! because we don't know 'this' is just created by
-	// fast state (which has mumbo jumbo values which play bad tricks) or already existed.
-	// clear the already existed potential value will cause memory leakage, say, it will make
-	// the 'tab' and 'cap' (inh. from Set and then Vector) 0, and make the operator= from Vector (which then calls its
-	// copy function) see there is no 'tab' and creates one, and make a new 'tab' without clearing the old one.
-	// But if we do not set it to 0, the 'tab' could have some random value, such as 0x7, and cap has smaller value
-	// then a.cap. the 'tab' will be used....then it leads to disaster
-	// and operator= from Vector will just use the tab
-
-	// first, we need to see if the 'tab' of this really contains something ?
-	// lets use a magic number stored in the static variable of the class MAGIC
-	// if the PotentialValue is created via ordinary constructor, then magic number should be MAGIC
-	// if not, it will be random value (could be MAGIC too, but lets bet?), we change the MAGIC for each new allocator because
-	// it is possible that allocator gets the same chunk of memory previously and the value persists.
-	// if it is not MAGIC, we know it is created by faststate, then we need to initialize the content of
-	// the memory. and assigned the magic number to MAGIC (just like a 'PASS' stamp!)
-	// we then use the operator= from Vector to create the tab
-
-	if(magic != MAGIC) { // valgrind will report error on reading magic as depends on uninitialized value(s), which is true :)
-		memset(this, 0, sizeof(PotentialValue));
-		magic = MAGIC;
-		Vector<elm::t::uint32>::operator=(a);
-#ifdef SAFE_MEM_ACCESS
-		pvm = new PotentialValueMem();
-		pvm->pv = this;
-		pvm->status = true;
-		potentialValueCollector.add(pvm);
-#else
-		potentialValueCollector.add(this);
-#endif
-	}
-	else{
-		clear();
-		for(PotentialValue::Iterator ita(a); ita; ita++)
-			insert(*ita);
-	}
+	// first copy the bTop
 	bTop = a.bTop;
+	// to save more time, call the operator directly
+	Vector<elm::t::uint32>::operator=(a);
 	return *this;
+
+//	elm::cout << "pv = is called" << io::endl;
+//	// need this for FastState because the memory are initialized as chars but not as the objects
+//	// (!)LESSON LEARNT: when calling =, the target (this) may not be initialized yet,
+//	// which means the capacity is 0, this is a big nono, hence we we grow the capacity with the same size of a
+//
+//	// ok someone has to be dirty
+//	// FIXME: possible memory leakage! because we don't know 'this' is just created by
+//	// fast state (which has mumbo jumbo values which play bad tricks) or already existed.
+//	// clear the already existed potential value will cause memory leakage, say, it will make
+//	// the 'tab' and 'cap' (inh. from Set and then Vector) 0, and make the operator= from Vector (which then calls its
+//	// copy function) see there is no 'tab' and creates one, and make a new 'tab' without clearing the old one.
+//	// But if we do not set it to 0, the 'tab' could have some random value, such as 0x7, and cap has smaller value
+//	// then a.cap. the 'tab' will be used....then it leads to disaster
+//	// and operator= from Vector will just use the tab
+//
+//	// first, we need to see if the 'tab' of this really contains something ?
+//	// lets use a magic number stored in the static variable of the class MAGIC
+//	// if the PotentialValue is created via ordinary constructor, then magic number should be MAGIC
+//	// if not, it will be random value (could be MAGIC too, but lets bet?), we change the MAGIC for each new allocator because
+//	// it is possible that allocator gets the same chunk of memory previously and the value persists.
+//	// if it is not MAGIC, we know it is created by faststate, then we need to initialize the content of
+//	// the memory. and assigned the magic number to MAGIC (just like a 'PASS' stamp!)
+//	// we then use the operator= from Vector to create the tab
+//
+//	if(magic != MAGIC) { // valgrind will report error on reading magic as depends on uninitialized value(s), which is true :)
+//		memset(this, 0, sizeof(PotentialValue));
+//		magic = MAGIC;
+//		Vector<elm::t::uint32>::operator=(a);
+//#ifdef SAFE_MEM_ACCESS
+//		pvm = new PotentialValueMem();
+//		pvm->pv = this;
+//		pvm->status = true;
+//		potentialValueCollector.add(pvm);
+//#else
+//		potentialValueCollector.add(this);
+//#endif
+//	}
+//	else{
+//		clear();
+//		for(PotentialValue::Iterator ita(a); ita; ita++)
+//			insert(*ita);
+//	}
+//	bTop = a.bTop;
+//	return *this;
 }
 
 PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
@@ -121,6 +167,7 @@ PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita & *itb);
@@ -135,6 +182,7 @@ PotentialValue operator|(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita | *itb);
@@ -149,6 +197,7 @@ PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita ^ *itb);
@@ -157,8 +206,9 @@ PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
 
 PotentialValue operator~(const PotentialValue& a) {
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
-			res.insert(~(*ita));
+		res.insert(~(*ita));
 	return res;
 }
 
@@ -170,6 +220,7 @@ PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita + *itb);
@@ -184,6 +235,7 @@ PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita - *itb);
@@ -198,6 +250,7 @@ PotentialValue operator*(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert((*ita)*(*itb));
@@ -212,6 +265,7 @@ PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
 			res.insert(*ita >> *itb);
@@ -228,6 +282,7 @@ PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& 
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++) {
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
 			res.insert((unsigned int)*ita >> *itb);
@@ -244,6 +299,7 @@ PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
 			t::int64 temp = (*ita)*(*itb);
@@ -261,6 +317,7 @@ PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita << *itb);
@@ -275,6 +332,7 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++)
 			res.insert(*ita || *itb);
@@ -285,20 +343,31 @@ PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
 	if(a.count() == 0 && b.count() == 0)
 		return PotentialValue::bot;
 	if(a.count()+b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
-		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " + " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
+		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " + " << b.count() << " = " << (a.count()+b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
 		return PotentialValue::bot;
 	}
 	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		res.insert(*ita);
 	for(PotentialValue::Iterator itb(b); itb; itb++) {
 		res.insert(*itb);
 	}
+//	if(willia)
+//		elm::cout << "res @ " << (&res)->getTab() << io::endl;
 	return res;
+}
+
+bool PotentialValue::collect(MyGC*  gc, bool show) {
+	bool already = Vector<unsigned int>::collect();
 }
 
 bool operator==(const PotentialValue& a, const PotentialValue& b) {
 	// in potential value, top and bot are no difference.... (?), hence to speed up, if they both contains 0 element, return true
+	if(a.bTop != b.bTop) {
+		return false;
+	}
+
 	if(a.length() == 0 && b.length() == 0)
 		return true;
 

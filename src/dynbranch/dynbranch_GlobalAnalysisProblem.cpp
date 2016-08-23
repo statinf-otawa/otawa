@@ -18,10 +18,16 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include "State.h"
 #include "GlobalAnalysisProblem.h"
 #include <elm/log/Log.h> // to use the debugging messages
 
 #define DEBUG_MEM(x)
+
+extern unsigned int debugGCCond;
+extern bool willia;
+extern unsigned long processedSemInstCount;
 
 using namespace elm::log;
 using namespace elm::color;
@@ -46,29 +52,33 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 	ent.setFastState(entry.getFastState());
 	ent.setState(entry.getFastState()->bot);
 	PotentialValue pvEntry;
+	// for the entry state, set the value of the SP
+	// note: this will create a new state from the bot state
 	pvEntry.insert(ws->process()->defaultStack());
 	ent.setReg(ws->process()->platform()->getSP()->platformNumber(), pvEntry);
+
 
 	// setting up temp regs
 	PotentialValue pv;
 	_tempRegs = new Vector<PotentialValue>(workspace->process()->platform()->regCount());
 	for(int i = 0; i < workspace->process()->platform()->regCount(); i++)
 		_tempRegs->add(pv);
+
 }
 
 GlobalAnalysisProblem::~GlobalAnalysisProblem(void) {
 	delete _tempRegs;
 }
 
-const Domain& GlobalAnalysisProblem::bottom() {
+const GlobalAnalysisProblem::Domain& GlobalAnalysisProblem::bottom() {
 	return bot ;
 }
 
-const Domain& GlobalAnalysisProblem::top() {
+const GlobalAnalysisProblem::Domain& GlobalAnalysisProblem::top() {
 	return topd ;
 }
 
-const Domain& GlobalAnalysisProblem::entry() {
+const GlobalAnalysisProblem::Domain& GlobalAnalysisProblem::entry() {
 	return ent ;
 }
 
@@ -102,6 +112,7 @@ void GlobalAnalysisProblem::widening(otawa::Block* ob, Domain& a, Domain b) cons
 }
 
 void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
+
 	// initially the output state equals to the input state
 	out = in ;
 
@@ -111,13 +122,20 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 	BasicBlock *bb = b->toBasic();
 
 	// process each instruction in turn
-	for(BasicBlock::InstIter inst(bb) ; inst ; inst++) {
+	for(BasicBlock::InstIter insto(bb) ; insto ; insto++) {
+
+//		elm::cout << __SOURCE_INFO__ << __YELLOW__ << "looking at " << *insto << " @　 " << insto->address() << __RESET__ << io::endl;
 		// get semantic instructions
 		sem::Block block;
-		inst->semInsts(block);
+		insto->semInsts(block);
 
 		// process the semantic instruction
 		for(sem::Block::InstIter semi(block) ; semi ; semi++) {
+
+			processedSemInstCount++;
+
+//			elm::cout << __SOURCE_INFO__ << __TAB__ << __CYAN__ << "checking sem inst " << *semi << __RESET__ << io::endl;
+//			elm::cout << "KLL " << out << io::endl;
 			sem::inst inst = *semi ;
 
 			// unsupported instructions without side-effects
@@ -140,7 +158,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 
 			case sem::SETI:		// d <- cst
 			{
-				PotentialValue pv ;
+				PotentialValue pv;
 				pv.insert(inst.cst()) ;
 				setReg(out, inst.d(), pv);
 				break;
@@ -150,6 +168,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 			{
 				const PotentialValue& vala = readReg(out, inst.a());
 				setReg(out, inst.d(), vala);
+				PotentialValue::tempPVAlloc = 0;
 				break ;
 			}
 
@@ -160,7 +179,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue sum = vala + valb;
+					PotentialValue::tempPVAlloc = &sum;
 					setReg(out, inst.d(), sum);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					// removing the entry (because we don't know the results, so we make an assumption that it is TOP)
@@ -209,8 +230,10 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 							t::uint32 dataFromMemDirectory;
 							ws->process()->get(addressToLoad, dataFromMemDirectory);
 							PotentialValue pv;
+							PotentialValue::tempPVAlloc = &pv;
 							pv.insert(dataFromMemDirectory);
 							setReg(out, inst.d(), pv);
+							PotentialValue::tempPVAlloc = 0;
 						}
 						else
 							setReg(out, inst.d(), data);
@@ -265,7 +288,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = vala << valb;
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -279,8 +304,10 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				const PotentialValue& valb = readReg(out, inst.b());
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
-					PotentialValue sum = vala - valb;
-					setReg(out, inst.d(), sum);
+					PotentialValue diff = vala - valb;
+					PotentialValue::tempPVAlloc = &diff;
+					setReg(out, inst.d(), diff);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -294,8 +321,11 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				const PotentialValue& valb = readReg(out, inst.b());
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
-					PotentialValue sum = vala & valb;
-					setReg(out, inst.d(), sum);
+					PotentialValue result = vala & valb;
+					PotentialValue::tempPVAlloc = &result;
+
+					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -309,8 +339,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				const PotentialValue& valb = readReg(out, inst.b());
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
-					PotentialValue sum = vala >> valb;
-					setReg(out, inst.d(), sum);
+					PotentialValue result = vala >> valb;
+					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -325,7 +356,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = logicalShiftRight(vala, valb);
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -340,7 +373,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = vala | valb;
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -355,7 +390,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = vala ^ valb;
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -369,7 +406,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = ~vala;
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -384,7 +423,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = vala * valb;
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP
@@ -399,7 +440,9 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
 				{
 					PotentialValue result = MULH(vala,valb);
+					PotentialValue::tempPVAlloc = &result;
 					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
 				}
 				else {
 					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results, so we make an assumption that it is TOP

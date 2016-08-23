@@ -21,23 +21,30 @@
 #ifndef OTAWA_DYNBRANCH_SET_H
 #define OTAWA_DYNBRANCH_SET_H
 
-#include <elm/genstruct/Vector.h>
+#include <DBVector.h>
 
 using namespace elm;
 
 namespace otawa { namespace dynbranch {
 
+class MyGC;
 
 template <typename T>
-class Set : public genstruct::Vector<T> {
+class XSet : public Vector<T> {
 public:
 
-	Set<T>(void) : genstruct::Vector<T>() { }
+	XSet<T>(void) { assert(0); }
+	XSet<T>(const XSet<T>& set) : Vector<T>(set) { assert(0);}
 
+	XSet<T>(const XSet<T>& set, MyGC* gc) : Vector<T>(gc, set) { }
+	XSet<T>(MyGC* gc) : Vector<T>(gc, 0) { }
+
+/*
 	void insert(const T& val) {
-		if(!genstruct::Vector<T>::contains(val))
-			genstruct::Vector<T>::push(val);
+		if(!Vector<T>::contains(val))
+			Vector<T>::push(val);
 	}
+*/
 };
 
 }}

@@ -2705,7 +2705,6 @@ public:
 			TRACEP(cerr << "> IF detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
-
 	}
 
 	/**

@@ -26,12 +26,11 @@
 #include <elm/alloc/StackAllocator.h>
 #include <otawa/hard/Platform.h>
 #include "State.h"
-
 namespace otawa { namespace dfa {
 
 using namespace elm;
 
-template <class D>
+template <class D, class T = StackAllocator>
 class FastState {
 public:
 	typedef t::uint32 address_t;
@@ -40,28 +39,55 @@ public:
 private:
 
 	typedef struct node_t {
-		inline node_t(address_t _a, value_t _v, node_t *_n = 0): a(_a), v(_v), n(_n) { }
-		inline node_t(node_t *node): a(node->a), v(node->v), n(0) { }
+		// each node_t is constructed through the allocator, later, its member v is assigned from external values, which may require the memory
+		// from the allocator as well. When GC is triggered due to the assignment of v, we need to ensure that the node_t will be marked.
+		// Hence we are using the nodeAlloc (static member of the FastState, because node_t currently does not know its aggregate-parent class) to
+		// keep the address of the node_t.
+		inline node_t(address_t _a, const value_t& _v, node_t *_n = 0) {
+			FastState<D,T>::nodeAlloc = this;
+			a = _a;
+			v = _v; // this could lead to memory allocation, and perhaps GC
+			n = _n;
+			FastState<D,T>::nodeAlloc = 0;
+		}
+		inline node_t(node_t *node) {
+			FastState<D,T>::nodeAlloc = this;
+			a = node->a;
+			v = node->v; // this could lead to memory allocation, and perhaps GC
+			n = 0;
+			FastState<D,T>::nodeAlloc = 0;
+		}
 		address_t a;
 		value_t v;
 		node_t *n;
-		inline void *operator new(size_t size, StackAllocator& alloc) { return alloc.allocate(size); }
+		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
 	} node_t;
 
 	typedef struct state_t {
 		inline state_t(value_t **r, node_t *m): regs(r), mem(m) { }
 		value_t **regs;
 		node_t *mem;
-		inline void *operator new(size_t size, StackAllocator& alloc) { return alloc.allocate(size); }
+		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
 	} stat_t;
 
 	static const elm::t::size
 		rblock_shift = 3,
 		rblock_mask = (1 << rblock_shift) - 1,
-		rblock_size = 1 << rblock_shift;
+		rblock_size = 1 << rblock_shift; 	// the number of registers per row
+		// nrblock							// the number of rows of registers
 
+	static node_t *nodeAlloc; // static because we want to collect the node, which is in our storage
+	state_t *stateAlloc1;      // some operation requires 2 states as the input, this points to the first state
+	state_t *stateAlloc2;      // some operation requires 2 states as the input, this points to the second state
+	value_t **regsAlloc;       // the pointer to rows of registers
+	value_t** regRowAlloc;     // the pointer to the current row of register
+	value_t** regEachAlloc;    // the pointer to the current registers
+	node_t *memAlloc;	       // the pointer to the current memory nodes that is currently in construction
+	value_t* tempValueAlloc;   // to hold a temporary created value
 public:
 	typedef state_t *t;
+
+
 
 	/**
 	 * Build a state.
@@ -69,13 +95,33 @@ public:
 	 * @param proc	Analyzed process.
 	 * @param alloc	Stack allocator to use.
 	 */
-	inline FastState(D *d, dfa::State *state, StackAllocator& alloc)
+	inline FastState(D *d, dfa::State *state, T& alloc)
 		: dom(d),
 		  nrblock((state->process().platform()->regCount() + rblock_mask) >> rblock_shift),
 		  allocator(alloc),
-		  bot(make(true)), top(make(false)),
 		  multi_max(8),
-		  istate(state){ }
+		  istate(state) {
+
+			bot = make(true);
+			top = make(false);
+
+			regRowAlloc = new value_t*[nrblock];
+			for(int i = 0; i < nrblock; i++)
+				regRowAlloc[i] = 0;
+
+			unsigned int regCount = (nrblock* (1 << rblock_shift));
+			regEachAlloc = new value_t*[regCount];
+			for(int i = 0; i < regCount; i++)
+				regEachAlloc[i] = 0;
+
+			tempValueAlloc = 0;
+			regsAlloc = 0;
+			memAlloc = 0;
+			stateAlloc1 = 0;
+			stateAlloc2 = 0;
+			nodeAlloc = 0;
+	}
+
 
 	/**
 	 * Get the max number of multiple load/store before jumping to top.
@@ -107,31 +153,51 @@ public:
 	 * @param v		Value to set.
 	 * @return		State after change.
 	 */
-	t set(t s, register_t r, value_t v) {
+	t set(const t& s, register_t r, const value_t& v, bool show = false) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
-
-		value_t temp = s->regs[r >> rblock_shift][r & rblock_mask]; // if the existing value is the same as the value to assign, then no change
-		if(dom->equals(temp, v))
+		value_t temp = s->regs[r >> rblock_shift][r & rblock_mask];
+		if(dom->equals(temp, v)) // if the existing value is the same as the value to assign, then no change
 			return s;
 
 		if(s == top && dom->equals(v, dom->top)) // assigning T to any register of the T state, will return T
 			return top;
 
+
+		stateAlloc1 = s;
+
+		typename D::t **regs = allocator.template allocate<value_t *>(nrblock); // allocate the registers
+		elm::array::copy(regs, s->regs, nrblock); // copy the pointer of each row to the just created registers
+		regsAlloc = regs; // now the regs are initialized properly, track it
+
 		//cerr << "DEBUG: set(" << r << ", "; dom->dump(cerr, v); cerr << ")\n";
-		typename D::t *rblock = allocator.allocate<typename D::t>(rblock_size);
-		elm::array::copy(rblock, s->regs[r >> rblock_shift], rblock_size);
-		rblock[r & rblock_mask] = v;
-		typename D::t **regs = allocator.allocate<value_t *>(nrblock);
-		elm::array::copy(regs, s->regs, nrblock);
-		regs[r >> rblock_shift] = rblock;
-		t res = new(allocator) state_t(regs, s->mem);
-		//cerr << "RESULT="; print(cerr, res);
+		typename D::t *rblock = allocator.template allocate<typename D::t>(rblock_size); // the row to replace, however the individual registers are not
+		regRowAlloc[0] = rblock;
+
+		// we copy the content of each register in the row, note that the copying could result memory allocation
+		// hence we need to track each register with regEachAlloc
+		// elm::array::copy(rblock, s->regs[r >> rblock_shift], rblock_size);
+		for(int i = 0; i < rblock_size; i++) { // copy each register
+			regEachAlloc[i] = new(&rblock[i]) value_t(s->regs[r >> rblock_shift][i]);
+		}
+
+		rblock[r & rblock_mask] = v; // set the value to the dedicated register, could lead GC, but we have everything tracked
+		regs[r >> rblock_shift] = rblock; // only pointer assignment, no worry
+
+		t res = new(allocator) state_t(regs, s->mem); // everything is tracked, no worry
+
+		// clear the GC collection info
+		stateAlloc1 = 0;
+		regsAlloc = 0;
+		regRowAlloc[0] = 0;
+		for(int i = 0; i < rblock_size; i++)
+			regEachAlloc[i] = 0;
 
 		if(dom->equals(v, dom->top) && equals(res, top)) // if the resulted state is T
 			return top;
 
-		return res;
+		return res; // NOITE: need to make sure the user of this function does not work with allocator, otherwise we need to protect res as well
 	}
+
 
 	/**
 	 * Perform a store to memory.
@@ -140,7 +206,10 @@ public:
 	 * @param v		Value to store.
 	 * @return		New state with store performed.
 	 */
-	t store(t s, address_t a, value_t v) {
+	t store(t s, address_t a, const value_t&  v) {
+
+		stateAlloc1 = s;
+
 		node_t *mem, *cur;
 		node_t **pn = &mem;
 
@@ -162,9 +231,14 @@ public:
 		if(!found && dom->equals(v, dom->top)) // write bot/top to an address not in a record does not require a new state
 			return s;
 
-		// look for position, while creating a node_t for each address
+		// look for position, while creating a node_t for each address until the address to store
+		bool first = true;
 		for(cur = s->mem; cur && cur->a < a; cur = cur->n) {
 			*pn = new(allocator) node_t(cur);
+			if(first) { // for the first allocated memory node, we associate memAlloc with the current mem head
+				first = false;
+				memAlloc = mem;
+			}
 			pn = &((*pn)->n);
 		}
 
@@ -180,11 +254,17 @@ public:
 		// create the new node
 		if(dom->equals(v, dom->top)) // if the address is found, it is not necessary to store the Top value
 			*pn = next;
-		else
+		else {
 			*pn = new(allocator) node_t(a, v, next);
+		}
 
 		// build the new state
-		return new(allocator) state_t(s->regs, mem);
+		state_t* res = new(allocator) state_t(s->regs, mem);
+		regsAlloc = 0;
+		memAlloc = 0;
+		stateAlloc1 = 0;
+		stateAlloc2 = 0;
+		return res;
 	}
 
 	/**
@@ -212,6 +292,7 @@ public:
 	 * @return		New state.
 	 */
 	t store(t s, address_t a, address_t b, ot::size off, value_t v) {
+		assert(0); // see who uses this function, need to implement GC on it
 		ASSERT(a < b);
 		ASSERT(off > 0);
 
@@ -227,6 +308,7 @@ public:
 				if(cur->a != a) {
 					if(a < cur->a)
 						a += (cur->a - a + off - 1) / off * off;
+
 					*pn = new(allocator) node_t(cur);
 					pn = &((*pn)->n);
 				}
@@ -298,6 +380,7 @@ public:
 	 * Perform join of both states.
 	 */
 	t join(t s1, t s2) {
+		assert(0); // wonder who comes here
 
 		// special cases
 		if(s1 == s2)
@@ -314,12 +397,12 @@ public:
 		if(s1->regs == s2->regs)
 			regs = s1->regs;
 		else {
-			regs = allocator.allocate<value_t *>(nrblock);
+			regs = allocator.template allocate<value_t *>(nrblock);
 			for(int i = 0; i < nrblock; i++) {
 				if(s1->regs[i] == s2->regs[i])
 					regs[i] = s1->regs[i];
 				else {
-					regs[i] = allocator.allocate<value_t>(rblock_size);
+					regs[i] = allocator.template allocate<value_t>(rblock_size);
 					for(int j = 0; j < rblock_size; j++)
 						regs[i][j] = dom->join(s1->regs[i][j], s2->regs[i][j]);
 				}
@@ -384,11 +467,11 @@ public:
 			// need duplication?
 			if(changed) {
 				if(!regs) {
-					regs = allocator.allocate<value_t *>(nrblock);
+					regs = allocator.template allocate<value_t *>(nrblock);
 					if(i > 0)
 						array::copy(regs, s->regs, i);
 				}
-				regs[i] = allocator.allocate<value_t>(rblock_size);
+				regs[i] = allocator.template allocate<value_t>(rblock_size);
 				array::copy(regs[i], rblock, rblock_size);
 			}
 			else if(regs)
@@ -514,7 +597,11 @@ public:
 	 * @param w		Worker object.
 	 * @return		Output state.
 	 */
-	template <class W> t combine(t s1, t s2, W& w) {
+	template <class W> t combine(const t& s1, const t& s2, W& w) {
+		stateAlloc1 = s1;
+		stateAlloc2 = s2;
+
+		// we need to guard s1 and s2 as well
 
 		// special cases
 		if(s1 == s2)
@@ -528,17 +615,24 @@ public:
 
 		// join registers
 		value_t **regs;
-		if(s1->regs == s2->regs)
+		if(s1->regs == s2->regs) // if two sets of registers are different, then we have to create new set
 			regs = s1->regs;
 		else {
-			regs = allocator.allocate<value_t *>(nrblock);
+			regs = allocator.template allocate<value_t *>(nrblock);
+			regsAlloc = regs;
+
 			for(int i = 0; i < nrblock; i++) {
 				if(s1->regs[i] == s2->regs[i])
 					regs[i] = s1->regs[i];
 				else {
-					regs[i] = allocator.allocate<value_t>(rblock_size);
-					for(int j = 0; j < rblock_size; j++)
-						regs[i][j] = w.process(s1->regs[i][j], s2->regs[i][j]);
+					regs[i] = allocator.template allocate<value_t>(rblock_size);
+					regRowAlloc[i] = regs[i];
+
+					int currentJ = i << rblock_shift;
+					for(int j = 0; j < rblock_size; j++) {
+						regEachAlloc[currentJ+j] = new(&regs[i][j])value_t(w.process(s1->regs[i][j], s2->regs[i][j]));
+						value_t::tempPVAlloc = 0;
+					}
 				}
 			}
 		}
@@ -546,22 +640,32 @@ public:
 		// join memory
 		node_t *mem = 0, *cur1 = s1->mem, *cur2 = s2->mem;
 		node_t **pn = &mem;
+		bool first = true;
 		while(cur1 != cur2 && cur1 && cur2) {
 
 			// join the common address
 			if(cur1->a == cur2->a) {
-				value_t temp = w.process(cur1->v, cur2->v);
+				value_t temp = w.process(cur1->v, cur2->v); // someone needs to protect the tab of the temp
+				//value_t* temp = allocator.template allocate<value_t>(1);
+				value_t::tempPVAlloc = 0;
+				tempValueAlloc = &temp;
+				//new(temp) value_t(w.process(cur1->v, cur2->v));
 				if(temp == dom->top) { }
 				else if(temp == dom->bot) { }
 				else {
 					*pn = new(allocator) node_t(cur1->a, temp);
-					pn = &((*pn)->n);
+					if(first) {
+						first = false;
+						memAlloc = mem;
+					}
+					pn = &((*pn)->n); // pn now points to the address of the member n of the address node, so any new node_t will be pointed by n automatically
 				}
+				tempValueAlloc = 0;
 				cur1 = cur1->n;
 				cur2 = cur2->n;
 			}
 
-			// else join with T -> T
+			// else join with T -> T, if the value for one address only presented for one state, the combine function will return Top for the address
 			// TODO		We should take into account initialized memory!
 			else if(cur1->a < cur2->a)
 				cur1 = cur1->n;
@@ -573,14 +677,135 @@ public:
 			*pn = cur1;
 		else
 			*pn = 0;
-
 		t res  = new(allocator) state_t(regs, mem);
+
+		stateAlloc1 = 0;
+		stateAlloc2 = 0;
+		regsAlloc = 0;
+		for(int i = 0; i < nrblock; i++) {
+			if(regRowAlloc[i]) {
+				regRowAlloc[i] = 0;
+				int maxj = (i << rblock_shift) + rblock_size;
+				for(int j = i << rblock_shift; j < maxj; j++) {
+					regEachAlloc[j] = 0;
+					assert(j < 24);
+				}
+			}
+		}
+		memAlloc = 0;
+
+
 		bool resultedTop = equals(res, top); // if the resulted state is top
 		if(resultedTop)
 			return top;
 
 		// return join state
 		return res;
+	}
+
+
+	void collect() {
+		bool already = false;
+		if(stateAlloc1) {
+			collect(stateAlloc1);
+		}
+		if(stateAlloc2) {
+			collect(stateAlloc2);
+		}
+
+		// then we have to mark the registers
+		if(regsAlloc) {
+			already = allocator.template mark(regsAlloc, sizeof(value_t *)*nrblock);
+			if(already) {
+			}
+			else {
+				for(int i = 0; i < nrblock; i++) { // for each row of registers
+					if(regRowAlloc[i]) {
+						already = allocator.template mark(regRowAlloc[i], sizeof(value_t)*rblock_size);
+						if(already) {
+						}
+						else {
+							int maxj = (i << rblock_shift) + rblock_size;
+							for(int j = i << rblock_shift; j < maxj; j++) { // now mark the domain for each register
+								if(regEachAlloc[j])
+									regEachAlloc[j]->collect(&allocator);
+								assert(j < 24);
+							} // end of each register
+						} // end of registers to mark
+					} // end of each row
+				} // end of each row checking
+			} // registers pack need to be marked
+		}
+
+		if(memAlloc) {
+			for(node_t *n = memAlloc; n; n = n->n) {
+				already = allocator.template mark(n, sizeof(node_t));
+				if(already) {
+				}
+				else {
+					(n->v).collect(&allocator);
+				}
+			}
+		}
+
+		if(nodeAlloc) {
+			already = allocator.template mark(nodeAlloc, sizeof(node_t));
+			if(already) {
+			}
+			else {
+			}
+		}
+
+		if(tempValueAlloc) {
+			//allocator.template mark(tempValueAlloc, sizeof(value_t));
+			tempValueAlloc->collect(&allocator);
+		}
+
+		if(value_t::tempPVAlloc) {
+			value_t::tempPVAlloc->collect(&allocator);
+		}
+
+	}
+
+	int collect(t _s, int currCount = 0, bool show=false) {
+		bool already = false;
+		// first mark the state
+
+		already = allocator.template mark(_s, sizeof(state_t));
+		if(already) {
+			return (currCount); // no need to collect the rest since they are already collected
+		}
+
+		// then we have to mark the registers
+		already = allocator.template mark(_s->regs, sizeof(value_t *)*nrblock);
+		if(already) {
+		}
+		else {
+			for(int i = 0; i < nrblock; i++) {
+				already = allocator.template mark(_s->regs[i], sizeof(value_t)*rblock_size);
+				if(already) {
+				}
+				else {
+					// now mark the domain
+					for(int j = 0; j < rblock_size; j++) {
+						_s->regs[i][j].collect(&allocator, show);
+					}
+				}
+			}
+		} // end of collecting registers
+
+		// collecting memory
+		int iii = 0;
+		for(node_t *n = _s->mem; n; n = n->n) {
+			already = allocator.template mark(n, sizeof(node_t));
+			if(already) {
+				return (currCount+1);
+			}
+			else {
+				(n->v).collect(&allocator);
+			}
+		}
+		return (currCount+1);
 	}
 
 private:
@@ -591,21 +816,33 @@ private:
 	 * @return		Created state (must not be released by the user).
 	 */
 	t make(bool bot) {
-		value_t **regs = allocator.allocate<value_t *>(nrblock);
+		value_t **regs = allocator.template allocate<value_t *>(nrblock);
+		for(int i = 0; i < nrblock; i++)
+			regs[i] = 0;
+		regsAlloc = regs; // register the current regs to be collected
+
 		for(int i = 0; i < nrblock; i++) {
-			regs[i] = allocator.allocate<value_t>(rblock_size);
+			regs[i] = allocator.template allocate<value_t>(rblock_size);
 			for(int j = 0; j < rblock_size; j++)
-				if(bot)
-					regs[i][j] = dom->bot;
-				else
-					regs[i][j] = dom->top;
+				if(bot) {
+					//regs[i][j] = dom->bot;
+					new(&regs[i][j])value_t(dom->bot);
+					assert(regs[i][j] == dom->bot);
+				}
+				else {
+					//regs[i][j] = dom->top;
+					new(&regs[i][j])value_t(dom->top);
+					assert(regs[i][j] == dom->top);
+				}
 		}
-		return new(allocator) state_t(regs, 0);
+		t res = new(allocator) state_t(regs, 0);
+		regsAlloc = 0; // de-register the current regs to be collected
+		return res;
 	}
 
 	D *dom;
 	elm::t::size nrblock;
-	StackAllocator& allocator;
+	T& allocator;
 	int multi_max;
 	dfa::State *istate;
 public:
@@ -613,6 +850,7 @@ public:
 
 };
 
+template <class D, class T> typename FastState<D, T>::node_t* FastState<D, T>::nodeAlloc = 0;
 } }	// otawa::dfa
 
 #endif /* OTAWA_DFA_FASTSTATE_H_ */

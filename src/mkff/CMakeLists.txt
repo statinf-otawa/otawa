@@ -3,5 +3,5 @@ set(CMAKE_CXX_FLAGS "-Wall" )
 
 
 add_executable(mkff mkff.cpp display_MultipleDotDisplayer.cpp display_MKFFDotDisplayer.cpp)
-target_link_libraries(mkff otawa ${LIBELM} odisplay)
+target_link_libraries(mkff otawa ${LIBELM} odisplay cfgio)
 install(TARGETS mkff DESTINATION bin)

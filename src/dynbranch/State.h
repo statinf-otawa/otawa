@@ -24,12 +24,16 @@
 #include "PotentialValue.h"
 #include <otawa/dfa/FastState.h>
 #include <otawa/prog/WorkSpace.h>
+
 using namespace elm;
 
 namespace otawa { namespace dynbranch {
 
 using namespace elm::io ;
 using namespace elm::genstruct ;
+
+
+class MyGC;
 
 class LUBFastStateCombineProcessor {
 public:
@@ -51,10 +55,16 @@ public:
 	}
 };
 
+
+/**
+ * We need to have a wrapper for FastState so that it can be used as the Domain of the AI
+ * This is because FastState does not provide functions such as lub ...
+ */
 class FastStateWrapper {
+	friend MyGC;
 public:
-	typedef otawa::dfa::FastState<PotentialValue>::t state_t;
-	typedef otawa::dfa::FastState<PotentialValue>* fast_state_t;
+	typedef otawa::dfa::FastState<PotentialValue, MyGC>::t state_t;
+	typedef otawa::dfa::FastState<PotentialValue, MyGC>* fast_state_t;
 	typedef elm::t::uint32 address_t;
 
 	inline friend Output& operator<<(Output& o, FastStateWrapper const& pv) {
@@ -66,7 +76,7 @@ public:
 		o << "}";
 		return o;
 	}
-
+#define EVALUATIONx
 	inline FastStateWrapper(void) : _fastState(0), _state(0), _bottom(true) { // default constructor
 	}
 
@@ -75,18 +85,18 @@ public:
 		copy(fsw);
 	}
 
+	inline ~FastStateWrapper() {
+		count--;
+	}
+
 	inline void setBottom(bool b) { _bottom = b; }
 	inline bool isBottom(void) const { return _bottom; }
-	inline void setFastState(otawa::dfa::FastState<PotentialValue>* fs) { _fastState = fs; }
-	inline otawa::dfa::FastState<PotentialValue>* getFastState(void) { return _fastState; }
+	inline void setFastState(otawa::dfa::FastState<PotentialValue, MyGC>* fs) { _fastState = fs; }
+	inline otawa::dfa::FastState<PotentialValue, MyGC>* getFastState(void) { return _fastState; }
 
-	inline void setState(otawa::dfa::FastState<PotentialValue>::t s) { _state = s; } // or initialize state with _fastState->bot
+	inline void setState(otawa::dfa::FastState<PotentialValue, MyGC>::t s) { _state = s; } // or initialize state with _fastState->bot
 
-	inline void setReg(int regNum, const PotentialValue& pv) {
-		assert(_fastState);
-		_state = _fastState->set(_state, regNum, pv);
-		_bottom = false;
-	}
+	void setReg(int regNum, const PotentialValue& pv);
 
 	inline const PotentialValue& readReg(int regNum) {
 		assert(_fastState);
@@ -94,51 +104,34 @@ public:
 	}
 
 	inline void copy(const FastStateWrapper & fsw) { 	_bottom = fsw._bottom; _fastState = fsw._fastState; _state = fsw._state; }
-	inline otawa::dfa::FastState<PotentialValue>::t getState(void) const { return _state; }
+	inline otawa::dfa::FastState<PotentialValue, MyGC>::t getState(void) const { return _state; }
 
 
-	inline void storeMemory(address_t addr, const PotentialValue &pv) {
-		_bottom = false;
-		_state = _fastState->store(_state, addr, pv);
-	}
+	void storeMemory(address_t addr, const PotentialValue &pv);
 
 	inline const PotentialValue& loadMemory(address_t addr) {
 		return _fastState->load(_state, addr);
 	}
 
-	inline void lub(const FastStateWrapper & fsw) {
-		LUBFastStateCombineProcessor temp;
-		_state = _fastState->combine<LUBFastStateCombineProcessor>(_state, fsw._state, temp);
-	}
+	void lub(const FastStateWrapper & fsw);
 
-	inline void widening(const FastStateWrapper & fsw) {
-		WideningFastStateCombineProcessor temp;
-		_state = _fastState->combine<WideningFastStateCombineProcessor>(_state, fsw._state, temp);
-	}
-
+	void widening(const FastStateWrapper & fsw);
 	inline bool equals(const FastStateWrapper & fsw) const {
 		return _fastState->equals(_state, fsw._state);
 	}
+
+
+	int collect(const MyGC* gc, int j = 0, bool show= false) const;
+
+	void checkState(bool f = false) const;
 
 private:
 	bool _bottom;
 	state_t _state;
 	fast_state_t _fastState;
+	static unsigned long count;
+	static int j;
 };
-
-typedef FastStateWrapper Domain;
-typedef FastStateWrapper State;
-
-//
-//extern Identifier<Vector<Pair<Address, Address> >* > DATA_IN_READ_ONLY_REGION;
-//inline bool inROData(Address addr, WorkSpace* ws) {
-//	Vector<Pair<Address, Address> > *rodata = DATA_IN_READ_ONLY_REGION(ws);;
-//	for(Vector<Pair<Address, Address> >::Iterator i(*rodata); i; i++) {
-//		if((addr >= (*i).fst) && (addr <= (*i).snd))
-//			return true;
-//	}
-//	return false;
-//}
 
 } }
 

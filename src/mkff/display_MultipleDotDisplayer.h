@@ -35,6 +35,8 @@ protected:
 	virtual void displayEndBlock(CFG *graph, Block *block, display::Text& content, display::VertexStyle& style) const;
 	virtual void displayBasicBlock(CFG *graph, BasicBlock *block, display::Text& content, display::VertexStyle& style) const;
 	virtual void decorate(CFG *graph, otawa::Edge *edge, display::Text& label, display::EdgeStyle& style) const;
+
+	virtual void displayProps(CFG *g, BasicBlock *b, display::Text& content) const;
 }; // class MultipleDotDecorator: public display::CFGDecorator {
 
 } // namespace mkff

@@ -30,11 +30,10 @@ namespace mkff {
 
 class MKFFDotDecorator: public display::CFGDecorator {
 public:
-	inline MKFFDotDecorator(WorkSpace *ws, bool rc = false, bool ns = false): display::CFGDecorator(ws), randomColors(rc), noSource(ns) {
-		if(ns) {
-			display_assembly = false;
-			display_props = false;
-		}
+	inline MKFFDotDecorator(WorkSpace *ws, bool rc = false, bool ns = false, bool sc = false):
+	display::CFGDecorator(ws), randomColors(rc), noSource(ns), showCLPProp(sc) {
+		display_assembly =!ns;
+		display_props = sc;
 	}
 protected:
 	virtual void displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const;
@@ -44,6 +43,7 @@ protected:
 private:
 	bool randomColors;
 	bool noSource;
+	bool showCLPProp;
 }; // class MKFFDotDecorator: public display::CFGDecorator {
 
 } // namespace mkff

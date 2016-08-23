@@ -18,8 +18,8 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include "GlobalAnalysis.h"
-#include "GlobalAnalysisProblem.h"
+
+
 #include <otawa/otawa.h>
 #include <otawa/util/WideningListener.h>
 #include <otawa/util/WideningFixPoint.h>
@@ -27,6 +27,13 @@
 #include <otawa/dfa/FastState.h>
 #include <otawa/dynbranch/features.h>
 #include <time.h>
+#include "PotentialValue.h"
+#include "State.h"
+#include "GlobalAnalysisProblem.h"
+#include "GC.h"
+#include "GlobalAnalysis.h"
+
+
 
 namespace otawa { namespace dynbranch {
 
@@ -35,7 +42,7 @@ namespace otawa { namespace dynbranch {
  * TODO
  */
 
-p::declare GlobalAnalysis::reg = p::init("otawa::dynbranch::GlobalAnalysisFeature", Version(1,0,0))
+p::declare GlobalAnalysis::reg = p::init("otawa::dynbranch::GlobalAnalysis", Version(1,0,0))
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
@@ -76,14 +83,37 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	else
 		PotentialValue::MAGIC++;
 
-	elm::StackAllocator* psa = new elm::StackAllocator(); // need to keep this in the heap so that the content of the fastState can be used between the Processors
-	dfa::FastState<PotentialValue> *fs = new dfa::FastState<PotentialValue>(&pv, dfa::INITIAL_STATE(ws), *psa);
+	MyGC *psa = new MyGC(ws); // obtain the garbage collector
+	psa->setDisableGC(true);
+
+	PotentialValue::pvgc = psa; // link the PotentialValue with the gc
+	//PotentialValue::tempPVAlloc = new PotentialValue(); // this will make use of the GC
+	PotentialValue::tempPVAlloc = 0;
+
+	dfa::FastState<PotentialValue, MyGC> *fs = new dfa::FastState<PotentialValue, MyGC>(&pv, dfa::INITIAL_STATE(ws), *psa);
+	psa->setFastState(fs);
+
 	entry.setFastState(fs);
 
 	dynbranch::GlobalAnalysisProblem prob(ws,isVerbose(), entry);
+
+	// adding the fundamental domains
+	psa->add(&prob.bottom());
+	psa->add(&prob.top());
+	psa->add(&prob.entry());
+	psa->setTempRegs(prob.getTempRegs());
+
+
 	WideningListener<dynbranch::GlobalAnalysisProblem> list(ws, prob);
 	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > fp(list);
 	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > hai(fp, *ws);
+
+	psa->setListener(list);
+	psa->setFixPoint(fp);
+	psa->setAbsInt(hai);
+
+	psa->setDisableGC(false);
+
 	hai.solve(cfg);
 
 	// Check the results
@@ -115,6 +145,8 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	clockWorkSpace = clock() - clockWorkSpace;
 	elm::cerr << "Global Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
+
+	elm::cout << "PV::CountX = " << PotentialValue::countX << " vs " << Vector<elm::t::uint32>::countX << io::endl;
 }
 
 
@@ -147,8 +179,9 @@ Identifier<dynbranch::Domain> GLOBAL_STATE_ENTRY("otawa::dynbranch::GLOBAL_STATE
  */
 Identifier<bool> TIME("otawa::dynbranch::TIME") ;
 
-Identifier<elm::StackAllocator*> DYNBRANCH_STACK_ALLOCATOR("", 0);
-Identifier<dfa::FastState<PotentialValue>*>DYNBRANCH_FASTSTATE("", 0);
+//Identifier<elm::StackAllocator*> DYNBRANCH_STACK_ALLOCATOR("", 0);
+Identifier<MyGC*> DYNBRANCH_STACK_ALLOCATOR("", 0);
+Identifier<dfa::FastState<PotentialValue, MyGC>*>DYNBRANCH_FASTSTATE("", 0);
 
 
 } }	// otawa::dynbranch

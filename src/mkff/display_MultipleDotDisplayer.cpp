@@ -64,4 +64,11 @@ void MultipleDotDecorator::decorate(CFG *graph, otawa::Edge *edge, display::Text
 		label << "both";
 }
 
+void MultipleDotDecorator::displayProps(CFG *g, BasicBlock *b, display::Text& content) const {
+	for(PropList::Iter p(b); p; p++)
+		if(p->id()->name())
+			content << display::begin(display::BOLD) << p->id()->name() << display::begin(display::BOLD)
+					<< "\t!!!!!!" << *p;
+}
+
 } // namespace mkff

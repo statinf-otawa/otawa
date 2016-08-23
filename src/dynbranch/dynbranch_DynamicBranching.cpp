@@ -18,8 +18,10 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include "DynamicBranching.h"
+
+#include "State.h"
 #include "GlobalAnalysis.h"
+
 #include <otawa/data/clp/features.h>
 #include <otawa/data/clp/SymbolicExpr.h>
 #include <elm/genstruct/quicksort.h>
@@ -28,6 +30,11 @@
 #include <otawa/dynbranch/features.h>
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
+
+#include "GlobalAnalysisProblem.h" // for GC.h to see the Problem class
+#include "GC.h"
+
+#include "DynamicBranching.h"
 
 #define DEBUG_FILTERS(x)  // x
 #define DEBUG_CLP(x)  // x
@@ -78,19 +85,20 @@ protected:
 			delete pv;
 #else
 			dynbranch::PotentialValue *pv = *slli;
-			if(pv->magic != PotentialValue::MAGIC)
-				continue;
+//			if(pv->magic != PotentialValue::MAGIC)
+//				continue;
 			((Vector<t::uint32> *)pv)->~Vector();
 #endif
 		}
 		pvl->clear();
 
-		elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
+		//elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
+		MyGC* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
 		assert(psa);
 		delete psa;
 		dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws).remove();
 
-		dfa::FastState<dynbranch::PotentialValue>* dfs = dynbranch::DYNBRANCH_FASTSTATE(ws);
+		dfa::FastState<dynbranch::PotentialValue, MyGC>* dfs = dynbranch::DYNBRANCH_FASTSTATE(ws);
 		assert(dfs);
 		delete dfs;
 		dynbranch::DYNBRANCH_FASTSTATE(ws).remove();
@@ -524,7 +532,8 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		istate = dfa::INITIAL_STATE(ws);
 		clpManager = new clp::Manager(ws); // only creates the clp manager once (performance)
 		isDebug = DEBUGDYN && isVerbose(); // need to be verbose to be debug
-		addCleaner(COLLECTED_CFG_FEATURE, new DynamicBranchingCleaner(ws, &PotentialValue::potentialValueCollector, isVerbose()));
+		//addCleaner(COLLECTED_CFG_FEATURE, new DynamicBranchingCleaner(ws, &PotentialValue::potentialValueCollector, isVerbose()));
+		addCleaner(COLLECTED_CFG_FEATURE, new DynamicBranchingCleaner(ws, 0, isVerbose()));
 		first = false;
 	}
 
@@ -563,8 +572,8 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// obtain the filters (if there is any) in this BB.
 		// FIXME: assumption: ONLY ONE IF per BB!
-		Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
-		Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
+		elm::genstruct::Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
+		elm::genstruct::Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
 
 		clpState.clear();
 

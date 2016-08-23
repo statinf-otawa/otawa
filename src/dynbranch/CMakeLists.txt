@@ -9,6 +9,7 @@ set(SOURCES
     dynbranch_MemType.cpp
     dynbranch_PotentialValue.cpp
     dynbranch_State.cpp
+    FastStateWrapper.cpp
 )
 
 include_directories(".")

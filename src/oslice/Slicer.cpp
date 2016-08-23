@@ -159,16 +159,20 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	// compute how many instructions before slicing
 	{
 		int sum = 0;
+		int sumCFG = 0;
+		int sumB = 0;
 		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
 		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+			sumCFG++;
 			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+				sumB++;
 				if(bi->isBasic())
 					sum = sum + bi->toBasic()->count();
 				else
 					continue;
 			} // for each BB
 		} // for each CFG
-		warn(String(" Before slicing: ") << sum << " instructions");
+		warn(String(" Before slicing: ") << sumCFG << " CFGs, " << sumB << " Blocks, " << sum << " instructions");
 	}
 
 	// start measuring the time taken by the slicer
@@ -304,15 +308,19 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	// compute how many instructions after slicing
 	{
 		int sum = 0;
+		int sumCFG = 0;
+		int sumB = 0;
 		for(CFGCollection::Iterator cfg(sliced_coll); cfg; cfg++) {
+			sumCFG++;
 			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+				sumB++;
 				if(bi->isBasic())
 					sum = sum + bi->toBasic()->count();
 				else
 					continue;
 			} // for each BB
 		} // for each CFG
-		warn(String(" After slicing: ") << sum << " instructions");
+		warn(String(" After slicing: ") << sumCFG << " CFGs, " << sumB << " Blocks, " << sum << " instructions");
 	}
 
 } // end of function Slicer::work
