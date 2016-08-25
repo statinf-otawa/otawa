@@ -795,16 +795,19 @@ public:
 		} // end of collecting registers
 
 		// collecting memory
-		int iii = 0;
 		for(node_t *n = _s->mem; n; n = n->n) {
 			already = allocator.template mark(n, sizeof(node_t));
 			if(already) {
-				return (currCount+1);
+				break;
+				// return (currCount+1);
 			}
 			else {
 				(n->v).collect(&allocator);
 			}
-		}
+		} // end of the mems
+
+
+
 		return (currCount+1);
 	}
 
