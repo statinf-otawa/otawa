@@ -22,7 +22,7 @@
 #include <otawa/dynbranch/features.h>
 #include <include/otawa/proc/Monitor.h>
 #include <sys/resource.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include "PotentialValue.h"
 #include "State.h"
 #include "GlobalAnalysisProblem.h"
