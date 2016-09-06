@@ -625,7 +625,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 				*workingMem = dfa::MemorySet::empty;
 			}
 			else if(temp.delta()) {
-				assert(0);
+				ASSERT(0);
 			}
 			else {
 				dfa::MemorySet ms;
@@ -643,7 +643,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 				*workingMem = ms.add(*workingMem, MemArea(0, 0xFFFFFFFF));
 			}
 			else if(temp.delta()) {
-				assert(0);
+				ASSERT(0);
 			}
 			else {
 				dfa::MemorySet ms;
@@ -676,9 +676,9 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	if(workingReg != regBeginState) {
 		elm::cerr << __SOURCE_INFO__ << "workingReg    = " << workingReg << io::endl;
 		elm::cerr << __SOURCE_INFO__ << "regBeginState = " << regBeginState << io::endl;
-		assert(workingReg == regBeginState);
+		ASSERT(workingReg == regBeginState);
 	}
-	assert(*workingMem == *memBeginState);
+	ASSERT(*workingMem == *memBeginState);
 
 	// working mem must be freed here...
 	// fixme workingMem->clear();

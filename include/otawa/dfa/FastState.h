@@ -292,7 +292,7 @@ public:
 	 * @return		New state.
 	 */
 	t store(t s, address_t a, address_t b, ot::size off, value_t v) {
-		assert(0); // see who uses this function, need to implement GC on it
+		ASSERT(0); // see who uses this function, need to implement GC on it
 		ASSERT(a < b);
 		ASSERT(off > 0);
 
@@ -380,7 +380,7 @@ public:
 	 * Perform join of both states.
 	 */
 	t join(t s1, t s2) {
-		assert(0); // wonder who comes here
+		ASSERT(0); // wonder who comes here
 
 		// special cases
 		if(s1 == s2)
@@ -688,7 +688,7 @@ public:
 				int maxj = (i << rblock_shift) + rblock_size;
 				for(int j = i << rblock_shift; j < maxj; j++) {
 					regEachAlloc[j] = 0;
-					assert(j < 24);
+					ASSERT(j < 24);
 				}
 			}
 		}
@@ -729,7 +729,7 @@ public:
 							for(int j = i << rblock_shift; j < maxj; j++) { // now mark the domain for each register
 								if(regEachAlloc[j])
 									regEachAlloc[j]->collect(&allocator);
-								assert(j < 24);
+								ASSERT(j < 24);
 							} // end of each register
 						} // end of registers to mark
 					} // end of each row
@@ -830,12 +830,12 @@ private:
 				if(bot) {
 					//regs[i][j] = dom->bot;
 					new(&regs[i][j])value_t(dom->bot);
-					assert(regs[i][j] == dom->bot);
+					ASSERT(regs[i][j] == dom->bot);
 				}
 				else {
 					//regs[i][j] = dom->top;
 					new(&regs[i][j])value_t(dom->top);
-					assert(regs[i][j] == dom->top);
+					ASSERT(regs[i][j] == dom->top);
 				}
 		}
 		t res = new(allocator) state_t(regs, 0);

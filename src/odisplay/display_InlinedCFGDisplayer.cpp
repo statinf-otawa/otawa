@@ -137,7 +137,7 @@ string InlinedCFG::id(const AbstractGraph::Vertex& v) const {
 bool InlinedCFG::InlinedCFGBlockIter::ended(void) const { return i.ended(); }
 const AbstractGraph::Vertex *InlinedCFG::InlinedCFGBlockIter::item(void) const {
 	InlinedCFG::Vertex v = VERTEX(i);
-	assert(v.block);
+	ASSERT(v.block);
 	return &*InlinedCFG::VERTEX(i);
 }
 
@@ -245,7 +245,7 @@ const AbstractGraph::Edge *InlinedCFG::InlinedCFGEdgeIter::item(void) const {
 		return new InlinedCFG::Edge(0, currentArtificialEdge.source, currentArtificialEdge.target);
 	}
 	InlinedCFG::Edge e = EDGE(i);
-	assert(e.edge);
+	ASSERT(e.edge);
 	return &*InlinedCFG::EDGE(i);
 }
 

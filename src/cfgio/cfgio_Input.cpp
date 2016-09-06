@@ -644,7 +644,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 					currentInst = cafebabeInst;
 				}
 				else // instruction not found
-					assert(currentInst);
+					ASSERT(currentInst);
 
 				insts.add(currentInst);
 				if((firstInst == &otawa::Inst::null) && currentInst) {

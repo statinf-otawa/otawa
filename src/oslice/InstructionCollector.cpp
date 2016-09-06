@@ -27,7 +27,7 @@ namespace otawa { namespace oslice {
 #define DEBUGGING_MESSAGE(x) // x
 
 
-bool interestedInstruction(otawa::Inst* inst) { assert(0); return true; }
+bool interestedInstruction(otawa::Inst* inst) { ASSERT(0); return true; }
 
 /*
  *
@@ -82,7 +82,7 @@ void InstCollector::processWorkSpace(WorkSpace *fw) {
 	collectInterestedInstructions(coll, interestedInstructions);
 
 	interested_instructions_t* p = INTERESTED_INSTRUCTIONS(fw);
-	assert(p);
+	ASSERT(p);
 
 } // end of function InstCollector::work
 

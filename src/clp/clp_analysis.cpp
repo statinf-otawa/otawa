@@ -858,7 +858,7 @@ Value& Value::inter(const Value& val) {
 	if((val1upper < val1._base) || (val2upper < val2._base)) {
 		static int iii = 0;
 		iii++;
-		assert(iii == 1);
+		ASSERT(iii == 1);
 		// make P and Q for A and B
 		Value PA, PB, QA, QB, PA2, QA2;
 		val1.PQValue(PA, QA);

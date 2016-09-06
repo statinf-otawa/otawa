@@ -56,7 +56,7 @@ public:
 			return true;
 
 		if(tab == 0 && cap != 0) {
-			assert(0);
+			ASSERT(0);
 		}
 
 		if(tab == 0 || cap == 0)
@@ -84,7 +84,7 @@ public:
 		if(gc == 0)
 			tab = (new T[_cap]);
 		else {
-			assert(0); // just to see what comes here
+			ASSERT(0); // just to see what comes here
 			tab = static_cast<T*>(gc->allocate(sizeof(T)*_cap));
 		}
 
@@ -99,7 +99,7 @@ public:
 
 	inline Vector(const Vector<T>& vec): tab(0), cap(0), cnt(0), gc(vec.gc) { // copy constructor
 		if(gc != 0)
-			assert(0);
+			ASSERT(0);
 		copy(vec);
 	}
 
@@ -210,11 +210,11 @@ public:
 	static unsigned long countX, countY, maxUse, minUse;
 	inline void checkState(void* x) {
 		//elm::cout << __SOURCE_INFO__ << "tab @ " << (void*)tab << ", gc = " << (void*)gc << io::endl;
-		assert(gc == x);
+		ASSERT(gc == x);
 	}
 	inline void checkState(void* x) const {
 		//elm::cout << __SOURCE_INFO__ << "tab @ " << (void*)tab << ", gc = " << (void*)gc << io::endl;
-		assert(gc == x);
+		ASSERT(gc == x);
 	}
 
 	DefaultAllocator* gc;

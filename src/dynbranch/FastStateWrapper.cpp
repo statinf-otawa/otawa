@@ -6,7 +6,7 @@
 namespace otawa { namespace dynbranch {
 
 void FastStateWrapper::setReg(int regNum, const PotentialValue& pv) {
-	assert(_fastState);
+	ASSERT(_fastState);
 	_state = _fastState->set(_state, regNum, pv);
 	_bottom = false;
 }

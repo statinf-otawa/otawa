@@ -94,12 +94,12 @@ protected:
 
 		//elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
 		MyGC* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
-		assert(psa);
+		ASSERT(psa);
 		delete psa;
 		dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws).remove();
 
 		dfa::FastState<dynbranch::PotentialValue, MyGC>* dfs = dynbranch::DYNBRANCH_FASTSTATE(ws);
-		assert(dfs);
+		ASSERT(dfs);
 		delete dfs;
 		dynbranch::DYNBRANCH_FASTSTATE(ws).remove();
 	}
@@ -253,7 +253,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				case sem::STORE:	// MEMb(a) <- d
 				case sem::SETP:		// page(d) <- cst
 				elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "fail to process sem inst: " << i << io::endl;
-				assert(0);			// want to know, these are ignored instructions......!
+				ASSERT(0);			// want to know, these are ignored instructions......!
 				return find(bb,id,clpin,globalin,semantics);
 
 				case sem::SCRATCH:	// d <- T

@@ -111,7 +111,7 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 			for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
 				if(edge->isTaken()) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					EdgeT = ipet::VAR( edge);
-					assert(EdgeT);
+					ASSERT(EdgeT);
 				}
 				else {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					EdgeNT = ipet::VAR(edge);

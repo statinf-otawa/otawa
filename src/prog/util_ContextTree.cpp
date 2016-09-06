@@ -256,7 +256,7 @@ void ContextTree::addChild(ContextTree *child) {
 ContextTree *ContextTree::enclosingFunction(void) {
 	ContextTree *cur;
 	for(cur = this; cur->kind() == LOOP; cur = cur->parent())
-		assert(cur);
+		ASSERT(cur);
 	return cur;
 }
 

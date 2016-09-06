@@ -467,7 +467,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				elm::cerr << "WARNING: Unsupported instruction " << inst.op << " of " << inst << io::endl;
 				elm::cerr << "i.a() = " << readReg(out, inst.a()) << io::endl;
 				elm::cerr << "i.b() = " << readReg(out, inst.b()) << io::endl;
-				assert(0); // need to think about the implementation here! or we just leave it TOP?
+				ASSERT(0); // need to think about the implementation here! or we just leave it TOP?
 				break;
 			} // end switch(inst.op) {
 		} // end of each semantic instruction

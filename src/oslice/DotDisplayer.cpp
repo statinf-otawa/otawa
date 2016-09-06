@@ -127,7 +127,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 							_output << " [label=\"return then call\", style=dashed, weight=1];\n";
 						}
 						else
-							assert(0);
+							ASSERT(0);
 					}
 					else {
 						// normal block here

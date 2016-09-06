@@ -33,8 +33,8 @@ template <typename T>
 class XSet : public Vector<T> {
 public:
 
-	XSet<T>(void) { assert(0); }
-	XSet<T>(const XSet<T>& set) : Vector<T>(set) { assert(0);}
+	XSet<T>(void) { ASSERT(0); }
+	XSet<T>(const XSet<T>& set) : Vector<T>(set) { ASSERT(0);}
 
 	XSet<T>(const XSet<T>& set, MyGC* gc) : Vector<T>(gc, set) { }
 	XSet<T>(MyGC* gc) : Vector<T>(gc, 0) { }

@@ -252,7 +252,7 @@ template <class Listener> template<class GC>
 inline int WideningFixPoint<Listener>::collect(Block* bb, const GC *gc) const {
 	typename Listener::Problem::Domain* s = *STATE(bb);
 	if (s != 0)
-		assert(0); // see if some block with this but we forget to collect
+		ASSERT(0); // see if some block with this but we forget to collect
 
 	// mark all the states on edge going out from bb
 	int i = 0;
@@ -270,7 +270,7 @@ template <class Listener> template<class GC>
 inline int WideningFixPoint<Listener>::collect2(Block* bb, const GC *gc) const {
 	typename Listener::Problem::Domain* s = *STATE(bb);
 	if (s != 0)
-		assert(0); // see if some block with this but we forget to collect
+		ASSERT(0); // see if some block with this but we forget to collect
 
 	// mark all the states on edge going out from bb
 	int i = 0;

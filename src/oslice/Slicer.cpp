@@ -116,7 +116,7 @@ public:
 protected:
 	virtual void clean(void) {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		assert(cfgc);
+		ASSERT(cfgc);
 		SLList<CFG*> cfgsToDelete;
 		// collects the things to delete
 		for(CFGCollection::Iterator cfgi(cfgc); cfgi; cfgi++) {
@@ -190,7 +190,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 
 	// get a list of interested instruction
 	interested_instructions_t *interestedInstructions = INTERESTED_INSTRUCTIONS(fw);
-	assert(interestedInstructions);
+	ASSERT(interestedInstructions);
 	if (interestedInstructions) {
 		warn(String(" ") << interestedInstructions->count() << " instructions to resolve");
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
@@ -497,7 +497,7 @@ CFGMaker& Slicer::newMaker(Inst *first) {
 // the main idea is to replace the INVOLVED_CFGS of the workspace
 // by the new one which is the CFG_original \ sliced_instructions
 void Slicer::cleanup(WorkSpace *ws) {
-	assert(sliced_coll);
+	ASSERT(sliced_coll);
 	ENTRY_CFG(ws) = (*sliced_coll)[0];
 	INVOLVED_CFGS(ws) = sliced_coll;
 	addCleaner(COLLECTED_CFG_FEATURE, new CollectedCFGCleaner(ws));
@@ -860,7 +860,7 @@ void Slicer::slicing(void) {
 			if(edgeTargets->contains(b)) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << "predecessor BB " << (*predecessor).fst->index() << " has a edge to current BB, removing...." << io::endl;
-				assert(0);
+				ASSERT(0);
 				edgeTargets->remove(b);
 			}
 		}
@@ -874,7 +874,7 @@ void Slicer::slicing(void) {
 				if((*plti).fst == b) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
 						elm::cerr << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
-					assert(0);
+					ASSERT(0);
 					edgeSources->remove(plti);
 				}
 			}

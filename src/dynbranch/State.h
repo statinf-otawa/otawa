@@ -81,7 +81,7 @@ public:
 	}
 
 	inline FastStateWrapper(const FastStateWrapper& fsw){ // copy constructor
-		assert(fsw._fastState);
+		ASSERT(fsw._fastState);
 		copy(fsw);
 	}
 
@@ -99,7 +99,7 @@ public:
 	void setReg(int regNum, const PotentialValue& pv);
 
 	inline const PotentialValue& readReg(int regNum) {
-		assert(_fastState);
+		ASSERT(_fastState);
 		return _fastState->get(_state, regNum);
 	}
 

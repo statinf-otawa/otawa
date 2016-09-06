@@ -617,7 +617,7 @@ void ParExeGraph::createNodes() {
 			else {		// EXECUTE stage => expand functional unit's pipeline
 				ParExePipeline *fu = pipeline(stage, inst);
 				ParExeNode *first=NULL, *last=NULL;
-				assert(fu);
+				ASSERT(fu);
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 					if (!first)
@@ -1343,7 +1343,7 @@ ParExeGraph::ParExeGraph(
 			_cache_line_size = 1;
 	}
 	_props = props;
-	assert(!hw_resources->isEmpty());
+	ASSERT(!hw_resources->isEmpty());
 	for (elm::genstruct::Vector<Resource *>::Iterator res(*hw_resources) ; res ; res++) {
 		_resources.add(res);
 	}
