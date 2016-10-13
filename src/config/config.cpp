@@ -22,7 +22,6 @@
  */
 
 #include <elm/options.h>
-#include <elm/genstruct/Vector.h>
 #include <elm/string/StringBuffer.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/system/Plugger.h>
@@ -33,6 +32,8 @@
 #include <elm/util/UniquePtr.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/prog/Loader.h>
+#include <elm/data/Vector.h>
 
 using namespace elm;
 using namespace elm::option;
@@ -50,24 +51,28 @@ using namespace otawa;
  * @endcode
  *
  * The following options are available:
+ * @li --bindir - output the OTAWA binary path
  * @li --cflags -- output compilation C++ flags
- * @li --data -- output the OTAWA data path
- * @li --doc -- output the OTAWA documentation path
- * @li --has-so -- exit with 0 return code if dynamic libraries are available, non-0 else
- * @li -h, --help -- display the help message
- * @li --list-ilps, --ilp -- list ILP solver plugins available
+ * @li --datadir -- output the OTAWA data path
+ * @li --docdir -- output the OTAWA document path
+ * @li --help, -h -- display this help message
+ * @li --ilp, --list-ilps -- list ILP solver plugins available
+ * @li --install, -i -- Output path to install the component
+ * @li --libdir -- output the OTAWA library path
  * @li --libs -- output linkage C++ flags
- * @li --list-loaders, --loader list loader plugins available
- * @li --prefix	output the prefix directory of OTAWA
- * @li --procs, --list-procs -- list available processor collections
- * @li --version -- output the current version
- * @li --scripts -- output the scripts path
- * @li --list-scripts -- output the list of available scripts
- * @li -r, --rpath -- output options to control RPATH on OS supporting it.
- * @li -p, --plugin ELD_FILE -- ouput linkage options for a plugin for the given ELD file.
- * @li -i, --install -- output the directory where installing a plugin.
- * @li --oversion -- output version of OTAWA.
- * @li -R, --origin-rpath -- output options to control RPATH for installation in OTAWA directory on OS supporting it.
+ * @li --list-loaders, --loader -- list loader plugins available
+ * @li --list-path, --path -- display path with plugins
+ * @li --list-plugins, --plug -- list available plugins
+ * @li --list-scripts, --script -- list available scripts
+ * @li --make-app, -a -- information to make a third-party application
+ * @li --make-plug, -p PLUGIN_NAME -- information to make a plugin
+ * @li --make-tool, -t -- information to make a tool integrated in OTAWA
+ * @li --otawa-version -- output the OTAWA version
+ * @li --plugdir -- output the OTAWA plugin path
+ * @li --prefix -- output the prefix directory of OTAWA
+ * @li --rpath, -r -- output options to control RPATH
+ * @li --scriptdir -- output the OTAWA script path
+ * @li --version, -v -- display this application version
  */
 
 #if defined(WIN32) || defined(WIN64)
@@ -76,190 +81,197 @@ using namespace otawa;
 #	define	LIB_DIR		"lib"
 #endif
 
-// Configuration class
-class Configuration {
-public:
-	Configuration(void): _origin(false) {
-		prefix = MANAGER.prefixPath();
-		cflags << "-I" << prefix.append("include");
-		libs << "-L" << prefix.append(LIB_DIR) << " -lotawa -lelm -lgel";
-		addRPath(prefix.append(LIB_DIR));
-	}
-
-	/**
-	 * Add an RPATH.
-	 * @param path	Added path.
-	 */
-	void addRPath(elm::system::Path path) {
-		sys::Path prefix = MANAGER.prefixPath();
-		if(_origin && path.subPathOf(prefix))
-			path = sys::Path(_ << "\\$ORIGIN") / path.toString().substring(prefix.toString().length() + 1);
-		if(!rpath.contains(path))
-			rpath.add(path);
-	}
-
-	/**
-	 * Get the RPATH value.
-	 * @return	RPATH value.
-	 */
-	string getRPath(void) {
-		StringBuffer buf;
-		for(int i = 0; i < rpath.length(); i++) {
-			if(i != 0)
-				buf << ':';
-			buf << rpath[i];
-		}
-		return buf.toString();
-	}
-
-	void setOrigin(bool origin) {
-		_origin = origin;
-		rpath.clear();
-		addRPath(prefix.append(LIB_DIR));
-	}
-
-	StringBuffer cflags, libs;
-	elm::system::Path prefix;
-private:
-	genstruct::Vector<sys::Path> rpath;
-	bool _origin;
-};
-
-// Main class
 class Config: public option::Manager {
 public:
 	Config(void):
-		Manager(Manager::Make("otawa-config", Version(2, 2, 0))
+		Manager(Manager::Make("otawa-config", Version(2, 3, 0))
 			.author("H. Cassé <casse@irit.fr>")
 			.copyright("LGPL v2")
 			.description("Get building information about the OTAWA framework")
-			.free_argument("MODULES...")),
-		eld				(ValueOption<string>::Make(*this).cmd("-p").cmd("--plugin")			.description("ELD file to generate linkage options").argDescription("ELD_FILE")),
-		cflags			(SwitchOption::Make(*this).cmd("--cflags")							.description("output compilation C++ flags")),
-		data			(SwitchOption::Make(*this).cmd("--data")							.description("output the OTAWA data path")),
-		doc				(SwitchOption::Make(*this).cmd("--doc")								.description("output the OTAWa document path")),
-		has_so			(SwitchOption::Make(*this).cmd("--has-so")							.description("exit with 0 if dynamic libraries are available, non-0 else")),
-		ilp				(SwitchOption::Make(*this).cmd("--list-ilps").cmd("--ilp")			.description("list ILP solver plugins available")),
-		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
-		loader			(SwitchOption::Make(*this).cmd("--list-loaders").cmd("--loader")	.description("list loader plugins available")),
+			.free_argument("MODULES...").help().version()),
+
+		list_ilps		(SwitchOption::Make(*this).cmd("--list-ilps").cmd("--ilp")			.description("list ILP solver plugins available")),
+		list_loaders	(SwitchOption::Make(*this).cmd("--list-loaders").cmd("--loader")	.description("list loader plugins available")),
+		list_plugins	(SwitchOption::Make(*this).cmd("--list-plugins").cmd("--plug")		.description("list available plugins")),
+		list_scripts	(SwitchOption::Make(*this).cmd("--list-scripts").cmd("--script")	.description("list available scripts")),
+		list_path		(SwitchOption::Make(*this).cmd("--list-path").cmd("--path")			.description("display path with plugins")),
+
 		prefix			(SwitchOption::Make(*this).cmd("--prefix")							.description("output the prefix directory of OTAWA")),
-		procs			(SwitchOption::Make(*this).cmd("--list-procs").cmd("--procs")		.description("list available processor collections")),
-		show_version	(SwitchOption::Make(*this).cmd("--version")							.description("output the current version")),
-		scripts			(SwitchOption::Make(*this).cmd("--scripts")							.description("output the scripts path")),
-		list_scripts	(SwitchOption::Make(*this).cmd("--list-scripts")					.description("output the list of available scripts")),
-		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH")),
-		install			(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path of plugin directory")),
-		oversion		(SwitchOption::Make(*this).cmd("--oversion")						.description("output version of OTAWA.")),
-		orpath			(SwitchOption::Make(*this).cmd("-R").cmd("--origin-rpath")			.description("output options to control RPATH for an installation relative to OTAWA")),
-		help			(SwitchOption::Make(*this).cmd("-h").cmd("--help")			.description("display this help message."))
+		docdir			(SwitchOption::Make(*this).cmd("--docdir")							.description("output the OTAWA document path")),
+		plugdir			(SwitchOption::Make(*this).cmd("--plugdir")							.description("output the OTAWA plugin path")),
+		datadir			(SwitchOption::Make(*this).cmd("--datadir")							.description("output the OTAWA data path")),
+		scriptdir		(SwitchOption::Make(*this).cmd("--scriptdir")						.description("output the OTAWA script path")),
+		bindir			(SwitchOption::Make(*this).cmd("--bindir")							.description("output the OTAWA binary path")),
+		libdir			(SwitchOption::Make(*this).cmd("--libdir")							.description("output the OTAWA library path")),
+
+		otawa_version	(SwitchOption::Make(*this).cmd("--otawa-version")					.description("output the OTAWA version")),
+
+		make_plug		(Value<string>::Make(*this).cmd("-p").cmd("--make-plug")			.description("information to make a plugin").argDescription("PLUGIN_NAME")),
+		make_app		(SwitchOption::Make(*this).cmd("-a").cmd("--make-app")				.description("information to make a third-party application")),
+		make_tool		(SwitchOption::Make(*this).cmd("-t").cmd("--make-tool")				.description("information to make a tool integrated in OTAWA")),
+
+		cflags			(SwitchOption::Make(*this).cmd("--cflags")							.description("output compilation C++ flags")),
+		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
+		installdir		(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path to install the component")),
+		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH"))
+
 	{
 	}
 
-	void run(int argc, char **argv) {
-
-		// perform the parse
-		this->parse(argc, argv);
-		if(help) {
-			displayHelp();
-			return;
-		}
-
-		// record the origin
-		if(orpath)
-			config.setOrigin(true);
-
-		// perform adjustment according to the plugins
-		for(int i = 0; i < plugs.length(); i++) {
-
-			// adjust output
-			Path path = plugs[i]->path();
-			config.libs << ' ' << path;
-			config.addRPath(path.parent());
-
-			// handle dependencies
-			for(sys::Plugin::DepIter dep = plugs[i]->dependencies(); dep; dep++)
-				if(!plugs.contains(*dep))
-					plugs.add(*dep);
-		}
-
-		// load the ELD
-		if(eld)
-			adjustELD(config);
-
-		// do the display
-		if(oversion)
-			cout << "OTAWA rev. " << MANAGER.VERSION << " (" << MANAGER.COMPILATION_DATE << ")";
-		if(prefix)
-			cout << config.prefix;
-		if(cflags)
-			cout << config.cflags.toString();
-		if(data)
-			cout << config.prefix.append("share/Otawa");
-		if(doc)
-			cout << config.prefix.append("share/Otawa/autodoc/index.html");
-		if(ilp)
-			show("ilp");
-		if(loader)
-			show("loader");
-		if(procs)
-			show("proc", true);
-		if(scripts)
-			cout  << getScriptDir();
-		if(list_scripts)
-			showScripts();
-		if(rpath || orpath)
-			cout << "-Wl,-rpath -Wl," << config.getRPath() << ' ';
-		if(libs)
-			cout << config.libs.toString();
-		if(install)
-			cout << (MANAGER.prefixPath() / "lib/otawa/proc");
-		cout << endl;
-	}
-
 protected:
+
 	virtual void process(string arg) {
 		ProcessorPlugin *plugin = ProcessorPlugin::get(arg);
-		if(plugin)
-			plugs.add(plugin);
+		if(plugin) {
+			if(!plugs.contains(plugin))
+				plugs.add(plugin);
+		}
 		else
 			throw OptionException(_ << " plugin " << arg << " cannot be found!");
 	}
 
-private:
+	virtual void run(void) throw(elm::Exception) {
 
-	/**
-	 * Adjust the configuration according to the ELD file.
-	 * @param config	Configuration to adjust.
-	 */
-	void adjustELD(::Configuration& config) throw(option::OptionException) {
-		try {
+		// list options
+		if(list_ilps) {
+			listILPs();
+			return;
+		}
+		if(list_loaders) {
+			listLoaders();
+			return;
+		}
+		if(list_plugins) {
+			listPlugins();
+			return;
+		}
+		if(list_scripts) {
+			listScripts();
+			return;
+		}
 
-			// get the list of dependencies
-			UniquePtr<ini::File> file(ini::File::load(*eld));
-			ini::Section *sect = file->get("elm-plugin");
-			if(!sect)
-				throw option::OptionException(_ << "no eld-plugin section in " << *eld);
-			genstruct::Vector<string> plugins;
-			sect->getList("deps", plugins);
+		// directory options
+		if(prefix) {
+			cout << MANAGER.prefixPath() << io::endl;
+			return;
+		}
+		if(docdir) {
+			cout << MANAGER.prefixPath() / "share" / "Otawa" / "doc" << io::endl;
+			return;
+		}
+		if(plugdir) {
+			cout << getPluginDir() << io::endl;
+			return;
+		}
+		if(datadir) {
+			cout << MANAGER.prefixPath() / "share" / "Otawa" << io::endl;
+			return;
+		}
+		if(scriptdir) {
+			cout << getScriptDir() << io::endl;
+			return;
+		}
+		if(bindir) {
+			cout << getBinDir() << io::endl;
+			return;
+		}
+		if(libdir) {
+			cout << getLibDir() << io::endl;
+			return;
+		}
 
-			// get the required plugins
-			for(int i = 0; i < plugins.length(); i++) {
-				ProcessorPlugin *plugin = ProcessorPlugin::get(plugins[i]);
-				if(!plugin)
-					throw option::OptionException(_ << "cannot find the plugin " << plugins[i]);
-				config.libs << ' ' << plugin->path();
+		// other information
+		if(otawa_version) {
+			cout << "Otawa " << MANAGER.VERSION << " (" << MANAGER.COMPILATION_DATE << ")";
+			return;
+		}
+
+		// for a plugin, look for the ELD
+		sys::Path ipath;
+		if(make_tool)
+			ipath = getBinDir();
+		else if(make_plug) {
+			try {
+
+				// get the list of dependencies
+				Path eld = *make_plug;
+				if(!eld.extension())
+					eld = eld.setExtension("eld");
+				UniquePtr<ini::File> file(ini::File::load(eld));
+				ini::Section *sect = file->get("elm-plugin");
+				if(!sect)
+					throw option::OptionException(_ << "no eld-plugin section in " << eld);
+				genstruct::Vector<string> deps;
+				sect->getList("deps", deps);
+
+				// get the required plugins
+				for(int i = 0; i < deps.length(); i++) {
+					cerr << "DEBUG: " << deps[i] << io::endl;
+					ProcessorPlugin *plugin = ProcessorPlugin::get(deps[i]);
+					if(!plugin)
+						throw option::OptionException(_ << "cannot find the plugin " << deps[i]);
+					if(!plugs.contains(plugin))
+						plugs.add(plugin);
+				}
+
+				// get the name and directory
+				string name = sect->get("name");
+				if(!name)
+					throw option::OptionException(_ << "no name provided for the plugin");
+				ipath = (getPluginDir() / name).parent();
+			}
+			catch(ini::Exception& e) {
+				throw option::OptionException(e.message());
 			}
 		}
-		catch(ini::Exception& e) {
-			throw option::OptionException(e.message());
+
+		// display path if required
+		if(installdir) {
+			cout << ipath << io::endl;
+			return;
+		}
+
+		// display C flags
+		if(cflags) {
+			cout << "-I" << MANAGER.prefixPath() / "include" << io::endl;
+			return;
+		}
+
+		// output libs
+		if(libs) {
+			cout << "-L" << MANAGER.prefixPath() << " -lotawa -lelm -lgel";
+
+			// output dependencies
+			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++)
+				cout << ' ' << p->path();
+
+			// output RPath
+			if(rpath) {
+				elm::Vector<string> rpaths;
+				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++) {
+					Path rpath = p->path().relativeTo(ipath);
+					if(!rpaths.contains(rpath)) {
+						rpaths.add(rpath);
+						cout << " -Wl,-rpath -Wl,\\$ORIGIN/" << rpath;
+					}
+				}
+			}
+
+			cout << io::endl;
 		}
 	}
 
+private:
+
 	/**
-	 * Get the scripts paths.
+	 * Compute RPath for the given plugin.
 	 */
-	Path getScriptDir() {
-		return config.prefix.append("share/Otawa/scripts");
+	Path rpathFor(sys::Plugin *p, sys::Path ipath) {
+		Path dir = p->path().dirPart();
+		if(!ipath)
+			return dir;
+		else
+			return dir.relativeTo(ipath);
 	}
 
 	/**
@@ -267,58 +279,79 @@ private:
 	 * @param kind		Type of the plugin.
 	 * @param rec		Perform recursive research.
 	 */
-	void show(cstring kind, bool rec = false) {
-		elm::system::Plugger plugger(
-			OTAWA_ILP_NAME,
-			OTAWA_ILP_VERSION,
-			otawa::Manager::buildPaths(kind));
+	void list(cstring kind, cstring name, cstring version) {
+		// this implementation (a) does not support the new plugin system
+		// and (b) hook any plugin without control and display all plugins as is.
+		elm::system::Plugger plugger(name, version, otawa::Manager::buildPaths(kind));
+		plugger.setQuiet(true);
 
-		// if recursive, add subdirectories
-		if(rec) {
+		// get the initial directories
+		elm::Vector<sys::Directory *> paths;
+		for(sys::Plugger::PathIterator path(plugger); path; path++) {
+			sys::FileItem *item = sys::FileItem::get(*path);
+			if(item && item->toDirectory()) {
+				paths.add(item->toDirectory());
+				item->toDirectory()->use();
+			}
+		}
+		int builtin = paths.length();
 
-			// get the initial directories
-			Vector<sys::Directory *> paths;
-			for(sys::Plugger::PathIterator path(plugger); path; path++) {
-				sys::FileItem *item = sys::FileItem::get(*path);
-				if(item && item->toDirectory()) {
-					paths.add(item->toDirectory());
-					item->toDirectory()->use();
+		// recursively build other directories
+		while(paths) {
+			bool is_builtin = builtin == paths.length();
+			builtin--;
+			sys::Directory *dir = paths.pop();
+			if(!is_builtin)
+				plugger.addPath(dir->path());
+			for(sys::Directory::Iterator child(dir); child; child++)
+				if(child->toDirectory()) {
+					paths.add(child->toDirectory());
+					child->toDirectory()->use();
 				}
-			}
-			int builtin = paths.length();
-
-			// recursively build other directories
-			while(paths) {
-				bool is_builtin = builtin == paths.length();
-				builtin--;
-				sys::Directory *dir = paths.pop();
-				if(!is_builtin)
-					plugger.addPath(dir->path());
-				for(sys::Directory::Iterator child(dir); child; child++)
-					if(child->toDirectory()) {
-						paths.add(child->toDirectory());
-						child->toDirectory()->use();
-					}
-				dir->release();
-			}
+			dir->release();
 		}
 
-		// look available plugins
-		bool first = true;
-		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
-			if(first)
-				first = false;
-			else
-				cout << ", ";
-			cout << *plugin;
-		}
-		cout << io::endl;
+		// look plugins
+		elm::Vector<sys::Path> found;
+		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++)
+			if(!found.contains(plugin.path())) {
+				cout << *plugin;
+				if(list_path)
+					cout << " (" << plugin.path() << ")";
+				cout << io::endl;
+				found.add(plugin.path());
+			}
 	}
 
-	/**
-	 * Display the list of available scripts.
-	 */
-	void showScripts() {
+	void listILPs(void) {
+		list("ilp", OTAWA_ILP_NAME, OTAWA_ILP_VERSION);
+	}
+
+	void listLoaders(void) {
+		list("loader", OTAWA_LOADER_NAME, OTAWA_LOADER_VERSION);
+	}
+
+	void listPlugins(void) {
+		list("proc", OTAWA_PROC_NAME, OTAWA_PROC_VERSION);
+	}
+
+	Path getScriptDir(void) const {
+		return MANAGER.prefixPath() / "share" / "Otawa" / "scripts";
+	}
+
+	Path getLibDir(void) const {
+		return MANAGER.prefixPath() / LIB_DIR;
+	}
+
+	Path getPluginDir(void) const {
+		return MANAGER.prefixPath() / LIB_DIR / "otawa";
+	}
+
+	Path getBinDir(void) const {
+		return MANAGER.prefixPath() / "bin";
+	}
+
+	void listScripts(void) {
 		sys::FileItem *item = sys::FileItem::get(getScriptDir());
 		sys::Directory *dir = item->toDirectory();
 		if(!dir)
@@ -329,36 +362,38 @@ private:
 					cout << file->path().basePart().namePart() << io::endl;
 	}
 
-	genstruct::Vector<sys::Plugin *> plugs;
-	::Configuration config;
-	option::ValueOption<string> eld;
 	SwitchOption
-		cflags,
-		data,
-		doc,
-		has_so,
-		ilp,
-		libs,
-		loader,
-		prefix,
-		procs,
-		show_version,
-		scripts,
+		list_ilps,
+		list_loaders,
+		list_plugins,
 		list_scripts,
-		rpath,
-		install,
-		oversion,
-		orpath,
-		help;
+		list_path;
+
+	SwitchOption
+		prefix,
+		docdir,
+		plugdir,
+		datadir,
+		scriptdir,
+		bindir,
+		libdir;
+
+	SwitchOption
+		otawa_version;
+
+	option::Value<string> make_plug;
+	SwitchOption
+		make_app,
+		make_tool,
+		cflags,
+		libs,
+		installdir,
+		rpath;
+
+	elm::Vector<sys::Plugin *> plugs;
 };
 
-int main(int argc, char **argv) {
-	try {
-		Config c;
-		c.run(argc, argv);
-	}
-	catch(OptionException& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
-		return 1;
-	}
+int main(int argc, char *argv[]) {
+	return Config().manage(argc, argv);
 }
+

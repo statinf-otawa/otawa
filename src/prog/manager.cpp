@@ -45,6 +45,7 @@ String Manager::buildPaths(cstring kind, string paths) {
 		<< elm::system::Path::home() << "/.otawa/" << kind << elm::system::Path::PATH_SEPARATOR;
 #	ifdef HAS_RELOCATION
 		buf << (Manager::prefixPath() / "lib/otawa" / kind) << elm::system::Path::PATH_SEPARATOR;
+		buf << (Manager::prefixPath() / "lib/otawa") << elm::system::Path::PATH_SEPARATOR;
 #	endif
 	buf << paths;
 	return buf.toString();
