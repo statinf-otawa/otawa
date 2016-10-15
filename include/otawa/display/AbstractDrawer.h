@@ -28,7 +28,6 @@
 namespace otawa { namespace display {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 // AbstractDrawer class
 class AbstractDrawer {
@@ -86,8 +85,8 @@ public:
 	
 private:
 	Graph *graph;
-	FragTable<Vertex *> vertices;
-	FragTable<Edge *> edges;
+	genstruct::FragTable<Vertex *> vertices;
+	genstruct::FragTable<Edge *> edges;
 };
 
 } } // otawa::display

@@ -80,7 +80,7 @@ public:
 		}
 	private:
 		Block::EdgeIter i;
-		SLList<Block::EdgeIter> slli;
+		genstruct::SLList<Block::EdgeIter> slli;
 	};
 	
 	// Collection concept
@@ -137,9 +137,9 @@ public:
 		}
 	private:
 		CFG::BlockIter i;
-		SLList<CFG::BlockIter> vbi;
+		genstruct::SLList<CFG::BlockIter> vbi;
 		bool stop;
-		SLList<CFG*> travledCFG;		// each CFG only gets through once
+		genstruct::SLList<CFG*> travledCFG;		// each CFG only gets through once
 	};
 	
 	// DiGraphWithVertexMap concept

@@ -30,7 +30,6 @@
 #include <otawa/proc/ProcessorException.h>
 
 
-using namespace elm::genstruct;
 using namespace otawa::ilp;
 using namespace otawa::sim;
 

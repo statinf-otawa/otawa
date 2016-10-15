@@ -35,7 +35,7 @@ protected:
 public:
 	Loader(CString name, Version version, Version plugger_version,
 	       const elm::system::Plugin::aliases_t & aliases
-	       = elm::system::Plugin::aliases_t::EMPTY);
+	       = elm::system::Plugin::aliases_t::null);
 
 	virtual CString getName(void) const = 0;
 	virtual Process *load(Manager *man, CString path, const PropList& props) = 0;

@@ -242,13 +242,13 @@ extern p::feature CONSTRAINTS_FEATURE;
 extern Identifier<ilp::Var *> MISS_VAR;
 
 // MAY analysis
-extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
+extern Identifier<genstruct::Vector<ACS *> *> ENTRY_MAY_ACS;
 extern p::feature MAY_ACS_FEATURE;
-extern Identifier<Vector<ACS *> *> MAY_ACS;
+extern Identifier<genstruct::Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis
 extern p::feature DIRTY_FEATURE;
-extern Identifier<AllocatedTable<DirtyManager::t> > DIRTY;
+extern Identifier<genstruct::AllocatedTable<DirtyManager::t> > DIRTY;
 
 // Purge analysis
 typedef enum {

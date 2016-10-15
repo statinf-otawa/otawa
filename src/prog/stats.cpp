@@ -168,8 +168,8 @@ void StatInfo::remove(WorkSpace *ws, StatCollector& stats) {
 }
 
 
-Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
-	static Vector<StatCollector *> empty;
+genstruct::Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
+	static genstruct::Vector<StatCollector *> empty;
 	StatInfo *info = StatInfo::ID(ws);
 	if(!info)
 		return empty;
@@ -182,7 +182,7 @@ Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
  * Iterate on statistics collector of the workspace.
  * @param ws	Workspace to work on.
  */
-StatInfo::Iter::Iter(WorkSpace *ws): Vector<StatCollector *>::Iterator(get(ws)) {
+StatInfo::Iter::Iter(WorkSpace *ws): genstruct::Vector<StatCollector *>::Iterator(get(ws)) {
 }
 
 }	// otawa

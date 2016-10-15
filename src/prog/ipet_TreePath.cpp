@@ -93,7 +93,6 @@ namespace otawa { namespace tsim {
 /* Example
 #include <iostream>
 #include <elm/genstruct/Vector.h>
-using namespace elm::genstruct;
 
 enum Direction {LEFT, RIGHT};
 

@@ -199,7 +199,7 @@ Identifier<genstruct::Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
  * at the entry of the task. If not defined, the T (top) value is assumed.
  * @ingroup dcache
  */
-Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
+Identifier<genstruct::Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
 
 
 /**

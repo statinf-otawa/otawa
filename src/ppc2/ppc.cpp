@@ -1021,7 +1021,7 @@ public:
 static string table[] = {
 	"elf_20"
 };
-static elm::genstruct::Table<string> ppc_aliases(table, 1);
+static elm::Table<string> ppc_aliases(1, table);
 
 
 /**

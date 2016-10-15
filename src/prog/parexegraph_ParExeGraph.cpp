@@ -498,9 +498,9 @@ void ParExeGraph::createSequenceResources(){
     int resource_index = _resources.length();
     int reg_num = _ws->platform()->regCount();
 
-    AllocatedTable<bool> is_input(reg_num);
-    AllocatedTable<ParExeInst *> is_produced_by(reg_num);
-    AllocatedTable<ParExeInst *> is_input_for(reg_num);
+    genstruct::AllocatedTable<bool> is_input(reg_num);
+    genstruct::AllocatedTable<ParExeInst *> is_produced_by(reg_num);
+    genstruct::AllocatedTable<ParExeInst *> is_input_for(reg_num);
     for (int j=0 ; j<reg_num ; j++){
     	is_input[j] = false;
     	is_produced_by[j] = NULL;

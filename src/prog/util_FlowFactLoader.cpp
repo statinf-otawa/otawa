@@ -1021,7 +1021,7 @@ void FlowFactLoader::onIgnoreSeq(Address address) {
  */
 void FlowFactLoader::onMultiBranch(
 	Address control,
-	const Vector<Address>& targets
+	const genstruct::Vector<Address>& targets
 ) {
 	if(!control)
 		return;
@@ -1053,7 +1053,7 @@ void FlowFactLoader::onMultiBranch(
  */
 void FlowFactLoader::onMultiCall(
 	Address control,
-	const Vector<Address>& targets
+	const genstruct::Vector<Address>& targets
 ) {
 	if(!control)
 		return;

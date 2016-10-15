@@ -104,7 +104,7 @@ Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CAC
  * @par Hooks
  * @li @ref PropList (code processor configuration)
  */
-Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", 0);
+Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", 0);
 
 /**
  * This property allows to set an entry PERS ACS. It must be set in the property list passed
@@ -113,7 +113,7 @@ Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_AC
  * @par Hooks
  * @li @ref PropList (code processor configuration)
  */
-Identifier<Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otawa::CACHE_ACS_PERS_ENTRY", 0);
+Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otawa::CACHE_ACS_PERS_ENTRY", 0);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.

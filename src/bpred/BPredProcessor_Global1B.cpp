@@ -39,7 +39,6 @@ namespace bpred {
 
 using namespace otawa::ilp;
 using namespace elm;
-using namespace elm::genstruct;
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
 #define NEW_BASIC_CONSTRAINT(cons_name) Constraint *cons_name = system->newConstraint(Constraint::EQ); \
@@ -100,7 +99,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	ASSERT(system);
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
-	HashTable<Block*,elm::genstruct::Vector<BCGNode*> > BB_classes;
+	genstruct::HashTable<Block*,elm::genstruct::Vector<BCGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BCGNode*> list_nodes;
 		
@@ -113,7 +112,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		if(list_nodes.length()>0) BB_classes.add(bb,list_nodes);
 	}
 
-	HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes_BBHG;
+	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes_BBHG;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BBHGNode*> v;
 		for(BBHG::Iterator node(bbhg);node;node++) {
@@ -142,7 +141,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 			////////
 #if C11_1b>0
 				{
-					HashTable<Var*, Var*> added_vars;
+					genstruct::HashTable<Var*, Var*> added_vars;
 					NEW_SPECIAL_CONSTRAINT(C11,EQ,0);
 					C11->addLeft(1,XbApi);
 					
@@ -167,7 +166,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 			////////
 #if C12_1b>0
 				{
-					HashTable<Var*, Var*> added_vars;
+					genstruct::HashTable<Var*, Var*> added_vars;
 					NEW_SPECIAL_CONSTRAINT(C12,EQ,0);
 					C12->addLeft(1,XbApi);
 					
@@ -509,13 +508,13 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
  * @param bcgs		Vector containg the BCGs (Branch Conflict Graphs) generated from the BHG.
  * @param ht_vars	Hash Table used to ensure unicity of the variables.
  */
-void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,HashTable<String ,Var*>& ht_vars) {
+void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, genstruct::HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
 
 	
-	HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes;
+	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BBHGNode*> v;
 		for(BBHG::Iterator node(bbhg);node;node++) {
@@ -661,7 +660,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg,Hash
 			
 			if(BB_classes.exists(bb)) {
 				elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);			
-				HashTable<Var* ,Var*> hist_done;					
+				genstruct::HashTable<Var* ,Var*> hist_done;
 				for(unsigned int i = 0 ; i<v.length();++i) {
 					for(BBHG::OutIterator s(v[i]);s;s++) {
 						if(s->target()->getCorrespondingBB()->index() == edge->target()->index()) {
@@ -833,7 +832,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		BBHGDrawer drawer(&bbhg, props);
 		drawer.display();
 	}
-	HashTable<String ,Var*> ht_vars;
+	genstruct::HashTable<String ,Var*> ht_vars;
 
 	BHG bhg(this->BHG_history_size);
 

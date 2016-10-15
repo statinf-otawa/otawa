@@ -408,7 +408,7 @@ p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis
  * @p Hook
  * @li @ref otawa::BasicBlock
  */
-Identifier<AllocatedTable<DirtyManager::t> > DIRTY("otawa::dcache::DIRTY", AllocatedTable<DirtyManager::t>::EMPTY);
+Identifier<genstruct::AllocatedTable<DirtyManager::t> > DIRTY("otawa::dcache::DIRTY", genstruct::AllocatedTable<DirtyManager::t>::EMPTY);
 
 } }		// otawa::dcache
 

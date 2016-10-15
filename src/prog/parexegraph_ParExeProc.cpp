@@ -29,12 +29,12 @@ namespace otawa {
 	 ASSERT(proc);
 
     // Create queues
-    const Table<hard::Queue *>& oqueues = proc->getQueues(); 
+    const genstruct::Table<hard::Queue *>& oqueues = proc->getQueues();
     for(int i = 0; i < oqueues.count(); i++)
       addQueue(oqueues[i]->getName(),1 << oqueues[i]->getSize());
     
     // Create stages
-    const Table<hard::Stage *>& ostages = proc->getStages();
+    const genstruct::Table<hard::Stage *>& ostages = proc->getStages();
     for(int i = 0; i < ostages.count(); i++) {
       hard::Stage * hstage = ostages[i];
  
@@ -79,12 +79,12 @@ namespace otawa {
       else {	// other than FETCH
     	  if (category == ParExeStage::EXECUTE) {
     		  setExecStage(stage);
-    		  const Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
+    		  const genstruct::Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
     		  for(int j = 0; j < fus.count(); j++) {
     			  hard::FunctionalUnit *fu = fus[j];
     			  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
     		  }
-    		  const Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
+    		  const genstruct::Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
     		  for(int j = 0; j < dispatch.count(); j++) {
     			  bool found = false;
     			  for(int k = 0; k < fus.count(); k++)

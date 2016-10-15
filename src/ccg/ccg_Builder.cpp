@@ -37,7 +37,6 @@
 
 using namespace otawa::ilp;
 using namespace otawa;
-using namespace elm::genstruct;
 
 namespace otawa { namespace ccg {
 

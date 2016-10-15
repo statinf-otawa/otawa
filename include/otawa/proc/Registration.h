@@ -30,7 +30,6 @@
 namespace otawa {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 // Pre-declaration
 class Processor;
@@ -98,8 +97,8 @@ protected:
 	AbstractRegistration(string name, Version version, AbstractRegistration *base);
 	virtual ~AbstractRegistration(void) { }
 	void init(cstring name, const Version& version, int tag, VarArg& args);
-	void setFeatures(const SLList<FeatureUsage>& features);
-	void setConfigs(const SLList<AbstractIdentifier *>& configs);
+	void setFeatures(const genstruct::SLList<FeatureUsage>& features);
+	void setConfigs(const genstruct::SLList<AbstractIdentifier *>& configs);
 	void record(void);
 
 private:
@@ -110,8 +109,8 @@ private:
 	string _name;
 	Version _version;
 	AbstractRegistration *_base;
-	SLList<AbstractIdentifier *> configs;
-	SLList<FeatureUsage> features;
+	genstruct::SLList<AbstractIdentifier *> configs;
+	genstruct::SLList<FeatureUsage> features;
 };
 
 
@@ -193,8 +192,8 @@ private:
 	string _name;
 	Version _version;
 	AbstractRegistration *_base;
-	SLList<AbstractIdentifier *> configs;
-	SLList<FeatureUsage> features;
+	genstruct::SLList<AbstractIdentifier *> configs;
+	genstruct::SLList<FeatureUsage> features;
 	AbstractMaker *_maker;
 };
 

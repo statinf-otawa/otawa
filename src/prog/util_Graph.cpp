@@ -24,7 +24,6 @@
 #include <elm/io.h>
 
 using namespace elm;
-using namespace elm::genstruct;
 
 namespace otawa { namespace graph {
 

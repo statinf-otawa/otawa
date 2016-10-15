@@ -256,8 +256,8 @@ public:
 	virtual ~Printer(void) { }
 	virtual void printNoReturn(Output& out, string label) = 0;
 	virtual void printNoCall(Output& out, string label) = 0;
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va = 0) = 0;
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va = 0) = 0;
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
 	virtual void startComment(Output& out) = 0;
 	virtual void endComment(Output& out) = 0;
@@ -315,7 +315,7 @@ public:
 	 * @param inst	Instruction to get address of.
 	 * @param va	The vector pointer containing the target addresses
 	 */
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va) {
 		out << "multibranch ";
 		addressOf(out, cfg, inst->address());
 
@@ -324,7 +324,7 @@ public:
 				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
-			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+			for(genstruct::Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
 				if(*vai == va->last())
@@ -351,7 +351,7 @@ public:
 		out << io::endl;
 	}
 
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va) {
 		out << "multicall ";
 		addressOf(out, cfg, inst->address());
 
@@ -360,7 +360,7 @@ public:
 				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
-			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+			for(genstruct::Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
 				if(*vai == va->last())
@@ -483,9 +483,9 @@ public:
 		out << "\t<nocall label=\"" << label << "\"/>\n";
 	}
 
-	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va) {
 		if(va)
-			for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+			for(genstruct::Vector<Address>::Iterator vai(*va); vai; vai++) {
 				out << "\t\t<target ";
 				addressOf(out, cfg, *vai);
 				out << "/> ";
@@ -496,7 +496,7 @@ public:
 			} // end of for
 	}
 
-	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va) {
 		out << "\t<!-- switch-like branch (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multibranch ";
 		addressOf(out, cfg, inst->address());
@@ -505,7 +505,7 @@ public:
 		out << "\t</multibranch>\n";
 	}
 
-	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
+	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va) {
 		out << "\t<!-- indirect call (" << inst->address() << ") in " << nameOf(cfg) << " -->\n";
 		out << "\t<multicall ";
 		addressOf(out, cfg, inst->address());
@@ -668,11 +668,11 @@ protected:
 		FlowFactLoader::onIgnoreControl(address);
 		record(address);
 	}
-	virtual void onMultiBranch(Address control, const Vector< Address > &target) {
+	virtual void onMultiBranch(Address control, const genstruct::Vector< Address > &target) {
 		FlowFactLoader::onMultiBranch(control, target);
 		record(control);
 	}
-	virtual void onMultiCall(Address control, const Vector< Address > &target) {
+	virtual void onMultiCall(Address control, const genstruct::Vector< Address > &target) {
 		FlowFactLoader::onMultiCall(control, target);
 		record(control);
 	}
@@ -1122,14 +1122,14 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				}
 			}
 
-			void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va, WorkSpace* _ws, String s) {
+			void printMulti(Output& out, CFG *cfg, Inst *inst, genstruct::Vector<Address>* va, WorkSpace* _ws, String s) {
 				out << s << " ";
 				addressOf(out, cfg, inst->address());
 
 				if(va->count()) {
 					out << " to "
 						<< "\t// 0x" << inst->address() << "\n";
-					for(Vector<Address>::Iterator vai(*va); vai; vai++) {
+					for(genstruct::Vector<Address>::Iterator vai(*va); vai; vai++) {
 						out << "\t";
 						addressOf(out, cfg, *vai);
 						if(*vai == va->last())
@@ -1164,7 +1164,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					continue;
 
 				if(BRANCH_TARGET(lastInst).exists()) {
-					Vector<Address> va;
+					genstruct::Vector<Address> va;
 					for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
 						va.push(*target);
 					if(removeDuplicatedTarget) {
@@ -1177,7 +1177,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
 				}
 				else if(CALL_TARGET(lastInst).exists()) {
-					Vector<Address> va;
+					genstruct::Vector<Address> va;
 					for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
 						va.push(*target);
 					if(removeDuplicatedTarget) {
@@ -1190,7 +1190,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
 				}
 				else {
-					Vector<Address> va;
+					genstruct::Vector<Address> va;
 					if(lastInst->isControl() && lastInst->isConditional())
 						printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
 					else
@@ -1274,7 +1274,7 @@ void FFOutput::scanTargets(CFG *cfg) {
 		Inst* lastInst = bb->last();
 
 		if(BRANCH_TARGET(lastInst).exists()) {
-			Vector<Address> va;
+			genstruct::Vector<Address> va;
 			for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
 				va.push(*target);
 
@@ -1291,7 +1291,7 @@ void FFOutput::scanTargets(CFG *cfg) {
 			_printer.printMultiBranch(out, cfg, lastInst, &va);
 		}
 		else if(CALL_TARGET(lastInst).exists()) {
-			Vector<Address> va;
+			genstruct::Vector<Address> va;
 			for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
 				va.push(*target);
 

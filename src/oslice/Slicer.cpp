@@ -12,9 +12,9 @@ static Identifier<BitVector> SLICER_REG_BB_END("otawa::oslice::SLICER_REG_BB_END
 
 static Identifier<bool> TO_REMOVE("", false);
 typedef Pair<Block*, t::uint32> predecessor_t;
-typedef Vector<predecessor_t> predecessor_list_t;
-static Identifier<Vector<Pair<Block*, t::uint32 /* flag of the edge */ > >*> ARTIFICIAL_PREDECESSORS("");
-static Identifier<Vector<Block*>*> ARTIFICIAL_SUCCESSORS("");
+typedef genstruct::Vector<predecessor_t> predecessor_list_t;
+static Identifier<genstruct::Vector<Pair<Block*, t::uint32 /* flag of the edge */ > >*> ARTIFICIAL_PREDECESSORS("");
+static Identifier<genstruct::Vector<Block*>*> ARTIFICIAL_SUCCESSORS("");
 
 
 p::declare Slicer::reg = p::init("otawa::oslice::Slicer", Version(16, 5, 3116))
@@ -117,13 +117,13 @@ protected:
 	virtual void clean(void) {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
 		ASSERT(cfgc);
-		SLList<CFG*> cfgsToDelete;
+		genstruct::SLList<CFG*> cfgsToDelete;
 		// collects the things to delete
 		for(CFGCollection::Iterator cfgi(cfgc); cfgi; cfgi++) {
 			cfgsToDelete.add(*cfgi); // collect the CFGs
 		}
 		// the removed of Blocks and Edges are handled by ~CFG()
-		for(SLList<CFG*>::Iterator slli(cfgsToDelete); slli; slli++)
+		for(genstruct::SLList<CFG*>::Iterator slli(cfgsToDelete); slli; slli++)
 			delete *slli;
 		// clean the Collection
 		delete INVOLVED_CFGS(ws);
@@ -390,7 +390,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			if(_debugLevel & DISPLAY_CFG_CREATION)
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << "this node is removed, ignored" << io::endl;
 			TO_REMOVE(*v).remove();
-			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
+			genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
 			if(edgeTargets)
 			delete edgeTargets;
 			ARTIFICIAL_SUCCESSORS(*v).remove();
@@ -430,7 +430,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			delete edgeSources;
 		}
 		ARTIFICIAL_PREDECESSORS(*v).remove();
-		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
+		genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(*v);
 		if(edgeTargets)
 			delete edgeTargets;
 		ARTIFICIAL_SUCCESSORS(*v).remove();
@@ -777,7 +777,7 @@ void Slicer::slicing(void) {
 			elm::cerr << __SOURCE_INFO__ << "Popping BB " << b->index() << " of CFG " << b->cfg()->index() << " from the BB-removing working list" << io::endl;
 
 		predecessor_list_t predecessors;
-		Vector<Block*> successors;
+		genstruct::Vector<Block*> successors;
 		// Collect the predecessors of the current block
 		// incoming edges exited in the original CFG
 		for (Block::EdgeIter in = b->ins(); in; in++) { // just to be safe not to remove the element during iter ops.
@@ -803,7 +803,7 @@ void Slicer::slicing(void) {
 				if((*in).fst != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
 					predecessors.add(*in);
 				// remove the current block from the successors of the its predecessor
-				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*in).fst);
+				genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*in).fst);
 				if(edgeTargets)
 					edgeTargets->remove(b);
 			}
@@ -822,9 +822,9 @@ void Slicer::slicing(void) {
 				elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to " << *out << io::endl;
 		}
 		// now we process the successors of the current block due to the removals of the other blocks
-		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(b);
+		genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(b);
 		if(edgeTargets) {
-			for(Vector<Block*>::Iterator out(*edgeTargets); out; out++) {
+			for(genstruct::Vector<Block*>::Iterator out(*edgeTargets); out; out++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
 				if(out != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
@@ -854,7 +854,7 @@ void Slicer::slicing(void) {
 		// actually this may not be necessary
 		// if the predecessor has the targets of the current block, remove the current block from the target
 		for (predecessor_list_t::Iterator predecessor(predecessors); predecessor; predecessor++) {
-			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
+			genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 			if(!edgeTargets)
 				continue;
 			if(edgeTargets->contains(b)) {
@@ -865,7 +865,7 @@ void Slicer::slicing(void) {
 			}
 		}
 		// if the successor has predecessor of the current block, remove the current block from the source
-		for (Vector<Block*>::Iterator successor(successors); successor; successor++) {
+		for (genstruct::Vector<Block*>::Iterator successor(successors); successor; successor++) {
 			predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
 			if(!edgeSources)
 				continue;
@@ -884,7 +884,7 @@ void Slicer::slicing(void) {
 		// now connect the predecessor with the successor
 		 // for each predecessor, need to wire the edge between the predecessor and its successor
 		for (predecessor_list_t::Iterator predecessor(predecessors); predecessor; predecessor++) {
-			for (Vector<Block*>::Iterator successor(successors); successor; successor++) {
+			for (genstruct::Vector<Block*>::Iterator successor(successors); successor; successor++) {
 				// check if the successor is already linked with the predecessor
 				// first check the real link
 				bool foundRealEdge = false;
@@ -898,7 +898,7 @@ void Slicer::slicing(void) {
 					}
 				}
 				// then check the artificial edge
-				Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
+				genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 				if(edgeTargets && edgeTargets->contains(*successor)) {
 					foundArtificialEdge = true;
 				}
@@ -918,7 +918,7 @@ void Slicer::slicing(void) {
 
 					// add the successor edge from the predecessor as the replacement
 					if(!edgeTargets) {
-						edgeTargets = new Vector<Block* >();
+						edgeTargets = new genstruct::Vector<Block* >();
 						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
 					}
 					edgeTargets->add(successor);
@@ -955,10 +955,10 @@ void Slicer::slicing(void) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
 						elm::cerr << __SOURCE_INFO__ << __TAB__ << "Adding edge between BB " << (*predecessor).fst->index() << " to BB " << successor->index() << io::endl;
 					// connecting the predecessor with all of the successors
-					Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
+					genstruct::Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 					// in case the EDGE_TARGET is not initialized
 					if(!edgeTargets) {
-						edgeTargets = new Vector<Block* >();
+						edgeTargets = new genstruct::Vector<Block* >();
 						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
 					}
 					edgeTargets->add(successor);

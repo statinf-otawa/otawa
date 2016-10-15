@@ -36,7 +36,6 @@ namespace elm { namespace xom {
 namespace otawa {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 // Classes
 class AbstractFeature;
@@ -118,7 +117,7 @@ private:
 	void delFeatDep(const AbstractFeature* feature);
 
 	LockPtr<Process> proc;
-	typedef HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
+	typedef genstruct::HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
 	feat_map_t featMap;
 	bool cancelled;
 };

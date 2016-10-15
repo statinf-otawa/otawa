@@ -201,7 +201,7 @@ protected:
 				ini::Section *sect = file->get("elm-plugin");
 				if(!sect)
 					throw option::OptionException(_ << "no eld-plugin section in " << eld);
-				genstruct::Vector<string> deps;
+				Vector<string> deps;
 				sect->getList("deps", deps);
 
 				// get the required plugins

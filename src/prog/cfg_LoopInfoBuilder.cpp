@@ -159,18 +159,19 @@ class LoopInfoProblem {
 
 	class DominanceOrder {
  	public:
-		DominanceOrder(DomInfo& info): _info(info) { }
+		DominanceOrder(void): _info(0) { }
+		DominanceOrder(DomInfo& info): _info(&info) { }
 
  		inline int doCompare(Block *bb1, Block *bb2) {
- 			if(_info.dom(bb1, bb2))
+ 			if(_info->dom(bb1, bb2))
  				return +1;
- 			else if(_info.dom(bb2, bb1))
+ 			else if(_info->dom(bb2, bb1))
  				return -1;
  			else
  				return 0;
  		}
  	private:
- 		DomInfo& _info;
+ 		DomInfo *_info;
  	};
 
 public:
@@ -194,13 +195,15 @@ public:
 
 private:
 	DomInfo& d;
-	SortedList<Block *, DominanceOrder> headersLList;
+	DominanceOrder dorder;
+	CompareManager<Block *, DominanceOrder> dman;
+	SortedList<Block *, CompareManager<Block *, DominanceOrder> > headersLList;
 	genstruct::Vector<Block *> hdrs;
 
 };
 
 /* Constructors/Methods for LoopInfoProblem */
-LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): d(info), headersLList(DominanceOrder(info)) {
+LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): d(info), dorder(info), dman(dorder), headersLList(dman) {
 
 		/*
 		 * Find all the headers of the CFG
@@ -211,7 +214,7 @@ LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): d(info), headersLList
 				headersLList.add(bb);
 
 		/* Converting to Vector, because a linked list is not very practical ... */
-		for(SortedList<Block*, DominanceOrder>::Iterator iter(headersLList); iter; iter++) {
+		for(SortedList<Block*, CompareManager<Block *, DominanceOrder> >::Iter iter(headersLList); iter; iter++) {
 			hdrs.add(*iter);
 		}
 	}

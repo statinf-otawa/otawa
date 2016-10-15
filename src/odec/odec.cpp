@@ -207,7 +207,7 @@ private:
 		ASSERT(address);
 
 		// Initialize the queue
-		VectorQueue<Inst *> todo(1024);
+		genstruct::VectorQueue<Inst *> todo(1024);
 		Inst *inst = getInst(workspace(), address);
 		if(!inst) {
 			cerr << "ERROR: bad function entry at " << address << io::endl;

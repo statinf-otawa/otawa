@@ -17,7 +17,6 @@
 namespace otawa { namespace dfa {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 extern Identifier<int> INDEX;
 
@@ -31,7 +30,7 @@ class XCFGVisitor {
 	} node_t;
 	P& dom;
 	const CFGCollection& cfgs;
-	FragTable<node_t> nodes;
+	genstruct::FragTable<node_t> nodes;
 	int *offs;
 	Vector<int> *preds;
 

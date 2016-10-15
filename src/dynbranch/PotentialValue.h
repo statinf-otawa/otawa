@@ -28,7 +28,6 @@
 
 using namespace elm;
 using namespace elm::io;
-using namespace elm::genstruct;
 
 namespace otawa { namespace dynbranch {
 
@@ -41,7 +40,7 @@ class PotentialValueMem;
 typedef SLList<PotentialValueMem*> potential_value_list_t;
 #else
 class PotentialValue;
-typedef SLList<PotentialValue*> potential_value_list_t;
+typedef genstruct::SLList<PotentialValue*> potential_value_list_t;
 #endif
 
 typedef t::uint32 potential_value_type ;

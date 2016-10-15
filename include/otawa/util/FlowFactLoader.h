@@ -44,7 +44,6 @@ void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 namespace otawa {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 // Extern class
 class ContextualPath;
@@ -77,8 +76,8 @@ protected:
 	virtual void onNoInline(Address address, bool no_inline, const ContextualPath& path);
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
-	virtual void onMultiBranch(Address control, const Vector<Address>& target);
-	virtual void onMultiCall(Address control, const Vector<Address>& target);
+	virtual void onMultiBranch(Address control, const genstruct::Vector<Address>& target);
+	virtual void onMultiCall(Address control, const genstruct::Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	virtual void onIgnoreEntry(string name);
 

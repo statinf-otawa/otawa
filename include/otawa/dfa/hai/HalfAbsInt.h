@@ -166,7 +166,7 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 
 	// clean remaining states
 	// genstruct::Vector<CFG *> cfgs;
-	SLList<CFG* > cfgs;
+	genstruct::SLList<CFG* > cfgs;
 	cfgs.add(&entry_cfg);
 	while(cfgs.count()) { // for(int i = 0; i < cfgs.count(); i++)
 		CFG* cfg = cfgs.pop();

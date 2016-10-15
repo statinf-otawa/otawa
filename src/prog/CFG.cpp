@@ -472,7 +472,7 @@ Inst *SynthBlock::callInst(void) {
  * Build a basic block.
  * @param instructions	Array of instructions.
  */
-BasicBlock::BasicBlock(const Table<Inst *>& instructions): Block(IS_BASIC), _insts(instructions) {
+BasicBlock::BasicBlock(const genstruct::Table<Inst *>& instructions): Block(IS_BASIC), _insts(instructions) {
 	ASSERTP(instructions, "unsupported empty array of instructions");
 }
 

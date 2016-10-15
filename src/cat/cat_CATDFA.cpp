@@ -15,7 +15,6 @@
 #include <otawa/cat/CATBuilder.h>
 
 using namespace otawa::ilp;
-using namespace elm::genstruct;
 using namespace otawa::ipet;
 
 namespace otawa { namespace cat {

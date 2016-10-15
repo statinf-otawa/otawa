@@ -31,7 +31,6 @@
 #include <otawa/ccg/DFA.h>
 
 using namespace otawa::ilp;
-using namespace elm::genstruct;
 using namespace otawa::ipet;
 
 namespace otawa { namespace ccg {

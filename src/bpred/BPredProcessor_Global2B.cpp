@@ -39,7 +39,6 @@ namespace bpred {
 
 using namespace otawa::ilp;
 using namespace elm;
-using namespace elm::genstruct;
 
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
@@ -95,12 +94,12 @@ using namespace elm::genstruct;
  * @param graphs	Vector containg the BCGs (Branch Conflict Graphs) generated from the BHG.
  * @param ht_vars	Hash Table used to ensure unicity of the variables.
  */
-void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
+void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	genstruct::HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
 
-	HashTable<Block*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
+	genstruct::HashTable<Block*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
@@ -687,12 +686,12 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
  * @param bcgs		Vector containg the BCGs (Branch Conflict Graphs) generated from the BHG.
  * @param ht_vars	Hash Table used to ensure unicity of the variables.
  */
-void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs ,	HashTable<String ,Var*>& ht_vars) {
+void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstruct::Vector<BCG*> &graphs, genstruct::HashTable<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
 
-	HashTable<Block*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
+	genstruct::HashTable<Block*,elm::genstruct::Vector<BCGNode*> > classes_of_BB;
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
@@ -735,7 +734,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	// H12:
 	//////////
 #if H_12 > 0
-	HashTable<Block*, elm::genstruct::Vector<BHGNode*> > BB_classes;
+	genstruct::HashTable<Block*, elm::genstruct::Vector<BHGNode*> > BB_classes;
 	
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BHGNode*> v;
@@ -1089,7 +1088,7 @@ void BPredProcessor::historyPlusOne(dfa::BitSet& h) {
  * @return A boolean value if the BHG Node is an entry.
  */
 bool BPredProcessor::isClassEntry(BHG* bhg, BHGNode* src) {
-	HashTable<BHGNode*,BHGNode*> visited_nodes;
+	genstruct::HashTable<BHGNode*,BHGNode*> visited_nodes;
 	for(BHG::Iterator node(bhg);node;node++) {
 		if(node->isEntry() && src->getHistory() != node->getHistory() ) {
 			for(BHG::OutIterator s_node(node);s_node;s_node++) {
@@ -1116,7 +1115,7 @@ bool BPredProcessor::isClassEntry(BHG* bhg, BHGNode* src) {
  * @return A boolean value if the BHG Node is an exit.
  */
 bool BPredProcessor::isClassExit(BHG* bhg, BHGNode* src, bool& src_withT,bool& src_withNT) {
-	HashTable<BHGNode*,BHGNode*> visited_nodes;
+	genstruct::HashTable<BHGNode*,BHGNode*> visited_nodes;
 	src_withNT = src_withT = false;
 	bool res = false;
 	for(BHG::Iterator node(bhg);node;node++) {
@@ -1146,7 +1145,7 @@ bool BPredProcessor::isClassExit(BHG* bhg, BHGNode* src, bool& src_withT,bool& s
  * 
  * @return A boolean value set to true if a way is found to the destination Node.
  */
-bool BPredProcessor::isLinked(BHGEdge* dir, BHGNode* dest, dfa::BitSet& h, HashTable<BHGNode* , BHGNode*>& visited_nodes) {
+bool BPredProcessor::isLinked(BHGEdge* dir, BHGNode* dest, dfa::BitSet& h, genstruct::HashTable<BHGNode* , BHGNode*>& visited_nodes) {
 	BHGNode* src = dir->target();
 	if(visited_nodes.exists(src)) {
 		return false;
@@ -1197,7 +1196,7 @@ void BPredProcessor::generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg) 
 		}
 		
 		BCG* bcg=new BCG(h);
-		HashTable<int,BCGNode*> created_nodes;
+		genstruct::HashTable<int,BCGNode*> created_nodes;
 		for(unsigned int i = 0 ; i < v_class_nodes.length() ; ++i) {
 			BHGNode* src = v_class_nodes[i];
 			for(unsigned int j = 0 ; j < v_class_nodes.length() ; ++j) {
@@ -1208,7 +1207,7 @@ void BPredProcessor::generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg) 
 				for(BHG::OutIterator s(src);s;s++) {
 					BHGEdge* dir = s;
 					
-					HashTable<BHGNode*,BHGNode*> visited_nodes;
+					genstruct::HashTable<BHGNode*,BHGNode*> visited_nodes;
 					if(isLinked(dir,dest,h,visited_nodes)) {
 
 						bool src_withT, src_withNT, dest_withT, dest_withNT;
@@ -1457,7 +1456,7 @@ void BPredProcessor::processCFG__Global2B(WorkSpace *ws,CFG* cfg) {
 			this->stat_hist.add(bs);
 		}
 	}
-	HashTable<String ,Var*> ht_vars;
+	genstruct::HashTable<String ,Var*> ht_vars;
 	if(this->withMitra) {
 		BBHG bbhg(this->BHG_history_size);
 		generateBBHG(cfg,bbhg);

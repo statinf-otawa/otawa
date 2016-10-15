@@ -614,7 +614,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		if(bb_elts->size() == 0)
 			raiseError(celt, _ << "no BB in CFG " << *cfgID);
 
-		Vector<Block*> basicBlocksInOrder;
+		genstruct::Vector<Block*> basicBlocksInOrder;
 
 		Inst* firstInst = &otawa::Inst::null;
 		for(int j = 0; j < bb_elts->size(); j++) {
@@ -630,7 +630,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 			// build the basic block
 			// first we collect the instructions
 			UniquePtr<xom::Elements> inst_elts(bb_elt->getChildElements("inst"));
-			Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
+			genstruct::Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
 			for(int k = 0; k < inst_elts->size(); k++) {
 				// <inst address="0x0020099c" file="cover.c" line="232"/>
 				xom::Element *inst_elt = inst_elts->get(k); // current instruction
@@ -679,7 +679,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		// add basic block in order ...
 		// we don't add the Synth Blocks now because the id of the Synth Blocks are after the Basic Blocks
 		// to have the same fashion of id numbering of the original and reconstructed CFG, we add the BB first.
-		for(Vector<Block*>::Iterator vbbi(basicBlocksInOrder); vbbi; vbbi++)
+		for(genstruct::Vector<Block*>::Iterator vbbi(basicBlocksInOrder); vbbi; vbbi++)
 			maker->add(*vbbi);
 
 		bb_map->put(*exitID, maker->exit()); // put the exit in the map

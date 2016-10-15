@@ -26,7 +26,6 @@
 #include <elm/system/ProcessBuilder.h>
 #include <elm/system/System.h>
 
-using namespace elm::genstruct;
 using namespace elm::io;
 using namespace elm::system;
 
@@ -129,7 +128,7 @@ void GraphVizGraph::printGraphData(Output& out){
 	String attrs = attributes();
 	if(!attrs.isEmpty())
 		out << "\tgraph " << attrs << '\n';
-	for(FragTable<GraphVizNode*>::Iterator iter(_nodes); !iter.ended(); iter.next()){
+	for(genstruct::FragTable<GraphVizNode*>::Iterator iter(_nodes); !iter.ended(); iter.next()){
 		GraphVizNode *node;
 		node = iter.item();
 		out << "\tNode" << node->number();
@@ -137,7 +136,7 @@ void GraphVizGraph::printGraphData(Output& out){
 			HTML(node) = true;
 		out << ' ' << node->attributes() << ";\n";
 	}
-	for(FragTable<GraphVizEdge*>::Iterator iter(_edges); !iter.ended(); iter.next()){
+	for(genstruct::FragTable<GraphVizEdge*>::Iterator iter(_edges); !iter.ended(); iter.next()){
 		GraphVizEdge *edge;
 		GraphVizNode *src;
 		GraphVizNode *dest;

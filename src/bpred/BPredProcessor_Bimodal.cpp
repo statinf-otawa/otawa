@@ -33,10 +33,8 @@
 
 using namespace otawa::ilp;
 using namespace elm;
-using namespace elm::genstruct;
 
-namespace otawa {
-namespace bpred {
+namespace otawa { namespace bpred {
 
 
 /////// CREATION DE CONTRAINTES ET VARIABLES
@@ -116,7 +114,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
-	HashTable<String ,Var*> ht_vars;
+	genstruct::HashTable<String , Var*> ht_vars;
 
 	elm::genstruct::Vector<int> l_addr;
 	bs.get_all_addr(l_addr);

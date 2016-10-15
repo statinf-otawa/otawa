@@ -155,7 +155,7 @@ template <class Problem, class Set, class Iter>
 inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 
 	// initialization
-	VectorQueue<Block *> todo;
+	genstruct::VectorQueue<Block *> todo;
 	BitVector present(_cfg.count());
 	Set *comp = prob.empty(), *ex;
 	for(CFG::BlockIter bb = _cfg.vertices(); bb; bb++) {

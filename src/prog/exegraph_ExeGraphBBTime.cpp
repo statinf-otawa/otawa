@@ -25,7 +25,6 @@
 using namespace otawa;
 using namespace otawa::hard;
 using namespace elm;
-using namespace elm::genstruct;
 using namespace otawa::graph;
 
 //#define ACCURATE_STATS

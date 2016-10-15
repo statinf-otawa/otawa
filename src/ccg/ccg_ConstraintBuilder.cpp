@@ -41,7 +41,6 @@
 
 using namespace otawa::ilp;
 using namespace otawa;
-using namespace elm::genstruct;
 using namespace otawa::ipet;
 
 namespace otawa { namespace ccg {

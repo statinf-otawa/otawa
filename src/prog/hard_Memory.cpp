@@ -25,7 +25,6 @@
 #include <elm/serial2/XOMUnserializer.h>
 
 using namespace elm;
-using namespace elm::genstruct;
 
 namespace otawa { namespace hard {
 

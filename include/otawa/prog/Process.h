@@ -37,8 +37,6 @@ namespace elm { namespace xom {
 
 namespace otawa {
 
-using namespace elm::genstruct;
-
 // Pre-definition
 class File;
 namespace hard {
@@ -195,12 +193,12 @@ public:
 	virtual void semInit(sem::Block& block) const;
 
 	// FileIterator
-	class FileIter: public Vector<File *>::Iterator {
+	class FileIter: public genstruct::Vector<File *>::Iterator {
 	public:
 		inline FileIter(const Process *process)
-			: Vector<File *>::Iterator(process->files) { }
+			: genstruct::Vector<File *>::Iterator(process->files) { }
 		inline FileIter(const FileIter& iter)
-			: Vector<File *>::Iterator(iter) { }
+			: genstruct::Vector<File *>::Iterator(iter) { }
 	};
 
 protected:
@@ -211,8 +209,8 @@ protected:
 private:
 	void link(WorkSpace *ws);
 	void unlink(WorkSpace *ws);
-	Vector<File *> files;
-	Vector<AbstractFeature *> provided;
+	genstruct::Vector<File *> files;
+	genstruct::Vector<AbstractFeature *> provided;
 	File *prog;
 	Manager *man;
 	stree::Tree<Address::offset_t, Symbol *> *smap;

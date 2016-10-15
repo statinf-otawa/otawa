@@ -53,9 +53,9 @@ class InlinedCFG: public AbstractGraph {
 		virtual void next(void);
 	private:
 		CFG::BlockIter i;				// the current iterator
-		SLList<CFG::BlockIter> vbi;		// the stack of the return target
+		genstruct::SLList<CFG::BlockIter> vbi;		// the stack of the return target
 		bool stop;						// true when no more block to go through
-		SLList<CFG*> travledCFG;		// use to make sure that there can only be one instance of each CFG (two calls of a CFG V will goes to the same CFG)
+		genstruct::SLList<CFG*> travledCFG;		// use to make sure that there can only be one instance of each CFG (two calls of a CFG V will goes to the same CFG)
 	};
 
 	class InlinedCFGEdgeIter: public datastruct::IteratorInst<const AbstractGraph::Edge *> {

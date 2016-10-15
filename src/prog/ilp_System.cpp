@@ -34,7 +34,7 @@ public:
 
 private:
 	int vcnt;
-	HashTable<Var *, string> map;
+	genstruct::HashTable<Var *, string> map;
 };
 
 
@@ -317,7 +317,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
  */
 void System::dumpMOSEK(OutStream& _out) {
 	io::Output out(_out);
-	HashTable<Var*, String*> rename;
+	genstruct::HashTable<Var*, String*> rename;
 	int idx = 0;
 
 	// dump the objective function
@@ -410,7 +410,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[variables]\n";
-	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -422,7 +422,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[integer]\n";
-	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -441,7 +441,7 @@ void System::dumpMOSEK(OutStream& _out) {
  */
 void System::dumpCPlex(OutStream& _out) {
 	io::Output out(_out);
-	HashTable<Var*, String*> rename;
+	genstruct::HashTable<Var*, String*> rename;
 	int idx = 0;
 	/* Rename the variables for cplex */
 
@@ -580,7 +580,7 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the integer variable definition
 	out << "\\* Integer definitions *\\\n";
 	out << "Integer\n";
-	for (HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;

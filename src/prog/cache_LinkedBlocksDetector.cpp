@@ -138,7 +138,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 		for (int j = 0; j < count; j++) {
 			if (blockList[j] != NULL) {
 
-				Vector<LBlock*> equiv;
+				genstruct::Vector<LBlock*> equiv;
 				Block *old_header = NULL;
 				equiv.clear();
 				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {
@@ -167,7 +167,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 /**
  * !!TODO!!
  */
-void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
+void LinkedBlocksDetector::recordBlocks(genstruct::Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
 		return;
 	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);

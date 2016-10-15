@@ -21,8 +21,6 @@ extern Identifier<int> OUTPUT_LEVEL;
 extern Identifier<String> GRAPHS_DIR;
 
 	
-using namespace elm::genstruct; 
-	
 class ParamExeGraphBBTime: public ExeGraphBBTime<ParamExeGraph> {
  private:
   int _prologue_depth;

@@ -37,7 +37,6 @@ namespace elm { namespace xom { class Element; } }
 namespace otawa { namespace hard {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 // ModeTransition class
 class Mode;
@@ -71,13 +70,13 @@ public:
 	inline int latency(void) const { return _latency; }
 	inline int staticPower(void) const { return _static_power; }
 	inline int dynamicPower(void) const { return _dynamic_power; }
-	inline const Table<ModeTransition>& transitions(void) const { return _transitions; }
+	inline const genstruct::Table<ModeTransition>& transitions(void) const { return _transitions; }
 
 private:
 	string _name;
 	int _latency;
 	int _static_power, _dynamic_power;
-	AllocatedTable<ModeTransition> _transitions;
+	genstruct::AllocatedTable<ModeTransition> _transitions;
 };
 
 // Bank class
@@ -121,7 +120,7 @@ public:
 	inline int power(void) const { return _power; }
 	inline int blockBits(void) const { return _block_bits; }
 	inline int blockSize(void) const { return 1 << _block_bits; }
-	inline const Table<const Mode *>& modes(void) const { return _modes; }
+	inline const genstruct::Table<const Mode *>& modes(void) const { return _modes; }
 	inline bool isCached(void) const { return _cached; }
 	inline bool isOnChip(void) const { return _on_chip; }
 	inline bool isWritable(void) const { return _writable; }
@@ -139,7 +138,7 @@ private:
 	type_t _type;
 	int _latency, _power, _write_latency;
 	int _block_bits;
-	AllocatedTable<const Mode *> _modes;
+	genstruct::AllocatedTable<const Mode *> _modes;
 	bool _cached;
 	bool _on_chip;
 	bool _writable;
@@ -176,8 +175,8 @@ public:
 	static const Memory null, full;
 	Memory(bool full = false);
 	virtual ~Memory(void);
-	inline const Table<const Bank *>& banks(void) const { return _banks; }
-	inline const Table<const Bus *>& buses(void) const  { return _buses; }
+	inline const genstruct::Table<const Bank *>& banks(void) const { return _banks; }
+	inline const genstruct::Table<const Bus *>& buses(void) const  { return _buses; }
 	static Memory *load(const elm::system::Path& path) throw(LoadException);
 	static Memory *load(xom::Element *element) throw(LoadException);
 	const Bank *get(Address address) const;
@@ -186,8 +185,8 @@ public:
 	int worstWriteAccess(void) const;
 
 private:
-	AllocatedTable<const Bank *> _banks;
-	AllocatedTable<const Bus *> _buses;
+	genstruct::AllocatedTable<const Bank *> _banks;
+	genstruct::AllocatedTable<const Bus *> _buses;
 };
 
 // features

@@ -24,8 +24,6 @@
 #include <otawa/hard/Register.h>
 #include <otawa/hard/Processor.h>
 
-using namespace elm::genstruct;
-
 namespace otawa { 
 
 static const unsigned long MUL_MASK = Inst::IS_MUL | Inst::IS_INT;

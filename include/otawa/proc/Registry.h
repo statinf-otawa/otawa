@@ -66,7 +66,7 @@ public:
 private:
 	void step(void);
 	const AbstractRegistration *reg;
-	SLList<AbstractIdentifier *>::Iterator iter;
+	genstruct::SLList<AbstractIdentifier *>::Iterator iter;
 	bool _all;
 };
 
@@ -83,7 +83,7 @@ public:
 private:
 	void step(void);
 	const AbstractRegistration *reg;
-	SLList<FeatureUsage>::Iterator iter;
+	genstruct::SLList<FeatureUsage>::Iterator iter;
 };
 
 } // otawa

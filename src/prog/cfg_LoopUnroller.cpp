@@ -127,9 +127,9 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		log << "\tunrolling " << cfg << " for " << (header ? header : cfg->entry()) << io::endl;
 
 	// workList := { }
-	VectorQueue<Block*> workList;
+	genstruct::VectorQueue<Block*> workList;
 	// loopList := { }
-	VectorQueue<Block*> loopList;
+	genstruct::VectorQueue<Block*> loopList;
 	// doneList := { }
 	genstruct::Vector<Block*> doneList;
 	// backEdges := { }

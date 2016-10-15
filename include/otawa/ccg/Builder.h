@@ -28,8 +28,6 @@
 
 namespace otawa {
 
-using namespace elm::genstruct;
-
 // Extern classes
 class LBlockSet;
 class CFG;

@@ -106,7 +106,7 @@ AbstractRegistration::AbstractRegistration(string name, Version version, Abstrac
  * Set the features.
  * @param coll		Features to set.
  */
-void AbstractRegistration::setFeatures(const SLList<FeatureUsage>& coll) {
+void AbstractRegistration::setFeatures(const genstruct::SLList<FeatureUsage>& coll) {
 	features.clear();
 	for(genstruct::SLList<FeatureUsage>::Iterator use(coll); use; use++)
 		features.add(use);
@@ -117,7 +117,7 @@ void AbstractRegistration::setFeatures(const SLList<FeatureUsage>& coll) {
  * Set the configurations.
  * @param coll	Configures to set.
  */
-void AbstractRegistration::setConfigs(const SLList<AbstractIdentifier *>& coll) {
+void AbstractRegistration::setConfigs(const genstruct::SLList<AbstractIdentifier *>& coll) {
 	configs.clear();
 	for(genstruct::SLList<AbstractIdentifier *>::Iterator use(coll); use; use++)
 		configs.add(use);
@@ -267,7 +267,7 @@ void AbstractRegistration::init(cstring name, const Version& version, int tag, V
 void ConfigIter::step(void) {
 	while(_all && reg && iter.ended()) {
 		if((reg = &reg->base()))
-			iter = SLList<AbstractIdentifier *>::Iterator(reg->configs);
+			iter = genstruct::SLList<AbstractIdentifier *>::Iterator(reg->configs);
 	}
 }
 
@@ -284,7 +284,7 @@ void ConfigIter::step(void) {
 void FeatureIter::step(void) {
 	while(reg && iter.ended()) {
 		if((reg = &reg->base()))
-			iter = SLList<FeatureUsage>::Iterator(reg->features);
+			iter = genstruct::SLList<FeatureUsage>::Iterator(reg->features);
 	}
 }
 

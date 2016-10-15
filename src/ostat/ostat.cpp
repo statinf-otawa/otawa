@@ -30,7 +30,6 @@
 
 using namespace otawa;
 using namespace elm;
-using namespace elm::genstruct;
 
 
 /**

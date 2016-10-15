@@ -42,7 +42,7 @@ class ClpProblem;
 class ClpStatePack{
 	friend class ClpProblem;
 public:
-	typedef Vector<clp::State*>::Iterator StateIterator;
+	typedef genstruct::Vector<clp::State*>::Iterator StateIterator;
 	
 	/** A pack of CLP states inside a machine instruction.
 	*	Each state of this pack is the state after a semantic instruction, in
@@ -75,7 +75,7 @@ public:
 		void append(clp::State &state);
 	private:
 		address_t _inst_addr;
-		Vector<clp::State*> _states;
+		genstruct::Vector<clp::State*> _states;
 	};
 
 	class Context {
@@ -89,7 +89,7 @@ public:
 		bool to_free;
 	};
 	
-	typedef Vector<InstPack*>::Iterator PackIterator;
+	typedef genstruct::Vector<InstPack*>::Iterator PackIterator;
 	
 	ClpStatePack(BasicBlock *bb, Process *process);
 	ClpStatePack(BasicBlock *bb, const Context& context);
@@ -109,7 +109,7 @@ public:
 	
 private:
 	BasicBlock *_bb;
-	Vector<InstPack*> _packs;
+	genstruct::Vector<InstPack*> _packs;
 };
 
 }	// clp

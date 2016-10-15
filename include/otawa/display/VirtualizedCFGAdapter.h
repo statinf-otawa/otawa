@@ -187,14 +187,14 @@ public:
 		}
 	private:
 		CFG::BlockIter i;
-		SLList<CFG::BlockIter> vbi;
+		genstruct::SLList<CFG::BlockIter> vbi;
 		bool stop;
-		SLList<otawa::Block*> synthList;
+		genstruct::SLList<otawa::Block*> synthList;
 		otawa::Block* currentSynth;
 		otawa::Block* returnSynth;
-		SLList<Block*> returnCallStack;
+		genstruct::SLList<Block*> returnCallStack;
 		Block* blockToReturn;
-		SLList<otawa::Edge*> returnEdgeCallStack;
+		genstruct::SLList<otawa::Edge*> returnEdgeCallStack;
 		otawa::Edge* edgeToReturn;
 	};
 	

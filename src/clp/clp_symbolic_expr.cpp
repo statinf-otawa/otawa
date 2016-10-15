@@ -78,9 +78,9 @@ namespace se{
 		if (_b)
 			_b->canonize();
 	}
-	Vector<V> SymbExpr::used_reg(void){
+	genstruct::Vector<V> SymbExpr::used_reg(void){
 		// recursively get reg for sub-expr
-		Vector<V> a_reg, b_reg;
+		genstruct::Vector<V> a_reg, b_reg;
 		if (_a)
 			a_reg = _a->used_reg();
 		if (_b)
@@ -91,9 +91,9 @@ namespace se{
 				a_reg.add(b_reg[i]);
 		return a_reg;
 	}
-	Vector<V> SymbExpr::used_addr(void){
+	genstruct::Vector<V> SymbExpr::used_addr(void){
 		// recursively get addr for sub-expr
-		Vector<V> a_addr, b_addr;
+		genstruct::Vector<V> a_addr, b_addr;
 		if (_a)
 			a_addr = _a->used_addr();
 		if (_b)
@@ -146,8 +146,8 @@ namespace se{
 					  << ", 0x" << hex(_val.mtimes()) << ')');
 	}
 	void SEAddr::canonize(void){}
-	Vector<V> SEAddr::used_addr(void){
-		Vector<V> vect;
+	genstruct::Vector<V> SEAddr::used_addr(void){
+		genstruct::Vector<V> vect;
 		vect.add(_val);
 		return vect;
 	}
@@ -176,8 +176,8 @@ namespace se{
 			return (_ << 't' << - _val.lower());
 	}
 	void SEReg::canonize(void){}
-	Vector<V> SEReg::used_reg(void){
-		Vector<V> vect;
+	genstruct::Vector<V> SEReg::used_reg(void){
+		genstruct::Vector<V> vect;
 		vect.add(_val);
 		return vect;
 	}
@@ -532,10 +532,10 @@ namespace se{
 	/*
 	 * To output a set of filters
 	 */
-	Output& operator<<(Output& o, Vector<SECmp *> const& exprs) {
+	Output& operator<<(Output& o, genstruct::Vector<SECmp *> const& exprs) {
 		bool fst = true;
 		o << "{";
-		for(Vector<SECmp *>::Iterator vsei(exprs); vsei; vsei++) {
+		for(genstruct::Vector<SECmp *>::Iterator vsei(exprs); vsei; vsei++) {
 			if(!fst)
 				o << ", ";
 			else
@@ -548,10 +548,10 @@ namespace se{
 	}
 
 
-	Identifier<Vector<SECmp *> > REG_FILTERS("otawa::se::REG_FILTERS");
-	Identifier<Vector<SECmp *> > ADDR_FILTERS("otawa::se::ADDR_FILTERS");
+	Identifier<genstruct::Vector<SECmp *> > REG_FILTERS("otawa::se::REG_FILTERS");
+	Identifier<genstruct::Vector<SECmp *> > ADDR_FILTERS("otawa::se::ADDR_FILTERS");
 
-	SECmp *getFilterForReg(SECmp *se, V reg, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
+	SECmp *getFilterForReg(SECmp *se, V reg, clp::ClpStatePack &pack, Inst *i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
 		/* FIXME : This could be otptimized: we do a CLP analysis from the
 			beginning of the BB each time we replace a register by its value */
 		clp::State state = pack.state_before(i->address(), sem);
@@ -596,7 +596,7 @@ namespace se{
 		}
 	}
 
-	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
+	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
 		/* FIXME: this could be otptimized: we do a CLP analysis from the
 			beginning of the BB each time we replace an address by its value */
 			clp::State state = pack.state_before(i->address(), sem);
@@ -681,15 +681,15 @@ namespace se{
 		// Set properties on the BB
 		// need to make sure they are clean first
 		if(se::REG_FILTERS(bb).exists()) {
-			Vector<se::SECmp *> vse = se::REG_FILTERS(bb);
-			for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+			genstruct::Vector<se::SECmp *> vse = se::REG_FILTERS(bb);
+			for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
 				delete *vsei;
 			se::REG_FILTERS(bb).remove();
 		}
 
 		if(se::ADDR_FILTERS(bb).exists()) {
-			Vector<se::SECmp *> vse = se::ADDR_FILTERS(bb);
-			for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+			genstruct::Vector<se::SECmp *> vse = se::ADDR_FILTERS(bb);
+			for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
 				delete *vsei;
 			se::ADDR_FILTERS(bb).remove();
 		}
@@ -840,7 +840,7 @@ namespace se{
 							// For the moment, if the load concern this expr
 							// we set the se to NULL, to
 							// invalidate the register i.a()
-							Vector<V> used_reg = se->used_reg();
+							genstruct::Vector<V> used_reg = se->used_reg();
 							for(int i = 0; i < used_reg.length(); i++){
 								if(used_reg[i] == rd->val()){
 									delete se;
@@ -914,7 +914,7 @@ namespace se{
 					// if the register rd is used in the expression, we set
 					// se to NULL: we cannot find any further filter where
 					// rd is implied.
-					Vector<V> used_reg = se->used_reg();
+					genstruct::Vector<V> used_reg = se->used_reg();
 					for(int i = 0; i < used_reg.length(); i++){
 						if(used_reg[i] == rd->val()){
 							delete se;
@@ -938,8 +938,8 @@ namespace se{
 
 				// find filters...
 				if (se->op() > CMPU && se->a() && se->b()){
-					Vector<V> used_reg = se->used_reg();
-					Vector<V> used_addr = se->used_addr();
+					genstruct::Vector<V> used_reg = se->used_reg();
+					genstruct::Vector<V> used_addr = se->used_addr();
 					bool has_tmp = false;
 					for(int i = 0; i < used_reg.length(); i++)
 						if (! (used_reg[i] >= 0))

@@ -36,9 +36,9 @@ class Input: public Processor {
 	typedef avl::Map<xom::String, CFGMaker *> cfg_map_t;
 	//typedef genstruct::HashTable<xom::String, Block *> bb_map_t;
 	//typedef genstruct::HashTable<xom::String, CFGMaker *> cfg_map_t;
-	typedef Vector<bb_map_t*> bb_map_table_t;
-	typedef Vector<Pair<xom::String, xom::String> > edge_list_t;
-	typedef Vector<edge_list_t*> edge_list_table_t;
+	typedef genstruct::Vector<bb_map_t*> bb_map_table_t;
+	typedef genstruct::Vector<Pair<xom::String, xom::String> > edge_list_t;
+	typedef genstruct::Vector<edge_list_t*> edge_list_table_t;
 
 public:
 	// inner class

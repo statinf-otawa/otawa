@@ -101,7 +101,7 @@ p::feature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", new Maker<ACSMayBui
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
+Identifier<genstruct::Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
 
 
 /**
@@ -109,7 +109,7 @@ Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
  * The vector contains one ACS for each cache set.
  * @ingroup dcache
  */
-Identifier<Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
+Identifier<genstruct::Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
 
 
 /**

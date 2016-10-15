@@ -137,9 +137,9 @@ void AbstractDrawer::draw(void) {
 		HTML(graph) = true;
 	
 	// Setup the vertices and edges
-	for(FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++)
+	for(genstruct::FragTable<Vertex *>::Iterator vertex(vertices); vertex; vertex++)
 		vertex->setup();
-	for(FragTable<Edge *>::Iterator edge(edges); edge; edge++)
+	for(genstruct::FragTable<Edge *>::Iterator edge(edges); edge; edge++)
 		edge->setup();
 	
 	// Draw

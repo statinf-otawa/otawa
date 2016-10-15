@@ -36,7 +36,6 @@
 namespace otawa {
 
 using namespace elm;
-using namespace elm::genstruct;
 class AbstractFeature;
 class Configuration;
 class WorkSpace;

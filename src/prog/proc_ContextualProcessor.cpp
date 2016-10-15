@@ -29,8 +29,6 @@
 
 namespace otawa {
 
-using namespace elm::genstruct;
-
 /**
  * @class ContextualProcessor
  * A contextual processor allows to process basic block in a call-aware way

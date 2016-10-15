@@ -79,7 +79,7 @@ private:
 			may_dom(coll.count(), cache->wayCount()) { }
 
 		void start(BasicBlock *bb) {
-			const AllocatedTable<DirtyManager::t>& dstates = DIRTY(bb);
+			const genstruct::AllocatedTable<DirtyManager::t>& dstates = DIRTY(bb);
 			dstate = dstates[coll.cacheSet()];
 			acs_table_t *musts = MUST_ACS(bb);
 			must_dom = *(musts->item(coll.cacheSet()));

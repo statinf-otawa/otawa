@@ -31,7 +31,6 @@
 namespace otawa { namespace ai {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 /**
  * Driver of abstract interpretation with a simple to-do list.
@@ -330,7 +329,7 @@ public:
 private:
 	D& _dom;
 	G& _graph;
-	HashTable<edge_t, t> map;
+	genstruct::HashTable<edge_t, t> map;
 };
 
 } }		// ai

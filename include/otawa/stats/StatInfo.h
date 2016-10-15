@@ -29,7 +29,6 @@
 
 namespace otawa {
 
-using namespace elm::genstruct;
 class WorkSpace;
 
 class StatInfo {
@@ -39,14 +38,14 @@ public:
 	static void add(WorkSpace *ws, StatCollector& stats);
 	static void remove(WorkSpace *ws, StatCollector& stats);
 
-	class Iter: public Vector<StatCollector *>::Iterator {
+	class Iter: public genstruct::Vector<StatCollector *>::Iterator {
 	public:
 		Iter(WorkSpace *ws);
 	};
 
 private:
-	static Vector<StatCollector *>& get(WorkSpace *ws);
-	Vector<StatCollector *> stats;
+	static genstruct::Vector<StatCollector *>& get(WorkSpace *ws);
+	genstruct::Vector<StatCollector *> stats;
 };
 
 }	// otawa

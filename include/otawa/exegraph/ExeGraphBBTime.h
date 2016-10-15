@@ -34,8 +34,6 @@
 
 namespace otawa {
 
-using namespace elm::genstruct; 
-
 template <class G>
 class ExeGraphBBTime: public BBProcessor {
 protected:

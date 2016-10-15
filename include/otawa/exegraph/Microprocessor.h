@@ -33,7 +33,6 @@
 namespace otawa {
 
 using namespace elm;
-using namespace elm::genstruct;
 
 template <class N> class PipelineStage;
 class FunctionalUnit;

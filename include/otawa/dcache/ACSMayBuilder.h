@@ -134,7 +134,7 @@ public:
 private:
 	void processLBlockSet(otawa::WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
 	bool unrolling;
-	Vector<ACS *> *may_entry;
+	genstruct::Vector<ACS *> *may_entry;
 };
 
 } } // otawa::dcache

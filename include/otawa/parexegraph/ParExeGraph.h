@@ -291,7 +291,7 @@ namespace otawa {
 		};
 		class StageIterator : public elm::genstruct::SLList<ParExeStage *>::Iterator {
 		public:
-			inline StageIterator(const SLList<ParExeStage *>  *list)
+			inline StageIterator(const genstruct::SLList<ParExeStage *>  *list)
 				: elm::genstruct::SLList<ParExeStage *>::Iterator(*list) {}
 		};
 

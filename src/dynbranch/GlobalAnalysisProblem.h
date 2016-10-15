@@ -30,7 +30,6 @@
 
 #define GLOBAL_MEMORY_LOADER true
 
-using namespace elm::genstruct;
 using namespace otawa;
 
 namespace otawa { namespace dynbranch {

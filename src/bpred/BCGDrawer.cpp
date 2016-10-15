@@ -26,8 +26,6 @@
 #include <elm/genstruct/HashTable.h>
 
 
-using namespace elm::genstruct;
-
 namespace otawa { namespace bpred {
 
 
@@ -81,7 +79,7 @@ void BCGDrawer::make(){
 	ASSERT(_graph);
 	
 	// Construct the Graph
-	HashTable<void*, display::Node*> map;
+	genstruct::HashTable<void*, display::Node*> map;
 	for(BCG::Iterator bb(_bcg); bb; bb++){
 		display::Node *node = _graph->newNode();
 		map.put(*bb, node);

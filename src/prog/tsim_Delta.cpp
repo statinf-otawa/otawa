@@ -30,7 +30,6 @@
 #include <otawa/ipet/features.h>
 
 using namespace otawa::ilp;
-using namespace elm::genstruct;
 
 namespace otawa { namespace tsim {
 

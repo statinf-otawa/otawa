@@ -39,8 +39,6 @@
 
 namespace otawa {
 	
-using namespace elm::genstruct; 
-	
 class LiExeGraphBBTime: public ExeGraphBBTime<LiExeGraph> {
 	private:
 	public:

@@ -129,10 +129,10 @@ public:
 	Inst *last(void);
 	int count(void) const;
 
-	class InstIter: public AllocatedTable<Inst *>::Iterator {
+	class InstIter: public genstruct::AllocatedTable<Inst *>::Iterator {
 	public:
 		inline InstIter(void) { }
-		inline InstIter(const BasicBlock *bb): AllocatedTable<Inst *>::Iterator(bb->_insts) { }
+		inline InstIter(const BasicBlock *bb): genstruct::AllocatedTable<Inst *>::Iterator(bb->_insts) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 
@@ -174,7 +174,7 @@ public:
 	inline BasicIns basicIns(void) { return BasicIns(this); }
 
 private:
-	DeletableTable<Inst *> _insts;
+	genstruct::DeletableTable<Inst *> _insts;
 };
 
 class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {

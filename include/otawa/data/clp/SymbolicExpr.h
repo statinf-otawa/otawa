@@ -33,7 +33,6 @@
 #include <otawa/data/clp/ClpPack.h>
 
 using namespace elm;
-using namespace elm::genstruct;
 
 namespace otawa {
 
@@ -188,13 +187,13 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of int.
 		*/
-		virtual Vector<V> used_reg(void);
+		virtual genstruct::Vector<V> used_reg(void);
 		/**
 		 * Return the list of memory addresses used
 		 * (recursively) in this expression.
 		 * @return a vector of int.
 		*/
-		virtual Vector<V> used_addr(void);
+		virtual genstruct::Vector<V> used_addr(void);
 
 		/** Setters */
 		/**
@@ -351,7 +350,7 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of memory addresses.
 		*/
-		virtual Vector<V> used_addr(void);
+		virtual genstruct::Vector<V> used_addr(void);
 	};
 
 	/** Register */
@@ -405,7 +404,7 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of int
 		*/
-		virtual Vector<V> used_reg(void);
+		virtual genstruct::Vector<V> used_reg(void);
 	};
 
 	/** Negation */
@@ -580,8 +579,8 @@ namespace se{
 	};
 
 
-	extern Identifier<Vector<SECmp *> > REG_FILTERS;
-	extern Identifier<Vector<SECmp *> > ADDR_FILTERS;
+	extern Identifier<genstruct::Vector<SECmp *> > REG_FILTERS;
+	extern Identifier<genstruct::Vector<SECmp *> > ADDR_FILTERS;
 
 	class FilterBuilder {
 	public:
@@ -594,10 +593,10 @@ namespace se{
 		void addFilters(SECmp *se, const Vector<Inst *>& insts);
 
 		BasicBlock *bb;
-		Vector<SECmp *> reg_filters;
-		Vector<SECmp *> addr_filters;
-		Vector<V> known_reg;
-		Vector<V> known_addr;
+		genstruct::Vector<SECmp *> reg_filters;
+		genstruct::Vector<SECmp *> addr_filters;
+		genstruct::Vector<V> known_reg;
+		genstruct::Vector<V> known_addr;
 		clp::ClpStatePack pack;
 	};
 

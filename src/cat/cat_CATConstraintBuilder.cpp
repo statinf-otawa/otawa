@@ -45,7 +45,6 @@
 
 using namespace otawa;
 using namespace otawa::ilp;
-using namespace elm::genstruct;
 using namespace otawa::ipet;
 
 

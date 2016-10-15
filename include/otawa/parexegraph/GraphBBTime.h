@@ -73,8 +73,6 @@ namespace otawa {
     	int i;
     };
 
-
-    using namespace elm::genstruct; 
     
     // -- class PathContext --------------------------------------------------------------------------------
     class PathContext{

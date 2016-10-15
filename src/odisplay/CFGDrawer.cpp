@@ -9,8 +9,6 @@
 #include <elm/genstruct/HashTable.h>
 #include <otawa/display/CFGDrawer.h>
 
-using namespace elm::genstruct;
-
 namespace otawa { namespace display {
 
 
@@ -67,7 +65,7 @@ void CFGDrawer::make(){
 	ASSERT(_graph);
 
 	// Construct the Graph
-	HashTable<void*, Node*> map;
+	genstruct::HashTable<void*, Node*> map;
 	for(CFG::BlockIter b = _cfg->blocks(); b; b++){
 		Node *node = _graph->newNode();
 		map.put(*b, node);

@@ -77,7 +77,7 @@ p::feature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", new Maker<ACS
  * @par Hooks
  * @li @ref PropList
  */
- Identifier<Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::CACHE_ACS_MAY_ENTRY", NULL);
+ Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::CACHE_ACS_MAY_ENTRY", NULL);
 
 
 /**

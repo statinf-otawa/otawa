@@ -35,7 +35,6 @@
 
 using namespace elm;
 using namespace elm::option;
-using namespace elm::genstruct;
 using namespace otawa;
 using namespace otawa::display;
 
@@ -152,7 +151,7 @@ public:
 	
 	// DiGraphWithVertexMap concept
 	template <class T>
-	class VertexMap: public HashTable<Vertex, T> {
+	class VertexMap: public genstruct::HashTable<Vertex, T> {
 	public:
 		VertexMap(const PCGAdapter& pcg) { }
 	};

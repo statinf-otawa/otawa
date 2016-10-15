@@ -32,16 +32,14 @@
 
 namespace otawa {
 
-using namespace elm::genstruct;
-
 // Defined classes
 class ProgItem;
 
 // File class
 class File: public PropList {
 	String _name;
-	Vector<Segment *> segs;
-	typedef HashTable<String, Symbol *> syms_t;
+	genstruct::Vector<Segment *> segs;
+	typedef genstruct::HashTable<String, Symbol *> syms_t;
 	syms_t syms;
 
 
@@ -54,10 +52,10 @@ public:
 	// Segment management
 	inline void addSegment(Segment *seg) { segs.add(seg); }
 	Segment *findSegmentAt(Address addr);
-	class SegIter: public Vector<Segment *>::Iterator {
+	class SegIter: public genstruct::Vector<Segment *>::Iterator {
 	public:
-		inline SegIter(const File *file): Vector<Segment *>::Iterator(file->segs) { }
-		inline SegIter(const SegIter& iter): Vector<Segment *>::Iterator(iter) { }
+		inline SegIter(const File *file): genstruct::Vector<Segment *>::Iterator(file->segs) { }
+		inline SegIter(const SegIter& iter): genstruct::Vector<Segment *>::Iterator(iter) { }
 	};
 
 	// Symbol management

@@ -44,7 +44,7 @@ public:
 private:
 	bool _explicit;
 	cache::CategoryStats *cstats;
-	void recordBlocks(Vector<LBlock*> *equiv);
+	void recordBlocks(genstruct::Vector<LBlock*> *equiv);
 };
 
 }

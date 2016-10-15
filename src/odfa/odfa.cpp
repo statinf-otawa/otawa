@@ -161,8 +161,8 @@ protected:
  	}
 
  	virtual void displayFilters(io::Output& out, BasicBlock *bb) {
-		Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
-		Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
+ 		genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(bb);
+ 		genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(bb);
 		if(reg_filters.length() != 0 || addr_filters.length() != 0) {
 			out << "\tFILTERS = \n";
 			for(int i = 0; i < reg_filters.count(); i++) {

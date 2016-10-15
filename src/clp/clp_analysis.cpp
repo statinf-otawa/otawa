@@ -2170,8 +2170,8 @@ public:
 		TRACEP(cerr << "s = " << dom << io::endl);
 		if(!edge->isBoth() && se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
-			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
-			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
+			genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
+			genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
 
 			// if not taken, invert conditions
 			// TODO Fixme! Generate two sets of predicates!
@@ -2811,15 +2811,15 @@ public:
 				clp::STATE_OUT(*bbi).remove();
 
 				if(se::REG_FILTERS(*bbi).exists()) {
-					Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
-					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					genstruct::Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
+					for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
 						delete *vsei;
 					se::REG_FILTERS(*bbi).remove();
 				}
 
 				if(se::ADDR_FILTERS(*bbi).exists()) {
-					Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
-					for(Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					genstruct::Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
+					for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
 						delete *vsei;
 					se::ADDR_FILTERS(*bbi).remove();
 				}

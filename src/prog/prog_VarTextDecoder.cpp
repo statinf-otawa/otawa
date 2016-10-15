@@ -171,7 +171,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
 
 	// Initialize the queue
-	VectorQueue<Inst *> todo(QUEUE_SIZE);
+	genstruct::VectorQueue<Inst *> todo(QUEUE_SIZE);
 	Inst *inst = getInst(workspace(), address);
 	if(!inst) {
 		log << "WARNING: bad function entry at " << address << io::endl;

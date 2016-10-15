@@ -22,8 +22,6 @@
 #include "graphviz.h"
 #include <otawa/properties.h>
 
-using namespace elm::genstruct;
-
 namespace otawa { namespace display {
 
 /**

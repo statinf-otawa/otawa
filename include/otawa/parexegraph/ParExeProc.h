@@ -34,7 +34,6 @@
 namespace otawa {
 
   using namespace elm;
-  using namespace elm::genstruct;
 
   class ParExeStage;
   class ParExePipeline;
