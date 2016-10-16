@@ -22,7 +22,7 @@
 import argparse
 import os.path
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 
 # parse arguments
 parser = argparse.ArgumentParser(description = "OTAWA Project Generator")
@@ -61,11 +61,12 @@ if not free:
     print "ERROR: at least, module name must be given."
     parser.print_help()
     exit(1)
-name = free[0]
+full_name = free[0]
 files = free[1:]
-eld_path = "%s.elf" % name
+eld_path = "%s.elf" % full_name
 
 # extract namespace
+name = full_name
 try:
     p = name.rindex('/')
     namespace = name[:p]
@@ -100,13 +101,12 @@ if(NOT OTAWA_CONFIG)
     endif()
 endif()
 message(STATUS "otawa-config found at ${OTAWA_CONFIG}")
-execute_process(COMMAND "${OTAWA_CONFIG}" --cflags ${MODULES} OUTPUT_VARIABLE OTAWA_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${OTAWA_CONFIG}" --libs ${MODULES}   OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --cflags OUTPUT_VARIABLE OTAWA_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --libs --make-plug ${PLUGIN} -r OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND "${OTAWA_CONFIG}" --prefix            OUTPUT_VARIABLE OTAWA_PREFIX  OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # plugin definition
 set(ORIGIN $ORIGIN)
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../../")
 include_directories("${CMAKE_SOURCE_DIR}" ".")
 add_library(${PLUGIN} SHARED ${SOURCES})
 set_property(TARGET ${PLUGIN} PROPERTY PREFIX "")
@@ -114,9 +114,14 @@ set_property(TARGET ${PLUGIN} PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
 target_link_libraries(${PLUGIN} "${OTAWA_LDFLAGS}")
 
 # installation
-set(PLUGIN_PATH "${OTAWA_PREFIX}/lib/otawa/proc/${NAMESPACE}")
+set(PLUGIN_PATH "${OTAWA_PREFIX}/lib/otawa/${NAMESPACE}")
 install(TARGETS ${PLUGIN} LIBRARY DESTINATION ${PLUGIN_PATH})
 """ % (name, namespace, name))
+
+out.write("install(FILES ${PLUGIN}.eld DESTINATION ${PLUGIN_PATH})\n")
+
+if do_loader:
+    out.write("install(FILES %s.eld DESTINATION ${OTAWA_PREFIX}/lib/otawa/loader)\n" % elf)
 
 if do_script:
     out.write("install(FILES %s.osx DESTINATION ${OTAWA_PREFIX}/share/Otawa/scripts)\n" % name)
@@ -131,6 +136,7 @@ for f in files:
 # generate ELD file
 eld = open("%s.eld" % name, "w")
 eld.write("[elm-plugin]\n")
+eld.write("name=%s\n" % full_name)
 if description:
     eld.write("description=%s\n" % description)
 if author:
@@ -143,9 +149,12 @@ if reqs:
 
 # for loader, generate ELF ELD file
 if do_loader:
-    eld = open("%d.eld" % elf)
+    if not elf:
+        print "ERROR: no ELF number given (-e XX)"
+        exit(1)
+    eld = open("%d.eld" % elf, "w")
     eld.write("[elm-plugin]\n")
-    eld.write("path=%s\n" % name)
+    eld.write("path=../%s/%s\n" % (namespace, name))
 
 
 # for script, generates initial OSX

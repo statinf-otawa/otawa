@@ -239,7 +239,7 @@ protected:
 
 		// output libs
 		if(libs) {
-			cout << "-L" << MANAGER.prefixPath() << " -lotawa -lelm -lgel";
+			cout << "-L" << getLibDir() << " -lotawa -lelm -lgel";
 
 			// output dependencies
 			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++)
@@ -248,8 +248,11 @@ protected:
 			// output RPath
 			if(rpath) {
 				elm::Vector<string> rpaths;
+				Path lpath = getLibDir().relativeTo(ipath);
+				rpaths.add(lpath);
+				cout << " -Wl,-rpath -Wl,\\$ORIGIN/" << lpath;
 				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++) {
-					Path rpath = p->path().relativeTo(ipath);
+					Path rpath = p->path().parent().relativeTo(ipath);
 					if(!rpaths.contains(rpath)) {
 						rpaths.add(rpath);
 						cout << " -Wl,-rpath -Wl,\\$ORIGIN/" << rpath;
