@@ -236,7 +236,8 @@ public:
 		WRITE,
 		USE,
 		RELEASE,
-		BRANCH
+		BRANCH,
+		GRANT
 	} kind_t;
 
 	inline Step(void): _kind(NONE) { }
@@ -244,13 +245,14 @@ public:
 	inline Step(FunctionalUnit *fu): _kind(FU) { arg.fu = fu; }
 	inline Step(kind_t kind, const hard::Register *reg): _kind(kind) { ASSERT(kind == READ || kind == WRITE); arg.reg = reg; }
 	inline Step(kind_t kind, hard::Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
-	inline Step(kind_t kind): _kind(kind) { ASSERT(kind == BRANCH); }
+	inline Step(kind_t kind, bool cached = true): _kind(kind) { ASSERT(kind == BRANCH || kind == GRANT); arg.cached = cached;}
 
 	inline kind_t kind(void) const { return _kind; }
 	inline Stage *stage(void) const { ASSERT(_kind == STAGE); return arg.stage; }
 	inline PipelineUnit *fu(void) const { ASSERT(_kind == FU); return arg.fu; }
 	inline const Register *getReg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
 	inline Queue *getQueue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
+	inline bool isCached(void) const { ASSERT(_kind == GRANT); return arg.cached; }
 
 private:
 	kind_t _kind;
@@ -259,6 +261,7 @@ private:
 		FunctionalUnit *fu;
 		const Register *reg;
 		Queue *queue;
+		bool cached;
 	} arg;
 };
 
