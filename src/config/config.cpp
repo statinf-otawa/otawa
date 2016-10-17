@@ -113,7 +113,8 @@ public:
 		cflags			(SwitchOption::Make(*this).cmd("--cflags")							.description("output compilation C++ flags")),
 		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
 		installdir		(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path to install the component")),
-		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH"))
+		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH")),
+		verbose			(SwitchOption::Make(*this).cmd("--verbose").cmd("-V")				.description("provide details on the configuration process"))
 
 	{
 	}
@@ -286,7 +287,8 @@ private:
 		// this implementation (a) does not support the new plugin system
 		// and (b) hook any plugin without control and display all plugins as is.
 		elm::system::Plugger plugger(name, version, otawa::Manager::buildPaths(kind));
-		plugger.setQuiet(true);
+		if(!verbose)
+			plugger.setQuiet(true);
 
 		// get the initial directories
 		elm::Vector<sys::Directory *> paths;
@@ -391,7 +393,8 @@ private:
 		cflags,
 		libs,
 		installdir,
-		rpath;
+		rpath,
+		verbose;
 
 	elm::Vector<sys::Plugin *> plugs;
 };
