@@ -11,5 +11,5 @@ set(dumpcfg_SOURCES
 
 add_executable(dumpcfg ${dumpcfg_SOURCES})
 target_link_libraries(dumpcfg otawa)
-target_link_libraries(dumpcfg odisplay)
+target_link_libraries(dumpcfg display)
 install(TARGETS dumpcfg DESTINATION bin)

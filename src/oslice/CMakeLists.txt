@@ -18,7 +18,7 @@ include_directories(".")
 add_library(oslice SHARED ${SOURCES})
 set_property(TARGET oslice PROPERTY PREFIX "")
 set(SUFFIX "${CMAKE_SHARED_LIBRARY_SUFFIX}")
-target_link_libraries(oslice otawa ${LIBELM} odisplay clp)
+target_link_libraries(oslice otawa ${LIBELM} display clp)
 
 install(TARGETS oslice DESTINATION "${PLUGDIR}/otawa")
 install(FILES oslice.eld DESTINATION "${PLUGDIR}/otawa")

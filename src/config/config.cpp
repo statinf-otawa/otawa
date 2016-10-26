@@ -207,7 +207,6 @@ protected:
 
 				// get the required plugins
 				for(int i = 0; i < deps.length(); i++) {
-					cerr << "DEBUG: " << deps[i] << io::endl;
 					ProcessorPlugin *plugin = ProcessorPlugin::get(deps[i]);
 					if(!plugin)
 						throw option::OptionException(_ << "cannot find the plugin " << deps[i]);
@@ -225,6 +224,8 @@ protected:
 				throw option::OptionException(e.message());
 			}
 		}
+
+		// close the dependencies
 		for(int i = 0; i < plugs.length(); i++)
 			for(sys::Plugin::DepIter dep(plugs[i]->dependencies()); dep; dep++)
 				if(!plugs.contains(*dep))
@@ -327,15 +328,17 @@ private:
 		}
 
 		// look plugins
-		elm::Vector<sys::Path> found;
-		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++)
-			if(!found.contains(plugin.path())) {
-				cout << *plugin;
+		elm::Vector<sys::Plugin *> found;
+		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
+			sys::Plugin *handle = plugin.plug();
+			if(handle && !found.contains(handle)) {
+				cout << handle->name();
 				if(list_path)
-					cout << " (" << plugin.path() << ")";
+					cout << " (" << handle->path() << ")";
 				cout << io::endl;
-				found.add(plugin.path());
+				found.add(handle);
 			}
+		}
 	}
 
 	void listILPs(void) {

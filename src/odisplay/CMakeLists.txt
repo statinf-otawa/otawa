@@ -2,7 +2,7 @@ set(CMAKE_INSTALL_RPATH "${ORIGIN}")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
-set(libodisplay_la_SOURCES
+set(SOURCES
 	"CFGDrawer.cpp"
 	"display.cpp"
 	"display_AbstractDrawer.cpp"
@@ -28,10 +28,9 @@ set(libodisplay_la_SOURCES
 
 include_directories(".")
 
-add_library(odisplay SHARED ${libodisplay_la_SOURCES})
-install(TARGETS odisplay DESTINATION ${LIBDIR})
+add_library(display SHARED ${SOURCES})
+target_link_libraries(display otawa ${LIBELM})
+set_property(TARGET display PROPERTY PREFIX "")
 
-target_link_libraries(odisplay otawa)
-target_link_libraries(odisplay ${LIBELM})
-
-install(FILES display.eld DESTINATION "${LIBDIR}/otawa/proc/otawa")
+install(TARGETS display DESTINATION ${LIBDIR}/otawa/otawa)
+install(FILES display.eld DESTINATION "${LIBDIR}/otawa/otawa")

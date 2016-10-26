@@ -408,7 +408,7 @@ public:
 
 class Plugin: public ProcessorPlugin {
 public:
-	Plugin(void): ProcessorPlugin("otawa::graphviz::Plugin", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+	Plugin(void): ProcessorPlugin("otawa::graphviz", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
 };
 
 } }	// otawa::graphviz

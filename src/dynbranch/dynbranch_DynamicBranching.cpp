@@ -73,10 +73,10 @@ public:
 protected:
 	virtual void clean(void) {
 		// clear the PotentialValues
-		if(verbose)
-			elm::cerr << "potentialValueList length = " << pvl->count() << io::endl;
+		//if(verbose)
+			//elm::cerr << "potentialValueList length = " << pvl->count() << io::endl;
 
-		for(potential_value_list_t::Iterator slli(*pvl); slli; slli++) {
+		//for(potential_value_list_t::Iterator slli(*pvl); slli; slli++) {
 #ifdef SAFE_MEM_ACCESS
 			dynbranch::PotentialValueMem *pv = *slli;
 			if(pv->status == true) {
@@ -84,13 +84,13 @@ protected:
 			}
 			delete pv;
 #else
-			dynbranch::PotentialValue *pv = *slli;
+			//dynbranch::PotentialValue *pv = *slli;
 //			if(pv->magic != PotentialValue::MAGIC)
 //				continue;
-			((Vector<t::uint32> *)pv)->~Vector();
+			//((Vector<t::uint32> *)pv)->~Vector();
 #endif
-		}
-		pvl->clear();
+		//}
+		//pvl->clear();
 
 		//elm::StackAllocator* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
 		MyGC* psa = dynbranch::DYNBRANCH_STACK_ALLOCATOR(ws);
