@@ -225,6 +225,10 @@ protected:
 				throw option::OptionException(e.message());
 			}
 		}
+		for(int i = 0; i < plugs.length(); i++)
+			for(sys::Plugin::DepIter dep(plugs[i]->dependencies()); dep; dep++)
+				if(!plugs.contains(*dep))
+					plugs.add(*dep);
 
 		// display path if required
 		if(installdir) {
@@ -249,14 +253,17 @@ protected:
 			// output RPath
 			if(rpath) {
 				elm::Vector<string> rpaths;
-				Path lpath = getLibDir().relativeTo(ipath);
+				Path lpath = rpathFor(getLibDir(), ipath);
 				rpaths.add(lpath);
-				cout << " -Wl,-rpath -Wl,\\$ORIGIN/" << lpath;
+				cout << " -Wl,-rpath -Wl," << lpath;
 				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++) {
-					Path rpath = p->path().parent().relativeTo(ipath);
+					Path rpath = rpathFor(p, ipath);
 					if(!rpaths.contains(rpath)) {
 						rpaths.add(rpath);
-						cout << " -Wl,-rpath -Wl,\\$ORIGIN/" << rpath;
+						if(make_app)
+							cout << " -Wl,-rpath -Wl," << rpath;
+						else
+							cout << " -Wl,-rpath -Wl," << rpath;
 					}
 				}
 			}
@@ -267,15 +274,18 @@ protected:
 
 private:
 
+	Path rpathFor(const Path& p, const Path& ipath) {
+		if(!ipath)
+			return p;
+		else
+			return Path("$ORIGIN") / p.relativeTo(ipath);
+	}
+
 	/**
 	 * Compute RPath for the given plugin.
 	 */
 	Path rpathFor(sys::Plugin *p, sys::Path ipath) {
-		Path dir = p->path().dirPart();
-		if(!ipath)
-			return dir;
-		else
-			return dir.relativeTo(ipath);
+		return rpathFor(p->path().dirPart(), ipath);
 	}
 
 	/**

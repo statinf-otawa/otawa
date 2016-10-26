@@ -121,7 +121,7 @@ install(TARGETS ${PLUGIN} LIBRARY DESTINATION ${PLUGIN_PATH})
 out.write("install(FILES ${PLUGIN}.eld DESTINATION ${PLUGIN_PATH})\n")
 
 if do_loader:
-    out.write("install(FILES %s.eld DESTINATION ${OTAWA_PREFIX}/lib/otawa/loader)\n" % elf)
+    out.write("install(FILES elf_%s.eld DESTINATION ${OTAWA_PREFIX}/lib/otawa/loader)\n" % elf)
 
 if do_script:
     out.write("install(FILES %s.osx DESTINATION ${OTAWA_PREFIX}/share/Otawa/scripts)\n" % name)
