@@ -38,7 +38,7 @@ namespace otawa { namespace dynbranch {
 class GlobalAnalysisProblem {
 public:
 	typedef FastStateWrapper Domain;
-	GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain & entry);
+	GlobalAnalysisProblem(WorkSpace* workspace, bool verbose, Domain & entry, MyGC* m);
 	~GlobalAnalysisProblem(void);
 
 	const Domain& bottom();
@@ -85,6 +85,7 @@ private:
 	Domain ent;
 	bool verbose;
 	Vector<PotentialValue>* _tempRegs;
+	MyGC* myGC;
 
 };
 

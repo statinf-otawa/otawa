@@ -83,36 +83,36 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	else
 		PotentialValue::MAGIC++;
 
-	MyGC *psa = new MyGC(ws); // obtain the garbage collector
-	psa->setDisableGC(true);
+	MyGC *myGC = new MyGC(ws); // obtain the garbage collector
+	myGC->setDisableGC(true);
 
-	PotentialValue::pvgc = psa; // link the PotentialValue with the gc
+	PotentialValue::pvgc = myGC; // link the PotentialValue with the gc
 	//PotentialValue::tempPVAlloc = new PotentialValue(); // this will make use of the GC
 	PotentialValue::tempPVAlloc = 0;
 
-	dfa::FastState<PotentialValue, MyGC> *fs = new dfa::FastState<PotentialValue, MyGC>(&pv, dfa::INITIAL_STATE(ws), *psa);
-	psa->setFastState(fs);
+	dfa::FastState<PotentialValue, MyGC> *fs = new dfa::FastState<PotentialValue, MyGC>(&pv, dfa::INITIAL_STATE(ws), *myGC);
+	myGC->setFastState(fs);
 
 	entry.setFastState(fs);
 
-	dynbranch::GlobalAnalysisProblem prob(ws,isVerbose(), entry);
+	dynbranch::GlobalAnalysisProblem prob(ws,isVerbose(), entry, myGC);
 
 	// adding the fundamental domains
-	psa->add(&prob.bottom());
-	psa->add(&prob.top());
-	psa->add(&prob.entry());
-	psa->setTempRegs(prob.getTempRegs());
+	myGC->add(&prob.bottom());
+	myGC->add(&prob.top());
+	myGC->add(&prob.entry());
+	myGC->setTempRegs(prob.getTempRegs());
 
 
 	WideningListener<dynbranch::GlobalAnalysisProblem> list(ws, prob);
 	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > fp(list);
 	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > hai(fp, *ws);
 
-	psa->setListener(list);
-	psa->setFixPoint(fp);
-	psa->setAbsInt(hai);
+	myGC->setListener(list);
+	myGC->setFixPoint(fp);
+	myGC->setAbsInt(hai);
 
-	psa->setDisableGC(false);
+	myGC->setDisableGC(false);
 
 	hai.solve(cfg);
 
@@ -128,7 +128,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// clear the memory
-	DYNBRANCH_STACK_ALLOCATOR(ws) = psa;
+	DYNBRANCH_STACK_ALLOCATOR(ws) = myGC;
 	DYNBRANCH_FASTSTATE(ws) = fs;
 
 	if (time) {

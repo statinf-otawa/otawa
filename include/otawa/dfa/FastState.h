@@ -1,3 +1,5 @@
+// TODO: need to mark the memory correctly!
+
 /*
  *	FastState class
  *
@@ -26,7 +28,10 @@
 #include <elm/alloc/StackAllocator.h>
 #include <otawa/hard/Platform.h>
 #include "State.h"
+
 namespace otawa { namespace dfa {
+
+#define MEM_SIZE 64
 
 using namespace elm;
 
@@ -64,9 +69,20 @@ private:
 	} node_t;
 
 	typedef struct state_t {
-		inline state_t(value_t **r, node_t *m): regs(r), mem(m) { }
+		//inline state_t(value_t **r, node_t *m): regs(r), mem(m) { }
+		inline state_t(value_t **r, node_t *m[MEM_SIZE]): regs(r) {
+			if(m != 0) {
+				for(int i = 0; i < MEM_SIZE; i++)
+					mems[i] = m[i];
+			}
+			else {
+				for(int i = 0; i < MEM_SIZE; i++)
+					mems[i] = 0;
+			}
+		}
 		value_t **regs;
-		node_t *mem;
+		//node_t *mem;
+		node_t* mems[MEM_SIZE];
 		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
 	} stat_t;
 
@@ -83,6 +99,7 @@ private:
 	value_t** regRowAlloc;     // the pointer to the current row of register
 	value_t** regEachAlloc;    // the pointer to the current registers
 	node_t *memAlloc;	       // the pointer to the current memory nodes that is currently in construction
+	node_t** memEachRowAlloc;    // the pointer to the current registers
 	value_t* tempValueAlloc;   // to hold a temporary created value
 public:
 	typedef state_t *t;
@@ -117,6 +134,11 @@ public:
 			tempValueAlloc = 0;
 			regsAlloc = 0;
 			memAlloc = 0;
+
+			memEachRowAlloc = new node_t*[MEM_SIZE];
+			for(int i = 0; i < MEM_SIZE; i++)
+				memEachRowAlloc[i] = 0;
+
 			stateAlloc1 = 0;
 			stateAlloc2 = 0;
 			nodeAlloc = 0;
@@ -183,7 +205,7 @@ public:
 		rblock[r & rblock_mask] = v; // set the value to the dedicated register, could lead GC, but we have everything tracked
 		regs[r >> rblock_shift] = rblock; // only pointer assignment, no worry
 
-		t res = new(allocator) state_t(regs, s->mem); // everything is tracked, no worry
+		t res = new(allocator) state_t(regs, s->mems); // everything is tracked, no worry
 
 		// clear the GC collection info
 		stateAlloc1 = 0;
@@ -208,8 +230,9 @@ public:
 	 */
 	t store(t s, address_t a, const value_t&  v) {
 
-		stateAlloc1 = s;
 
+
+		stateAlloc1 = s;
 		node_t *mem, *cur;
 		node_t **pn = &mem;
 
@@ -219,7 +242,7 @@ public:
 
 		// try to find the corresponding address in the state, if existed, then checking if the existing value and the assigned values are the same
 		bool found = false;
-		for(cur = s->mem; cur; cur = cur->n) { // find the address
+		for(cur = s->mems[findMemsIndex(a)]; cur; cur = cur->n) { // find the address
 			if(cur->a == a) {
 				if(dom->equals(cur->v, v)) // if the value to assign is the same as the holding value, no need to allocate a new state
 					return s;
@@ -231,9 +254,9 @@ public:
 		if(!found && dom->equals(v, dom->top)) // write bot/top to an address not in a record does not require a new state
 			return s;
 
-		// look for position, while creating a node_t for each address until the address to store
-		bool first = true;
-		for(cur = s->mem; cur && cur->a < a; cur = cur->n) {
+		// duplicating all the nodes whose memory address is smaller than the one to store.
+		bool first = true; // use to mark the first node
+		for(cur = s->mems[findMemsIndex(a)]; cur && cur->a < a; cur = cur->n) {
 			*pn = new(allocator) node_t(cur);
 			if(first) { // for the first allocated memory node, we associate memAlloc with the current mem head
 				first = false;
@@ -242,24 +265,31 @@ public:
 			pn = &((*pn)->n);
 		}
 
-		// determine the next node
+		// determine the next node for the node of designated address
 		node_t *next;
-		if(!cur)
+		if(!cur) // if all the nodes in the current mem list are smaller then the address to store, hence nothing after the new node
 			next = 0;
-		else if(cur->a == a)
+		else if(cur->a == a) // skipping the current node since its address is the same, the next node pointed by the current node will be used
 			next = cur->n;
-		else
+		else // if the current node's address is larger than the designated address, it will be used as the next node
 			next = cur;
 
 		// create the new node
-		if(dom->equals(v, dom->top)) // if the address is found, it is not necessary to store the Top value
+		if(dom->equals(v, dom->top)) // even if the address is found, it is not necessary to store the Top value to the designated address, so skip
 			*pn = next;
 		else {
 			*pn = new(allocator) node_t(a, v, next);
 		}
 
 		// build the new state
-		state_t* res = new(allocator) state_t(s->regs, mem);
+
+		node_t* mems[MEM_SIZE];
+		for(int i = 0; i < MEM_SIZE; i++) {
+			mems[i] = s->mems[i];
+		}
+		mems[findMemsIndex(a)] = mem;
+
+		state_t* res = new(allocator) state_t(s->regs, mems);
 		regsAlloc = 0;
 		memAlloc = 0;
 		stateAlloc1 = 0;
@@ -273,10 +303,24 @@ public:
 	 * @param a		Address to load from.
 	 * @return		Load value.
 	 */
+
+	inline int findMemsIndex(address_t a) {
+		t::uint32 i = a;
+		i = i >> 2; // get rid of the lowest 2 bits
+		// i = i & 0x3F; // the lower 6 bits
+		i = i & (MEM_SIZE - 1);
+		//if(willieDebug) elm::cout << __SOURCE_INFO__ << "given address = " << hex(a) << ", the index is " << i << io::endl;
+		return i;
+	}
+
+
 	const value_t& load(t s, address_t a) {
 		if(s == bot)
 			return dom->bot;
-		for(node_t *cur = s->mem; cur; cur = cur->n)
+
+		// find the index of the mems
+		int memsIndex = findMemsIndex(a);
+		for(node_t *cur = s->mems[memsIndex]; cur; cur = cur->n)
 			if(cur->a == a)
 				return cur->v;
 		return dom->top;
@@ -527,18 +571,19 @@ public:
 		}
 
 		// check memory
-		if(s1->mem != s2->mem) {
-			node_t *c1, *c2;
-			for(c1 = s1->mem, c2 = s2->mem; c1 && c2; c1 = c1->n, c2 = c2->n) {
-				if(c1 == c2)
-					break;
-				if(c1->a != c2->a || !dom->equals(c1->v, c2->v))
+		for(int i = 0; i < MEM_SIZE; i++) {
+			if(s1->mems[i] != s2->mems[i]) {
+				node_t *c1, *c2;
+				for(c1 = s1->mems[i], c2 = s2->mems[i]; c1 && c2; c1 = c1->n, c2 = c2->n) {
+					if(c1 == c2)
+						break;
+					if(c1->a != c2->a || !dom->equals(c1->v, c2->v))
+						return false;
+				}
+				if(c1 != c2)
 					return false;
 			}
-			if(c1 != c2)
-				return false;
 		}
-
 		// all is fine
 		return true;
 	}
@@ -568,6 +613,7 @@ public:
 				}
 
 		// display memory
+#ifdef SINGLE_MEM
 		for(node_t *n = s->mem; n; n = n->n) {
 			if(fst)
 				fst = false;
@@ -576,6 +622,97 @@ public:
 			out << Address(n->a) << " = ";
 			dom->dump(out, n->v);
 		}
+#else
+		// lets create a link list on the run....
+		class AllMemList {
+		public:
+			node_t* memNode;
+			AllMemList* next;
+		};
+
+		AllMemList* allMemList = 0;
+
+		for(int i = 0; i < MEM_SIZE; i++) {
+			node_t* currNodeT = s->mems[i];
+			while(currNodeT) {
+				// add the currNodeT into the list
+				if(allMemList == 0) {
+					allMemList = new AllMemList();
+					allMemList->memNode = currNodeT;
+					allMemList->next = 0;
+				}
+				else {
+					AllMemList* curr = allMemList;
+					AllMemList* prev = 0;
+					while(curr) {
+						if(curr->memNode->a > currNodeT->a) {
+							AllMemList* temp = new AllMemList();
+							temp->memNode = currNodeT;
+							temp->next = curr;
+							if(prev == 0) // first node
+								allMemList = temp;
+							else
+								prev->next = temp;
+							break;
+						}
+						else {
+							prev = curr;
+							curr = curr->next;
+						}
+					} // finishing searching all the node
+					if(curr == 0) { // nodes' mem address are smaller than the currNodeT->a
+						AllMemList* temp = new AllMemList();
+						temp->memNode = currNodeT;
+						prev->next = temp;
+					}
+				} // finish adding the currNodeT
+				currNodeT = currNodeT->n;
+			} // finishing adding the current mems[i]
+		} // finishing adding all mems
+
+
+		AllMemList* curr = allMemList;
+		AllMemList* prev = 0;
+		while(curr) {
+			node_t *n = curr->memNode;
+			if(fst)
+				fst = false;
+			else
+				out << ", ";
+			out << Address(n->a) << " = ";
+			dom->dump(out, n->v);
+			prev = curr;
+			curr = curr->next;
+			delete prev;
+		}
+
+		// print the contents of each mems[i]
+		/*
+		if(allMemList != 0) {
+			elm::cout << io::endl;
+			for(int i = 0; i < MEM_SIZE; i++) {
+				node_t* n = s->mems[i];
+				bool printing = false;
+				bool fst = true;
+				if(n) {
+					elm::cout << "index = " << i << ":" << io::endl;
+					printing = true;
+				}
+				while(n) {
+					if(fst)
+						fst = false;
+					else
+						out << ", ";
+					out << Address(n->a) << " = ";
+					dom->dump(out, n->v);
+					n = n->n;
+				}
+				if(printing)
+					elm::cout << io::endl;
+			}
+		}
+		*/
+#endif
 	}
 
 	/**
@@ -638,46 +775,51 @@ public:
 		}
 
 		// join memory
-		node_t *mem = 0, *cur1 = s1->mem, *cur2 = s2->mem;
-		node_t **pn = &mem;
-		bool first = true;
-		while(cur1 != cur2 && cur1 && cur2) {
+		node_t* mems[MEM_SIZE];
+		for(int i = 0; i < MEM_SIZE; i++) {
+			node_t *mem = 0, *cur1 = s1->mems[i], *cur2 = s2->mems[i];
+			node_t **pn = &mem;
+			bool first = true;
+			while(cur1 != cur2 && cur1 && cur2) {
 
-			// join the common address
-			if(cur1->a == cur2->a) {
-				value_t temp = w.process(cur1->v, cur2->v); // someone needs to protect the tab of the temp
-				//value_t* temp = allocator.template allocate<value_t>(1);
-				value_t::tempPVAlloc = 0;
-				tempValueAlloc = &temp;
-				//new(temp) value_t(w.process(cur1->v, cur2->v));
-				if(temp == dom->top) { }
-				else if(temp == dom->bot) { }
-				else {
-					*pn = new(allocator) node_t(cur1->a, temp);
-					if(first) {
-						first = false;
-						memAlloc = mem;
+				// join the common address
+				if(cur1->a == cur2->a) {
+					value_t temp = w.process(cur1->v, cur2->v); // someone needs to protect the tab of the temp
+					value_t::tempPVAlloc = 0;
+					tempValueAlloc = &temp;
+					// get rid of the bot/top states
+					if(temp == dom->top) { }
+					else if(temp == dom->bot) { }
+					else {
+						*pn = new(allocator) node_t(cur1->a, temp);
+						if(first) {
+							first = false;
+							memAlloc = mem;
+							memEachRowAlloc[i] = mem;
+						}
+						pn = &((*pn)->n); // pn now points to the address of the member n of the address node, so any new node_t will be pointed by n automatically
 					}
-					pn = &((*pn)->n); // pn now points to the address of the member n of the address node, so any new node_t will be pointed by n automatically
+					tempValueAlloc = 0;
+					cur1 = cur1->n;
+					cur2 = cur2->n;
 				}
-				tempValueAlloc = 0;
-				cur1 = cur1->n;
-				cur2 = cur2->n;
-			}
 
-			// else join with T -> T, if the value for one address only presented for one state, the combine function will return Top for the address
-			// TODO		We should take into account initialized memory!
-			else if(cur1->a < cur2->a)
-				cur1 = cur1->n;
+				// else join with T -> T, if the value for one address only presented for one state, the combine function will return Top for the address
+				// TODO		We should take into account initialized memory!
+				else if(cur1->a < cur2->a)
+					cur1 = cur1->n;
+				else
+					cur2 = cur2->n;
+
+			} // end of while cur1 != cur2
+			if(cur1 == cur2)
+				*pn = cur1;
 			else
-				cur2 = cur2->n;
+				*pn = 0;
 
+			mems[i] = mem;
 		}
-		if(cur1 == cur2)
-			*pn = cur1;
-		else
-			*pn = 0;
-		t res  = new(allocator) state_t(regs, mem);
+		t res  = new(allocator) state_t(regs, mems);
 
 		stateAlloc1 = 0;
 		stateAlloc2 = 0;
@@ -693,6 +835,8 @@ public:
 			}
 		}
 		memAlloc = 0;
+		for(int i = 0; i < MEM_SIZE; i++)
+			memEachRowAlloc[i] = 0;
 
 
 		bool resultedTop = equals(res, top); // if the resulted state is top
@@ -765,6 +909,19 @@ public:
 			value_t::tempPVAlloc->collect(&allocator);
 		}
 
+		for(int i = 0; i < MEM_SIZE; i++) {
+			for(node_t *n = memEachRowAlloc[i]; n; n = n->n) {
+				already = allocator.template mark(n, sizeof(node_t));
+				if(already) {
+				}
+				else {
+					(n->v).collect(&allocator);
+				}
+			}
+		}
+
+
+
 	}
 
 	int collect(t _s, int currCount = 0, bool show=false) {
@@ -795,18 +952,19 @@ public:
 		} // end of collecting registers
 
 		// collecting memory
-		for(node_t *n = _s->mem; n; n = n->n) {
-			already = allocator.template mark(n, sizeof(node_t));
-			if(already) {
-				break;
-				// return (currCount+1);
-			}
-			else {
-				(n->v).collect(&allocator);
-			}
-		} // end of the mems
 
-
+		for(int i = 0; i < MEM_SIZE; i++) {
+			for(node_t *n = _s->mems[i]; n; n = n->n) {
+				already = allocator.template mark(n, sizeof(node_t));
+				if(already) {
+					break;
+					// return (currCount+1);
+				}
+				else {
+					(n->v).collect(&allocator);
+				}
+			} // end of the mem
+		} // end of all mems
 
 		return (currCount+1);
 	}

@@ -27,7 +27,6 @@
 #include <otawa/cfg/features.h>
 #include <otawa/prog/sem.h>
 
-
 #define TIME_NB_EXEC_GLOBAL 1000
 
 namespace otawa { namespace dynbranch {

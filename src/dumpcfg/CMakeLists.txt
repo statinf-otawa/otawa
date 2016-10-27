@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib;${ORIGIN}/../lib/otawa/otawa")
 set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(dumpcfg_SOURCES

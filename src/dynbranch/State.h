@@ -41,7 +41,7 @@ public:
 		// only add the values exist in both domain
 		if((pva.length() == 0) || (pvb.length() == 0))
 			return PotentialValue::top;
-		return merge(pva, pvb);
+		return merge(pva, pvb); // neither pva nor pvb is empty
 	}
 };
 

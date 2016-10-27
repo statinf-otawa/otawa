@@ -2,11 +2,11 @@
 #define OTAWA_DYNBRANCH_GC_H
 #include <elm/alloc/GroupedGC.h>
 #include <otawa/dfa/hai/WideningListener.h>
+#include <elm/genstruct/Vector.h>
 
 extern unsigned long processedSemInstCount;
 extern unsigned int gcIndex;
 
-#define Domain FastStateWrapper
 
 namespace otawa { namespace dynbranch {
 //#define NO_GC
@@ -20,8 +20,16 @@ public:
 	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
 	//MyGC(WorkSpace* _ws): elm::GroupedGC(4*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
 
-	void add(const Domain* d) {
+	void add(const FastStateWrapper* d) {
 		vd.add(d);
+	}
+
+	void addPV(const PotentialValue* pv) {
+		_pvs.add(pv);
+	}
+
+	void clearPV() {
+		_pvs.clear();
 	}
 
 	void setListener(WideningListener<dynbranch::GlobalAnalysisProblem>& l) { listener = &l; }
@@ -78,6 +86,10 @@ protected:
 			_tempRegs->item(ii).collect(this);
 		}
 
+		for(int ii = 0; ii < _pvs.length(); ii++) {
+			_pvs.item(ii)->collect(this);
+		}
+
 
 		if(fs)
 			fs->collect(); // to collect the current using state in the function of the FastState
@@ -106,8 +118,9 @@ protected:
 
 	}
 private:
-	Vector<const Domain*> vd;
+	elm::genstruct::Vector<const FastStateWrapper*> vd;
 	Vector<PotentialValue> *_tempRegs;
+	elm::genstruct::Vector<const PotentialValue*> _pvs;
 	dfa::FastState<PotentialValue, MyGC>* fs;
 	WorkSpace* ws;
 

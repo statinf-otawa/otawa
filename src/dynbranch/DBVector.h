@@ -51,7 +51,7 @@ public:
 //	template<class G> inline void *operator new[](size_t size, G& alloc) { static int i = 0; i++; elm::cout << "vector.new6 [" << i << "] " << size << io::endl; return alloc.template allocate(size); }
 //
 
-	inline bool collect() {
+	inline bool collect() const {
 		if(!gc)
 			return true;
 

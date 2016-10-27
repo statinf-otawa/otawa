@@ -28,10 +28,6 @@
 #include "GlobalAnalysisProblem.h"
 #include "GC.h"
 
-//bool collectDebug = true;
-
-
-
 namespace otawa { namespace dynbranch {
 
 //Identifier<potential_value_list_t*> DYNBRANCH_POTENTIAL_VALUE_LIST("");
@@ -79,12 +75,6 @@ PotentialValue::PotentialValue(const PotentialValue & cpv) :  Vector<elm::t::uin
 	// note: when a potentialvalue is created through the copy constructor, the tab is not initialized.
 	// we need to call the constructor of Set and then Vector to initialize the tab
 	// reminder: PotentialValue does not allocate memory for the tab hence the size of PV only includes the pointer to the tab
-//WILLIE_BEGIN_FASTSTATE_GC(
-//	elm::cout << __SOURCE_INFO__ << "pv copy constr. is called, source pv size = " << cpv.count() << "/" << cpv.capacity() << " (allocation is finished before this line)" << io::endl;
-//)WILLIE_END()
-//	countX++;
-
-
 	bTop = cpv.bTop;
 }
 
@@ -339,7 +329,7 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
-PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
+PotentialValue merge(const PotentialValue& a, const PotentialValue& b) { // result a set which contains both a and b
 	if(a.count() == 0 && b.count() == 0)
 		return PotentialValue::bot;
 	if(a.count()+b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
@@ -358,19 +348,31 @@ PotentialValue merge(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
-bool PotentialValue::collect(MyGC*  gc, bool show) {
+bool PotentialValue::collect(const MyGC*  gc, bool show) const {
 	bool already = Vector<unsigned int>::collect();
 }
 
 bool operator==(const PotentialValue& a, const PotentialValue& b) {
 	// in potential value, top and bot are no difference.... (?), hence to speed up, if they both contains 0 element, return true
-	if(a.bTop != b.bTop) {
-		return false;
-	}
-
 	if(a.length() == 0 && b.length() == 0)
 		return true;
 
+	/*
+	if(a.bTop != b.bTop) {
+		return false;
+	}
+	*/
+
+	if(a.length() == b.length()) {
+		for(PotentialValue::Iterator isa(a); isa; isa++)
+			if(!b.contains(*isa))
+				return false;
+		return true;
+	}
+	else
+		return false;
+
+	/*
 	for(PotentialValue::Iterator isa(a); isa; isa++)
 		if(!b.contains(*isa))
 			return false;
@@ -378,6 +380,7 @@ bool operator==(const PotentialValue& a, const PotentialValue& b) {
 		if(!a.contains(*isb))
 			return false;
 	return true;
+	*/
 }
 
 Output& operator<<(Output& o, PotentialValue const& pv) {

@@ -67,7 +67,7 @@ public:
 	inline void dump(Output& o, PotentialValue &pv) { o << pv; }
 
 	inline bool equals(const PotentialValue &a, const PotentialValue &b) { return a == b; }
-	bool collect(MyGC*  gc, bool show = false);
+	bool collect(const MyGC*  gc, bool show = false) const;
 
 	inline void checkState() { Vector<potential_value_type>::checkState(pvgc); }
 	inline void checkState() const { Vector<potential_value_type>::checkState(pvgc); }
