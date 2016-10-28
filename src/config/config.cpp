@@ -330,6 +330,8 @@ private:
 		// look plugins
 		elm::Vector<sys::Plugin *> found;
 		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
+			if(verbose)
+				cerr << "INFO: plugging " << plugin.path() << io::endl;
 			sys::Plugin *handle = plugin.plug();
 			if(handle && !found.contains(handle)) {
 				cout << handle->name();

@@ -1,3 +1,3 @@
 [elm-plugin]
-name=dcahe
+name=otawa/dcache
 deps=otawa/clp
