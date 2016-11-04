@@ -47,13 +47,12 @@ Dumper::Dumper(void): Processor(reg) {
 /**
  */
 void Dumper::processWorkSpace(WorkSpace *ws) {
-	const Platform& pf = *ws->process()->platform();
 
 	// display memory
 	out << "MEMORY\n";
 	const hard::Memory *mem = hard::MEMORY(ws);
 	if(!mem)
-		mem = &pf.memory();
+		mem = &Single<hard::Memory>::_;
 	for(int i = 0; i < mem->banks().count(); i++) {
 		const Bank& bank = *mem->banks()[i];
 		out << "\tBANK " << bank.name() << io::endl;

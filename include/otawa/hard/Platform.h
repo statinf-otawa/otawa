@@ -76,10 +76,10 @@ public:
 		Identification(const elm::String& name);
 		Identification(const elm::String& arch, const elm::String& abi,
 			const elm::String& mach = ANY);
-		inline const elm::String& name(void) const;
-		inline const elm::String& architecture(void) const;
-		inline const elm::String& abi(void) const;
-		inline const elm::String& machine(void) const;
+		inline const elm::String& name(void) const { return _name; }
+		inline const elm::String& architecture(void) const { return _arch; }
+		inline const elm::String& abi(void) const { return _abi; }
+		inline const elm::String& machine(void) const { return _mach; }
 		bool matches(const Identification& id);
 		Identification& operator=(const Identification& id);
 		void print(io::Output& out) const;
@@ -92,96 +92,30 @@ public:
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
 
 	// Identification
-	inline const Identification& identification(void) const;
+	inline const Identification& identification(void) const { return id; }
 	virtual bool accept(const Identification& id);
-	inline bool accept(elm::CString name);
-	inline bool accept(const elm::String& name);
+	inline bool accept(elm::CString name) { return accept(Identification(name)); }
+	inline bool accept(const elm::String& name) { return accept(Identification(name)); }
 
 	// Register bank access
-	inline const banks_t& banks(void) const;
+	inline const banks_t& banks(void) const { return *_banks; }
 	inline int regCount(void) const { return rcnt; }
 	Register *findReg(int uniq) const;
 	const Register *findReg(const string& name) const;
 	virtual const Register *getSP(void) const;
 	virtual const Register *getPC(void) const;
 
-	// deprecated
-	inline const CacheConfiguration& cache(void) const;
-	void loadCacheConfig(const elm::system::Path& path);
-	void loadCacheConfig(elm::xom::Element *element);
-	inline const Memory& memory(void) const { return *_memory; }
-	void loadMemory(const elm::system::Path& path) throw(otawa::LoadException);
-	void loadMemory(elm::xom::Element *element) throw(otawa::LoadException);
-	void loadProcessor(const elm::system::Path& path);
-	void loadProcessor(elm::xom::Element *element);
-	inline const Processor *processor(void) const { return _processor; };
-	inline const int pipelineDepth(void) const;
-
 protected:
 	friend class otawa::Manager;
 	static const banks_t null_banks;
-	virtual ~Platform(void);
 	void setBanks(const banks_t& banks);
 
 private:
-	static const unsigned long HAS_PROCESSOR	= 0x00000001;
-	static const unsigned long HAS_CACHE		= 0x00000002;
-	static const unsigned long HAS_MEMORY		= 0x00000004;
-	unsigned long flags;
 	Identification id;
-	const CacheConfiguration *_cache;
-	Processor *_processor;
-	const Memory *_memory;
-	int depth;
 	int rcnt;
 	const banks_t *_banks;
-
-	void configure(const PropList& props);
 };
 inline io::Output& operator<<(io::Output& out, const Platform::Identification& id) { id.print(out); return out; }
-
-// Inlines
-inline const Platform::Identification& Platform::identification(void) const {
-	return id;
-}
-
-inline const CacheConfiguration& Platform::cache(void) const {
-	return *_cache;
-}
-
-inline const int Platform::pipelineDepth(void) const {
-	return depth;
-}
-
-inline bool Platform::accept(elm::CString name) {
-	return accept(Identification(name));
-}
-
-inline bool Platform::accept(const elm::String& name) {
-	return accept(Identification(name));
-}
-
-inline const elm::genstruct::Table<const hard::RegBank *>& Platform::banks(void) const {
-	return *_banks;
-}
-
-
-// Platform::Identification inlines
-inline const elm::String& Platform::Identification::architecture(void) const {
-	return _arch;
-}
-
-inline const elm::String& Platform::Identification::abi(void) const {
-	return _abi;
-}
-
-inline const elm::String& Platform::Identification::machine(void) const {
-	return _mach;
-}
-
-inline const elm::String& Platform::Identification::name(void) const {
-	return _name;
-}
 
 } } // otawa::hard
 

@@ -34,6 +34,7 @@
 #include <otawa/proc/DynFeature.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/hard/CacheConfiguration.h>
 
 namespace otawa { namespace ipet {
 
@@ -120,12 +121,10 @@ p::feature INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE",
  */
 
 void TrivialDataCacheManager::setup(WorkSpace *ws) {
-	if(!hard::CACHE_CONFIGURATION(ws)->hasDataCache()) {
-		time = 0;
-		log << "WARNING: there is no data cache here !\n";
-	}
-	else
-		time = ws->cache().dataCache()->missPenalty();
+	const hard::CacheConfiguration& conf = **hard::CACHE_CONFIGURATION(ws);
+	if(!conf.hasDataCache())
+		throw ProcessorException(*this, "there is no data cache here !\n");
+	time = conf.dataCache()->missPenalty();
 }
 
 

@@ -143,110 +143,15 @@ const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
 
 
 /**
- */
-void Platform::configure(const PropList& props) {
-	
-	// Configure cache
-	CacheConfiguration *cache = CACHE_CONFIG(props);
-	if(cache) {
-		_cache = cache;
-		flags &= ~HAS_CACHE;
-	}
-	else {
-		xom::Element *element = CACHE_CONFIG_ELEMENT(props);
-		if(element) 
-			loadCacheConfig(element);
-		else {
-			elm::system::Path path = CACHE_CONFIG_PATH(props);
-			if(path)
-				loadCacheConfig(path);
-			else {
-				element = CONFIG_ELEMENT(props);
-				if(element) {
-					xom::Element *cache_elem = element->getFirstChildElement(
-						Manager::CACHE_CONFIG_NAME, Manager::OTAWA_NS);
-					if(cache_elem)
-						loadCacheConfig(cache_elem);
-				}
-			}
-		}
-	}
-	
-	// Configure pipeline depth
-	int new_depth = PIPELINE_DEPTH(props);
-	if(new_depth > 0)
-		depth = new_depth;
-	
-	// Configure processor 
-	Processor *new_processor = otawa::PROCESSOR(props);
-	if(new_processor) {
-		_processor = new_processor;
-		flags &= ~HAS_PROCESSOR;
-	}
-	else {
-		xom::Element *element = PROCESSOR_ELEMENT(props);
-		if(element) 
-			loadProcessor(element);
-		else {
-			elm::system::Path path = PROCESSOR_PATH(props);
-			if(path)
-				loadProcessor(path);
-			else {
-				element = CONFIG_ELEMENT(props);
-				if(element) {
-					xom::Element *proc_elem = element->getFirstChildElement(
-						Manager::PROCESSOR_NAME, Manager::OTAWA_NS);
-					if(proc_elem)
-						loadProcessor(proc_elem);
-				}
-			}
-		}
-	}
-	
-	// configure the memory
-	Memory *memory = MEMORY_OBJECT(props);
-	if(memory) {
-		_memory = memory;
-		flags &= ~HAS_MEMORY;
-	}
-	else {
-		xom::Element *element = MEMORY_ELEMENT(props);
-		if(element) 
-			loadMemory(element);
-		else {
-			elm::system::Path path = MEMORY_PATH(props);
-			if(path)
-				loadMemory(path);
-			else {
-				element = CONFIG_ELEMENT(props);
-				if(element) {
-					xom::Element *memory_elem = element->getFirstChildElement(
-						Manager::MEMORY_NAME, Manager::OTAWA_NS);
-					if(memory_elem)
-						loadMemory(memory_elem);
-				}
-			}
-		}
-	}
-}
-
-
-/**
  * Build a platform from the given description.
  * @param _id		Platform identification.
  * @param props		Properties describing the platform.
  */
 Platform::Platform(const Platform::Identification& _id, const PropList& props)
-:	flags(0),
-	id(_id),
-	_cache(&CacheConfiguration::NO_CACHE),
-	_processor(0),
-	_memory(&Memory::full),
-	depth(5),
+:	id(_id),
 	rcnt(0),
 	_banks(&null_banks)
 {
-	configure(props);
 }
 
 
@@ -254,16 +159,10 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
  */
 Platform::Platform(cstring name, const Identification& _id, const PropList& props)
 :	AbstractIdentifier(name),
-	flags(0),
 	id(_id),
-	_cache(&CacheConfiguration::NO_CACHE),
-	_processor(0),
-	_memory(&Memory::full),
-	depth(5),
 	rcnt(0),
 	_banks(&null_banks)
 {
-	configure(props);
 }
 
 
@@ -273,28 +172,10 @@ Platform::Platform(cstring name, const Identification& _id, const PropList& prop
  * @param props		Description properties.
  */
 Platform::Platform(const Platform& platform, const PropList& props)
-:	flags(0),
-	id(platform.identification()),
-	_cache(&platform.cache()),
-	_processor(0),
-	_memory(&platform.memory()),
-	depth(5),
+:	id(platform.identification()),
 	rcnt(0),
 	_banks(&null_banks)
 {
-	configure(props);
-}
-
-
-/**
- */
-Platform::~Platform(void) {
-	if(flags & HAS_PROCESSOR)
-		delete _processor;
-	if(flags & HAS_CACHE)
-		delete _cache;
-	if(flags & HAS_MEMORY)
-		delete _memory;
 }
 
 
@@ -545,120 +426,6 @@ bool Platform::Identification::matches(const Identification& id) {
 	
 	// All is fine
 	return true;
-}
-
-
-/**
- * Load the processor configuration.
- * @param path	Path to the file.
- * @throws	elm::io::IOException	If a configuration file cannot be loaded.
- */
-void Platform::loadProcessor(const elm::system::Path& path) {
-
-	// free an existing one
-	if(flags & HAS_PROCESSOR) {
-		delete _processor;
-		_processor = 0;
-		flags &= ~HAS_PROCESSOR;
-	}
-
-	// load the new one
-	_processor = Processor::load(path);
-	flags |= HAS_PROCESSOR;
-}
-
-
-/**
- * Load the processor configuration from the given element.
- * @param element			Element to use.
- * @throws	LoadException	If the XML element is mal-formed.
- */
-void Platform::loadProcessor(elm::xom::Element *element) {
-	ASSERT(element);
-
-	// free it already exists
-	if(flags & HAS_PROCESSOR) {
-		delete _processor;
-		_processor = 0;
-		flags &= ~HAS_PROCESSOR;
-	}
-
-	// load the new one
-	_processor = Processor::load(element);
-	flags |= HAS_PROCESSOR;
-}
-
-
-/**
- * @fn Processor *Platform::processor(void);
- * Get the current processor (possibly derivated from the current configuration).
- * @return	Current processor.
- */
-
-
-/**
- * Load a cache configuration from the given path.
- * @param path			Path to the cache configuration.
- * @throws LoadException	Throws if there is an error.
- */
-void Platform::loadCacheConfig(const elm::system::Path& path) {
-	try {
-		CacheConfiguration *new_cache = CacheConfiguration::load(path);
-		if(flags & HAS_CACHE)
-			delete _cache;
-		flags |= HAS_CACHE;
-		_cache = new_cache;
-	}
-	catch(elm::Exception& e) {
-		throw LoadException(&e.message());
-	}
-}
-
-
-/**
- * Load a cache configuration from an XML element.
- * @param element	Element to read from.
- * @throws LoadException	Thrown if there is an error.
- */
-void Platform::loadCacheConfig(elm::xom::Element *element) {
-	try {
-		CacheConfiguration *new_cache = CacheConfiguration::load(element);
-		if(flags & HAS_CACHE)
-			delete _cache;
-		flags |= HAS_CACHE;
-		_cache = new_cache;
-	}
-	catch(elm::Exception& e) {
-		throw LoadException(&e.message());
-	}
-}
-
-
-/**
- * Load a memory configuration from the given path.
- * @param path				Path to the memory configuration.
- * @throws LoadException	Throws if there is an error.
- */
-void Platform::loadMemory(const elm::system::Path& path) throw(LoadException) {
-	Memory *new_memory = Memory::load(path);
-	if(flags & HAS_MEMORY)
-		delete _memory;
-	flags |= HAS_MEMORY;
-	_memory = new_memory;
-}
-
-
-/**
- * Load a memory configuration from an XML element.
- * @param element	Element to read from.
- * @throws LoadException	Thrown if there is an error.
- */
-void Platform::loadMemory(elm::xom::Element *element) throw(LoadException) {
-	Memory *new_memory = Memory::load(element);
-	if(flags & HAS_MEMORY)
-		delete _memory;
-	flags |= HAS_MEMORY;
-	_memory = new_memory;
 }
 
 

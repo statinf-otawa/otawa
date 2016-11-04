@@ -181,17 +181,6 @@ Process::Process(Manager *manager, const PropList& props, File *program)
 
 
 /**
- * Get the cache hierarchy of the current processor. The cachers are ordered
- * according the index in the vector.
- * @return	Cache hierarchy.
- */
-const hard::CacheConfiguration& Process::cache(void) {
-	DEPRECATED;
-	return platform()->cache();
-}
-
-
-/**
  * @fn const elm::Collection<File *> *Process::files(void) const
  * Get the list of files used in this process.
  * @return	List of files.

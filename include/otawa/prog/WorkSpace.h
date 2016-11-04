@@ -109,7 +109,6 @@ public:
 	ilp::System *newILPSystem(bool max = true);
 	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
-	virtual const hard::CacheConfiguration& cache(void);
 
 private:
 	void newFeatDep(const AbstractFeature* feature);

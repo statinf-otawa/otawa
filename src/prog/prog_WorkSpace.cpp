@@ -385,15 +385,6 @@ ast::ASTInfo *WorkSpace::getASTInfo(void) {
 
 
 /**
- * @deprecated
- */
-const hard::CacheConfiguration& WorkSpace::cache(void) {
-	DEPRECATED;
-	return proc->cache();
-}
-
-
-/**
  * Build an ILP system with the default ILP engine.
  * @param max	True for a maximized system, false for a minimized.
  * @return		ILP system ready to use, NULL fi there is no support for ILP.
