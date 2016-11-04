@@ -304,30 +304,8 @@ private:
 
 	void dumpExeGraph(hard::Processor::steps_t& steps, Output out = otawa::cout, String start = "") {
 		out << start << "pipeline\n" << start;
-		for (int i = 0; i < steps.length(); i++) {
-			switch (steps[i].kind()) {
-			case hard::Step::STAGE:
-				out << "\t" << steps[i].stage()->getName();
-				break;
-			case hard::Step::FU:
-				out << "\t" << steps[i].fu()->getName();
-				break;
-			case hard::Step::READ:
-				out << " r:" << steps[i].getReg()->name();
-				break;
-			case hard::Step::WRITE:
-				out << " w:" << steps[i].getReg()->name();
-				break;
-			case hard::Step::USE:
-				out << "\tuse:" << steps[i].getQueue()->getName();
-				break;
-			case hard::Step::RELEASE:
-				out << "\trel:" << steps[i].getQueue()->getName();
-				break;
-			default:
-				out << " [unknown]";
-			}
-		}
+		for (int i = 0; i < steps.length(); i++)
+			out << steps[i];
 		out << endl;
 	}
 

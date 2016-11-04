@@ -819,6 +819,44 @@ Identifier<string> PROCESSOR_ID("otawa::hard::PROCESSOR_ID");
  * @return	Queue.
  */
 
+Output& operator<<(Output& out, const Step& step) {
+	switch(step.kind()) {
+	case hard::Step::STAGE:
+		out << "\t" << step.stage()->getName();
+		break;
+	case hard::Step::FU:
+		out << "\t" << step.fu()->getName();
+		break;
+	case hard::Step::READ:
+		out << " r:" << step.getReg()->name();
+		break;
+	case hard::Step::WRITE:
+		out << " w:" << step.getReg()->name();
+		break;
+	case hard::Step::USE:
+		out << " use:" << step.getQueue()->getName();
+		break;
+	case hard::Step::RELEASE:
+		out << " rel:" << step.getQueue()->getName();
+		break;
+	case hard::Step::BRANCH:
+		out << " branch";
+		break;
+	case hard::Step::MEM_CACHED:
+		out << " mem";
+		break;
+	case hard::Step::MEM_UNCACHED:
+		out << " umem";
+		break;
+	case hard::Step::MEM_WAIT:
+		out << " wait";
+		break;
+	default:
+		out << " [unknown]";
+	}
+	return out;
+}
+
 } } // otawa::hard
 
 ENUM_BEGIN(otawa::hard::Stage::type_t)
