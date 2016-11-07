@@ -22,7 +22,8 @@
 #ifndef ICAT3_CMAKEFILES_FEATURES_H_
 #define ICAT3_CMAKEFILES_FEATURES_H_
 
-#include <elm/data/Table.h>
+#include <elm/data/Array.h>
+
 #include <otawa/hard/Cache.h>
 #include <otawa/proc/Feature.h>
 
@@ -76,7 +77,7 @@ extern p::id<LBlock *> LBLOCK;
 typedef t::int8 age_t;
 const int BOT_AGE = -1;
 
-class ACS: public AllocTable<age_t> {
+class ACS: public AllocArray<age_t> {
 public:
 	ACS(void);
 	ACS(int n, age_t d = BOT_AGE);
@@ -115,12 +116,12 @@ private:
 };
 
 template <class T>
-class Container: public AllocTable<T> {
+class Container: public AllocArray<T> {
 public:
 	inline Container(void) { }
-	inline Container(const LBlockCollection& c): elm::AllocTable<T>(new T[c.sets()]) { }
-	inline Container(const Container& c): elm::AllocTable<T>(c) { }
-	inline void configure(const LBlockCollection& c) { AllocTable<T>::set(c.sets(), new T[c.sets()]); }
+	inline Container(const LBlockCollection& c): elm::AllocArray<T>(new T[c.sets()]) { }
+	inline Container(const Container& c): elm::AllocArray<T>(c) { }
+	inline void configure(const LBlockCollection& c) { AllocArray<T>::set(c.sets(), new T[c.sets()]); }
 };
 
 extern p::id<Container<ACS> > MUST_INIT;

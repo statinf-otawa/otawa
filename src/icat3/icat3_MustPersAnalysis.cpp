@@ -45,13 +45,13 @@ ACS::ACS(void) {
 
 /**
  */
-ACS::ACS(int n, age_t d): AllocTable<age_t>(n) {
+ACS::ACS(int n, age_t d): AllocArray<age_t>(n) {
 	fill(d);
 }
 
 /**
  */
-ACS::ACS(const ACS& a): AllocTable<age_t>(a) {
+ACS::ACS(const ACS& a): AllocArray<age_t>(a) {
 }
 
 /**

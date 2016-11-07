@@ -1038,7 +1038,7 @@ sem::cond_t Inst::condition(void) {
 
 // alias table
 static string table[] = { "elf_40", "arm2" };
-static elm::Table<string> loader_aliases(2, table);
+static Array<string> loader_aliases(2, table);
 
 // loader definition
 class Loader: public otawa::Loader {

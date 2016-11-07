@@ -46,12 +46,12 @@ public:
 	void next(void);
 
 	inline opcode op(void) const { return opcode(item().op); }
-	inline t::int16 d(void) const { return item().d(); }
-	inline t::int16 a(void) const { return item().a(); }
-	inline t::int16 b(void) const { return item().b(); }
-	inline t::uint32 cst(void) const { return item().cst(); }
-	inline t::uint32 reg(void) const { return item().reg(); }
-	inline t::uint32 addr(void) const { return item().addr(); }
+	inline elm::t::int16 d(void) const { return item().d(); }
+	inline elm::t::int16 a(void) const { return item().a(); }
+	inline elm::t::int16 b(void) const { return item().b(); }
+	inline elm::t::uint32 cst(void) const { return item().cst(); }
+	inline elm::t::uint32 reg(void) const { return item().reg(); }
+	inline elm::t::uint32 addr(void) const { return item().addr(); }
 
 private:
 	sem::Block bb;
