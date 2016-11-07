@@ -197,13 +197,12 @@ private:
 // Plugin class
 class Plugin: public ilp::ILPPlugin {
 public:
-	Plugin(void): ILPPlugin("cplex", Version(1, 0, 0), OTAWA_ILP_VERSION) {
-	}
+	Plugin(void): ILPPlugin(make("cplex", OTAWA_ILP_VERSION)
+		.version(Version(1, 0, 0))
+		.description("ILP plugin based on CPlex")
+		.license(Manager::copyright)) { }
 
-	// ILPPlugin overload
-	virtual ilp::System *newSystem(void) {
-		return new System(this);
-	}
+	virtual ilp::System *newSystem(void) { return new System(this); }
 
 };
 

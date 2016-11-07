@@ -283,6 +283,12 @@ WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) 
 
 
 /**
+ * Copyright of OTAWA.
+ */
+CString Manager::copyright = "Copyright (c) 2016, University of Toulouse";
+
+
+/**
  * Look for loader of the given path.
  * @param path	Path to the looked file.
  * @return		Found loader or NULL.

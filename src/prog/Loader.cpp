@@ -45,6 +45,7 @@ namespace otawa {
  * @param version			Version of the loader.
  * @param plugger_version	Version of the plugger (must be OTAWA_LOADER_VERSION).
  * @param aliases			Name aliases.
+ * @deprecated	Use Loader(make&) instead.
  */
 Loader::Loader(
 	CString name,
@@ -53,6 +54,14 @@ Loader::Loader(
 	const Plugin::aliases_t& aliases)
 : Plugin(name, plugger_version, OTAWA_LOADER_NAME, aliases) {
 	_plugin_version = version;
+}
+
+
+/**
+ * Build a loader plugin using a maker.
+ * @param maker	Maker to use.
+ */
+Loader::Loader(make& maker): Plugin(maker.hook(OTAWA_LOADER_NAME)) {
 }
 
 

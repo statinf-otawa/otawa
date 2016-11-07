@@ -23,6 +23,7 @@ class System;
 // ILPPlugin class
 class ILPPlugin: public elm::system::Plugin {
 public:
+	ILPPlugin(make& maker);
 	ILPPlugin(
 		elm::CString name,
 		const elm::Version& version,

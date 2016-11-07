@@ -80,6 +80,7 @@ public:
 	ilp::System *newILPSystem(String plugin = "");
 	elm::system::Path retrieveConfig(const elm::system::Path& path);
 	Loader *findFileLoader(const elm::system::Path& path);
+	static CString copyright;
 
 private:
 	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);

@@ -1008,69 +1008,31 @@ void Process::decodeRegs(otawa::Inst *oinst, elm::genstruct::AllocatedTable<hard
 // otawa::loader::ppc::Loader class
 class Loader: public otawa::Loader {
 public:
-	Loader(void);
-
-	// otawa::Loader overload
-	virtual CString getName(void) const;
-	virtual otawa::Process *load(Manager *_man, CString path, const PropList& props);
-	virtual otawa::Process *create(Manager *_man, const PropList& props);
-};
-
-
-// Alias table
-static string table[] = {
-	"elf_20"
-};
-static Array<string> ppc_aliases(1, table);
-
-
-/**
- * Build a new loader.
- */
-Loader::Loader(void)
-: otawa::Loader("ppc", Version(2, 0, 0), OTAWA_LOADER_VERSION, ppc_aliases) {
-}
-
-
-/**
- * Get the name of the loader.
- * @return Loader name.
- */
-CString Loader::getName(void) const
-{
-	return "ppc";
-}
-
-
-/**
- * Load a file with the current loader.
- * @param man		Caller manager.
- * @param path		Path to the file.
- * @param props	Properties.
- * @return	Created process or null if there is an error.
- */
-otawa::Process *Loader::load(Manager *man, CString path, const PropList& props)
-{
-	otawa::Process *proc = create(man, props);
-	if (!proc->loadProgram(path))
-	{
-		delete proc;
-		return 0;
+	Loader(void) : otawa::Loader(make("ppc", OTAWA_LOADER_VERSION)
+		.version(Version(2, 0, 0))
+		.alias("elf_20")
+		.description("PowerPC architecture loader (VLE support)")
+		.license(Manager::copyright)
+	) {
 	}
-	else
-		return proc;
-}
 
+	virtual CString getName(void) const { return "ppc"; }
 
-/**
- * Create an empty process.
- * @param man		Caller manager.
- * @param props	Properties.
- * @return		Created process.
- */
-otawa::Process *Loader::create(Manager *man, const PropList& props) {
-	return new Process(man, new Platform(props), props);
-}
+	virtual otawa::Process *load(Manager *man, CString path, const PropList& props) {
+		otawa::Process *proc = create(man, props);
+		if (!proc->loadProgram(path))
+		{
+			delete proc;
+			return 0;
+		}
+		else
+			return proc;
+	}
+
+	virtual otawa::Process *create(Manager *man, const PropList& props)  {
+		return new Process(man, new Platform(props), props);
+	}
+};
 
 
 /**
@@ -1078,11 +1040,10 @@ otawa::Process *Loader::create(Manager *man, const PropList& props) {
  */
 class Plugin: public ProcessorPlugin {
 public:
-	Plugin(): ProcessorPlugin("otawa::ppc", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual elm::genstruct::Table<AbstractRegistration *>& processors(void) const {
-		static elm::genstruct::Table<AbstractRegistration *> none;
-		return none;
-	}
+	Plugin(void): ProcessorPlugin(make("otawa::ppc", OTAWA_PROC_VERSION)
+			.version(Version(1, 0, 0))
+			.description("plugin providing access to PowerPC specific resources")
+			.license(Manager::copyright)) { }
 };
 
 } }	// namespace otawa::ppc2

@@ -843,26 +843,13 @@ void System::dumpSolution(io::Output& out) {
 // LPSolvePlugin class
 class Plugin: public ilp::ILPPlugin {
 public:
-	Plugin(void);
+	Plugin(void): ILPPlugin(make("lp_solve5", OTAWA_ILP_VERSION)
+		.version(Version(1, 1, 0))
+		.description("ILP plugin based on lp_solve v5")
+		.license(Manager::copyright)) { }
 
-	// ILPPlugin overload
-	virtual System *newSystem(void);
+	virtual System *newSystem(void) { return new System(this); }
 };
-
-
-/**
- * Build the plugin.
- */
-Plugin::Plugin(void)
-: ILPPlugin("lp_solve5", Version(1, 1, 0), OTAWA_ILP_VERSION) {
-}
-
-
-/**
- */
-System *Plugin::newSystem(void) {
-	return new System(this);
-}
 
 } } // otawa::lp_solve5
 

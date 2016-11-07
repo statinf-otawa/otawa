@@ -81,13 +81,22 @@ static string makeCanonical(string name) {
  * 							or canonical name with "/").
  * @param version			Version of the plugin.
  * @param plugger_version	Version for the plugger interface (OTAWA_PROC_VERSION).
+ * @deprecated	Use ProcessorPlugin(make&) instead.
  */
 ProcessorPlugin::ProcessorPlugin(
 	cstring name,
 	const elm::Version& version,
 	const elm::Version& plugger_version)
-:	elm::system::Plugin(makeCanonical(name), plugger_version, OTAWA_PROC_NAME) {
+:	elm::sys::Plugin(makeCanonical(name), plugger_version, OTAWA_PROC_NAME) {
 	_plugin_version = version;
+}
+
+
+/**
+ * Build a processor plugin using a maker.
+ * @param maker	Maker describing the plugin.
+ */
+ProcessorPlugin::ProcessorPlugin(make& make): Plugin(make.hook(OTAWA_PROC_NAME)) {
 }
 
 

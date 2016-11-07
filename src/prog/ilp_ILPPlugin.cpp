@@ -103,6 +103,7 @@ namespace otawa { namespace ilp {
  * @param name				Plugin name.
  * @param plugger_version	Required plugger version.
  * @param					Allow having static plugins (@see elm::system::Plugin).
+ * @deprecated	Use ILPPlugin(make&) instead.
  */
 ILPPlugin::ILPPlugin(
 		elm::CString name,
@@ -110,6 +111,14 @@ ILPPlugin::ILPPlugin(
 		const elm::Version& plugger_version)
 : Plugin(name, plugger_version, OTAWA_ILP_NAME) {
 		_plugin_version = version;
+}
+
+
+/**
+ * Build an ILP plugin using a maker.
+ * @param maker	Maker describing the plugin.
+ */
+ILPPlugin::ILPPlugin(make& maker): Plugin(maker.hook(OTAWA_ILP_NAME)) {
 }
 
 

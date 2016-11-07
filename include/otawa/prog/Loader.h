@@ -33,9 +33,12 @@ class Loader: public elm::system::Plugin {
 protected:
 	virtual ~Loader(void) { };
 public:
-	Loader(CString name, Version version, Version plugger_version,
-	       const elm::system::Plugin::aliases_t & aliases
-	       = elm::system::Plugin::aliases_t::null);
+	Loader(
+		CString name,
+		Version version,
+		Version plugger_version,
+		const elm::system::Plugin::aliases_t & aliases = elm::system::Plugin::aliases_t::null);
+	Loader(make& maker);
 
 	virtual CString getName(void) const = 0;
 	virtual Process *load(Manager *man, CString path, const PropList& props) = 0;

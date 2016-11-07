@@ -1036,15 +1036,15 @@ sem::cond_t Inst::condition(void) {
 
 /****** loader definition ******/
 
-// alias table
-static string table[] = { "elf_40", "arm2" };
-static Array<string> loader_aliases(2, table);
-
 // loader definition
 class Loader: public otawa::Loader {
 public:
-	Loader(void): otawa::Loader("arm", Version(VERSION), OTAWA_LOADER_VERSION, loader_aliases) {
-	}
+	Loader(void): otawa::Loader(make("arm", OTAWA_LOADER_VERSION)
+		.version(VERSION)
+		.description("loader for ARM 32-bit architecture")
+		.license(Manager::copyright)
+		.alias("elf_40")
+		.alias("arm2")) { }
 
 	virtual CString getName(void) const { return "arm"; }
 
@@ -1067,8 +1067,10 @@ public:
 // plugin definition
 class Plugin: public otawa::ProcessorPlugin {
 public:
-	Plugin(void): otawa::ProcessorPlugin("otawa/arm", Version(VERSION), OTAWA_PROC_VERSION) {
-	}
+	Plugin(void): otawa::ProcessorPlugin(make("otawa/arm", OTAWA_PROC_VERSION)
+		.version(Version(VERSION))
+		.description("plugin providing access to ARM specific resources")
+		.license(Manager::copyright)) { }
 };
 
 } }		// otawa::arm2
