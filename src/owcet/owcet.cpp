@@ -188,7 +188,7 @@ protected:
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
 			cerr << "ERROR: no WCET computed (see errors above)." << io::endl;
-		else
+		else if(scr.version() == 1)
 			cout << "WCET[" << entry << "] = " << wcet << " cycles\n";
 
 		// ILP dump

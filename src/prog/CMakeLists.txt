@@ -176,6 +176,7 @@ set(libotawa_SOURCES
 	"cache_LBlockBuilder.cpp"
 
 #   program representation module
+	"prog_Bundle.cpp"
 	"prog_File.cpp"
 	"prog_FixedTextDecoder.cpp"
 	"prog_Label.cpp"

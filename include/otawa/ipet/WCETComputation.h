@@ -32,6 +32,7 @@ class WCETComputation: public Processor {
 public:
 	WCETComputation(void);
 	static p::declare reg;
+	static p::id<bool> DO_DISPLAY;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
@@ -39,6 +40,7 @@ protected:
 
 private:
 	ilp::System *system;
+	bool do_display;
 };
 
 } } // otawa::ipet

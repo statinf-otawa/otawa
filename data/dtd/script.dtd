@@ -11,6 +11,7 @@
 %xslt_dtd;
 
 <!ELEMENT otawa-script	(name,info?,path*,id,platform?,configuration?,script)>
+<!ATTLIST otawa-script	version	CDATA	(1|2)	"1" 
 
 <!ELEMENT name			(#PCDATA)>
 <!ELEMENT info			ANY>					<!-- should be XHTML -->

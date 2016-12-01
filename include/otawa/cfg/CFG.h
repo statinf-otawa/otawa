@@ -26,6 +26,7 @@
 #include <otawa/prog/Inst.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/sgraph/DiGraph.h>
+#include "../prog/Bundle.h"
 
 using namespace elm;
 
@@ -121,13 +122,15 @@ public:
 	~BasicBlock(void);
 
 	inline Address address(void) const { return first()->address(); }
-	int size(void);
-	inline Address topAddress(void) { return address() + size(); }
+	int size(void) const;
+	inline Address topAddress(void) const { return address() + size(); }
 
 	inline Inst *first(void) const { return _insts[0]; }
 	Inst *control(void);
 	Inst *last(void);
 	int count(void) const;
+	inline bool contains(Inst *i) const
+		{ return address() <= i->address() && i->address() < topAddress(); }
 
 	class InstIter: public genstruct::AllocatedTable<Inst *>::Iterator {
 	public:
@@ -136,13 +139,13 @@ public:
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 
-	class BundleIter: public PreIterator<BundleIter, Inst *const> {
+	class BundleIter: public PreIterator<BundleIter, Bundle> {
 	public:
 		inline BundleIter(void) { }
 		inline BundleIter(const BasicBlock *bb): _iter(bb) { }
-		inline Inst *const &item(void) const { return _iter.item(); }
+		inline Bundle item(void) const { return Bundle(_iter.item()); }
 		inline bool ended(void) const { return _iter.ended(); }
-		inline void next(void) { while(!ended() && item()->isBundle()) _iter.next(); _iter.next(); }
+		inline void next(void) { while(!ended() && _iter->isBundle()) _iter.next(); _iter.next(); }
 	private:
 		InstIter _iter;
 	};

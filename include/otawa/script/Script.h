@@ -81,6 +81,8 @@ public:
 			: genstruct::Vector<ScriptItem *>::Iterator(script.items) { }
 	};
 
+	inline int version(void) const { return _version; }
+
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 
@@ -94,6 +96,7 @@ private:
 	PropList props;
 	genstruct::Vector<ScriptItem *> items;
 	bool only_config, timed;
+	int _version;
 };
 
 // script path

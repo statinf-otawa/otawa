@@ -47,6 +47,13 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
 	.maker<WCETComputation>();
 
 
+/**
+ * Configuration item for WCETComputation. Default to false, if set to true,
+ * the processor will output the WCET at the end of computation.
+ */
+p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation", false);
+
+
 /* BB time statistics collector */
 class BBTimeCollector: public BBStatCollector {
 public:
@@ -88,6 +95,9 @@ private:
  * This class is used for computing the WCET from the system found in the root
  * CFG.
  *
+ * @par Configuration
+ * @li @ref WCETComputation::DO_DISPLAY
+ *
  * @par Required Features
  * @li @ref ipet::CONTROL_CONSTRAINTS_FEATURE
  * @li @ref ipet::OBJECT_FUNCTION_FEATURE
@@ -104,7 +114,7 @@ private:
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(void): Processor(reg), system(0) {
+WCETComputation::WCETComputation(void): Processor(reg), system(0), do_display(false) {
 }
 
 
@@ -132,6 +142,8 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
 	else
 		log << "ERROR: " << system->lastErrorMessage() << io::endl;
 	WCET(ws) = wcet;
+	if(do_display)
+		cout << "wcet[" << otawa::ENTRY_CFG(ws)->label() << "] = " << wcet << " cycles\n";
 }
 
 

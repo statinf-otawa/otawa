@@ -523,9 +523,10 @@ protected:
 		// verbose display
 		if(isVerbose() && config)
 			for(int i = 0; i < config->banks().count(); i++)
-				log << "\t\t" << config->banks()[i]->type() << "\t"
+				log << "\t\t" << config->banks()[i]->name() << "\t"
 					<< config->banks()[i]->address() << "-"
-					<< (config->banks()[i]->topAddress() - 1) << io::endl;
+					<< (config->banks()[i]->topAddress() - 1)
+					<< io::endl;
 	}
 
 private:

@@ -369,6 +369,17 @@ void Script::work(WorkSpace *ws) {
 	elm::system::Path initial_base = doc->getBaseURI();
 	initial_base = initial_base.parent().absolute();
 
+	// look the version
+	Option<xom::String> version = doc->getRootElement()->getAttributeValue("version");
+	if(!version)
+		_version = 1;
+	else if(*version == "1")
+		_version = 1;
+	else if(*version == "2")
+		_version = 2;
+	else
+		throw ProcessorException(*this, _ << "unsupported version of script: " << *version);
+
 	// build the script items
 	items.clear();
 	xom::Element *oroot = doc->getRootElement();

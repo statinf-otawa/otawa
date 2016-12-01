@@ -491,7 +491,7 @@ BasicBlock::~BasicBlock(void) {
  * Get size of the basic block.
  * @return	Block size (in bytes).
  */
-int BasicBlock::size(void) {
+int BasicBlock::size(void) const {
 	return _insts[_insts.count() - 1]->topAddress() - _insts[0]->address();
 }
 
