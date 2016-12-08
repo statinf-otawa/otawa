@@ -57,7 +57,7 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 string Config::toString(int n) const {
 	StringBuffer buf;
 	for(int i = 0; i < n; i++)
-		buf << (bit(i) ? "+" : "-");
+		buf << (bit(i) ? char(i + 'a') : '-');
 	return buf.toString();
 }
 
@@ -179,7 +179,7 @@ void ConfigSet::dump(io::Output& out, int n) {
 string maskToString(t::uint32 mask, int len) {
 	StringBuffer buf;
 	for(int i = 0; i < len; i++)
-		buf << ((mask & (1 << i)) ? "!" : "_");
+		buf << ((mask & (1 << i)) ? char(i + 'a') : '_');
 	return buf.toString();
 }
 
@@ -216,7 +216,6 @@ void EventCollector::contribute(case_t c, ilp::Var *var) {
  * @param sys	System to create constraints in.
  */
 void EventCollector::make(ilp::System *sys) {
-	//cerr << "DEBUG: making constraint for " << evt->inst()->address() << "\t" << evt->name() << "(type = " << int(evt->type()) << ")\n";
 	int s = PREFIX_OFF ;
 	if(evt->type() == EDGE)
 		s = BLOCK_OFF;
@@ -601,7 +600,7 @@ void EdgeTimeBuilder::processSequence(void) {
 		}
 		while(inst->inst() != evt->inst()) {
 			inst++;
-			ASSERT(inst);
+			ASSERTP(inst, "no instruction for event " << evt->inst()->address() << ":" << evt->inst());
 		}
 
 		// apply the event
@@ -616,7 +615,7 @@ void EdgeTimeBuilder::processSequence(void) {
 	if(logFor(LOG_BB)) {
 		log << "\t\t\t\tdynamic events = " << events.count() << io::endl;
 		for(int i = 0; i < events.count(); i++)
-			log << "\t\t\t\t" << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
+			log << "\t\t\t\t(" << char(i + 'a') << ") " << events[i].fst->inst()->address() << "\t" << events[i].fst->name()
 				<< " " << events[i].snd << io::endl;
 	}
 
@@ -672,20 +671,23 @@ void EdgeTimeBuilder::processSequence(void) {
 			else
 				outputGraph(graph, target->index(), 0, mask, _ << target << " (cost = " << cost << ")");
 		}
+
 		// add the new time
-		bool done = false;
-		for(int j = 0; j < confs.length(); j++)
-			if(confs[j].time() == cost) {
-				done = true;
-				confs[j].add(Config(mask));
+		int j;
+		for(j = 0; j < confs.length(); j++)
+			if(cost == confs[j].time())
+				break;
+			else if(cost < confs[j].time()) {
+				confs.insert(j, ConfigSet(cost));
 				break;
 			}
-		if(!done) {
+		if(j >= confs.length())
 			confs.add(ConfigSet(cost));
-			confs[confs.length() - 1].add(Config(mask));
-		}
+		confs[j].add(Config(mask));
 	}
-	if(isVerbose())
+
+	//if(isVerbose())
+	if(logFor(LOG_BB))
 		displayConfs(confs, events);
 	delete graph;
 
@@ -801,7 +803,6 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 	ConfigSet set;
 	for(int i = confs.length() - 1; i >= 0; i--)
 		set.push(confs[i]);
-	//cerr << "DEBUG: init = " << set.isFeasible(events.length()) << io::endl;
 
 	// computation
 	for(p = 1; p < confs.length(); p++) {
@@ -813,7 +814,6 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 
 		// select the best split
 		float cost = sep_factor * (min_high - max_low) - span_factor * (max_low - min_low);
-		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
 		if(cost > best_cost && set.isFeasible(events.length())) {
 			best_p = p;
 			best_cost = cost;
@@ -830,11 +830,13 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
  * @param confs		List of configuration to display.
  */
 void EdgeTimeBuilder::displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events) {
-	for(int i = 0; i < confs.length(); i++) {
-		log << "\t\t\t\t" << confs[i].time() << " -> ";
-		for(ConfigSet::Iter conf(confs[i]); conf; conf++)
-			log << " " << (*conf).toString(events.length());
-		log << io::endl;
+	if(confs) {
+		for(int i = 0; i < confs.length(); i++) {
+			log << "\t\t\t\t[" << i << "] cost = " << confs[i].time() << " -> ";
+			for(ConfigSet::Iter conf(confs[i]); conf; conf++)
+				log << " " << (*conf).toString(events.length());
+			log << io::endl;
+		}
 	}
 }
 
@@ -870,7 +872,6 @@ ParExeNode *EdgeTimeBuilder::getBranchNode(void) {
  */
 void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 	static string pred_msg = "pred";
-	//cerr << "DEBUG: apply " << event->name() << io::endl;
 
 	switch(event->kind()) {
 
@@ -959,7 +960,6 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
  * @param inst		Instruction to apply to.
  */
 void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
-	//cerr << "DEBUG: rollback " << event->name() << io::endl;
 
 	switch(event->kind()) {
 
@@ -1090,7 +1090,6 @@ void EdgeTimeBuilder::applyFloppySplit(const config_list_t& confs) {
 			+-int(feasible) * (min_high - max_low);
 		if (isVerbose())
 			log << "\t\t\t p = " << p << " -> " << cost << io::endl;
-		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
 		if(cost > best_cost) {
 			best_p = p;
 			best_cost = cost;
@@ -1140,7 +1139,8 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		set.push(confs[i]);
 
 	// computation
-	for(int p = 1; p <= confs.length(); p++) {
+	//for(int p = 1; p <= confs.length(); p++) {	// TODO -- why this error? Is it really an error?
+	for(int p = 1; p < confs.length(); p++) {
 
 		// update set and values
 		set.pop(confs[p - 1]);
@@ -1167,7 +1167,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 			x_hts = weight;
 		ot::time cost = x_hts * confs.top().time() + (weight - x_hts) * confs[p - 1].time();
 		if (isVerbose())
-			log << "\t\t\t p = " << p << ", cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
+			log << "\t\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
 
 		// look for best cost
 		if(cost < best_cost) {
@@ -1176,7 +1176,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		}
 	}
 	if (logFor(LOG_BB))
-		log << "\t\t\tbest_p = " << best_p << io::endl;
+		log << "\t\t\t\tbest HTS [" << best_p << " - " << (confs.length() - 1) << "]\n";
 
 	// look in the split
 	ConfigSet hts;
@@ -1221,7 +1221,6 @@ void EdgeTimeBuilder::applyStrictSplit(const config_list_t& confs) {
 	ConfigSet set;
 	for(int i = confs.length() - 1; i >= 0; i--)
 		set.push(confs[i]);
-	//cerr << "DEBUG: init = " << set.isFeasible(events.length()) << io::endl;
 
 	// computation
 	for(p = 1; p < confs.length(); p++) {
@@ -1233,7 +1232,6 @@ void EdgeTimeBuilder::applyStrictSplit(const config_list_t& confs) {
 
 		// select the best split
 		float cost = sep_factor * (min_high - max_low) - span_factor * (max_low - min_low);
-		//log << "DEBUG: p = " << p << ", cost = " << cost << ", Ml = " << max_low << ", mh = " << min_high << ", ml = " << min_low << ", f = " << set.isFeasible(events.length()) << io::endl;
 		if(cost > best_cost && set.isFeasible(events.length())) {
 			best_p = p;
 			best_cost = cost;

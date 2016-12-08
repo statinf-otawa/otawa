@@ -51,7 +51,7 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
  * Configuration item for WCETComputation. Default to false, if set to true,
  * the processor will output the WCET at the end of computation.
  */
-p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation", false);
+p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation::DO_DISPLAY", false);
 
 
 /* BB time statistics collector */

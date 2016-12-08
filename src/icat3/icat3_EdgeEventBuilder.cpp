@@ -173,11 +173,11 @@ private:
 
 		// process the source
 		if(e.source() && use(e.source(), set))
-			make(e.source(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
+			make(e.sink(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 
 		// process the edge
 		if(e.edge() && use(e.edge(), set))
-			make(e.source(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
+			make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
 
 		// process the
 		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
@@ -199,7 +199,7 @@ private:
 			age_t age = mustpers->must(acs)[lb->index()];
 			if(0 <= age && age < A)
 				cat = AH;
-			else {
+			else if(b) {
 				LoopIter h(b);
 				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
 					age = mustpers->pers(acs).stack()[i][lb->index()];
