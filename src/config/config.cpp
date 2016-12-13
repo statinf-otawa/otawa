@@ -114,8 +114,8 @@ public:
 		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
 		installdir		(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path to install the component")),
 		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH")),
-		verbose			(SwitchOption::Make(*this).cmd("--verbose").cmd("-V")				.description("provide details on the configuration process"))
-
+		verbose			(SwitchOption::Make(*this).cmd("--verbose").cmd("-V")				.description("provide details on the configuration process")),
+		locals			(ListOption<string>::Make(*this).cmd("-L").cmd("--local")			.description("path for local dependent plugin").argDescription("PATH"))
 	{
 	}
 
@@ -208,9 +208,9 @@ protected:
 				// get the required plugins
 				for(int i = 0; i < deps.length(); i++) {
 					ProcessorPlugin *plugin = ProcessorPlugin::get(deps[i]);
-					if(!plugin)
+					if(!plugin && !lookupLocal(deps[i]))
 						throw option::OptionException(_ << "cannot find the plugin " << deps[i]);
-					if(!plugs.contains(plugin))
+					if(plugin && !plugs.contains(plugin))
 						plugs.add(plugin);
 				}
 
@@ -251,6 +251,10 @@ protected:
 			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++)
 				cout << ' ' << p->path();
 
+			// output local dependencies
+			for(int i = 0; i < locals.count(); i++)
+				cout << " -L" << locals[i];
+
 			// output RPath
 			if(rpath) {
 				elm::Vector<string> rpaths;
@@ -274,6 +278,21 @@ protected:
 	}
 
 private:
+
+	/**
+	 * Lookup for a local plugin.
+	 * @param ppath	Plugin path.
+	 */
+	Path lookupLocal(Path ppath) {
+		// TODO very light implementation - can be improved
+		string name = ppath.namePart() + ".eld";
+		for(int i = 0; i < locals.count(); i++) {
+			Path path = Path(locals[i]) / name;
+			if(path.exists())
+				return path;
+		}
+		return Path();
+	}
 
 	Path rpathFor(const Path& p, const Path& ipath) {
 		if(!ipath)
@@ -402,6 +421,7 @@ private:
 		otawa_version;
 
 	option::Value<string> make_plug;
+
 	SwitchOption
 		make_app,
 		make_tool,
@@ -410,6 +430,7 @@ private:
 		installdir,
 		rpath,
 		verbose;
+	option::ListOption<string> locals;
 
 	elm::Vector<sys::Plugin *> plugs;
 };
