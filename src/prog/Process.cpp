@@ -1111,12 +1111,12 @@ void Process::deleteNop(Inst *inst) {
 
 
 /**
- * Get the maximum number of temporaries used in the semantics instruction
+ * Get the maximum number of temporaries used in the semantic instruction
  * block.
  * @return	Maximum number of temporaries.
  */
 int Process::maxTemp(void) const {
-	return 16;
+	return 3;
 }
 
 
