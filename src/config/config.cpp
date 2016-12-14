@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	"Half" abstract interpretation class interface.
+ * otawa-config utility
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -208,10 +207,12 @@ protected:
 				// get the required plugins
 				for(int i = 0; i < deps.length(); i++) {
 					ProcessorPlugin *plugin = ProcessorPlugin::get(deps[i]);
-					if(!plugin && !lookupLocal(deps[i]))
+					if(plugin) {
+						if(!plugs.contains(plugin))
+							plugs.add(plugin);
+					}
+					else if(!lookupLocal(deps[i]))
 						throw option::OptionException(_ << "cannot find the plugin " << deps[i]);
-					if(plugin && !plugs.contains(plugin))
-						plugs.add(plugin);
 				}
 
 				// get the name and directory
@@ -251,10 +252,6 @@ protected:
 			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++)
 				cout << ' ' << p->path();
 
-			// output local dependencies
-			for(int i = 0; i < locals.count(); i++)
-				cout << " -L" << locals[i];
-
 			// output RPath
 			if(rpath) {
 				elm::Vector<string> rpaths;
@@ -283,15 +280,14 @@ private:
 	 * Lookup for a local plugin.
 	 * @param ppath	Plugin path.
 	 */
-	Path lookupLocal(Path ppath) {
-		// TODO very light implementation - can be improved
+	bool lookupLocal(Path ppath) {
 		string name = ppath.namePart() + ".eld";
 		for(int i = 0; i < locals.count(); i++) {
 			Path path = Path(locals[i]) / name;
 			if(path.exists())
-				return path;
+				return true;
 		}
-		return Path();
+		return false;
 	}
 
 	Path rpathFor(const Path& p, const Path& ipath) {
