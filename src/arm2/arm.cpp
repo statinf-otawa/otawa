@@ -771,6 +771,7 @@ public:
 	}
 	virtual void get(Address at, char *buf, int size)
 		{ arm_mem_read(_memory, at.offset(), buf, size); }
+	virtual int maxTemp (void) const { return 3; }
 
 	// otawa::arm::Info overload
 	virtual void *decode(otawa::Inst *inst) { return decode_raw(inst->address()); }
