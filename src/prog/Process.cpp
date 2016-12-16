@@ -1116,7 +1116,7 @@ void Process::deleteNop(Inst *inst) {
  * @return	Maximum number of temporaries.
  */
 int Process::maxTemp(void) const {
-	return 3;
+	return 16;
 }
 
 
