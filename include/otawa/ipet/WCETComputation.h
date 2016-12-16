@@ -34,6 +34,8 @@ public:
 	static p::declare reg;
 	static p::id<bool> DO_DISPLAY;
 
+	virtual void configure(const PropList& props = PropList::EMPTY);
+
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void collectStats(WorkSpace *ws);

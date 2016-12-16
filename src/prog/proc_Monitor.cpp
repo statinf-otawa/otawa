@@ -106,7 +106,8 @@ void Monitor::configure(const PropList& props) {
 	log_level_t level = LOG_LEVEL(props);
 	if(level) {
 		log_level = level;
-		flags |= IS_VERBOSE;
+		if(level >= LOG_BLOCK)
+			flags |= IS_VERBOSE;
 	}
 }
 
