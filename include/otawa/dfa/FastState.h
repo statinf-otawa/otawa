@@ -828,9 +828,9 @@ public:
 			if(regRowAlloc[i]) {
 				regRowAlloc[i] = 0;
 				int maxj = (i << rblock_shift) + rblock_size;
+				ASSERT(maxj < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
 				for(int j = i << rblock_shift; j < maxj; j++) {
 					regEachAlloc[j] = 0;
-					ASSERT(j < 24);
 				}
 			}
 		}
@@ -870,10 +870,10 @@ public:
 						}
 						else {
 							int maxj = (i << rblock_shift) + rblock_size;
+							ASSERT(maxj < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
 							for(int j = i << rblock_shift; j < maxj; j++) { // now mark the domain for each register
 								if(regEachAlloc[j])
 									regEachAlloc[j]->collect(&allocator);
-								ASSERT(j < 24);
 							} // end of each register
 						} // end of registers to mark
 					} // end of each row

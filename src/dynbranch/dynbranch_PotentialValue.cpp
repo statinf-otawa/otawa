@@ -299,6 +299,46 @@ PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
 	return res;
 }
 
+PotentialValue DIV(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
+		return PotentialValue::bot;
+	}
+	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			if(*itb == 0)
+				return PotentialValue::top;
+
+			res.insert((*ita)/(*itb));
+		}
+	return res;
+}
+
+PotentialValue DIVU(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
+		return PotentialValue::bot;
+	}
+	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			if(*itb == 0)
+				return PotentialValue::top;
+
+			t::int64 temp = (*ita)/(*itb);
+			t::uint32 temp2 = temp >> 32;
+			res.insert(temp2);
+		}
+	return res;
+}
+
 PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
 	if(a.count() == 0 || b.count() == 0)
 		return PotentialValue::bot;
