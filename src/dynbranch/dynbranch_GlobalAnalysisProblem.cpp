@@ -510,14 +510,53 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 				myGC->clearPV();
 				break ;
 			}
+
+			case sem::DIV:
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				myGC->addPV(&vala);
+				myGC->addPV(&valb);
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = DIV(vala,valb);
+					myGC->addPV(&result);
+					PotentialValue::tempPVAlloc = &result;
+					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results due to one of the argument is top, so we make an assumption that it is TOP
+				}
+				myGC->clearPV();
+
+				break ;
+			}
+
+			case sem::DIVU:
+			{
+				const PotentialValue& vala = readReg(out, inst.a());
+				const PotentialValue& valb = readReg(out, inst.b());
+				myGC->addPV(&vala);
+				myGC->addPV(&valb);
+				if(vala.length() && valb.length()) // when both of the lengths are larger than 0
+				{
+					PotentialValue result = DIVU(vala,valb);
+					myGC->addPV(&result);
+					PotentialValue::tempPVAlloc = &result;
+					setReg(out, inst.d(), result);
+					PotentialValue::tempPVAlloc = 0;
+				}
+				else {
+					setReg(out, inst.d(), PotentialValue::top); // because we don't know the results due to one of the argument is top, so we make an assumption that it is TOP
+				}
+				myGC->clearPV();
+
+				break ;
+			}
 			/*
             NEG,		// d <- -a
-            NOT,		// d <- ~a
-            AND,		// d <- a & b
-            OR,			// d <- a | b
             MULU,		// d <- unsigned(a) * unsigned(b)
-            DIV,		// d <- a / b
-            DIVU,		// d <- unsigned(a) / unsigned(b)
             MOD,		// d <- a % b
             MODU		// d <- unsigned(a) % unsigned(b)
               break ;
@@ -525,10 +564,11 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 			case sem:: IF:
 				break;
 			default:
-				elm::cerr << "WARNING: Unsupported instruction " << inst.op << " of " << inst << io::endl;
+				elm::cerr << "WARNING: unsupported semantic instruction " << inst.op << " of " << inst << io::endl;
 				elm::cerr << "i.a() = " << readReg(out, inst.a()) << io::endl;
 				elm::cerr << "i.b() = " << readReg(out, inst.b()) << io::endl;
-				ASSERT(0); // need to think about the implementation here! or we just leave it TOP?
+				setReg(out, inst.d(), PotentialValue::top);
+				// ASSERT(0); // need to think about the implementation here! or we just leave it TOP?
 				break;
 			} // end switch(inst.op) {
 		} // end of each semantic instruction

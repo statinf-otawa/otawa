@@ -138,14 +138,13 @@ static PotentialValue setFromClp(clp::Value v) {
 PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const clp::State & clpin, State & globalin, Vector<sem::inst> semantics) {
 	// TODO: instead copy the whole vector of semantic, use the index ?
 
-	/* Stop case
+	/* Stop case (semantics.length() < 1)
 	 * We have the value from the global analysis, the value from CLP (with filters), and direct access to memory
 	 * Since the global analysis only provide EXACT values, we first try to get them
 	 * If they aren't known by the global analysis, we ask the clp  analysis for them
-	 * If neither analysis has this value, we get this from memory, and if its a register... we continue but the result is going to be 99% wrong ..
+	 * If neither analysis has this value, we get this from memory, and if its a register... we continue but the result is going to be 99% wrong ...
 	 */
-
-	if(semantics.length() < 1) { // no other sem inst
+	if(semantics.length() < 1) { // no other sem inst, the STOP CASE
 		if (id.fst == MEM) {
 			// Priority of memory reading: RO MEM -> Global Analysis -> CLP
 			// the value is available in the READ ONLY REGION, then read from it
@@ -208,14 +207,15 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 		sem::inst i = semantics.top();
 		semantics.pop();
 
-		// when the Potential Value to trace is for a memory, we only care about STORE to memory
+		// if we are interested in the content of the memory address [id.snd], the only chances to change the content is when STOREs are issued.
+		// hence we are interested in only the STORE but ignore all the other sem inst
 		if (id.fst == MEM) { // MEMb(a) <- d
 
 			if (i.op == sem::STORE ) {
 				MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 				PotentialValue potentialAddr = find(bb,rega,clpin,globalin,semantics);
 
-				if ( potentialAddr.length() > 0 && potentialAddr.get(0) == id.snd) {
+				if ( potentialAddr.length() > 0 && potentialAddr.get(0) == id.snd) { // if the address specified with register i.a(), i.e. [i.a()], is found, and matches address from id
 					MemID valid = elm::Pair<Memtype,int>(REG,i.d());
 					PotentialValue r = find(bb,valid,clpin,globalin,semantics);
 					return r;
@@ -236,6 +236,14 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 
 			PotentialValue v;
 			switch(i.op) {
+				case sem::STORE:	// MEMb(a) <- d, i.e. store d, a, Byte, which does not change the reg d at all, hence skip and continue
+				case sem::SETP:		// page(d) <- cst
+				case sem::TRAP:		// perform a trap
+				case sem::NOP:
+				case sem::CONT:		// continue in sequence with next instruction
+				case sem::SCRATCH:	// d <- T
+					return find(bb,id,clpin,globalin,semantics);
+
 				case sem::NEG:		// d <- -a
 				case sem::NOT:		// d <- ~a
 				case sem::MUL:		// d <- a * b
@@ -244,21 +252,15 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				case sem::DIVU:		// d <- unsigned(a) / unsigned(b)
 				case sem::MOD:		// d <- a % b
 				case sem::MODU:		// d <- unsigned(a) % unsigned(b)
-				case sem::NOP:
-				case sem::TRAP:		// perform a trap
-				case sem::CONT:		// continue in sequence with next instruction
 				case sem::IF:		// continue if condition a is meet in register b, else jump c instructions
 				case sem::CMP:		// d <- a ~ b
 				case sem::CMPU:		// d <- a ~u b
-				case sem::STORE:	// MEMb(a) <- d
-				case sem::SETP:		// page(d) <- cst
-				elm::cout << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "fail to process sem inst: " << i << io::endl;
-				ASSERT(0);			// want to know, these are ignored instructions......!
-				return find(bb,id,clpin,globalin,semantics);
+					// elm::cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "not handled sem inst: " << i << io::endl;
+					elm::cerr << "WARNING: unsupported semantic instruction " << i << io::endl;
+					return find(bb,id,clpin,globalin,semantics);
 
-				case sem::SCRATCH:	// d <- T
 				case sem::BRANCH:	// perform a branch on content of register a
-				ASSERT(false);		// No branch in a BB
+					ASSERTP(false, "The BB should not contain other branch semantic instruction(s)!"); // No branch in a BB
 				break;
 
 				case sem::LOAD:// d <- MEMb(a)
@@ -269,11 +271,11 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 
 					// Get the value in memory from each possible addresses
 					for(PotentialValue::Iterator it(toget); it; it++) {
-						if(istate && istate->isInitialized(*it)) {
+						if(istate && istate->isInitialized(*it)) { // if this specific address is initialized (in the binary)
 							potential_value_type val = readFromMem(*it, i.type());// workspace()->process()->get(*it,val);
 							r.insert(val);
 						}
-						else {
+						else { // if the specific address is not initialized, then try to find this memory ....
 							int val = *it;
 							MemID memid = elm::Pair<Memtype,int>(MEM,val);
 							PotentialValue p = find(bb,memid,clpin,globalin,semantics);
@@ -381,7 +383,9 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				}
 
 				default:
-				// Unknown semantic instruction
+					// Unknown semantic instruction
+					ASSERTP(false, elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "unknown semantic instruction: " << i);
+
 				break;
 			}
 		}
@@ -390,7 +394,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 }
 
 /*
- * If the find() method returns empty PotentialValue, we are looking into the CLP state to see if we can obtain the value
+ * If the find() method returns empty PotentialValue, i.e. the length of the PotentialValue &pv is 0, we are looking into the CLP state to see if we can obtain the value
  */
 void DynamicBranchingAnalysis::takingCLPValueIfNecessary(PotentialValue& pv, int semanticInstIndex, const clp::Value& regOrAddr) {
 	if(pv.length() == 0) { // if there is no value for the potential value
@@ -402,8 +406,11 @@ void DynamicBranchingAnalysis::takingCLPValueIfNecessary(PotentialValue& pv, int
 }
 
 /**
+ * This is the place to find the target address of a BasicBlock that finishes with a branch.
+ *
  */
 void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
+	// semantics is a vector containing the semantic instructions of a given basic block in a reverse order (in respect with the instruction order)
 	Vector<sem::inst> semantics;
 	for(BasicBlock::InstIter inst(bb); inst; inst++) {
 		sem::Block block;
@@ -412,16 +419,17 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 			semantics.push(*semi);
 	}
 
+	// obtain "last" semantic instruction of the basic block
 	sem::inst i = semantics.top();
 	semantics.pop();
 
-	// not a branch, ignored
+	// not a branch, ignored // the last semantic instruction has to be a branch (at least) so that there can be a target to branch
 	if(i.op != sem::BRANCH)
 		return;
 
 	Domain globalStateBB = GLOBAL_STATE_IN(bb);
 
-	// start looking for the possible branching address
+	// start looking for the possible branching address, i.d() is the register containing the target address
 	MemID branchID = elm::Pair<Memtype, int>(REG, i.d());
 	PotentialValue addresses = find(bb, branchID, clp::STATE_IN(bb), globalStateBB, semantics);
 
@@ -575,6 +583,8 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		elm::genstruct::Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
 		elm::genstruct::Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
 
+
+		// to prepare the clpState, which is a Vector of CLP states. Each element of the vector is associated with a semantic instruction
 		clpState.clear();
 
 		int semInstIndex = 0;

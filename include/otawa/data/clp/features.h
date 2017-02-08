@@ -26,9 +26,9 @@
 
 namespace otawa {
 
-class ClpProblem;
-
 namespace clp {
+
+class ClpProblem;
 
 class Manager {
 public:
