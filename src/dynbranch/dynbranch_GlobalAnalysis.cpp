@@ -95,26 +95,25 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	entry.setFastState(fs);
 
-	dynbranch::GlobalAnalysisProblem prob(ws,isVerbose(), entry, myGC);
+	dynbranch::GlobalAnalysisProblem* prob = new dynbranch::GlobalAnalysisProblem(ws,isVerbose(), entry, myGC);
 
 	// adding the fundamental domains
-	myGC->add(&prob.bottom());
-	myGC->add(&prob.top());
-	myGC->add(&prob.entry());
-	myGC->setTempRegs(prob.getTempRegs());
+	myGC->add(&prob->bottom());
+	myGC->add(&prob->top());
+	myGC->add(&prob->entry());
+	myGC->setTempRegs(prob->getTempRegs());
 
+	WideningListener<dynbranch::GlobalAnalysisProblem>* list = new WideningListener<dynbranch::GlobalAnalysisProblem>(ws, *prob);
+	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> >* fp = new  WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> >(*list);
+	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > >* hai = new HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > >(*fp, *ws);
 
-	WideningListener<dynbranch::GlobalAnalysisProblem> list(ws, prob);
-	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > fp(list);
-	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > hai(fp, *ws);
-
-	myGC->setListener(list);
-	myGC->setFixPoint(fp);
-	myGC->setAbsInt(hai);
+	myGC->setListener(*list);
+	myGC->setFixPoint(*fp);
+	myGC->setAbsInt(*hai);
 
 	myGC->setDisableGC(false);
 
-	hai.solve(cfg);
+	hai->solve(cfg);
 
 	// Check the results
 	int i = 0 ;
@@ -123,9 +122,10 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 			if(!bbi->isBasic())
 				continue;
 
-			GLOBAL_STATE_IN(*bbi) = *list.results[cfgi->index()][bbi->index()];
+			GLOBAL_STATE_IN(*bbi) = *list->results[cfgi->index()][bbi->index()];
 		}
 	}
+
 
 	// clear the memory
 	DYNBRANCH_STACK_ALLOCATOR(ws) = myGC;
@@ -133,7 +133,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	if (time) {
 		watch.start() ;
-		for (int i=0 ; i < TIME_NB_EXEC_GLOBAL ; i++) {hai.solve(cfg) ; }
+		for (int i=0 ; i < TIME_NB_EXEC_GLOBAL ; i++) {hai->solve(cfg) ; }
 		watch.stop() ;
 		otawa::ot::time t = watch.delay() ;
 		cout << " ---------- Time stat for Global Analysis -----------" << endl  ;

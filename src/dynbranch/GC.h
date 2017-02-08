@@ -17,7 +17,7 @@ public:
 	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > *fixPoint;
 	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > *ai;
 
-	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
+	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { } // 50MB per chuck
 	//MyGC(WorkSpace* _ws): elm::GroupedGC(4*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
 
 	void add(const FastStateWrapper* d) {

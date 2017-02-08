@@ -36,7 +36,7 @@ namespace otawa { namespace dynbranch {
 PotentialValue PotentialValue::bot(false);
 PotentialValue PotentialValue::top(true);
 PotentialValue PotentialValue::DEFAULT(false);
-PotentialValue* PotentialValue::tempPVAlloc = 0;
+const PotentialValue* PotentialValue::tempPVAlloc = 0;
 
 unsigned int PotentialValue::MAGIC = 0;
 MyGC* PotentialValue::pvgc = 0;
@@ -100,7 +100,9 @@ PotentialValue& PotentialValue::operator=(const PotentialValue& a) {
 	// first copy the bTop
 	bTop = a.bTop;
 	// to save more time, call the operator directly
+	PotentialValue::tempPVAlloc = &a;
 	Vector<elm::t::uint32>::operator=(a);
+	PotentialValue::tempPVAlloc = 0;
 	return *this;
 
 //	elm::cout << "pv = is called" << io::endl;

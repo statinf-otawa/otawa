@@ -63,7 +63,7 @@ public:
 	static PotentialValue bot; // ⊥
 	static PotentialValue top; // ⊤
 	static PotentialValue DEFAULT;
-	static PotentialValue* tempPVAlloc;
+	static const PotentialValue* tempPVAlloc;
 	inline void dump(Output& o, PotentialValue &pv) { o << pv; }
 
 	inline bool equals(const PotentialValue &a, const PotentialValue &b) { return a == b; }
