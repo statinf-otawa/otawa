@@ -93,7 +93,7 @@ public:
 	inline const T& value(const PropList *list) const { return value(*list); }
 	inline Ref<T, Identifier<T> > value(PropList *list) const { return value(*list); }
 	inline void remove(PropList *list) const { list->removeProp(this); }
-	inline bool exists(PropList *list) const { return list->getProp(this); }
+	inline bool exists(const PropList *list) const { return list->getProp(this); }
 	inline void copy(PropList *list, Property *prop) { copy(*list, prop); }
 
 	// Property accessors
