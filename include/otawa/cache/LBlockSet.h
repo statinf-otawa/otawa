@@ -44,6 +44,8 @@ public:
 	public:
 		inline Iterator(LBlockSet& lbset):
 			elm::genstruct::Vector<LBlock *>::Iterator(lbset.listelbc) { }
+		inline Iterator(LBlockSet *lbset):
+			elm::genstruct::Vector<LBlock *>::Iterator(lbset->listelbc) { }
 	};
 	
 	// Methods

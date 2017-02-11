@@ -115,8 +115,8 @@ public:
 	inline const Address& address(void) const { return _address; }
 	inline const int size(void) const { return _size; }
 	inline type_t type(void) const { return _type; }
-	inline int latency(void) const { return _latency; }
-	inline int writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
+	inline time_t readLatency(void) const { return _latency; }
+	inline time_t writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
 	inline int power(void) const { return _power; }
 	inline int blockBits(void) const { return _block_bits; }
 	inline int blockSize(void) const { return 1 << _block_bits; }
@@ -131,12 +131,15 @@ public:
 	inline bool contains(Address addr) const
 		{ return addr.page() == address().page() && addr >= address() && addr <= (topAddress() - 1); }
 
+	// deprecated
+	inline time_t latency(void) const { return _latency; }
+
 private:
 	string _name;
 	Address _address;
 	int _size;
 	type_t _type;
-	int _latency, _power, _write_latency;
+	time_t _latency, _power, _write_latency;
 	int _block_bits;
 	genstruct::AllocatedTable<const Mode *> _modes;
 	bool _cached;
@@ -175,18 +178,30 @@ public:
 	static const Memory null, full;
 	Memory(bool full = false);
 	virtual ~Memory(void);
+
 	inline const genstruct::Table<const Bank *>& banks(void) const { return _banks; }
 	inline const genstruct::Table<const Bus *>& buses(void) const  { return _buses; }
 	static Memory *load(const elm::system::Path& path) throw(LoadException);
 	static Memory *load(xom::Element *element) throw(LoadException);
 	const Bank *get(Address address) const;
-	int worstAccess(void) const;
-	int worstReadAccess(void) const;
-	int worstWriteAccess(void) const;
+
+	time_t worstReadTime(void) const;
+	time_t worstWriteTime(void) const;
+	time_t worstAccessTime(void) const;
+
+	time_t readTime(Address a) const;
+	time_t writeTime(Address a) const;
+	time_t accessTime(Address a) const;
+
+	// deprecated
+	inline time_t worstAccess(void) const { return worstAccessTime(); }
+	inline time_t worstReadAccess(void) const { return worstReadTime(); }
+	inline time_t worstWriteAccess(void) const { return worstWriteTime(); }
 
 private:
 	genstruct::AllocatedTable<const Bank *> _banks;
 	genstruct::AllocatedTable<const Bus *> _buses;
+	mutable time_t _waccess, _wread, _wwrite;
 };
 
 // features

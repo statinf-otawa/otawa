@@ -426,7 +426,7 @@ Memory *Memory::load(const elm::system::Path& path) throw(LoadException) {
 /**
  * Memory constructor.
  */
-Memory::Memory(bool full) {
+Memory::Memory(bool full): _waccess(0), _wread(0), _wwrite(0) {
 	if(full) {
 		_banks.allocate(1);
 		_banks[0] = &Bank::full;
@@ -443,8 +443,10 @@ Memory::~Memory(void) {
  * Compute the worst access latency.
  * @return Worst access latency.
  */
-int Memory::worstAccess(void) const {
-	return max(worstReadAccess(), worstWriteAccess());
+time_t Memory::worstAccessTime(void) const {
+	if(_waccess == 0)
+		_waccess = max(worstReadAccess(), worstWriteAccess());
+	return _waccess;
 }
 
 
@@ -452,11 +454,11 @@ int Memory::worstAccess(void) const {
  * Compute the worst read access latency.
  * @return Worst read access latency.
  */
-int Memory::worstReadAccess(void) const {
-	int w = 0;
-	for(int i = 0; i < _banks.count(); i++)
-		w = max(w, _banks[i]->latency());
-	return w;
+time_t Memory::worstReadTime(void) const {
+	if(_wread == 0)
+		for(int i = 0; i < _banks.count(); i++)
+			_wread = max(_wread, _banks[i]->latency());
+	return _wread;
 }
 
 
@@ -464,11 +466,56 @@ int Memory::worstReadAccess(void) const {
  * Compute the worst read access latency.
  * @return Worst read access latency.
  */
-int Memory::worstWriteAccess(void) const {
-	int w = 0;
-	for(int i = 0; i < _banks.count(); i++)
-		w = max(w, _banks[i]->writeLatency());
-	return w;
+time_t Memory::worstWriteTime(void) const {
+	if(_wwrite == 0)
+		for(int i = 0; i < _banks.count(); i++)
+			_wwrite = max(_wwrite, _banks[i]->writeLatency());
+	return _wwrite;
+}
+
+/**
+ * Compute the read time for the given address. If a bank is found,
+ * return the read latency of the bank, else the worst read time
+ * is returned.
+ * @param a		Read address.
+ * @return		Worst-case read access time.
+ */
+time_t Memory::readTime(Address a) const {
+	const Bank *b = get(a);
+	if(!b)
+		return worstReadTime();
+	else
+		return b->readLatency();
+}
+
+/**
+ * Compute the write time for the given address. If a bank is found,
+ * return the write latency of the bank, else the worst write time
+ * is returned.
+ * @param a		Written address.
+ * @return		Worst-case write access time.
+ */
+time_t Memory::writeTime(Address a) const {
+	const Bank *b = get(a);
+	if(!b)
+		return worstWriteTime();
+	else
+		return b->writeLatency();
+}
+
+/**
+ * Compute the access time for the given address. If a bank is found,
+ * return the access latency of the bank, else the worst access time
+ * is returned. The access time is the maximum of read and write time.
+ * @param a		Read address.
+ * @return		Worst-case access time.
+ */
+time_t Memory::accessTime(Address a) const {
+	const Bank *b = get(a);
+	if(!b)
+		return worstAccessTime();
+	else
+		return max(b->readLatency(), b->writeLatency());
 }
 
 
