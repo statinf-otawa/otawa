@@ -26,7 +26,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cat/CATBuilder.h>
 #include <otawa/cat/CATDFA.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/XCFGVisitor.h>
 #include <otawa/hard/CacheConfiguration.h>

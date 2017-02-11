@@ -27,7 +27,11 @@
 #include <otawa/hard/Cache.h>
 #include <otawa/proc/Feature.h>
 
-namespace otawa { namespace icat3 {
+namespace otawa {
+
+class Block;
+
+namespace icat3 {
 
 using namespace elm;
 
@@ -142,6 +146,11 @@ typedef enum category_t {
 } category_t;
 io::Output& operator<<(io::Output& out, category_t cat);
 extern p::feature EDGE_EVENTS_FEATURE;
+
+// simple category approach
+extern p::feature EDGE_CATEGORY_FEATURE;
+extern p::id<category_t> CATEGORY;
+extern p::id<Block *> HEADER;
 
 } }		// otawa::icat3
 

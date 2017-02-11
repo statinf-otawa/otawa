@@ -30,6 +30,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/util/HalfAbsInt.h>
 
+using namespace otawa::cache;
 
 namespace otawa {
 

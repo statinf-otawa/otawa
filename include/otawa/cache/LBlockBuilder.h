@@ -34,6 +34,8 @@ namespace hard {
 	class Memory;
 }
 
+namespace cache {
+
 // LBlockBuilder class
 class LBlockBuilder: public BBProcessor {
 public:
@@ -53,9 +55,6 @@ private:
 	void addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
 };
 
-// Features
-extern Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE;
-
-} // otawa
+} }	// otawa::cachze
 
 #endif // OTAWA_CACHE_LBLOCKBUILDER_H

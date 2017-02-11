@@ -33,6 +33,7 @@
 #include <otawa/ipet.h>
 #include <otawa/cache/cat2/CachePenalty.h>
 
+using namespace otawa::cache;
 
 namespace otawa {
     extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
@@ -61,7 +62,7 @@ namespace otawa {
     			return cat;
     		}
     		else
-    			return otawa::INVALID_CATEGORY;
+    			return INVALID_CATEGORY;
     	}
 
     	inline Block *header(void) const { return hd; }
@@ -453,7 +454,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		LBlockManager lbm;
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
-			if (cat != otawa::INVALID_CATEGORY){
+			if (cat != INVALID_CATEGORY){
 				if (cat == cache::NOT_CLASSIFIED){
 					if (list->isEmpty()){
 						TimingContext *tctxt = new TimingContext();
@@ -498,7 +499,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		LBlockManager lbm;
 		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
 			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
-			if (cat != otawa::INVALID_CATEGORY){
+			if (cat != INVALID_CATEGORY){
 				if (cat == cache::FIRST_MISS){
 					Block *header = lbm.header();
 					//		elm::cout << "found header b" << header->number() << "\n";

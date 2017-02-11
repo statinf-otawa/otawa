@@ -8,9 +8,9 @@
 #define OTAWA_PROC_LBLOCKPROCESSOR_H
 
 #include <otawa/proc/Processor.h>
-#include <otawa/cache/LBlockSet.h>
+#include <otawa/cache/features.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 	
 // Extern class
 class LBlock;
@@ -32,6 +32,6 @@ private:
 	const hard::Cache *_cache;
 };
 
-} // otawa
+} }	// otawa::cache
 
 #endif // OTAWA_PROC_LBLOCKPROCESSOR_H

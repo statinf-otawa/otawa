@@ -21,7 +21,7 @@
 
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/Dominance.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/CatConstraintBuilder.h>
 #include <otawa/hard/Cache.h>
@@ -134,7 +134,7 @@ protected:
 		ASSERT(xi);
 		int xiv = int(system->valueOf(xi));
 		for(int i = 0; i < dbs.fst; i++)
-			if(dcache::CATEGORY(dbs.snd[i]) == otawa::NOT_CLASSIFIED)
+			if(dcache::CATEGORY(dbs.snd[i]) == NOT_CLASSIFIED)
 				sum += xiv;
 		return sum;
 	}

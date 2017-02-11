@@ -51,21 +51,26 @@ protected:
 
 // Ref class
 template <class T, class I>
-class Ref: public ImmutableRef<T, I> {
+class Ref {
 public:
-	inline Ref(PropList& _prop, const I& _id): ImmutableRef<T, I>(_prop, _id) { }
-	inline Ref(PropList *_prop, const I& _id): ImmutableRef<T, I>(_prop, _id) { }
-	inline Ref(const Ref<T, I>& ref): ImmutableRef<T, I>(ref)  { }
+	inline Ref(PropList& prop, const I& id): _prop(prop), _id(id) { }
+	inline Ref(PropList *prop, const I& id): _prop(*prop), _id(id) { }
+	inline Ref(const Ref<T, I>& ref): _prop(ref._prop), _id(ref._id)  { }
 
 	// accessors
-	inline PropList& props(void) const { return const_cast<PropList&>(ImmutableRef<T, I>::proplist()); }
-	inline const I& id(void) const { return ImmutableRef<T, I>::identifier(); }
+	inline PropList& props(void) const { return _prop; }
+	inline const I& id(void) const { return _id; }
+	inline const T& get(void) const { return ref(); }
+	inline bool exists(void) const { return _prop.hasProp(_id); }
+	inline T& ref(void) const { return id().ref(props()); }
+	inline T *addr(void) const { return id().addr(props()); }
+	inline void print(io::Output& out) const { _id.print(out, _prop.getProp(&_id)); }
+	inline operator T&(void) const { return ref(); }
+	inline T operator->(void) const { return _id.get(_prop, _id.defaultValue()); }
 
 	// mutators
 	inline const Ref& add(const T& value) const { id().add(props(), value); return *this; }
 	inline void remove(void) const { props().removeProp(id()); }
-	inline T& ref(void) const { return id().ref(props()); }
-	inline T *addr(void) const { return id().addr(props()); }
 
 	inline T& operator*(void) const { return ref(); }
 	inline T *operator&(void) const { return addr(); }
@@ -85,6 +90,10 @@ public:
 	inline Ref<T, I>& operator--(void) const { ref()--; return *this; }
 	inline Ref<T, I>& operator++(int) const { ref()++; return *this; }
 	inline Ref<T, I>& operator--(int) const { ref()--; return *this; }
+
+private:
+	PropList& _prop;
+	const I& _id;
 };
 
 // output

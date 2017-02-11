@@ -10,7 +10,7 @@
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/hard/CacheConfiguration.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 
 /**
  * @class LBlockProcessor
@@ -23,7 +23,7 @@ namespace otawa {
 MetaRegistration LBlockProcessor::reg(
 	"otawa::LBlockProcessor", Version(1, 0, 0),
 	p::base, &Processor::reg,
-	p::require, &COLLECTED_LBLOCKS_FEATURE,
+	p::require, &cache::COLLECTED_LBLOCKS_FEATURE,
 	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
 	p::end
 );
@@ -78,4 +78,4 @@ void LBlockProcessor::processLBlockSet(WorkSpace *ws, LBlockSet *set) {
 void LBlockProcessor::processLBlock(WorkSpace *ws, LBlockSet *set, LBlock *lblock) {
 }
 
-} // otawa
+} }	// otawa::cache

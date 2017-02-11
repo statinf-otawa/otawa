@@ -28,7 +28,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/prop/Identifier.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 
 namespace otawa {
 

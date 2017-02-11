@@ -1,6 +1,6 @@
 /*
  *	LBlock interface
- *	Copyright (c) 2005-12, IRIT UPS <casse@irit.fr>
+ *	Copyright (c) 2005-17, IRIT UPS <casse@irit.fr>
  *
  *	LBlockBuilder class interface
  *	This file is part of OTAWA
@@ -28,13 +28,11 @@
 #include <elm/inhstruct/DLList.h>
 #include <elm/PreIterator.h>
 #include <otawa/instruction.h>
-//#include <otawa/ccg/Node.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ilp/Var.h>
-//#include <otawa/cache/categorisation/CATNode.h>
 #include <otawa/hard/Cache.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 
 // Extern classes
 class LBlockSet;
@@ -48,7 +46,6 @@ public:
 	inline Address address(void) const { return _inst->address(); }
 	inline BasicBlock *bb(void) const { return _bb; }
 	inline ot::size size(void) const { return _size; }
-	//inline bool sameCacheBlock(const LBlock *block) const { return cacheBlock() == block->cacheBlock(); }
 	inline LBlockSet *lblockset(void) const { return lbs; }
 	int countInsts(void);
 	inline int cacheBlock(void) const { return cid - 1; }
@@ -70,6 +67,6 @@ private:
 
 Output& operator<<(Output& out, const LBlock *block);
 
-} // otawa
+} } // otawa::cache
 
 #endif // OTAWA_CACHE_LBLOCK_H

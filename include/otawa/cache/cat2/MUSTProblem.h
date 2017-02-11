@@ -32,6 +32,7 @@
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
 
+using namespace otawa::cache;
 
 namespace otawa {
 

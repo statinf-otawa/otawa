@@ -25,7 +25,7 @@
 #include <otawa/cache/cat2/MUSTProblem.h>
 #include <otawa/cache/cat2/PERSProblem.h>
 #include <otawa/cache/cat2/MAYProblem.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 
 namespace otawa {
 

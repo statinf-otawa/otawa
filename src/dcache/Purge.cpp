@@ -28,6 +28,8 @@
 #include <otawa/dcache/MUSTPERS.h>
 #include <otawa/dcache/ACSMayBuilder.h>
 
+using namespace otawa::cache;
+
 namespace otawa { namespace dcache {
 
 io::Output& operator<<(io::Output& out, purge_t purge) {

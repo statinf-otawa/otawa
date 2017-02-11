@@ -24,7 +24,7 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/ACSMayBuilder.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 #include <otawa/dcache/features.h>
 #include <otawa/dcache/MUSTPERS.h>
 

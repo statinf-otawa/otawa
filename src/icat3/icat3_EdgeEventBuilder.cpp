@@ -27,6 +27,7 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
+
 #include "features.h"
 #include "MustPersDomain.h"
 
@@ -45,7 +46,8 @@ io::Output& operator<<(io::Output& out, category_t cat) {
 	return out;
 }
 
-
+/**
+ */
 class ICacheEvent: public etime::Event {
 public:
 	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, Block *b, Block *head = 0,
@@ -113,6 +115,140 @@ private:
 };
 
 
+/**
+ * Abstract class to generate the instruction cache access categories.
+ */
+class AbstractCategoryBuilder: public Processor {
+	static p::declare reg;
+	AbstractCategoryBuilder(void): Processor(reg), coll(0), mustpers(0), A(0), mem(0) { }
+
+protected:
+
+	virtual void processCategory(Block *b, icache::Access& acc, category_t cat, Block *hd = 0) = 0;
+
+	virtual void processWorkSpace(WorkSpace *ws) {
+
+		// gather needed information
+		coll = icat3::LBLOCKS(ws);
+		ASSERT(coll);
+		A = coll->A();
+		const CFGCollection *cfgs = *otawa::INVOLVED_CFGS(ws);
+		ASSERT(cfgs);
+		mem = hard::MEMORY(ws);
+		ASSERT(mem);
+
+		// process basic blocks
+		for(int set = 0; set < coll->cache()->setCount(); set++)
+			if((*coll)[set].count() > 0) {
+				if(logFor(LOG_FUN))
+					log << "\tprocessing set " << set << io::endl;
+				MustPersDomain mustpers_inst(*coll, set);
+				mustpers = &mustpers_inst;
+				for(CFGCollection::BBIterator b(cfgs); b; b++)
+					if(b->isBasic())
+						for(BasicBlock::BasicIns e(b->toBasic()); e; e++) {
+							if(logFor(LOG_BLOCK))
+								log << "\t\tbasic edge " << (*e).source() << ", " << (*e).edge() << ", " << (*e).sink() << io::endl;
+							make(e, set);
+						}
+			}
+	}
+
+private:
+
+	bool use(const PropList *b, int set) {
+		const Bag<icache::Access>& accs = icache::ACCESSES(b);
+		for(int i = 0; i < accs.count(); i++)
+			if(LBLOCK(accs[i])->set() == set)
+				return true;
+		return false;
+	}
+
+	void make(const BasicBlock::BasicEdge& e, int set) {
+
+		// prepare ACS
+		MustPersDomain::t a = mustpers->bot();
+		if(e.source())
+			for(Block::EdgeIter i = e.source()->ins(); i; i++)
+				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
+		else
+			mustpers->join(a, mustpers->init());
+
+		// process the source
+		if(e.source() && use(e.source(), set))
+			make(e.sink(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
+
+		// process the edge
+		if(e.edge() && use(e.edge(), set))
+			make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
+
+		// process the
+		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
+		make(e.sink(), *e.edge(), icache::ACCESSES(e.sink()), a, set, false);
+	}
+
+	void make(Block *b, Edge& site, Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
+		for(int i = 0; i < accs.count(); i++) {
+
+			// obtain the access
+			const icache::Access& acc = accs[i];
+			LBlock *lb = LBLOCK(acc);
+			if(lb->set() != set)
+				continue;
+
+			// compute the category
+			category_t cat = NC;
+			Block *ch = 0;
+			age_t age = mustpers->must(acs)[lb->index()];
+			if(0 <= age && age < A)
+				cat = AH;
+			else if(b) {
+				LoopIter h(b);
+				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
+					age = mustpers->pers(acs).stack()[i][lb->index()];
+					if(0 <= age && age < A) {
+						ch = h;
+						cat = PERS;
+						break;
+					}
+				}
+			}
+
+			processCategory(b, accs[i], cat, ch);
+
+			// if required, obtain the time
+			time_t t = 0;
+			if(cat != AH) {
+				const hard::Bank *bnk = mem->get(lb->address());
+				ASSERT(bnk);
+				t = bnk->latency();
+			}
+
+			// build the event
+			etime::Event *e = new ICacheEvent(acc, t, cat, b, ch);
+			if(prefix) {
+				if(logFor(LOG_INST))
+					log << "\t\t\tprefix event " << e << io::endl;
+				etime::PREFIX_EVENT(site).add(e);
+			}
+			else {
+				if(logFor(LOG_INST))
+					log << "\t\t\tblock event " << e << io::endl;
+				etime::EVENT(site).add(e);
+			}
+			mustpers->update(acc, acs);
+		}
+	}
+
+	const LBlockCollection *coll;
+	MustPersDomain *mustpers;
+	int A;
+	const hard::Memory *mem;
+};
+
+
+/**
+ */
 class EdgeEventBuilder: public Processor {
 public:
 	static p::declare reg;

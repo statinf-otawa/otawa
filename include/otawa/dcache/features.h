@@ -21,7 +21,7 @@
 #ifndef OTAWA_DCACHE_FEATURES_H_
 #define OTAWA_DCACHE_FEATURES_H_
 
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/hard/Cache.h>

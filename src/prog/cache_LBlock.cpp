@@ -24,7 +24,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cfg/BasicBlock.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 
 // TODO		Add for each block set a map of used blocks.
 
@@ -140,4 +140,4 @@ Output& operator<<(Output& out, const LBlock *block) {
 	return out;
 }
 
-} // otawa
+} }	// otawa::cache

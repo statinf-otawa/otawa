@@ -79,7 +79,7 @@ FirstLastBuilder::FirstLastBuilder(void) : CFGProcessor("otawa::FirstLastBuilder
 	require(DOMINANCE_FEATURE);
 	require(LOOP_HEADERS_FEATURE);
 	require(LOOP_INFO_FEATURE);
-	require(COLLECTED_LBLOCKS_FEATURE);
+	require(cache::COLLECTED_LBLOCKS_FEATURE);
 	provide(ICACHE_FIRSTLAST_FEATURE);
 }
 

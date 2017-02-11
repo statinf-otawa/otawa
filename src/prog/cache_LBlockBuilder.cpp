@@ -21,6 +21,11 @@
  */
 
 #include <elm/assert.h>
+#include <elm/genstruct/HashTable.h>
+#include <elm/genstruct/Table.h>
+#include <elm/genstruct/Vector.h>
+
+#include <otawa/cache/features.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -31,11 +36,8 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Table.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 
 /**
  * @class LBlockBuilder
@@ -56,7 +58,7 @@ p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1,
 	.require(COLLECTED_CFG_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.require(hard::MEMORY_FEATURE)
-	.provide(COLLECTED_LBLOCKS_FEATURE)
+	.provide(cache::COLLECTED_LBLOCKS_FEATURE)
 	.maker<LBlockBuilder>();
 
 
@@ -197,7 +199,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
  * @li @ref LBLOCKS
  * @li @ref BB_LBLOCKS
  */
-Feature<LBlockBuilder> COLLECTED_LBLOCKS_FEATURE("otawa::COLLECTED_LBLOCKS_FEATURE");
+p::feature COLLECTED_LBLOCKS_FEATURE("otawa::COLLECTED_LBLOCKS_FEATURE", p::make<LBlockBuilder>());
 
 
-} // otawa
+} }	 // otawa::cache

@@ -25,53 +25,14 @@
 #include <elm/assert.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Feature.h>
+#include "features.h"
+
+#warning "This header is deprecated. Uses <otawa/cache/features.h> instead"
 
 namespace otawa {
 
 using namespace elm;
 class Block;
-
-namespace cache {
-
-// categories
-typedef enum category_t {
-	INVALID_CATEGORY = 0,
-	ALWAYS_HIT = 1,
-	FIRST_HIT = 2,
-	FIRST_MISS = 3,
-	ALWAYS_MISS = 4,
-	NOT_CLASSIFIED = 5
-} category_t;
-io::Output& operator<<(io::Output& out, category_t stats);
-
-
-// category stats
-class CategoryStats {
-public:
-	CategoryStats(void);
-	void reset(void);
-	inline void add(category_t cat)
-		{ ASSERT(cat <= NOT_CLASSIFIED); counts[cat]++; _total++; }
-	inline void addLinked(void) { _linked++; }
-
-	inline int get(category_t cat) const
-		{ ASSERT(cat <= NOT_CLASSIFIED); return counts[cat]; }
-	inline int total(void) const { return _total; }
-	inline int linked(void) const { return _linked; }
-	
-private:
-	int counts[NOT_CLASSIFIED + 1];
-	int _total, _linked;
-};
-io::Output& operator<<(io::Output& out, const CategoryStats& stats); 
-
-// stats
-extern Identifier<category_t> CATEGORY;
-extern Identifier<Block *> CATEGORY_HEADER;
-extern Identifier<CategoryStats *> CATEGORY_STATS;
-extern p::feature ICACHE_CATEGORY_FEATURE;
-
-}
 
 // deprecation
 typedef otawa::cache::category_t category_t;

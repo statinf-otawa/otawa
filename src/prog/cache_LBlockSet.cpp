@@ -21,7 +21,7 @@
  */
 #include <otawa/cache/LBlockSet.h>
 
-namespace otawa {
+namespace otawa { namespace cache {
 
 /**
  * This property is used for storing the list of L-Blocks. The type of its
@@ -112,4 +112,4 @@ LBlockSet::LBlockSet(int line, const hard::Cache *cache): linenumber(line), cblo
  * @return	Cache set number.
  */
 
-} // otawa
+} }	// otawa::cache

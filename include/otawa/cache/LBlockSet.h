@@ -1,6 +1,6 @@
 /*
  *	LBlockSet interface
- *	Copyright (c) 2005-12, IRIT UPS.
+ *	Copyright (c) 2005-17, IRIT UPS.
  *
  *	This file is part of OTAWA
  *
@@ -30,9 +30,9 @@
 #include <otawa/cache/LBlock.h>
 #include <elm/PreIterator.h>
 
-using namespace elm;
+namespace otawa { namespace cache {
 
-namespace otawa {
+using namespace elm;
 
 // LBlockSet class
 class LBlockSet {
@@ -69,6 +69,6 @@ private:
 extern Identifier<LBlockSet **> LBLOCKS;
 extern Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS;	 
 
-} //otawa
+} }	// otawa::cache
 
 #endif // OTAWA_CACHE_LBLOCKSET_H

@@ -20,7 +20,7 @@
  *	02110-1301  USA
  */
 
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 
 namespace otawa { namespace cache {
 
@@ -84,7 +84,7 @@ void CategoryStats::reset(void) {
  * @par Hooks
  * @li processor configuration property list
  */
-Identifier<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
+p::id<CategoryStats *> CATEGORY_STATS("otawa::CATEGORY_STATS", 0);
 
 
 /**
@@ -113,7 +113,7 @@ p::feature ICACHE_CATEGORY_FEATURE("otawa::ICACHE_CATEGORY_FEATURE", new Maker<N
  * @par Hooks
  * @li @ref LBlock
  */
-Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
+p::id<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
 
 
 /**
@@ -124,7 +124,7 @@ Identifier<category_t> CATEGORY("otawa::category", INVALID_CATEGORY);
  * @par Hooks
  * @li @ref LBlocks
  */
-Identifier<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
+p::id<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 
 
 /**
@@ -158,8 +158,8 @@ io::Output& operator<<(io::Output& out, const CategoryStats& stats) {
 
 }
 
-Identifier<category_t>& CATEGORY = cache::CATEGORY;
+Identifier<cache::category_t>& CATEGORY = cache::CATEGORY;
 Identifier<Block *>& CATEGORY_HEADER = cache::CATEGORY_HEADER;
-Identifier<CategoryStats *>& CATEGORY_STATS = cache::CATEGORY_STATS;
+Identifier<cache::CategoryStats *>& CATEGORY_STATS = cache::CATEGORY_STATS;
 
 }	// otawa::cache

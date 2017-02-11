@@ -6,7 +6,7 @@
 #include <otawa/cache/cat2/ACSMayBuilder.h>
 #include <otawa/cache/FirstLastBuilder.h>
 #include <otawa/util/LBlockBuilder.h>
-#include <otawa/cache/categories.h>
+#include <otawa/cache/features.h>
 
 namespace otawa {
 	
@@ -46,7 +46,7 @@ p::declare CAT2NCBuilder::reg = p::init("otawa::CAT2NCBuilder", Version(1, 0, 1)
 	.require(DOMINANCE_FEATURE)
 	.require(LOOP_HEADERS_FEATURE)
 	.require(LOOP_INFO_FEATURE)
-	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(cache::COLLECTED_LBLOCKS_FEATURE)
 	.require(ICACHE_ACS_FEATURE)
 	.require(ICACHE_ACS_MAY_FEATURE)
 	.require(ICACHE_FIRSTLAST_FEATURE)

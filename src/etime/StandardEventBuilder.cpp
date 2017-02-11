@@ -30,6 +30,8 @@
 #include <otawa/ipet.h>
 #include <otawa/dcache/features.h>
 
+using namespace otawa::cache;
+
 namespace otawa { namespace etime {
 
 
@@ -43,7 +45,7 @@ public:
 	virtual type_t type(void) const { return BLOCK; }
 
 	virtual occurrence_t occurrence(void) const {
-		switch(otawa::CATEGORY(_lb)) {
+		switch(CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return NEVER;
 		case FIRST_HIT:			return SOMETIMES;
 		case FIRST_MISS:		return SOMETIMES;
@@ -55,10 +57,10 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << *otawa::CATEGORY(_lb); }
+	virtual string detail(void) const { return _ << *CATEGORY(_lb); }
 
 	virtual int weight(void) const {
-		switch(otawa::CATEGORY(_lb)) {
+		switch(CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return 0;
 		case FIRST_HIT:
 		case ALWAYS_MISS:
