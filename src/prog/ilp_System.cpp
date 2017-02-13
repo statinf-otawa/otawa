@@ -614,6 +614,36 @@ bool System::hasDump(format_t fmt) {
 }
 
 /**
+ * @fn void System::addObject(const Term& t);
+ * Add a term to the objective function.
+ * @param t	Term to add.
+ */
+
+/**
+ * @fn void System::subObject(const Term& t);
+ * Subtract a term from the objective function.
+ * @param t	Term to subtract.
+ */
+
+/**
+ * Add an expression to the objective function.
+ * @param e	Expression to add.
+ */
+void System::addObject(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		addObject(*i);
+}
+
+/**
+ * Subtract an expression from the objective function.
+ * @param e	Expression to subtract.
+ */
+void System::subObject(const Expression& e) {
+	for(Expression::Iterator i(&e); i; i++)
+		subObject(*i);
+}
+
+/**
  * @fn int System::countVars(void);
  * Count the number of variables in the system.
  * @return	Variable count.

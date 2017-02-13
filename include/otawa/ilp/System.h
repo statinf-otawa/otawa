@@ -44,10 +44,8 @@ public:
 	virtual ~System(void) { }
 
 	// 1.0.0 & 1.1.0 interfaces
-	virtual Constraint *newConstraint(Constraint::comparator_t comp,
-		double constant = 0) = 0;
-	virtual Constraint *newConstraint(const string& label,
-		Constraint::comparator_t comp, double constant = 0) = 0;
+	virtual Constraint *newConstraint(Constraint::comparator_t comp, double constant = 0) = 0;
+	virtual Constraint *newConstraint(const string& label, Constraint::comparator_t comp, double constant = 0) = 0;
 	virtual bool solve(WorkSpace *ws = 0) = 0;
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
@@ -67,6 +65,12 @@ public:
 	virtual string lastErrorMessage(void);
 	virtual ILPPlugin *plugin(void);
 	virtual Var *newVar(Var::type_t type, const string& name = "") = 0;
+
+	// shortcuts
+	inline void addObject(const Term& t) { addObjectFunction(t.snd, t.fst); }
+	inline void subObject(const Term& t) { addObjectFunction(-t.snd, t.fst); }
+	void addObject(const Expression& e);
+	void subObject(const Expression& e);
 
 	// output methods
 	bool hasDump(format_t fmt);

@@ -42,6 +42,8 @@ inline Term operator*(coef_t c, var v) { return Term(v, c); }
 inline Term operator*(var v, coef_t c) { return Term(v, c); }
 inline Term operator*(int c, var v) { return Term(v, c); }
 inline Term operator*(var v, int c) { return Term(v, c); }
+inline Term operator*(int64_t c, var v) { return Term(v, c); }
+inline Term operator*(var v, int64_t c) { return Term(v, c); }
 
 
 // cons class
@@ -108,6 +110,10 @@ public:
 	inline System *operator->(void) const { return _s; }
 	inline operator System *(void) const { return _s; }
 	inline ilp::var var(const string& name) const { return _s->newVar(name); }
+
+	inline model& operator+=(const Term& t) { _s->addObject(t); return *this; }
+	inline model& operator-=(const Term& t) { _s->addObject(t); return *this; }
+
 private:
 	System *_s;
 };

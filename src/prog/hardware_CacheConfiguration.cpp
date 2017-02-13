@@ -230,12 +230,13 @@ p::declare CacheConfigurationProcessor::reg = p::init("otawa::CacheConfiguration
  * This feature ensures we have obtained the cache configuration
  * of the system.
  *
- * @par Properties
- * @li @ref otawa::CACHE_CONFIGURATION
+ * Configuration:
+ * @li @ref CACHE_CONFIG -- cache configuration objerct to use,
+ * @li @ref CACHE_CONFIG_ELEMENT -- cache configuration as an XML element,
+ * @li @ref CACHE_CONFIG_PATH -- path to the cache configuration descriptor in XML.
  *
- * @par Accessors
- * @li @ref otawa::L1_ICACHE
- * @li @ref otawa::L2_DCACHE
+ * Properties
+ * @li @ref otawa::CACHE_CONFIGURATION
  */
 p::feature CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", p::make<CacheConfigurationProcessor>());
 

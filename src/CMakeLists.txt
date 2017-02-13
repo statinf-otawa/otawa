@@ -32,6 +32,7 @@ add_subdirectory(odisplay)
 add_subdirectory(dcache)
 add_subdirectory(oslice)
 add_subdirectory(icat3)
+add_subdirectory(trivial)
 
 
 # graphviz
