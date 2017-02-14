@@ -481,7 +481,7 @@ extern int fft_line;
  *
  * @par Extensions
  * Flow fact files are very useful file to allow user to give more detail
- * on the behaviour of a program. This section presents some extensions that remain experimental.
+ * on the behaviour of a program.
  *
  * @li <b><tt>memory access <i>iaddr: ADDRESS</i> .. <i>lo: ADDRESS</i> .. <i>hi: ADDRESS</i> ;</tt></b> @n
  * Definition of the range <i>lo</i> to <i>hi</i> (exclusive) for the memory instruction at address <i>iaddr</i>.
@@ -489,7 +489,7 @@ extern int fft_line;
  * @li <b><tt>reg <i>NAME</i> = <i>DATA</i> ;</tt></b>
  * Allows to assign a value to a register. This value may be a simple integer or an address.
  *
- * @li <b><tt>mem [<i>TYPE</i>] <i>ADDRESS</i> = <i>DATA</i> ;<tt></b>
+ * @li <b><tt>memory [<i>TYPE</i>] <i>ADDRESS</i> = <i>DATA</i> ;<tt></b>
  * Assign a value in memory.<i>TYPE</i> may be one <tt>int8</tt>, <tt>uint8</tt>, <tt>int816</tt>, <tt>uint16</tt>,
  * <tt>int32</tt>, <tt>uint32</tt>, <tt>int64</tt>, <tt>uint64</tt>, <tt>float32</tt> or <tt>float64</tt>.
  * <i>DATA</i> supports several forms described below.

@@ -105,7 +105,7 @@ public:
 	void record(const MemCell& cell);
 	class MemIter: public mem_map_t::Iterator {
 	public:
-		inline MemIter(State *state): mem_map_t::Iterator(state->cmem) { }
+		inline MemIter(const State *state): mem_map_t::Iterator(state->cmem) { }
 		inline MemIter(const MemIter& iter): mem_map_t::Iterator(iter) { }
 	};
 

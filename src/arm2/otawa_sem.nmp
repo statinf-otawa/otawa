@@ -128,7 +128,7 @@ extend BX_ARM
 			if cond.otawa_ever then
 				_branch(rd.i);
 			else
-				_if(cond.otawa_cond, cond.otawa_cond, 1);
+				_if(cond.otawa_cond, _CPSR, 1);
 				_branch(rd.i);
 			endif;
 		endif;

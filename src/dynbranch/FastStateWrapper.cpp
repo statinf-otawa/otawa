@@ -28,7 +28,6 @@ void FastStateWrapper::storeMemory(address_t addr, const PotentialValue &pv) {
 }
 
 int FastStateWrapper::collect(const MyGC*  gc, int j, bool show) const {
-		//gc->mark((void*)_state, sizeof(*_state));
 	return _fastState->collect(_state, j, show);
 }
 

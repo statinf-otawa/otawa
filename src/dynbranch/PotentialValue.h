@@ -63,7 +63,7 @@ public:
 	static PotentialValue bot; // ⊥
 	static PotentialValue top; // ⊤
 	static PotentialValue DEFAULT;
-	static PotentialValue* tempPVAlloc;
+	static const PotentialValue* tempPVAlloc;
 	inline void dump(Output& o, PotentialValue &pv) { o << pv; }
 
 	inline bool equals(const PotentialValue &a, const PotentialValue &b) { return a == b; }
@@ -125,6 +125,8 @@ bool operator==(const PotentialValue& a, const PotentialValue& b);
 PotentialValue merge(const PotentialValue& a, const PotentialValue& b);
 PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& b);
 PotentialValue MULH(const PotentialValue& a, const PotentialValue& b);
+PotentialValue DIV(const PotentialValue& a, const PotentialValue& b);
+PotentialValue DIVU(const PotentialValue& a, const PotentialValue& b);
 
 #ifdef SAFE_MEM_ACCESS
 class PotentialValueMem {

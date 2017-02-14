@@ -36,7 +36,7 @@ namespace otawa { namespace dynbranch {
 PotentialValue PotentialValue::bot(false);
 PotentialValue PotentialValue::top(true);
 PotentialValue PotentialValue::DEFAULT(false);
-PotentialValue* PotentialValue::tempPVAlloc = 0;
+const PotentialValue* PotentialValue::tempPVAlloc = 0;
 
 unsigned int PotentialValue::MAGIC = 0;
 MyGC* PotentialValue::pvgc = 0;
@@ -100,7 +100,9 @@ PotentialValue& PotentialValue::operator=(const PotentialValue& a) {
 	// first copy the bTop
 	bTop = a.bTop;
 	// to save more time, call the operator directly
+	PotentialValue::tempPVAlloc = &a;
 	Vector<elm::t::uint32>::operator=(a);
+	PotentialValue::tempPVAlloc = 0;
 	return *this;
 
 //	elm::cout << "pv = is called" << io::endl;
@@ -293,6 +295,46 @@ PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
 	for(PotentialValue::Iterator ita(a); ita; ita++)
 		for(PotentialValue::Iterator itb(b); itb; itb++) {
 			t::int64 temp = (*ita)*(*itb);
+			t::uint32 temp2 = temp >> 32;
+			res.insert(temp2);
+		}
+	return res;
+}
+
+PotentialValue DIV(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
+		return PotentialValue::bot;
+	}
+	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			if(*itb == 0)
+				return PotentialValue::top;
+
+			res.insert((*ita)/(*itb));
+		}
+	return res;
+}
+
+PotentialValue DIVU(const PotentialValue& a, const PotentialValue& b) {
+	if(a.count() == 0 || b.count() == 0)
+		return PotentialValue::bot;
+	if(a.count()*b.count() >= POTENTIAL_VALUE_WARNING_SIZE) {
+		elm::cerr << "WARNING: large set of potential value with size = " << a.count() << " X " << b.count() << " = " << (a.count()*b.count()) << " @ " << __FILE__ << ":" << __LINE__ << io::endl;
+		return PotentialValue::bot;
+	}
+	PotentialValue res;
+	PotentialValue::tempPVAlloc = &res;
+	for(PotentialValue::Iterator ita(a); ita; ita++)
+		for(PotentialValue::Iterator itb(b); itb; itb++) {
+			if(*itb == 0)
+				return PotentialValue::top;
+
+			t::int64 temp = (*ita)/(*itb);
 			t::uint32 temp2 = temp >> 32;
 			res.insert(temp2);
 		}
