@@ -89,13 +89,11 @@ set(libotawa_SOURCES
 #   ipet module
 	"ipet_BasicConstraintsBuilder.cpp"
 	"ipet_BasicObjectFunctionBuilder.cpp"
-	"ipet_CacheSupport.cpp"
 	"ipet_ConstraintLoader.cpp"
 	"ipet_FlowFactLoader.cpp"
 	"ipet_FlowFactConstraintBuilder.cpp"
 	"ipet_ILPSystemGetter.cpp"
 	"ipet_IPET.cpp"
-	"ipet_TrivialBBTime.cpp"
 	"ipet_VarAssignment.cpp"
 	"ipet_WCETComputation.cpp"
 	"ipet_WCETCountRecorder.cpp"

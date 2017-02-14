@@ -31,7 +31,6 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/ipet/TrivialInstCacheManager.h>
 #include <elm/util/Pair.h>
 #include <elm/genstruct/SortedSLList.h>
 

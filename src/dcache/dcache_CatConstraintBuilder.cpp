@@ -30,7 +30,6 @@
 #include <otawa/ilp.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialDataCacheManager.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/stats/BBStatCollector.h>
 

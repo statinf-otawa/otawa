@@ -241,7 +241,7 @@ private:
 	bool blocking_store;
 };
 
-p::declare NoDCacheTime::reg = p::init("otawa::trivial::NoDCacheTime", Version(2, 0, 0))
+p::declare NoDCacheTime::reg = p::init("otawa::trivial::NoDCacheTime", Version(1, 0, 0))
 	.make<NoDCacheTime>()
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(hard::MEMORY_FEATURE)

@@ -31,7 +31,6 @@
 #include <otawa/util/LoopInfoBuilder.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/ipet/TrivialInstCacheManager.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
 #include <otawa/cache/cat2/CAT2ConstraintBuilder.h>

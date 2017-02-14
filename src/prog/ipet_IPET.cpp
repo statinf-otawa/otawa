@@ -1,15 +1,32 @@
 /*
- *	$Id$
- *	Copyright (c) 2005-06, IRIT UPS.
+ *	IPET module implementation
  *
- *	src/prog/ipet_IPET.cpp -- IPET class implementation.
+ *	This file is part of OTAWA.
+ *	Copyright (c) 2005-17, IRIT UPS <casse@irit.fr>
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with Foobar; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <elm/util/MessageException.h>
-#include <otawa/ipet/IPET.h>
+
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/cache/cat2/features.h>
 #include <otawa/ilp.h>
-#include <otawa/manager.h>
+#include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/manager.h>
+#include <otawa/proc/DynFeature.h>
 #include <otawa/prop/info.h>
 
 namespace otawa { namespace ipet {
@@ -158,5 +175,102 @@ ilp::System *getSystem(WorkSpace *fw, CFG *cfg) {
  * @ingroup ipet
  */
 p::feature INTERBLOCK_SUPPORT_FEATURE("otawa::ipet::INTERBLOCK_SUPPORT_FEATURE", new Maker<NoProcessor>());
+
+
+/**
+ * This feature ensurers that the instruction cache has been modeled
+ * in the IPET approach.
+ *
+ * Default Analysis:
+ * @li @ref otawa::trivial::AllMissICacheTime
+ */
+p::feature INST_CACHE_SUPPORT_FEATURE("otawa::ipet::INST_CACHE_SUPPORT_FEATURE", new DelayedMaker("otawa::trivial::AllMissICacheTime"));
+
+
+/**
+ * This feature ensures that the first-level data cache has been taken in
+ * account in the basic block timing.
+ *
+ * Default Analysis:
+ * @li @ref otawa::trivial::NoDCacheTime
+ */
+p::feature DATA_CACHE_SUPPORT_FEATURE("otawa::ipet::DATA_CACHE_SUPPORT_FEATURE", new DelayedMaker("otawa::trivial::NoDCacheTime"));
+
+
+/**
+ * Provide support for cache hierarchy. Basically, explore the cache hierarchy
+ * and either select the matching analyzes, or raise an error.
+ */
+class CacheSupport: public Processor {
+public:
+	static p::declare reg;
+	CacheSupport(p::declare& _reg = reg): Processor(_reg) { }
+
+protected:
+	virtual void prepare(WorkSpace *ws) {
+		const hard::CacheConfiguration& conf = **hard::CACHE_CONFIGURATION(ws);
+
+		// no cache needed?
+		if(!conf.instCache() && !conf.dataCache()) {
+			if(logFor(LOG_PROC))
+				log << "\tINFO: no cache.";
+			return;
+		}
+
+		// unified?
+		if(conf.isUnified())
+			throw ProcessorException(*this, "unified L1 cache unsupported");
+
+		// process instruction cache
+		if(conf.instCache()) {
+			if(conf.instCache()->replacementPolicy() != hard::Cache::LRU)
+				throw ProcessorException(*this, _ << "instruction cache L1 unsupported");
+			require(ICACHE_ACS_FEATURE);
+			require(ICACHE_ACS_MAY_FEATURE);
+			require(ICACHE_CATEGORY2_FEATURE);
+			require(ICACHE_ONLY_CONSTRAINT2_FEATURE);
+		}
+
+		// process data cache
+		if(conf.dataCache()) {
+			if(conf.dataCache()->replacementPolicy() != hard::Cache::LRU)
+				throw ProcessorException(*this, _ << "replacement policy of data cache L1 unsupported");
+			// TODO		For now, supports only write-through data cache (write-back to be added later)
+			if(conf.dataCache()->writePolicy() != hard::Cache::WRITE_THROUGH)
+				throw ProcessorException(*this, _ << "write policy of data cache L1 unsupported");
+			requireDyn("otawa::dcache::MUST_ACS_FEATURE");
+			requireDyn("otawa::dcache::PERS_ACS_FEATURE");
+			requireDyn("otawa::dcache::MAY_ACS_FEATURE");
+			requireDyn("otawa::dcache::CONSTRAINTS_FEATURE");
+		}
+	}
+
+private:
+	void requireDyn(cstring name) {
+		DynFeature f(name);
+		require(f);
+	}
+};
+
+p::declare CacheSupport::reg = p::init("otawa::ipet::CacheSupport", Version(1, 0, 0))
+	.maker<CacheSupport>()
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.provide(CACHE_SUPPORT_FEATURE);
+
+
+/**
+ * This feature ensures that analysis for the cache configuration has been performed.
+ */
+p::feature CACHE_SUPPORT_FEATURE("otawa::ipet::CACHE_SUPPORT_FEATURE", new Maker<CacheSupport>());
+
+/**
+ * This feature ensures that the execution time of each basic block has been
+ * computed.
+ *
+ * @par Properties
+ * @li otawa::ipet::TIME
+ * @li otawa::ipet::DELTA_TIME
+ */
+p::feature BB_TIME_FEATURE("otawa::ipet::BB_TIME_FEATURE", new DelayedMaker("otawa::trivial::BlockTime"));
 
 } } // otawa::ipet

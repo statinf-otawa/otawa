@@ -13,7 +13,6 @@
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/VarAssignment.h>
 
 using namespace otawa::ilp;

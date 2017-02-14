@@ -161,6 +161,16 @@ public:
 	virtual Processor *make(void) const { return new C(); }
 };
 
+
+// DelayaedMaker class
+class DelayedMaker: public AbstractMaker {
+public:
+	DelayedMaker(string name);
+	virtual Processor *make(void) const;
+private:
+	string _name;
+};
+
 // useful
 extern AbstractMaker *null_maker, *no_maker;
 

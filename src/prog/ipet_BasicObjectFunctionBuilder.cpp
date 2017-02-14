@@ -24,7 +24,6 @@
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/ipet/VarAssignment.h>
-#include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 
 using namespace otawa::ilp;

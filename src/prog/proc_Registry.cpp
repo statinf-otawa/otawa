@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	Registration class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
+ *	Copyright (c) 2005-17, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -20,10 +19,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/proc/Registry.h>
-#include <otawa/proc/Registration.h>
-#include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/proc/Registration.h>
+#include <otawa/proc/Registry.h>
 
 namespace otawa {
 
@@ -391,17 +391,40 @@ bool declare::isFinal(void) const {
 
 }	// p
 
+
+/**
+ * @class DelayedMaker
+ * This process maker allow to locate a processor based on its name,
+ * delaying this localization until the time it needs to be created.
+ * This is a very way to use processor located in an external plugin.
+ * @ingroup proc
+ */
+
+/**
+ * Build a delated maker.
+ * @param name	Full-qualified name (including name spaces) of the processor.
+ */
+DelayedMaker::DelayedMaker(string name): _name(name) { }
+
+/**
+ */
+Processor *DelayedMaker::make(void) const {
+	return ProcessorPlugin::getProcessor(_name.toCString());
+}
+
 static Maker<NullProcessor> null_inst;
 static Maker<NoProcessor> no_inst;
 
 /**
  * Special maker for a null processor.
+ * @ingroup proc
  */
 AbstractMaker *null_maker = &null_inst;
 
 
 /**
  * Special maker for "no processor available".
+ * @ingroup proc
  */
 AbstractMaker *no_maker = &no_inst;
 
