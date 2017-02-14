@@ -145,7 +145,7 @@ protected:
 
 	virtual void prepare(WorkSpace *ws, const PropList& props) {
 		_ws = ws;
-		ws->require(otawa::clp::FEATURE, props);
+		ws->require(otawa::clp::CLP_ANALYSIS_FEATURE, props);
 	}
 
  	virtual void displayBefore(io::Output& out, BasicBlock *bb) {

@@ -95,7 +95,7 @@ namespace otawa { namespace clp {
  * address of the array, d the size of the array elements and n the number of elements. Therefore, it provides
  * interesting result when processing machine language.
  *
- * Ensuring it has been performed needs only a requirement on @ref otawa::clp::FEATURE.
+ * Ensuring it has been performed needs only a requirement on @ref otawa::clp::CLP_ANALYSIS_FEATURE.
  *
  * This analysis is performed on the semantic (@ref sem) representation of language machine.
  * To use  the result of the analysis requires to handle @ref otawa::clp::State at the entry
@@ -125,7 +125,7 @@ namespace otawa { namespace clp {
  * @ingroup clp
  */
 Identifier<Analysis::init_t> Analysis::INITIAL(
-		"otawa::clp::Analysis::INITIAL",
+		"otawa::clp::CLP_ANALYSIS_INITIAL",
 		pair((const hard::Register *)0, Address::null));
 
 
@@ -2017,7 +2017,8 @@ public:
 	 	_nb_load_top_addr(0),
 	 	_nb_filters(0),
 	 	_nb_top_filters(0),
-	 	_nb_top_load(0)
+	 	_nb_top_load(0),
+		_nb_clp_bb_count(0)
 { }
 
 	/*
@@ -2299,6 +2300,7 @@ public:
 	 * @param state		State to update.
 	 */
 	void update(State *state) {
+		_nb_clp_bb_count++;
 		TRACEI(cerr << "\t\t" << i << io::endl);
 		sem::inst& i = b[pc];
 		if(state->equals(Domain::EMPTY)) { // handles the bottom state input (possibly infeasible path)
@@ -2755,6 +2757,7 @@ public:
 	inline clp::STAT_UINT get_nb_filters(void){ return _nb_filters;}
 	inline clp::STAT_UINT get_nb_top_filters(void){ return _nb_top_filters;}
 	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
+	inline clp::STAT_UINT get_nb_clp_bb_count(void) const { return _nb_clp_bb_count; }
 
 private:
 	clp::State _init;
@@ -2784,6 +2787,7 @@ private:
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;
 	clp::STAT_UINT _nb_top_load;
+	clp::STAT_UINT _nb_clp_bb_count;
 
 	// store to T management
 	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
@@ -2841,7 +2845,7 @@ private:
  * expressions.
  *
  * @par Provided Features
- * @li @ref otawa::clp::FEATURE
+ * @li @ref otawa::clp::CLP_ANALYSIS_FEATURE
  *
  * @par Required Features
  * @li @ref otawa::LOOP_INFO_FEATURE
@@ -2851,13 +2855,13 @@ private:
  * @ingroup clp
  */
 
-p::declare Analysis::reg = p::init("otawa::clp::Analysis", Version(0, 1, 0))
+p::declare Analysis::reg = p::init("otawa::clp::CLPAnalysis", Version(0, 1, 0))
 	.maker<Analysis>()
 	//.require(VIRTUALIZED_CFG_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
-	.provide(clp::FEATURE);
+	.provide(clp::CLP_ANALYSIS_FEATURE);
 
 Analysis::Analysis(p::declare& r)
 : 	Processor(r),
@@ -2905,7 +2909,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	CFG *cfg = coll->get(0);
 
 	// set the cleaner
-	addCleaner(clp::FEATURE, new CLPStateCleaner(ws));
+	addCleaner(clp::CLP_ANALYSIS_FEATURE, new CLPStateCleaner(ws));
 
 	ClpProblem prob(ws->process());
 
@@ -2981,7 +2985,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_top_load = prob.get_nb_top_load();
 
 	clockWorkSpace = clock() - clockWorkSpace;
-	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
+	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob.get_nb_clp_bb_count() << " blocks" << io::endl;
 
 //	watchWorkSpace.stop();
 //	otawa::ot::time t = watchWorkSpace.delay();
@@ -3012,7 +3016,7 @@ void Analysis::configure(const PropList &props) {
  *
  * @ingroup clp
  */
-p::feature FEATURE("otawa::clp::FEATURE", p::make<Analysis>());
+p::feature CLP_ANALYSIS_FEATURE("otawa::clp::CLP_ANALYSIS_FEATURE", p::make<Analysis>());
 
 /**
  * Put on a basic block, it's the CLP state at the beginning of the block
@@ -3204,7 +3208,7 @@ ClpStatePack::InstPack* ClpStatePack::newPack(address_t inst){
  * @li @ref otawa::CLP_ANALYSIS_FEATURE
  */
 DeadCodeAnalysis::DeadCodeAnalysis(void): Processor("otawa::DeadCodeAnalysis", Version(0, 1, 0)) {
-	require(clp::FEATURE);
+	require(clp::CLP_ANALYSIS_FEATURE);
 	provide(DEAD_CODE_ANALYSIS_FEATURE);
 }
 

@@ -144,9 +144,11 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	}
 
 	clockWorkSpace = clock() - clockWorkSpace;
-	elm::cerr << "Global Analyse takes " << clockWorkSpace << " micro-seconds" << io::endl;
+	elm::cerr << "Global Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob->get_nb_bb_count() << " blocks" << io::endl;
 
-	elm::cout << "PV::CountX = " << PotentialValue::countX << " vs " << Vector<elm::t::uint32>::countX << io::endl;
+	ASSERTP(PotentialValue::countX == Vector<elm::t::uint32>::countX, "PV::CountX = " << PotentialValue::countX << " vs " << Vector<elm::t::uint32>::countX);
+
+	myGC->doGC();
 }
 
 

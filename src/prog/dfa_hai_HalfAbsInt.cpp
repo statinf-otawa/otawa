@@ -154,6 +154,12 @@ Identifier<Block*> HAI_BYPASS_SOURCE("otawa::util::HAI_BYPASS_SOURCE", 0);
 Identifier<Block*> HAI_BYPASS_TARGET("otawa::util::HAI_BYPASS_TARGET", 0);
 
 /**
+ * This property indicates a block is the header of an infinite loop.
+ */
+
+Identifier<bool> HAI_INFINITE_LOOP("otawa::util::HAI_INFINITE_LOOP", false);
+
+/**
  * @fn typename FixPoint::FixPointState *HalfAbsInt::getFixPointState(BasicBlock *bb);
  * Get the FixPointState of a loop.
  *

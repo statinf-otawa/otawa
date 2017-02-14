@@ -72,6 +72,7 @@ extern Identifier<bool> FIRST_ITER;
 extern Identifier<bool> HAI_DONT_ENTER;
 extern Identifier<Block*> HAI_BYPASS_SOURCE;
 extern Identifier<Block*> HAI_BYPASS_TARGET;
+extern Identifier<bool> HAI_INFINITE_LOOP;
 
 // abstract interpretater
 template <class FixPoint>
@@ -100,7 +101,6 @@ private:
 	bool enter_call; /* enter_call == true: we need to process this call. enter_call == false: already processed (call return) */
 	bool fixpoint;
 	bool mainEntry;
-
 	static Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;
 	inline bool isEdgeDone(Edge *edge);
 	inline bool tryAddToWorkList(Block *bb);
@@ -235,11 +235,13 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 		// Compute the IN thanks to the fixpoint handler
 		if(FIRST_ITER(current))
         	FIXPOINT_STATE(current) = fp.newState();
+
+		// compute if fix-point is reached
     	fp.fixPoint(current, fixpoint, in, FIRST_ITER(current));
     	HAI_TRACE("\t\tat loop header " << current << ", fixpoint reached = " << fixpoint);
     	// TODO ever perform it
     	if(FIRST_ITER(current)) {
-    		ASSERT(!fixpoint);
+    		ASSERTP(!fixpoint, "ERROR: achieving fixpoint at the first iteration"); // achieving fixpoint at the first iteration is impossible, hence the ASSERT
     		FIRST_ITER(current) = false;
     	}
         FIXED(current) = fixpoint;
@@ -318,8 +320,10 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 	// Fixpoint reached: activate the associated loop-exit-edges
 	if(LOOP_HEADER(current) && fixpoint) {
 		genstruct::Vector<Block*> alreadyAdded;
-		if((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty())
+		if((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty()) {
 			cerr << "WARNING: infinite loop found at " << current << io::endl;
+			HAI_INFINITE_LOOP(current) = true;
+		}
 		else
 	        for (elm::genstruct::Vector<Edge*>::Iterator iter(**EXIT_LIST(current)); iter; iter++) {
 	           	HAI_TRACE("\t\tpushing edge " << iter->source() << " -> " << iter->target());
@@ -356,8 +360,10 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		// the output state of a block should be assigned to all the out-going edges of the block
 		// such edges could be created as a result of slicing
 		Block* b = edge->source();
+
 		for(Block::EdgeIter bei = b->outs(); bei; bei++) {
 			fp.markEdge(bei, out);
+
 			tryAddToWorkList(bei->sink());
 		}
 #		endif
@@ -378,11 +384,11 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 		// push call context
 		else {
-
 			// push call context
 			callStack->push(return_edge);
 	        cfgStack->push(cur_cfg);
 	        cur_cfg = current->toSynth()->callee();
+
 	        fp.enterContext(out, cur_cfg->entry(), CTX_FUNC);
 			HAI_TRACE("\tcalling CFG " << cur_cfg->label());
 
@@ -404,6 +410,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 #		ifdef HAI_JSON
         	fp.dumpJSON(out, saver);
 #		endif
+
         addSuccessors();
 	}
 }
@@ -509,9 +516,10 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 			// now we need to check the out-going edge
 			for(Block::EdgeIter bei=current->outs(); bei; bei++) {
 				if(bei->target() != current)
-					ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
-			}
-		}
+					if(!HAI_INFINITE_LOOP(current))
+						ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
+			} // end of each output edge of the current block
+		} // end of the current block is not an exit block, and workList is empty
 	}
 
     // json debugging finalization
@@ -586,12 +594,33 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(Block *bb)
 template <class FixPoint>
 inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
 
+	if(HAI_BYPASS_TARGET(bb)) {
+		typename FixPoint::Domain *bypassState = fp.getMark(bb);
+		if(!bypassState) {
+			return false;
+		}
+    }
+
+	else { // for the other kinds of blocks
+		for (Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+			// 1. with program slicing, it is possible to have a synth block connecting to a synth block directly
+			// to be safe, we check every incoming edge to the block
+			// 2. the function isEdgeDone checks if the edge is the exit edge of a loop header, and see if the loop header reaches the fix-point. if it doesnt, then return false
+			if(!isEdgeDone(*inedge)) { // if any of the incoming edge is not associated with a state, then we don't process the block
+				return false;
+			}
+		}
+		workList->push(bb);
+		return true;
+	}
+
 	// compute if the block must be added
 	bool add = true;
 	if(HAI_BYPASS_TARGET(bb)) {
 		typename FixPoint::Domain *bypassState = fp.getMark(bb);
-		if(!bypassState)
+		if(!bypassState) {
 			add = false;
+		}
     }
 	if(add)
 		for (Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
@@ -604,8 +633,9 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
 			else if(!isEdgeDone(*inedge))
 				add = false;
 #		else
-			// with program slicing, it is possible to have a synth block connecting to a synth block directly
+			// 1. with program slicing, it is possible to have a synth block connecting to a synth block directly
 			// to be safe, we check every incoming edge to the block
+			// 2. the function isEdgeDone checks if the edge is the exit edge of a loop header, and see if the loop header reaches the fix-point. if it doesnt, then return false
 			if(!isEdgeDone(*inedge))
 				add = false;
 #		endif
@@ -622,6 +652,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
 		HAI_TRACE("\t\tadding " << bb << " to worklist");
 		workList->push(bb);
 	}
+
 	return(add);
 }
 

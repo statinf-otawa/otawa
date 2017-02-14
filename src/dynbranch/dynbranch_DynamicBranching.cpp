@@ -509,7 +509,7 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 }
 
 p::declare DynamicBranchingAnalysis::reg = p::init("otawa::dynbranch::DynamicBranchingAnalysis", Version(1, 0, 0))
-											.require(clp::FEATURE)
+											.require(clp::CLP_ANALYSIS_FEATURE)
 											.require(GLOBAL_ANALYSIS_FEATURE)
 											.require(dfa::INITIAL_STATE_FEATURE)
 											.provide(DYNBRANCH_FEATURE);

@@ -19,7 +19,7 @@ static Identifier<genstruct::Vector<Block*>*> ARTIFICIAL_SUCCESSORS("");
 
 p::declare Slicer::reg = p::init("otawa::oslice::Slicer", Version(16, 5, 3116))
        .maker<Slicer>()
-	   .use(otawa::clp::FEATURE)
+	   .use(otawa::clp::CLP_ANALYSIS_FEATURE)
 	   .use(INSTRUCTION_COLLECTOR_FEATURE)
 	   .require(COLLECTED_CFG_FEATURE)
 	   .invalidate(COLLECTED_CFG_FEATURE)

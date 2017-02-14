@@ -29,7 +29,6 @@
 #include <otawa/proc/Progress.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/stats/StatCollector.h>
-
 using namespace elm;
 using namespace elm::io;
 

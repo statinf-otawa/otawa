@@ -418,7 +418,7 @@
  * @par Data Flow Features
  *
  * @li @ref otawa::ADDRESS_ANALYSIS_FEATURE
- * @li @ref otawa::clp::FEATURE
+ * @li @ref otawa::clp::CLP_ANALYSIS_FEATURE
  * @li @ref otawa::STACK_ANALYSIS_FEATURE
  */
 

@@ -144,7 +144,6 @@ public:
 			nodeAlloc = 0;
 	}
 
-
 	/**
 	 * Get the max number of multiple load/store before jumping to top.
 	 * @return	Maximum number of effective load/store.
@@ -183,7 +182,6 @@ public:
 
 		if(s == top && dom->equals(v, dom->top)) // assigning T to any register of the T state, will return T
 			return top;
-
 
 		stateAlloc1 = s;
 
@@ -246,6 +244,7 @@ public:
 			if(cur->a == a) {
 				if(dom->equals(cur->v, v)) // if the value to assign is the same as the holding value, no need to allocate a new state
 					return s;
+
 				found = true;
 				break;
 			}
@@ -309,7 +308,6 @@ public:
 		i = i >> 2; // get rid of the lowest 2 bits
 		// i = i & 0x3F; // the lower 6 bits
 		i = i & (MEM_SIZE - 1);
-		//if(willieDebug) elm::cout << __SOURCE_INFO__ << "given address = " << hex(a) << ", the index is " << i << io::endl;
 		return i;
 	}
 
@@ -895,8 +893,6 @@ public:
 		if(nodeAlloc) {
 			already = allocator.template mark(nodeAlloc, sizeof(node_t));
 			if(already) {
-			}
-			else {
 			}
 		}
 

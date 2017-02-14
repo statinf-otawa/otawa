@@ -59,7 +59,7 @@ private:
 	int i;
 };
 
-extern p::feature FEATURE;
+extern p::feature CLP_ANALYSIS_FEATURE;
 
 extern Identifier<clp::State> STATE_IN;
 extern Identifier<clp::State> STATE_OUT;

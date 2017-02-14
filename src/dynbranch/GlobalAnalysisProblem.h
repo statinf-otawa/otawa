@@ -77,6 +77,8 @@ public:
 			return _tempRegs->get(-regNum);
 	}
 
+	inline unsigned int get_nb_bb_count(void) { return _nb_bb_count; }
+
 private:
 	WorkSpace* ws;
 	dfa::State* istate;
@@ -86,6 +88,7 @@ private:
 	bool verbose;
 	Vector<PotentialValue>* _tempRegs;
 	MyGC* myGC;
+	unsigned int _nb_bb_count;
 
 };
 

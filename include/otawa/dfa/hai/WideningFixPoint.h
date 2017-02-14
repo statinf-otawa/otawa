@@ -134,7 +134,6 @@ void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in
 			HAIW_TRACE("before widening, state + 1: " << newHeaderState << io::endl);
 			// TODO Uncomment and fix!
 			prob.widening(bb, newHeaderState, ai->backEdgeUnion(bb));
-
 #			ifdef FILTERING_AFTER_WIDENING // for future testing, whether to have widening before or after the filtering
 			for(Block::EdgeIter inedge = bb->ins(); !bb->isSynth() && inedge; inedge++) {
 				// if the edge is within the loop, then perform the filtering on the edge and the state

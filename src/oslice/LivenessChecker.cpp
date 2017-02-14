@@ -27,7 +27,7 @@ p::feature LIVENESS_FEATURE("otawa::oslice::LIVENESS_FEATURE", new Maker<Livenes
 p::declare LivenessChecker::reg = p::init("otawa::oslice::LivenessChecker", Version(2, 0, 0))
        .maker<LivenessChecker>()
 	   .use(COLLECTED_CFG_FEATURE)
-       .use(otawa::clp::FEATURE)
+       .use(otawa::clp::CLP_ANALYSIS_FEATURE)
        .provide(LIVENESS_FEATURE);
 
 elm::BitVector LivenessChecker::_defaultRegisters = 1;

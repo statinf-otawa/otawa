@@ -35,7 +35,6 @@
 #define DEBUG_MEM(x)
 
 extern unsigned int debugGCCond;
-extern bool willia;
 extern unsigned long processedSemInstCount;
 
 using namespace elm::log;
@@ -44,7 +43,7 @@ using namespace elm::color;
 
 namespace otawa { namespace dynbranch {
 
-GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry, MyGC* m) : verbose(v), ws(workspace), myGC(m) {
+GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry, MyGC* m) : verbose(v), ws(workspace), myGC(m), _nb_bb_count(0) {
 	istate = dfa::INITIAL_STATE(workspace);
 
 	// initial the BOT state
@@ -123,6 +122,9 @@ void GlobalAnalysisProblem::widening(otawa::Block* ob, Domain& a, Domain b) cons
 }
 
 void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
+	_nb_bb_count++;
+
+	myGC->doGC();
 
 	// initially the output state equals to the input state
 	out = in ;

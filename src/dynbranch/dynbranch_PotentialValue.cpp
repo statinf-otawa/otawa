@@ -22,7 +22,6 @@
 #include <otawa/dynbranch/features.h>
 #include <include/otawa/proc/Monitor.h>
 #include <sys/resource.h>
-//#include <malloc.h>
 #include "PotentialValue.h"
 #include "State.h"
 #include "GlobalAnalysisProblem.h"
@@ -385,8 +384,6 @@ PotentialValue merge(const PotentialValue& a, const PotentialValue& b) { // resu
 	for(PotentialValue::Iterator itb(b); itb; itb++) {
 		res.insert(*itb);
 	}
-//	if(willia)
-//		elm::cout << "res @ " << (&res)->getTab() << io::endl;
 	return res;
 }
 

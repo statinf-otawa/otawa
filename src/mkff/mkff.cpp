@@ -719,7 +719,7 @@ private:
 	void generateCFGs(String path, int type = GeneratedCFGType::MULTIDOT);
 	void generateXMLs(String path, int type, PropList &props);
 	option::Switch xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
-		showBlockProps, rawoutput, forFun, slicing, showSlicing, showReducedCFG, lightSlicing, debugging, nosource, debugSlicing, debugReducing;
+		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML;
 };
 
 
@@ -843,7 +843,6 @@ void XMLOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 }
 
 void XMLOutput::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
-
 	// add the basic
 	if(!b->isEnd()) {
 
@@ -878,6 +877,53 @@ p::declare XMLOutput::reg = p::init("mkff::XMLOutput", Version(1, 0, 0))
 	.maker<XMLOutput>()
 	.base(otawa::cfgio::Output::reg);
 
+class DetailedXMLOutput: public XMLOutput {
+public:
+	static p::declare reg;
+	DetailedXMLOutput(void) : XMLOutput() {}
+protected:
+	virtual void configure(const PropList& props) { XMLOutput::configure(props); }
+	virtual void processWorkSpace(WorkSpace *ws) { XMLOutput::processWorkSpace(ws); }
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+		// add the basic
+		if(!b->isEnd()) {
+
+			// make the BB element
+			xom::Element *bb_node = new xom::Element("bb");
+			string _id = id(b);
+			string num = _ << b->index();
+			cfg_node->insertChild(bb_node, last_bb++);
+			bb_node->addAttribute(new xom::Attribute("id", &_id));
+			bb_node->addAttribute(new xom::Attribute("number", &num));
+
+			// add the each instruction
+			if(b->isBasic()) {
+				for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
+					xom::Element *inst_node = new xom::Element("inst");
+					bb_node->appendChild(inst_node);
+					string addr = _ << "0x" << inst->address();
+					inst_node->addAttribute(new xom::Attribute("address", &addr));
+				}
+			}
+		}
+
+		// add the output edges
+		for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+			xom::Element *edge_node = new xom::Element("edge");
+			cfg_node->appendChild(edge_node);
+			string source = id(edge->source());
+			edge_node->addAttribute(new xom::Attribute("source", &source));
+			string target = id(edge->target());
+			edge_node->addAttribute(new xom::Attribute("target", &target));
+			processProps(edge_node, **edge);
+		}
+	}
+};
+
+p::declare DetailedXMLOutput::reg = p::init("mkff::DetailedXMLOutput", Version(1, 0, 0))
+	.maker<DetailedXMLOutput>()
+	.base(XMLOutput::reg);
+
 void Command::generateXMLs(String path, int type, PropList &props) {
 
 	// set up the path
@@ -894,7 +940,8 @@ void Command::generateXMLs(String path, int type, PropList &props) {
 	Path p(path);
 	xmlOutputFolder(props) = p;
 
-	DynProcessor dis("mkff::XMLOutput");
+	//DynProcessor dis("mkff::XMLOutput");
+	DynProcessor dis("mkff::DetailedXMLOutput");
 	dis.process(workspace(), props);
 }
 
@@ -905,18 +952,21 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	clock_t mkfftime = clock();
 
-	// outputing the original CFG when required
-	if(outputCFG) {
-		workspace()->require(COLLECTED_CFG_FEATURE, props);
-		generateCFGs(String("") << "begin" /*, GeneratedCFGType::MULTIDOT*/);
-	}
-
 	// configure the CFG collection
 	Application::parseAddress(arguments()[0]); // make sure the entry symbol is valid
 	TASK_ENTRY(props) = arguments()[0];
 	for(int i = 1; i < arguments().length(); i++)
 		ADDED_FUNCTION(props).add(arguments()[i].toCString());
 	CFGChecker::NO_EXCEPTION(props) = true;
+
+	// outputing the original CFG when required
+	if(outputCFG) {
+		workspace()->require(COLLECTED_CFG_FEATURE, props);
+		generateCFGs(String("") << "begin" /*, GeneratedCFGType::MULTIDOT*/);
+	}
+
+	if(outputCFGXML)
+		generateXMLs(String("") << "begin_xml" , 0, props);
 
 	Printer *p;
 
@@ -973,52 +1023,43 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				workspace()->require(COLLECTED_CFG_FEATURE, props); // rebuild the CFG
 			} // end of the first time
 
-			if(outputCFG) {
+			if(outputCFG)
 				generateCFGs(String("") << iteration << "_iteration" /*, GeneratedCFGType::MULTIDOT*/);
-			}
+
+			if(outputCFGXML)
+				generateXMLs(String("") << iteration << "_iteration_xml" , 0, props);
+
 
 			// before performing the analysis, maybe it is better to slice away the unnecessary ?
 			if(slicing || lightSlicing) {
 
 				if(debugSlicing) {
-					//otawa::oslice::SLICE_DEBUG_LEVEL(props)=0xFFFF;
 					DynIdentifier<int> sliceDebugLevel("otawa::oslice::DEBUG_LEVEL");
 					sliceDebugLevel(props) = 0xFFFF;
 				}
 
-				//workspace()->require(otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE, props);
 				workspace()->require(DynFeature("otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE"), props);
 
-				if(showSlicing) {
-					// otawa::oslice::CFG_OUTPUT(props) = true;
+				if(cfg4PS) {
 					DynIdentifier<bool> cfgOutput("otawa::oslice::CFG_OUTPUT");
 					cfgOutput(props) = true;
-
-					//otawa::oslice::SLICING_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_slicing");
 					DynIdentifier<String> slicingCFGOutput("otawa::oslice::SLICING_CFG_OUTPUT_PATH");
 					slicingCFGOutput(props) = (String("./") << iteration << "_slicing");
-
-					//otawa::oslice::SLICED_CFG_OUTPUT_PATH(props) = (String("./") << iteration << "_sliced");
 					DynIdentifier<String> slicedCFGOutput("otawa::oslice::SLICED_CFG_OUTPUT_PATH");
 					slicedCFGOutput(props) = (String("./") << iteration << "_sliced");
 				}
 
 				if(slicing)
-					// workspace()->require(otawa::oslice::SLICER_FEATURE, props);
 					workspace()->require(DynFeature("otawa::oslice::SLICER_FEATURE"), props);
 				else if(lightSlicing)
-					//workspace()->require(otawa::oslice::LIGHT_SLICER_FEATURE, props);
 					workspace()->require(DynFeature("otawa::oslice::LIGHT_SLICER_FEATURE"), props);
 
-				if(outputCFG || showReducedCFG)
+				if(outputCFG || cfg4LR)
 					generateCFGs(String("") << iteration << "_sliced" /*, GeneratedCFGType::MULTIDOT*/);
 
-				if(debugReducing) { // also the result of the sliced CFG before performing the LOOP_REDUCTION
-					// generate the dot file for debugging
-					generateCFGs(String("") << iteration << "_reducing", GeneratedCFGType::NO_SOURCE);
-
+				if(outputCFGXML) {
 					// generate the xml file for future uses
-					generateXMLs(String("") << iteration << "_reducing", 0, props);
+					generateXMLs(String("") << iteration << "_sliced_xml", 0, props);
 				}
 
 
@@ -1047,10 +1088,14 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				//generateCFGs(String("") << iteration << "_reduced", 0);
 
 				// output the CFG after loop reduction
-				if(outputCFG || showReducedCFG)
+				if(outputCFG || cfg4LR) {
 					generateCFGs(String("") << iteration << "_reduced",
 						(outputInlinedCFG?GeneratedCFGType::INLINED:GeneratedCFGType::DEFAULT) |
 						(forFun?GeneratedCFGType::COLORED:GeneratedCFGType::DEFAULT));
+				}
+
+				if(outputCFGXML)
+					generateXMLs(String("") << iteration << "_reduced_xml", 0, props);
 #endif
 			} // end of slicing
 
@@ -1089,6 +1134,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	if(outputCFG)
 		generateCFGs(String("") << "final" /*, GeneratedCFGType::MULTIDOT*/);
+
+	if(outputCFGXML)
+		generateXMLs(String("") << "final_xml", 0, props);
 
 	if(!debugging) {
 		// display low-level flow facts
@@ -1217,25 +1265,22 @@ Command::Command(void):
 		"Generate a flow fact file for an application.",
 		"Copyright (c) 2005-15, IRIT - UPS"),
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
-		//dynbranch(*this, option::cmd, "-D", option::cmd, "--dynbranch", option::description, "check for dynamic branches", option::end),
 		dynbranch				(make_switch()			.cmd("-D").cmd("--dynbranch")		.description("check for dynamic branches")),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
 		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
 		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
-		//removeDuplicatedTarget(*this, option::cmd, "-S", option::cmd, "--no_repeat_multibranch", option::description, "do not output the multi-call/branch with the same target addresses", option::end),
-		removeDuplicatedTarget	(make_switch()			.cmd("-S").cmd("--no_repeat_multibranch")		.description("do not output the multi-call/branch with the same target addresses")),
+		removeDuplicatedTarget	(make_switch()			.cmd("-R").cmd("--no_repeat_multibranch")		.description("do not output the multi-call/branch with the same target addresses")),
 		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
-		rawoutput(*this, option::cmd, "-R", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
-		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colourful :)", option::end),
+		rawoutput(*this, option::cmd, "-RO", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
+		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colorful :)", option::end),
 		slicing(*this, option::cmd, "-T", option::cmd, "--test", option::description, "apply the slicing during dynamic branching analysis", option::end),
-		showSlicing(*this, option::cmd, "-SS", option::cmd, "--show_slicing", option::description, "showing the progress of the slicing in dot files.", option::end),
-		showReducedCFG(*this, option::cmd, "-SR", option::cmd, "--show_reduced", option::description, "showing the result of the reduced CFG in dot files.", option::end),
-		//lightSlicing(*this, option::cmd, "-LS", option::cmd, "--light_slicing", option::description, "apply the slicing (lite) during dynamic branching analysis", option::end),
-		lightSlicing	(make_switch()			.cmd("-LS").cmd("--light_slicing")		.description("apply the slicing (lite) during dynamic branching analysis")),
+		cfg4PS(*this, option::cmd, "-S", option::cmd, "--show_cfg_SL", option::description, "generate DOT files before and after program slicing (PS)", option::end),
+		cfg4LR(*this, option::cmd, "-L", option::cmd, "--show_cfg_LR", option::description, "generate DOT files before and after loop reduction (LR)", option::end),
+		lightSlicing	(make_switch()			.cmd("-LS").cmd("--light_slicing")		.description("apply the slicing (light) during dynamic branching analysis")),
 		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end),
 		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end),
 		debugSlicing(*this, option::cmd, "-DS", option::cmd, "--debug_slicing", option::description, "show the debugging message of slicing", option::end),
-		debugReducing(*this, option::cmd, "-DR", option::cmd, "--debug_loop_reduction", option::description, "generate DOT and XML files before loop reduction", option::end)
+		outputCFGXML(*this, option::cmd, "-X", option::cmd, "--xml_output", option::description, "generate XML files of each CFG for the initial, the iterations, and the final phases", option::end)
 {
 }
 
