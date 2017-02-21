@@ -24,7 +24,7 @@
 
 #include <otawa/cfg.h>
 #include <otawa/icache/features.h>
-#include "features.h"
+#include "../../include/otawa/icat3/features.h"
 
 namespace otawa { namespace icat3 {
 

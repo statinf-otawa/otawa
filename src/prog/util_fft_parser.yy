@@ -60,10 +60,12 @@ static void reset_counts(void) {
 %token CHECKSUM
 %token DOT_DOT
 %token KW_ACCESS
+%token KW_BRANCH
 %token KW_CALL
 %token KW_CONTROL
 %token KW_DOINLINE
 %token KW_ENTRY
+%token KW_FORCE
 %token KW_IGNORE
 %token KW_IGNORECONTROL
 %token KW_IGNORESEQ
@@ -133,6 +135,10 @@ command:
 		{ loader->onNoCall(*$3); delete $3; }
 |	KW_DOINLINE id_or_address opt_in ';'
 		{ loader->onNoInline(*$2, false, path); delete $2; path.clear(); }
+|	KW_FORCE KW_BRANCH full_address ';'
+		{ loader->onForceBranch(*$3); delete $3; }
+|	KW_FORCE KW_CALL full_address ';'
+		{ loader->onForceCall(*$3); delete $3; }
 |	KW_NOINLINE id_or_address opt_in ';'
 		{ loader->onNoInline(*$2, true, path); delete $2; path.clear(); }
 |	KW_INLINING_ON id_or_address opt_in ';'

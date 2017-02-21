@@ -7,9 +7,11 @@
 
 #include <elm/assert.h>
 #include <elm/serial2/XOMUnserializer.h>
+
 #include <otawa/hard/CacheConfiguration.h>
-#include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa { namespace hard {
 

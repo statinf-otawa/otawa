@@ -106,10 +106,10 @@ AbstractRegistration::AbstractRegistration(string name, Version version, Abstrac
  * Set the features.
  * @param coll		Features to set.
  */
-void AbstractRegistration::setFeatures(const genstruct::SLList<FeatureUsage>& coll) {
-	features.clear();
-	for(genstruct::SLList<FeatureUsage>::Iterator use(coll); use; use++)
-		features.add(use);
+void AbstractRegistration::setFeatures(const List<FeatureUsage>& coll) {
+	_feats.clear();
+	for(List<FeatureUsage>::Iter use(coll); use; use++)
+		_feats.add(use);
 }
 
 
@@ -117,9 +117,9 @@ void AbstractRegistration::setFeatures(const genstruct::SLList<FeatureUsage>& co
  * Set the configurations.
  * @param coll	Configures to set.
  */
-void AbstractRegistration::setConfigs(const genstruct::SLList<AbstractIdentifier *>& coll) {
+void AbstractRegistration::setConfigs(const List<AbstractIdentifier *>& coll) {
 	configs.clear();
-	for(genstruct::SLList<AbstractIdentifier *>::Iterator use(coll); use; use++)
+	for(List<AbstractIdentifier *>::Iter use(coll); use; use++)
 		configs.add(use);
 }
 
@@ -229,16 +229,16 @@ void AbstractRegistration::init(cstring name, const Version& version, int tag, V
 	while(tag != p::end) {
 		switch(tag) {
 		case p::require:
-			features.add(FeatureUsage(FeatureUsage::require, *args.next<const AbstractFeature *>()));
+			_feats.add(FeatureUsage(FeatureUsage::require, *args.next<const AbstractFeature *>()));
 			break;
 		case p::provide:
-			features.add(FeatureUsage(FeatureUsage::provide, *args.next<const AbstractFeature *>()));
+			_feats.add(FeatureUsage(FeatureUsage::provide, *args.next<const AbstractFeature *>()));
 			break;
 		case p::invalidate:
-			features.add(FeatureUsage(FeatureUsage::invalidate, *args.next<const AbstractFeature *>()));
+			_feats.add(FeatureUsage(FeatureUsage::invalidate, *args.next<const AbstractFeature *>()));
 			break;
 		case p::use:
-			features.add(FeatureUsage(FeatureUsage::use, *args.next<const AbstractFeature *>()));
+			_feats.add(FeatureUsage(FeatureUsage::use, *args.next<const AbstractFeature *>()));
 			break;
 		case p::base:
 			_base = args.next<AbstractRegistration *>();
@@ -267,7 +267,7 @@ void AbstractRegistration::init(cstring name, const Version& version, int tag, V
 void ConfigIter::step(void) {
 	while(_all && reg && iter.ended()) {
 		if((reg = &reg->base()))
-			iter = genstruct::SLList<AbstractIdentifier *>::Iterator(reg->configs);
+			iter = List<AbstractIdentifier *>::Iter(reg->configs);
 	}
 }
 
@@ -284,7 +284,7 @@ void ConfigIter::step(void) {
 void FeatureIter::step(void) {
 	while(reg && iter.ended()) {
 		if((reg = &reg->base()))
-			iter = genstruct::SLList<FeatureUsage>::Iterator(reg->features);
+			iter = List<FeatureUsage>::Iter(reg->_feats);
 	}
 }
 

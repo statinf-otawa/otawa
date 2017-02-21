@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	OTAWA Instruction Disassembler
  *
  *	This file is part of OTAWA
@@ -26,6 +25,7 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
+#include <otawa/prog/Process.h>
 #include <otawa/hard/Processor.h>
 #include <otawa/hard/Register.h>
 #include <otawa/prog/sem.h>

@@ -20,10 +20,11 @@
  *	02110-1301  USA
  */
 
-#include <otawa/util/SymAddress.h>
-#include <otawa/prog/Symbol.h>
-#include <otawa/cfg/features.h>
 #include <otawa/cfg/CFGInfo.h>
+#include <otawa/cfg/features.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prog/Symbol.h>
+#include <otawa/util/SymAddress.h>
 
 namespace otawa {
 
