@@ -20,19 +20,22 @@
  */
 
 #include <stdio.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/prog/WorkSpace.h>
+
 #include <elm/checksum/Fletcher.h>
 #include <elm/io/InFileStream.h>
 #include <elm/io/BufferedInStream.h>
-#include <otawa/flowfact/features.h>
 #include <elm/xom.h>
 #include <elm/xom/XIncluder.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/system/Path.h>
+
+#include <otawa/flowfact/features.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/prop/DeletableProperty.h>
 #include <otawa/prog/File.h>
-#include <otawa/hard/Platform.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/util/FlowFactLoader.h>
 
 // Externals
 extern FILE *util_fft_in;

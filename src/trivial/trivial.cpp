@@ -23,6 +23,7 @@
 #include <otawa/cfg.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Memory.h>
+#include <otawa/icache/features.h>
 #include <otawa/ilp/expr.h>
 #include <otawa/ipet.h>
 #include <otawa/proc/BBProcessor.h>
@@ -259,6 +260,97 @@ p::declare NoDCacheTime::reg = p::init("otawa::trivial::NoDCacheTime", Version(1
 p::id<bool> BLOCKING_STORE("otawa::trivial::BLOCKING_STORE", true);
 
 
+/**
+ * This analysis uses the category instruction cache analysis to increase
+ * the WCET objective function with miss time, considering that a miss causes
+ * the full memory access time.
+ *
+ * @ingroup trivial
+ */
+class CatICacheTime: public BBProcessor {
+public:
+	static p::declare reg;
+	CatICacheTime(p::declare& r = reg): BBProcessor(r), cache(0), mem(0), sys(0) { }
+
+protected:
+
+	virtual void setup(WorkSpace *ws) {
+		cache = hard::CACHE_CONFIGURATION(ws)->instCache();
+		if(!cache)
+			throw ProcessorException(*this, "no instruction cache here!");
+		mem = hard::MEMORY(ws);
+		sys = model(ipet::SYSTEM(ws));
+	}
+
+	void processAccess(PropList *site, const icache::Access& acc) {
+		switch(cache::CATEGORY(acc)) {
+
+		case cache::INVALID_CATEGORY:
+			warn(_ << "no category at " << acc.address() << " in " << site);
+			break;
+
+		case cache::ALWAYS_HIT:
+			// no miss penality
+			break;
+
+		case cache::FIRST_MISS: {
+				time_t t_miss = mem->readTime(acc.address());
+				Block *h = cache::CATEGORY_HEADER(acc);
+				if(!h)
+					sys += t_miss;
+				else {
+					for(Block::EdgeIter e = h->ins(); e; e++)
+						if(!otawa::BACK_EDGE(e))
+							sys += t_miss * var(ipet::VAR(e));
+				}
+			}
+			break;
+
+		case cache::FIRST_HIT:
+		case cache::ALWAYS_MISS:
+		case cache::NOT_CLASSIFIED: {
+				time_t t_miss = mem->readTime(acc.address());
+				var x(ipet::VAR(site));
+				sys += t_miss * x;
+			}
+			break;
+		}
+	}
+
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+
+		// process accesses of the input edges
+		for(Block::EdgeIter e = b->ins(); e; e++) {
+			const Bag<icache::Access>& accs = icache::ACCESSES(e);
+			for(int i = 0; i < accs.count(); i++)
+				processAccess(e, accs[i]);
+		}
+
+		// process access of the block
+		const Bag<icache::Access>& accs = icache::ACCESSES(b);
+		for(int i = 0; i < accs.count(); i++)
+			processAccess(b, accs[i]);
+	}
+
+private:
+	const hard::Cache *cache;
+	const hard::Memory *mem;
+	model sys;
+};
+
+p::declare CatICacheTime::reg = p::init("otawa::trivial::CatICacheTime", Version(1, 0, 0))
+	.make<CatICacheTime>()
+	.require(ipet::ASSIGNED_VARS_FEATURE)
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.use(icache::ACCESSES_FEATURE)
+	.use(cache::COLLECTED_LBLOCKS_FEATURE)
+	.use(otawa::LOOP_INFO_FEATURE)
+	.provide(ipet::INST_CACHE_SUPPORT_FEATURE);
+
+
+/* plugin hook */
 ProcessorPlugin plugin = sys::Plugin::make("otawa::trivial", OTAWA_PROC_VERSION)
 	.version(Version(1, 0, 0))
 	.hook(OTAWA_PROC_NAME);

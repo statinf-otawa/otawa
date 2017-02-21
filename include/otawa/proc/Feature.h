@@ -25,6 +25,7 @@
 #include <elm/string.h>
 #include <otawa/proc/AbstractFeature.h>
 #include <otawa/prop/info.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 	
@@ -67,14 +68,14 @@ Feature<T, C>::Feature(CString name): AbstractFeature(name) {
 }
 
 template <class T, class C>
-void Feature<T, C>::process(WorkSpace *fw, const PropList& props) const {
+void Feature<T, C>::process(WorkSpace *ws, const PropList& props) const {
+	bool del_proc = false;
 	Processor *proc = (*this)(props);
-	if(proc)
-		proc->process(fw, props);
-	else {
-		T proc;
-		proc.process(fw, props);
+	if(!proc) {
+		proc = new T();
+		del_proc = true;
 	}
+	ws->run(proc, props, del_proc);
 }
 
 } // otawa

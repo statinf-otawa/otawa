@@ -403,27 +403,6 @@ Loader *Process::loader(void) const {
 
 
 /**
- * This method is called each a workspace using the current process is
- * created. It may be used to perform some workspace initialization like
- * feature providing.
- */
-void Process::link(WorkSpace *ws) {
-	ASSERT(ws);
-	for(int i = 0; i < provided.length(); i++)
-		ws->provide(*provided[i]);
-}
-
-
-/**
- * This method is called each a workspace using the current process is
- * deleted.
- */
-void Process::unlink(WorkSpace *ws) {
-	ASSERT(ws);
-}
-
-
-/**
  * This method let provide feature from the loader / processors.
  */
 void Process::provide(AbstractFeature& feature) {
@@ -746,10 +725,7 @@ throw (UnsupportedFeatureException) {
  * @throw UnsupportedFeatureException	If this function is called and
  * 				the feature @ref SOURCE_LINE_FEATURE is not implemented.
  */
-void Process::getAddresses(
-	cstring file,
-	int line,
-	Vector<Pair<Address, Address> >& addresses)
+void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
 throw (UnsupportedFeatureException) {
 	throw UnsupportedFeatureException(this, SOURCE_LINE_FEATURE);
 }

@@ -20,10 +20,12 @@
  */
 #include <elm/io/OutFileStream.h>
 #include <elm/xom/Serializer.h>
+
 #include <otawa/cfgio/Output.h>
-#include <otawa/proc/ProcessorPlugin.h>
-#include <otawa/prop/DynIdentifier.h>
 #include <otawa/ipet/features.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prop/DynIdentifier.h>
 
 
 namespace otawa { namespace cfgio {

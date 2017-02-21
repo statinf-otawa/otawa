@@ -1083,8 +1083,8 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		} while(branchDetected);
 	}
 
-
-	workspace()->invalidate(COLLECTED_CFG_FEATURE); // clean the sliced CFG
+	if(workspace()->isProvided(COLLECTED_CFG_FEATURE))
+		workspace()->invalidate(COLLECTED_CFG_FEATURE); // clean the sliced CFG
 	workspace()->require(COLLECTED_CFG_FEATURE, props); // the final full CFG
 
 	if(outputCFG)

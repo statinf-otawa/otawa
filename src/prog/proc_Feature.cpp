@@ -69,22 +69,6 @@ AbstractFeature& AbstractFeature::null = _null;
  * @param props	Property list configuration.
  */
 
-
-/**
- * @fn void AbstractFeature::check(FrameWork *fw) const;
- * Check if the framework really implement the current feature. If not, it
- * throws a @ref ProcessorException. This method is only usually called
- * for debugging purpose as its execution is often very large.
- */
-
-
-/**
- * @fn void AbstractFeature::clean(WorkSpace *ws) const;
- * This method is called each time a feature is invalidated. In this case, the
- * feature must removed all properties put on the workspace.
- */
-
-
 namespace p {
 
 /**
@@ -144,21 +128,9 @@ feature::~feature(void) {
 void feature::process(WorkSpace *ws, const PropList& props) const {
 	Processor *p = _maker->make();
 	ASSERT(p);
-	p->process(ws, props);
-	delete p;
+	ws->run(p, props, true);
 }
 
-
-/**
- */
-void feature::check(WorkSpace *fw) const {
-}
-
-
-/**
- */
-void feature::clean(WorkSpace *ws) const {
-}
 
 }	// p
 

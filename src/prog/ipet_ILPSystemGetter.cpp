@@ -21,11 +21,12 @@
  */
 
 #include <elm/assert.h>
-#include <otawa/prog/Manager.h>
-#include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/ilp/System.h>
-#include <otawa/prop/DeletableProperty.h>
 #include <otawa/ipet/features.h>
+#include <otawa/ipet/ILPSystemGetter.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prop/DeletableProperty.h>
 
 namespace otawa { namespace ipet {
 

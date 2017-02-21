@@ -13,6 +13,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
 #include <otawa/prog/File.h>
+#include <otawa/prog/Process.h>
 #include "ExpNode.h"
 
 // Externals
