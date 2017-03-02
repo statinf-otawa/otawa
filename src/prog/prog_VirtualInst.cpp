@@ -155,7 +155,7 @@ int VirtualInst::multiCount(void) { return _inst->multiCount(); }
 
 /**
  */
-sem::cond_t VirtualInst::condition(void) { return _inst->condition(); }
+Condition VirtualInst::condition(void) { return _inst->condition(); }
 
 
 /**
@@ -180,7 +180,7 @@ public:
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void)
 		{ return elm::genstruct::Table<hard::Register *>::EMPTY; }
 	virtual int multiCount(void)							{ return 0; }
-	virtual sem::cond_t condition(void)						{ return sem::NO_COND; }
+	virtual Condition condition(void)						{ return Condition(); }
 
 };
 

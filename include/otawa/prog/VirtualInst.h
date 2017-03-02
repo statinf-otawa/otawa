@@ -55,7 +55,7 @@ public:
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
-	virtual sem::cond_t condition(void);
+	virtual Condition condition(void);
 
 protected:
 	~VirtualInst(void);

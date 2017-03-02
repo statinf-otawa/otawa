@@ -229,7 +229,10 @@ private:
 
 // useful functions
 cond_t invert(cond_t cond);
+bool isSigned(cond_t cond);
+bool isUnsigned(cond_t cond);
 int size(type_t type);
+
 io::Output& operator<<(io::Output& out, type_t type);
 io::Output& operator<<(io::Output& out, cond_t cond);
 

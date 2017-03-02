@@ -475,12 +475,15 @@ Inst *Inst::toInst(void) {
 
 /**
  * Return the condition associated with the current instruction.
- * In its default implementation, return sem::NO_COND for
+ * In its default implementation, return a no-condition for
  * all instructions.
- * @return	Condition of the instruction.
+ * @return	Condition of the instruction
+ * 			(no-condition if there is no condition,
+ * 			any-condition if the condition is not handled by the condition system).
+ *
  */
-sem::cond_t Inst::condition(void) {
-	return sem::NO_COND;
+Condition Inst::condition(void) {
+	return Condition();
 }
 
 

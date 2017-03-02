@@ -7,20 +7,20 @@ This section describes the requirements to build and use the @(OTAWA) framework.
 To build OTAWA, the following tools are required:
 
 ^ Package ^ Version ^ URL ^
-| GCC | 4.0.1 | http://gcc.gnu.org/ |
-| GMake | 3.80 | http://www.gnu.org/software/make/ |
-| CMake | 2.6 | http://www.cmake.org/ |
-| Flex | 2.5.4 |  |
-| Bison | 2.0 |  |
-| OCAML | 3.0 | http://caml.inria.fr/ocaml/release.fr.html |
+| GCC   | 4.0.1 | http://gcc.gnu.org/ |
+| GMake | 3.80  | http://www.gnu.org/software/make/ |
+| CMake | 2.6   | http://www.cmake.org/ |
+| Flex  | 2.5.4 |  |
+| Bison | 2.0   |  |
+| OCAML | 3.0   | http://caml.inria.fr/ocaml/release.fr.html |
 
-Depending on the use of @(OTAWA), you should also install :
+OTAWA has been tested succesfully on the following platforms:
+  * Linux (32- or 64-bit),
+  * MacOSX (only 64-bit),
+  * Windows (32- or 64-bits but requires a recent version of MiGW).
 
-OTAWA has been tested on the following platforms:
-^ Distribution ^ Version ^ Architecture ^ Remarks ^
-| Linux | Debian and RPM based | x86, x86_64 |  |
-| MacOSX |  | x86_64 |  |
-| Windows | XP, 7 | x86, x86_64 | Needs MinGW. |
+Additionally, it can be useful to install cross-compilers for platforms
+you want to compute WCET for.
 
 
 ===== Building automatically from the source repository =====
@@ -36,7 +36,7 @@ First, get the distribution package itself:
 > hg clone https://anon:ok@wwwsecu.irit.fr/hg/TRACES/dist
 </code>
 
-Then, the build of OTAWA may be launched:
+Then, the build of OTAWA can runned:
 <code sh>
 > cd dist
 > ./build.sh -D -p otawa-core
@@ -48,13 +48,18 @@ where:
   * DATE is the concatenation of 2-last numbers of the year, the month number and the day number.
   * OS is one of linux-x86, linux-x86_64, win32, win64, etc according your OS version.
 
-If you encounter any error, contact us at [[mailto:otawa@irit.fr]] and join to the email
+If you encounter any error, contact us to [[mailto:otawa@irit.fr]] and join to the email
 a copy of the file ''build.log'' that contains details about the building process.
 
+Notice that you will find the downloaded sources in the directory named //OS//''/otawa-core-build''.
+This may be a good point to start developing extension inside OTAWA sources.
 
-==== Installing extensions ====
 
-@(OTAWA) is heavily based on plug-in system and therefore provides lots of extensions.
+==== Installing Extensions ====
+
+@(OTAWA) is heavily based on plug-in system and therefore provides lots of extensions
+like new analyses, new instructions set or the support of new microprocessor modles.
+
 The tool ''otawa-install.py'' provides a simple way to install new extensions. Yet, it
 requires that the @(OTAWA) ''bin'' directory to be on the executable file paths.
 

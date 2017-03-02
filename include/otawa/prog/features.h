@@ -23,8 +23,11 @@
 #define OTAWA_PROG_FEATURES_H_
 
 #include <otawa/proc/Feature.h>
+#include <otawa/prog/sem.h>
 
 namespace otawa {
+
+namespace hard { class Register; }
 
 // delayed_t type
 typedef enum delayed_t {
@@ -43,12 +46,42 @@ public:
 extern Identifier<DelayedInfo *> DELAYED_INFO;
 
 
+// Conditional type
+class Condition {
+public:
+	typedef t::uint8 cond_t;
+	static const cond_t
+		EQ  = 0b001,
+		LT  = 0b010,
+		GT  = 0b100,
+		ANY = 0b111;
+
+	Condition(void);
+	Condition(sem::cond_t cond, hard::Register *reg);
+	Condition(bool unsigned_, cond_t cond, hard::Register *reg);
+	inline bool isEmpty(void) const { return _cond == 0; }
+	inline bool isAny(void) const { return _cond == ANY; }
+	inline bool isUnsigned(void) const { return _unsigned; }
+	inline bool isSigned(void) const { return !_unsigned; }
+	inline cond_t cond(void) const { return _cond; }
+	inline hard::Register *reg(void) const { return _reg; }
+	sem::cond_t semCond(void) const;
+	bool subsetOf(const Condition& c);
+	Condition complementOf(const Condition& c);
+	inline Condition revert(void) const { return Condition(_unsigned, ANY & ~_cond, _reg); };
+
+private:
+	bool _unsigned;
+	cond_t _cond;
+	hard::Register *_reg;
+};
+
 // Common properties
 class Symbol;
 extern p::feature LABEL_FEATURE;
 extern Identifier<Symbol *> SYMBOL;
-extern Identifier<String> LABEL;
-extern Identifier<String> FUNCTION_LABEL;
+extern Identifier<string> LABEL;
+extern Identifier<string> FUNCTION_LABEL;
 
 // Process information
 extern Identifier<Address> ARGV_ADDRESS;

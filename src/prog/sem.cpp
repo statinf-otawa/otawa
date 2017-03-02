@@ -538,6 +538,32 @@ cond_t invert(cond_t cond) {
 
 
 /**
+ * Test if a condition concerns signed numbers or not.
+ * EQ and NE are considered to apply equally on signed and unsigned
+ * numbers.
+ * @param cond	Type to test.
+ * @return		True if cond concerns signed numbers, false else.
+ * @ingroup sem
+ */
+bool isSigned(cond_t cond) {
+	return EQ <= cond  && cond <= NE;
+}
+
+
+/**
+ * Test if a condition concerns unsigned numbers or not.
+ * EQ and NE are considered to apply equally on signed and unsigned
+ * numbers.
+ * @param cond	Type to test.
+ * @return		True if cond concerns signed numbers, false else.
+ * @ingroup sem
+ */
+bool isUnsigned(cond_t cond) {
+	return cond == EQ || cond >= ANY_COND;
+}
+
+
+/**
  * Get the size of the given type.
  * @param type	Type to get size for.
  * @return		Size in bytes.

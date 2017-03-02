@@ -132,6 +132,9 @@ public:
 	virtual void readRegSet(RegSet& set);
 	virtual void writeRegSet(RegSet& set);
 
+	// conditional accessors
+	virtual Condition condition(void);
+
 	// ProgItem overload
 	virtual Inst *toInst(void);
 
@@ -139,9 +142,6 @@ public:
 	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
 	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
-
-	// guarded information
-	virtual sem::cond_t condition(void);
 
 protected:
 	static const elm::genstruct::Table<hard::Register *> no_regs;

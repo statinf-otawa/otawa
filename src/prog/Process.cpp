@@ -890,7 +890,7 @@ p::feature VLIW_SUPPORTED("otawa::VLIW_SUPPORTED", new Maker<NoProcessor>());
  * This feature is provided by @ref Process which architecture provides conditional
  * instructions. A common example are the ARM microprocessors which instructions,
  * at least in normal mode, can be conditional. The architectures providing this
- * feature implement the method Inst::condition().
+ * feature implement the method Inst::condition() and Inst::updateCondition().
  */
 p::feature CONDITIONAL_INSTRUCTIONS_FEATURE("otawa::CONDITIONAL_INSTRUCTIONS_FEATURE", new Maker<NoProcessor>());
 
@@ -1171,5 +1171,171 @@ p::feature DELAYED2_FEATURE("otawa::DELAYED2_FEATURE", new Maker<NoProcessor>())
  * @li @ref DELAYED2_FEATURE
  */
 Identifier<DelayedInfo *> DELAYED_INFO("otawa::DELAYED_INFO", 0);
+
+
+/**
+ * @classclass Condition
+ * This type of object is returned by Inst::condition() method and is used
+ * to manage conditional instructions (which conditional branches are only
+ * a particular case). It provides information about the condition that
+ * activates the instruction and the register containing the condition.
+ *
+ * In this representation, a condition is a boolean (true -- unsigned, false -- signed)
+ * and a bit set representing the possible conditions (OR'ed composition
+ * of @ref EQ, @ref LT or @ref GT).
+ *
+ * @seealso Inst, Inst::condition()
+ * @ingroup prog
+ */
+
+/**
+ * Build an empty condition.
+ */
+Condition::Condition(void): _unsigned(false), _cond(0), _reg(0) {
+}
+
+/**
+ * Build a condition.
+ * @param cond	Condition value as used in semantic instructions.
+ * @param reg	Register containing the condition.
+ */
+Condition::Condition(sem::cond_t cond, hard::Register *reg): _reg(reg) {
+
+	// set condition
+	static cond_t set[] = {
+		0,					// NO_COND	= 0
+		EQ,				// EQ		= 1
+		LT,				// LT		= 2
+		LT | EQ,		// LE		= 3
+		GT | EQ,		// GE		= 4
+		GT,				// GT		= 5
+		0,				//			= 6
+		0,				//			= 7
+		EQ | LT | GT,	// ANY_COND	= 8
+		LT | GT,		// NE		= 9
+		LT,				// ULT		= 10
+		LT | EQ,		// ULE		= 11
+		GT | EQ,		// UGE		= 12
+		GT				// UGT		= 13
+	};
+	ASSERT(_cond < sem::MAX_COND);
+	_cond = set[cond];
+	_unsigned = sem::ULT <= cond && cond <= sem::UGT;
+}
+
+/**
+ * Build a condition.
+ * @param unsigned_		True if the condition is unsigned, false else.
+ * @param cond			Set of conditions.
+ * @param reg			Register containing the condition.
+ */
+Condition::Condition(bool unsigned_, cond_t cond, hard::Register *reg)
+: _unsigned(unsigned_), _cond(cond), _reg(reg) {
+}
+
+
+/**
+ * Get the semantic condition.
+ * @return	Semantic condition.
+ */
+sem::cond_t Condition::semCond(void) const {
+
+	// signed case
+	if(!_unsigned) {
+		static sem::cond_t back[] = {
+			sem::NO_COND,	// none
+			sem::EQ,		// EQ
+			sem::LT,		// LT
+			sem::LE,		// LT | EQ
+			sem::GT,		// GT
+			sem::GE,		// GT | EQ
+			sem::NE,		// GT | LT
+			sem::ANY_COND	// GT | LT | EQ
+		};
+		return back[_cond];
+	}
+
+	// unsigned case
+	else {
+		static sem::cond_t back[] = {
+			sem::NO_COND,	// none
+			sem::EQ,		// EQ
+			sem::ULT,		// LT
+			sem::ULE,		// LT | EQ
+			sem::UGT,		// GT
+			sem::UGE,		// GT | EQ
+			sem::NE,		// GT | LT
+			sem::ANY_COND	// GT | LT | EQ
+		};
+		return back[_cond];
+	}
+}
+
+/**
+ * @fn bool Condition::isEmpty(void) const;
+ * Test if the condition is empty.
+ * @return	True if the condition is empty, false else.
+ */
+
+/**
+ * @fn bool Condition::isAny(void) const;
+ * Test if the condition is any condition.
+ * @return	True if the condition is any, false else.
+ */
+
+/**
+ * @fn hard::Register *Condition::reg(void) const;
+ * Get the register containing the condition.
+ * @return	Register containing the condition.
+ */
+
+/**
+ * @fn bool Condition::isUnsigned(void) const;
+ * Test if the condition is unsigned.
+ * @return	True if the condition is unsigned, false else.
+ */
+
+/**
+ * @fn bool Condition::isSigned(void) const;
+ * Test if the condition is signed.
+ * @return	True if the condition is signed, false else.
+ */
+
+/**
+ * @fn cond_t Condition::cond(void) const;
+ * Get the condition as a set of EQ, LT or GT.
+ * @return	Condition as a set.
+ */
+
+/**
+ * Test if the current condition is a subset of the given
+ * condition.
+ * @param c		Condition to be a superset of the current condition.
+ * @return		True if the current condition is a subset of the condition c.
+ */
+bool Condition::subsetOf(const Condition& c) {
+	if(_reg != c._reg || _unsigned != c._unsigned)
+		return false;
+	else
+		return (_cond | c._cond) == _cond;
+}
+
+
+/**
+ * Considering the current condition, return the complement
+ * condition of the condition. The current condition must be
+ * a superset of the condition c!
+ *
+ * For example, if the current condition GE =(Greater or Equal)
+ * and c is EQ (Equal), this function returns GT (Greater-Than).
+ *
+ * @param c	Condition to get complement for.
+ * @return	Complement condition.
+ */
+Condition Condition::complementOf(const Condition& c) {
+	ASSERT(_reg == c._reg);
+	ASSERT(_unsigned == c._unsigned);
+	return Condition(_unsigned, _cond & ~c._cond, _reg);
+}
 
 } // otawa

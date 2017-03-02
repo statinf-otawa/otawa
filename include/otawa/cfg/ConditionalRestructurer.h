@@ -32,8 +32,14 @@ public:
 	ConditionalRestructurer(p::declare& r = reg);
 
 protected:
-	virtual Block *transform(Block *b);
-	virtual Edge *transform(Edge *e);
+	virtual void transform(CFG *g, CFGMaker &m);
+
+private:
+	void split(Block *bb);
+	Inst *nop(Inst *i);
+	void make(Block *bb);
+
+	Inst *_nop, *_anop;
 };
 
 } // otawa

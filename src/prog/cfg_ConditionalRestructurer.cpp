@@ -24,9 +24,23 @@
 
 namespace otawa {
 
-// set of blocks matching the block it is put on
-static p::id<Bag<Block *> > BB_SET("");
+class Nop: public VirtualInst {
+public:
+	Nop(WorkSpace *ws, Inst *i): VirtualInst(ws, i) { }
+};
 
+static const t::uint8
+	NONE		= 0b00,
+	TAKEN		= 0b01,
+	NOT_TAKEN	= 0b10,
+	BOTH		= 0b11;
+
+/**
+ * Attached to a block to represent the different versions.
+ * The pair is made of a new basic block and a branch mode
+ * (one of NONE, TAKEN, NOT_TAKEN or BOTH).
+ */
+static p::id<Pair<Block *, int> > BB("");
 
 /**
  * This feature ensures that the CFG is transformed to reflect the effects of conditional instructions.
@@ -45,119 +59,253 @@ p::declare ConditionalRestructurer::reg = p::init("otawa::ConditionalRestructure
 	.extend<CFGTransformer>()
 	.make<ConditionalRestructurer>();
 
-typedef enum {
-	NEVER = 0,
-	MAYBE = 1,
-	ALWAYS = 2
-} effect_t;
+
+/**
+ */
+ConditionalRestructurer::ConditionalRestructurer(p::declare& r)
+: CFGTransformer(r), _nop(0), _anop(0) {
+}
 
 
 /**
- * Apply a condition
  */
-static effect_t apply(sem::cond_t state, sem::cond_t cond) {
-	switch(state) {
-	case sem::NO_COND:
-		return MAYBE;
+void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 
-	case sem::EQ:
-		switch(state) {
-		case sem::EQ:		return ALWAYS;
-		case sem::NE:		return NEVER;
-		case sem::LT:		return NEVER;
-		case sem::GT:		return NEVER;
-		case sem::LE:		return MAYBE;
-		case sem::GE:		return MAYBE;
-		case sem::ANY_COND:	return MAYBE;
-		}
-		break;
+	// split the basic blocks
+	for(CFG::BlockIter b(g->blocks()); b; b++)
+		split(b);
+	BB(g->entry()) = pair(m.entry(), int(BOTH));
+	BB(g->exit()) = pair(m.entry(), int(BOTH));
+	if(g->unknown())
+		BB(g->unknown()) = pair(m.unknown(), int(BOTH));
 
-	case sem::NE:
-		switch(state) {
-		case sem::EQ:		return NEVER;
-		case sem::NE:		return ALWAYS;
-		case sem::LT:		return MAYBE;
-		case sem::GT:		return MAYBE;
-		case sem::LE:		return MAYBE;
-		case sem::GE:		return MAYBE;
-		case sem::ANY_COND:	return MAYBE;
-		}
-		break;
+	// re-build the CFG
+	for(CFG::BlockIter b(g->blocks()); b; b++)
+		make(b);
+}
 
-	case sem::LT:
-		switch(state) {
-		case sem::EQ:		return NEVER;
-		case sem::NE:		return MAYBE;
-		case sem::LT:		return ALWAYS;
-		case sem::GT:		return NEVER;
-		case sem::LE:		return MAYBE;
-		case sem::GE:		return NEVER;
-		case sem::NO_COND:	return MAYBE;
+
+// basic block
+class Case {
+public:
+	inline Case(void): _bra(BOTH) { }
+	inline t::uint8 branch(void) const { return _bra; }
+
+	/**
+	 * Remove conditions matching the condition which register is written.
+	 * @param wr	Written registers.
+	 */
+	void remove(const RegSet& wr) {
+		int i = 0, j = 0;
+		while(i < _conds.length())
+			if(wr.contains(_conds[i].reg()->platformNumber()))
+				i++;
+			else {
+				if(i != j)
+					_conds[j] = _conds[i];
+				i++;
+				j++;
+			}
+	}
+
+	/**
+	 * Get the index of a condition.
+	 * @param c	Looked condition.
+	 * @return	Matching index or -1.
+	 */
+	int index(const Condition& c) {
+		for(int i = 0; i < _conds.length(); i++)
+			if(c.isSigned() == _conds[i].isSigned()
+			&& c.reg() == _conds[i].reg())
+				return i;
+		return -1;
+	}
+
+	/**
+	 * Find the case condition matching the given condition.
+	 * @param c	Looked condition.
+	 * @return	Matching condition or empty condition.
+	 */
+	Condition matches(const Condition& c) {
+		int i = index(c);
+		if(i >= 0)
+			return _conds[i];
+		else
+			return Condition();
+	}
+
+	/**
+	 * Add an instruction to the basic block.
+	 * @param i		Added instruction.
+	 * @param wr	Written registers.
+	 * @param bra	Branch mode (default to NONE).
+	 */
+	void add(Inst *i, const RegSet& wr, t::uint8 bra = NONE) {
+		_insts.add(i);
+		remove(wr);
+		if(bra != NONE)
+			_bra = bra;
+	}
+
+	/**
+	 * Add an instruction with its condition.
+	 * @param i		Added instruction.
+	 * @param wr	Written registers.
+	 * @param c		Instruction condition.
+	 * @param bra	Branch mode (default to NONE).
+	 */
+	void add(Inst *i, const RegSet& set, const Condition& c, t::uint8 bra = NONE) {
+		int ci = index(c);
+		if(ci >= 0)
+			_conds[ci] = c;
+		else
+			_conds.add(c);
+		add(i, set, bra);
+	}
+
+	/**
+	 * Build a new case where the given instruction is added.
+	 * @param i		Added instruction.
+	 * @param wr	Written registers.
+	 * @param bra	Branch mode (default to NONE).
+	 */
+	Case *split(Inst *i, const RegSet& wr, t::uint8 bra = NONE) {
+		Case *nc = new Case(*this);
+		nc->add(i, wr, bra);
+		return nc;
+	}
+
+	/**
+	 * Build a new case where the given instruction is added
+	 * with the given condition.
+	 * @param i		Added instruction.
+	 * @param wr	Written registers.
+	 * @param c		Instruction condition.
+	 * @param bra	Branch mode (default to NONE).
+	 */
+	Case *split(Inst *i, const RegSet& wr, const Condition& c, t::uint8 bra = NONE) {
+		Case *nc = new Case(*this);
+		nc->add(i, wr, c, bra);
+		return nc;
+	}
+
+	inline genstruct::Table<Inst *> insts(void) { return _insts.detach(); }
+
+private:
+	Vector<Condition> _conds;
+	genstruct::Vector<Inst *> _insts;
+	t::uint8 _bra;
+};
+
+
+/**
+ * Split the block according to the conditions.
+ * Alternatives of the block are stored on the block itself using
+ * BB identifier.
+ *
+ * @param b	Split block.
+ */
+void ConditionalRestructurer::split(Block *b) {
+
+	// end block
+	if(b->isEnd())
+		return;
+
+	// synthetic block
+	if(b->isSynth()) {
+		Block *cb = build(b->toSynth()->callee());
+		BB(b) = pair(cb, 0);
+		return;
+	}
+
+	// split the block
+	RegSet wr;
+	BasicBlock *bb = b->toBasic();
+	Vector<Case *> cases;
+	cases.add(new Case());
+	for(BasicBlock::InstIter i(bb); i; i++) {
+		Condition c = i->condition();
+		i->writeRegSet(wr);
+
+		// no condition: just add the instruction
+		if(c.isEmpty())
+			for(Vector<Case *>::Iter k(cases); k; k++)
+				k->add(i, wr);
+
+		// any condition: duplicate all cases
+		else if(c.isAny()) {
+			int l = cases.length();
+			for(int k = 0; k < l; k++) {
+				cases[k]->add(i, wr);
+				cases.add(cases[k]->split(nop(i), wr));
+			}
 		}
-		break;
-	case sem::LE:
-		switch(state) {
-		case sem::EQ:		return ALWAYS;
-		case sem::NE:		return MAYBE;
-		case sem::LT:		return MAYBE;
-		case sem::GT:		return NEVER;
-		case sem::LE:		return ALWAYS;
-		case sem::GE:		return MAYBE;
-		case sem::NO_COND:	return MAYBE;
+
+		// look at each condition
+		else {
+			int l = cases.length();
+			for(int k = 0; k < l; k++) {
+				Condition cc = cases[k]->matches(c);
+
+				// special for last branch
+				if(l == 1 && i == bb->control())
+					cases[k]->add(i, wr);
+
+				// cc = no condition => split
+				else if(cc.isEmpty()) {
+					cases[k]->add(i, wr, c);
+					cases.add(cases[k]->split(nop(i), wr, c.revert()));
+				}
+
+				// c subset of cc => add instruction
+				else if(c.subsetOf(cc))
+					cases[k]->add(i, wr, i->isControl() ? TAKEN : NONE);
+
+				// cc subset of c => split
+				else if(cc.subsetOf(c)) {
+					cases[k]->add(i, wr, cc, i->isControl() ? TAKEN : NONE);
+					cases.add(cases[k]->split(nop(i), wr, c.complementOf(cc), i->isControl() ? NOT_TAKEN : NONE));
+				}
+
+				// cc is out of c => not executed
+				else
+					cases[k]->add(nop(i), wr, i->isControl() ? NOT_TAKEN : NONE);
+			}
 		}
-		break;
-	case sem::GE:
-	case sem::GT:
-	case sem::ANY_COND:		break;
+
+	}
+
+	// build the block and clean
+	for(Vector<Case *>::Iter k(cases); k; k++) {
+		BB(bb) = pair(static_cast<Block *>(build(k->insts())), int(k->branch()));
+		delete *k;
 	}
 }
 
 
 /**
- * @class ConditionalRestructurer
- * This code processor transforms the CFG to reflect the effect of conditional instruction.
- * BB are duplicated according the conditional instructions it contains. The new BBS are made
- * of unconditional instructions, conditional instructions whose condition true and NOP
- * instructions to replace instructions which condition is false. When a condition becomes
- * true, the semantic of the instruction it applies to is prefixed with a semantic instruction
- * @ref sem::ASSUME to assert the condition.
- *
- * As a result, the obtained BBs reflects exactly the execution in the pipeline and the
- * semantic of the machine instructions.
- *
- * Used features:
- * @li @ref COLLECTED_CFG_FEATURE
- *
- * Required features:
- * @li @ref VIRTUAL_INST_FEATURE
- *
- * Provided features:
- * @li @ref CONDITIONAL_RESTRUCTURED_FEATURE
+ * Build a nop for the given instruction.
  */
+Inst *ConditionalRestructurer::nop(Inst *i) {
+	if(_anop != i) {
+		_nop = new Nop(workspace(), i);
+		_anop = i;
+	}
+	return _nop;
+}
+
 
 /**
+ * Build the corresponding blocks.
+ * @param b		Block to rebuild.
  */
-ConditionalRestructurer::ConditionalRestructurer(p::declare& r): CFGTransformer(r) {
-}
-
-Block *ConditionalRestructurer::transform(Block *b) {
-
-}
-
-Edge *ConditionalRestructurer::transform(Edge *e) {
-	Block *src = e->source();
-	Block *snk = e->sink();
-	if(src->hasProp(BB_SET) || snk->hasProp(BB_SET)) {
-		Bag<Block *> src_one(1, &src), snk_one(1, &snk);
-		const Bag<Block *>& src_bag = src->hasProp(BB_SET) ? BB_SET(src) : src_one;
-		const Bag<Block *>& snk_bag = snk->hasProp(BB_SET) ? BB_SET(snk) : snk_one;
-		for(int i = 0; i < src_bag.count(); i++)
-			for(int j = 0; j < snk_bag.count(); j++)
-				clone(src_bag[i], e, snk_bag[j]);
-		return 0;
-	}
-	else
-		return CFGTransformer::transform(e);
+void ConditionalRestructurer::make(Block *b) {
+	for(Block::EdgeIter e = b->outs(); e; e++)
+		for(p::id<Pair<Block *, int> >::Getter sb(b, BB); sb; sb++)
+			if((e->isTaken() && ((*sb).snd & TAKEN))
+			|| (e->isNotTaken() && ((*sb).snd & NOT_TAKEN)))
+				for(p::id<Pair<Block *, int> >::Getter tb(e->target(), BB); tb; tb++)
+					build((*sb).fst, (*tb).fst, e->flags());
 }
 
 } // otawa
