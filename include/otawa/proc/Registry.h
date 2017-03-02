@@ -66,7 +66,7 @@ public:
 private:
 	void step(void);
 	const AbstractRegistration *reg;
-	genstruct::SLList<AbstractIdentifier *>::Iterator iter;
+	List<AbstractIdentifier *>::Iter iter;
 	bool _all;
 };
 
@@ -75,7 +75,7 @@ private:
 class FeatureIter: public PreIterator<FeatureIter, const FeatureUsage *> {
 public:
 	inline FeatureIter(const AbstractRegistration& registration)
-		: reg(&registration), iter(reg->features) { step(); }
+		: reg(&registration), iter(reg->_feats) { step(); }
 	inline const FeatureUsage *item(void) const { return &iter.item(); }
 	inline void next(void) { iter.next(); step(); }
 	inline bool ended(void) const { return !reg; }
@@ -83,7 +83,7 @@ public:
 private:
 	void step(void);
 	const AbstractRegistration *reg;
-	genstruct::SLList<FeatureUsage>::Iterator iter;
+	List<FeatureUsage>::Iter iter;
 };
 
 } // otawa

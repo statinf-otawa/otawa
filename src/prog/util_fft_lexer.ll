@@ -59,11 +59,13 @@ SYM [?;,+-/:@=\[\]()]
 ".."			return DOT_DOT;
 
 "access"		return KW_ACCESS;
+"branch"		return KW_BRANCH;
 "call"			return KW_CALL;
 "checksum"		return CHECKSUM;
 "control"		return KW_CONTROL;
 "doinline"		return KW_DOINLINE;
 "entry"			return KW_ENTRY;
+"force"			return KW_FORCE;
 "ignore"		return KW_IGNORE;
 "ignorecontrol"	return KW_IGNORECONTROL;
 "ignoreseq"		return KW_IGNORESEQ;

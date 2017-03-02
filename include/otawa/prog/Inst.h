@@ -45,7 +45,6 @@ typedef genstruct::Vector<t::uint16> RegSet;
 class RegIter: public PreIterator<RegIter, const hard::Register *> {
 public:
 	inline RegIter(const RegSet& s, hard::Platform *p): set(s), i(0), pf(p) { }
-	//inline RegIter(const RegSet& s, WorkSpace *ws): set(s), i(0), pf(ws->process()->platform()) { }
 	inline bool ended(void) const { return i >= set.length(); }
 	inline const hard::Register *item(void) const { return pf->findReg(set[i]); }
 	inline void next(void) { i++; }

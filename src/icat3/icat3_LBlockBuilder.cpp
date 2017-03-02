@@ -19,7 +19,6 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#include "features.h"
 #include <elm/genstruct/HashTable.h>
 #include <elm/ptr.h>
 #include <otawa/cfg/features.h>
@@ -28,6 +27,7 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/EdgeProcessor.h>
 #include <otawa/prog/WorkSpace.h>
+#include "../../include/otawa/icat3/features.h"
 
 namespace otawa { namespace icat3 {
 

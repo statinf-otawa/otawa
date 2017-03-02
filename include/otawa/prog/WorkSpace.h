@@ -23,11 +23,14 @@
 #ifndef OTAWA_PROG_WORK_SPACE_H
 #define OTAWA_PROG_WORK_SPACE_H
 
+#include <elm/data/List.h>
+#include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/sys/Path.h>
 #include <elm/sys/Thread.h>
+#include <elm/util/LockPtr.h>
+
 #include <otawa/properties.h>
-#include <otawa/prog/Process.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -51,6 +54,7 @@ class Inst;
 class Loader;
 class Manager;
 class Process;
+class Processor;
 namespace hard {
 	class CacheConfiguration;
 	class Platform;
@@ -72,23 +76,22 @@ public:
 	inline Process *process(void) const { return &proc; };
 
 	// Process overload
-	virtual hard::Platform *platform(void) { return proc->platform(); };
-	virtual Manager *manager(void) { return proc->manager(); };
-	virtual Inst *start(void) { return proc->start(); };
-	virtual Inst *findInstAt(address_t addr) { return proc->findInstAt(addr); };
+	virtual hard::Platform *platform(void);
+	virtual Manager *manager(void);
+	virtual Inst *start(void);
+	virtual Inst *findInstAt(address_t addr);
 	string format(Address addr, bool with_address = true);
 
 	// Configuration services
 	elm::xom::Element *config(void);
-	void loadConfig(const elm::system::Path& path);
+	void loadConfig(const elm::sys::Path& path);
 
 	// Feature management
+	void run(Processor *proc, const PropList& props, bool del_proc = false);
+	inline void run(Processor& proc, const PropList& props, bool del_proc = false) { run(&proc, props); }
 	void require(const AbstractFeature& feature, const PropList& props = PropList::EMPTY);
-	void provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required = NULL);
 	bool isProvided(const AbstractFeature& feature);
-	void remove(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
-	FeatureDependency* getDependency(const AbstractFeature* feature);
 
 	// cancellation management
 	inline void clearCancellation(void) { cancelled = false; }
@@ -111,13 +114,23 @@ public:
 	CFG *getStartCFG(void);
 
 private:
-	void newFeatDep(const AbstractFeature* feature);
-	bool hasFeatDep(const AbstractFeature* feature);
-	void delFeatDep(const AbstractFeature* feature);
+
+	// new dependency system
+	typedef struct Dependency {
+		Dependency(void);
+		Dependency(Processor *proc, bool del_proc = false);
+		Processor *_proc;
+		List<struct Dependency *> _users, _used;
+		bool _del_proc;
+	} Dependency ;
+	typedef genstruct::HashTable<const AbstractFeature *, Dependency *> dep_map_t;
+	dep_map_t dep_map;
+
+	void invalidate(Dependency *dep);
+	void add(Processor *proc, bool del_proc);
+	void remove(Dependency *dep);
 
 	LockPtr<Process> proc;
-	typedef genstruct::HashTable<const AbstractFeature*, FeatureDependency*> feat_map_t;
-	feat_map_t featMap;
 	bool cancelled;
 };
 

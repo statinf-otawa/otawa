@@ -36,13 +36,9 @@ class WorkSpace;
 class AbstractFeature: public Identifier<Processor *> {
 public:
 	static AbstractFeature& null;
-
 	AbstractFeature(cstring name = "");
 	virtual ~AbstractFeature(void);
-	virtual void process(WorkSpace *fw,
-		const PropList& props = PropList::EMPTY) const = 0;
-	virtual void check(WorkSpace *fw) const = 0;
-	virtual void clean(WorkSpace *ws) const = 0;
+	virtual void process(WorkSpace *ws, const PropList& props = PropList::EMPTY) const = 0;
 };
 
 
@@ -56,8 +52,6 @@ namespace p {
 		~feature(void);
 
 		virtual void process(WorkSpace *ws, const PropList& props) const;
-		virtual void check(WorkSpace *fw) const;
-		virtual void clean(WorkSpace *ws) const;
 
 	private:
 		AbstractMaker *_maker;

@@ -390,86 +390,33 @@ void Processor::configure(const PropList& props) {
 
 
 /**
- * Execute the code processor on the given framework.
- * @param fw	Workspace to work on.
- * @param props	Configuration properties.
+ * This function runs the analysis on the given workspace.
+ * @param ws	Work space to run on.
  */
-void Processor::process(WorkSpace *fw, const PropList& props) {
-
-	// first, perform preparation
-	if(!isPrepared())
-		prepare(fw);
-
-	// Perform configuration
-	ws = fw;
-	configure(props);
-
-	// build the list of required features
-	Vector<const AbstractFeature *> required;
-	for(FeatureIter fuse(*_reg); fuse; fuse++)
-		if(fuse->kind() == FeatureUsage::require && !required.contains(&fuse->feature()))
-			required.add(&fuse->feature());
-
-	// remove non-used invalidated features
-	for(FeatureIter feature(*_reg); feature; feature++)
-		if(feature->kind() == FeatureUsage::invalidate
-		&& !_reg->uses(feature->feature())) {
-			if(logFor(LOG_DEPS))
-				log << "INVALIDATED: " << feature->feature().name()
-					<< " by " << _reg->name() << io::endl;
-			fw->invalidate(feature->feature());
-			required.remove(&feature->feature());
-		}
-
-	// Get used feature
-	for(FeatureIter feature(*_reg); !ws->isCancelled() && feature; feature++)
-		if(feature->kind() == FeatureUsage::require
-		|| feature->kind() == FeatureUsage::use) {
-			if(logFor(LOG_DEPS)) {
-				cstring kind = "USED";
-				if(feature->kind() == FeatureUsage::require)
-					kind = "REQUIRED";
-				log << kind << ": " << feature->feature().name()
-					<< " by " << _reg->name() << io::endl;
-			}
-			try {
-				fw->require(feature->feature(), props);
-			}
-			catch(NoProcessorException& e) {
-				log << "ERROR: no processor to implement " << feature->feature().name() << io::endl;
-				throw UnavailableFeatureException(this, feature->feature());
-			}
-		}
-	if(ws->isCancelled())
-		return;
-
-	// check before starting processor
-	for(FeatureIter feature(*_reg); feature; feature++)
-		if((feature->kind() == FeatureUsage::require
-		|| feature->kind() == FeatureUsage::use)
-		&& !fw->isProvided(feature->feature()))
-			throw otawa::Exception(_ << "feature " << feature->feature().name()
-				<< " is not provided after one cycle of requirements:\n"
-				<< "stopping -- this may denotes circular dependencies.");
+void Processor::run(WorkSpace *ws) {
+	this->ws = ws;
 
 	// pre-processing actions
 	if(logFor(LOG_CFG))
 		log << "Starting " << name() << " (" << version() << ')' << io::endl;
 	else if(logFor(LOG_PROC))
 		log << "RUNNING: " << name() << " (" << version() << ')' << io::endl;
+
+	// record time
 	elm::system::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
-	setup(fw);
 
 	// Launch the work
+	setup(ws);
 	try {
-		processWorkSpace(fw);
+		processWorkSpace(ws);
 	}
 	catch(ProcessorException& e) {
-		cleanup(fw);
+		cleanup(ws);
 		throw e;
 	}
+	cleanup(ws);
 
 	// Post-processing actions
 	if(logFor(LOG_CFG))
@@ -486,39 +433,19 @@ void Processor::process(WorkSpace *fw, const PropList& props) {
 	if(logFor(LOG_CFG))
 		log << io::endl;
 
-	// cleanup used invalidated features
-	for(FeatureIter feature(*_reg); feature; feature++)
-		if(feature->kind() == FeatureUsage::invalidate
-		&& _reg->uses(feature->feature())) {
-			if(logFor(LOG_DEPS))
-				log << "INVALIDATED: " << feature->feature().name()
-					<< " by " << _reg->name() << io::endl;
-			fw->invalidate(feature->feature());
-			required.remove(&feature->feature());
-		}
-
-	// perform cleanup
-	cleanup(fw);
-
-	// add provided features
-	for(FeatureIter feature(*_reg); feature; feature++)
-		if(feature->kind() == FeatureUsage::provide) {
-			if(logFor(LOG_DEPS))
-				log << "PROVIDED: " << feature->feature().name()
-					<< " by " << _reg->name() << io::endl;
-			fw->provide(feature->feature(), &required);
-		}
-
-	// put the cleaners
-	for(clean_list_t::Iterator clean(cleaners); clean; clean++) {
-		FeatureDependency *dep = ws->getDependency((*clean).fst);
-		ASSERTP(dep, "cleanup invoked for a not provided feature: " + (*clean).fst->name());
-		dep->elm::CleanList::add((*clean).snd);
-	}
-
 	// record statistics
 	if(isCollectingStats())
 		collectStats(ws);
+}
+
+
+/**
+ * Execute the code processor on the given workspace.
+ * @param ws	Workspace to work on.
+ * @param props	Configuration properties.
+ */
+void Processor::process(WorkSpace *ws, const PropList& props) {
+	ws->run(this, props);
 }
 
 
@@ -577,6 +504,23 @@ void Processor::cleanup(WorkSpace *ws) {
  * @param ws	Current workspace.
  */
 void Processor::collectStats(WorkSpace *ws) {
+}
+
+
+/**
+ * This method is called when the properties produced by a processor
+ * are no more useful and can be release. This happens (a) when the workspace
+ * is release or (b) the features provided by the processor are invalidated.
+ *
+ * The processor has to retain the properties of the provided features until
+ * this function is called.
+ *
+ * The default implementation activates the clean list.
+ */
+void Processor::destroy(WorkSpace *ws) {
+	for(clean_list_t::Iterator clean(cleaners); clean; clean++)
+		delete (*clean).snd;
+	cleaners.clear();
 }
 
 
@@ -689,7 +633,7 @@ void Processor::require(const AbstractFeature& feature) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
 	}
-	_reg->features.add(FeatureUsage(FeatureUsage::require, feature));
+	_reg->_feats.add(FeatureUsage(FeatureUsage::require, feature));
 }
 
 
@@ -704,7 +648,7 @@ void Processor::invalidate(const AbstractFeature& feature) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
 	}
-	_reg->features.add(FeatureUsage(FeatureUsage::invalidate, feature));
+	_reg->_feats.add(FeatureUsage(FeatureUsage::invalidate, feature));
 }
 
 
@@ -719,7 +663,7 @@ void Processor::use(const AbstractFeature& feature) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
 	}
-	_reg->features.add(FeatureUsage(FeatureUsage::use, feature));
+	_reg->_feats.add(FeatureUsage(FeatureUsage::use, feature));
 }
 
 
@@ -734,7 +678,7 @@ void Processor::provide(const AbstractFeature& feature) {
 		_reg = new CustomRegistration(*_reg);
 		flags |= IS_ALLOCATED;
 	}
-	_reg->features.add(FeatureUsage(FeatureUsage::provide, feature));
+	_reg->_feats.add(FeatureUsage(FeatureUsage::provide, feature));
 }
 
 
@@ -851,6 +795,12 @@ void Processor::recordStat(const AbstractFeature& feature, StatCollector *collec
  */
 
 
+static NullProcessor _null;
+/**
+ * Singleton representing a null processor.
+ */
+Processor& Processor::null = _null;
+
 /**
  * @class NullProcessor
  * A simple processor that does nothing.
@@ -867,7 +817,7 @@ NullProcessor::NullProcessor(void):
 
 /**
  * @class NoProcessor class
- * A processor whise execution cause an exception throw. Useful for features
+ * A processor which execution causes an exception throw. Useful for features
  * without default definition.
  * @ingroup proc
  */

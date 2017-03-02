@@ -21,12 +21,15 @@
  */
 
 #include <elm/assert.h>
-#include <elm/io.h>
-#include <otawa/ilp.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Vector.h>
+#include <elm/io.h>
+
+#include <otawa/ilp.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <otawa/prog/Manager.h>
 #include <otawa/prog/WorkSpace.h>
+
 #if defined(__unix) || defined(__APPLE__)
 #include <lp_lib.h>
 #elif defined(__WIN32) || defined(__WIN64)

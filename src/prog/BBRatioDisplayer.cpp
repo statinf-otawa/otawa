@@ -22,6 +22,7 @@
 
 #include <elm/system/System.h>
 #include <otawa/ipet.h>
+#include <otawa/prog/Process.h>
 #include <otawa/util/BBRatioDisplayer.h>
 
 namespace otawa {

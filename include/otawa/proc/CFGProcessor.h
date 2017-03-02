@@ -49,8 +49,10 @@ protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+	virtual void destroy(WorkSpace *ws, CFG *cfg);
 
 	// useful
+	virtual void destroy(WorkSpace *ws);
 	void doCleanUp(void);
 	string str(const Address& address);
 	string str(const Address& base, const Address& address);

@@ -20,8 +20,10 @@
  */
 
 #include <elm/util/array.h>
+
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/features.h>
+#include <otawa/flowfact/features.h>
 #include <otawa/prog/File.h>
 
 namespace otawa {
@@ -513,7 +515,7 @@ int BasicBlock::size(void) const {
  */
 Inst *BasicBlock::control(void) {
 	for(InstIter i(this); i; i++)
-		if(i->isControl())
+		if(i->isControl() && !IGNORE_CONTROL(i))
 			return i;
 	return 0;
 }

@@ -80,6 +80,8 @@ protected:
 	virtual void onMultiCall(Address control, const genstruct::Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	virtual void onIgnoreEntry(string name);
+	virtual void onForceBranch(Address address);
+	virtual void onForceCall(Address address);
 
 	virtual void onUnknownLoop(Address addr);
 	virtual void onUnknownMultiBranch(Address control);

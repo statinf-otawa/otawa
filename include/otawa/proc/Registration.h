@@ -22,7 +22,7 @@
 #ifndef OTAWA_PROC_REGISTRATION_H_
 #define OTAWA_PROC_REGISTRATION_H_
 
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 #include <elm/util/Initializer.h>
 #include <elm/util/Version.h>
 #include <otawa/prop/Identifier.h>
@@ -81,6 +81,8 @@ public:
 	inline const string& name(void) const { return _name; }
 	inline const Version& version(void) const { return _version; }
 	inline AbstractRegistration& base(void) const { return *_base; }
+	inline const List<FeatureUsage>& features(void) const { return _feats; }
+
 	virtual Processor *make(void) const = 0;
 	virtual bool isFinal(void) const = 0;
 	bool provides(const AbstractFeature& feature);
@@ -97,8 +99,8 @@ protected:
 	AbstractRegistration(string name, Version version, AbstractRegistration *base);
 	virtual ~AbstractRegistration(void) { }
 	void init(cstring name, const Version& version, int tag, VarArg& args);
-	void setFeatures(const genstruct::SLList<FeatureUsage>& features);
-	void setConfigs(const genstruct::SLList<AbstractIdentifier *>& configs);
+	void setFeatures(const List<FeatureUsage>& features);
+	void setConfigs(const List<AbstractIdentifier *>& configs);
 	void record(void);
 
 private:
@@ -109,8 +111,8 @@ private:
 	string _name;
 	Version _version;
 	AbstractRegistration *_base;
-	genstruct::SLList<AbstractIdentifier *> configs;
-	genstruct::SLList<FeatureUsage> features;
+	List<AbstractIdentifier *> configs;
+	List<FeatureUsage> _feats;
 };
 
 
@@ -202,8 +204,8 @@ private:
 	string _name;
 	Version _version;
 	AbstractRegistration *_base;
-	genstruct::SLList<AbstractIdentifier *> configs;
-	genstruct::SLList<FeatureUsage> features;
+	List<AbstractIdentifier *> configs;
+	List<FeatureUsage> features;
 	AbstractMaker *_maker;
 };
 

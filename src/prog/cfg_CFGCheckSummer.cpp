@@ -23,6 +23,7 @@
 #include <otawa/cfg/CFGCheckSummer.h>
 #include <elm/checksum/Fletcher.h>
 #include <otawa/cfg/CFG.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
 
 using namespace elm;

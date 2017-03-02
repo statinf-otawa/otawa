@@ -1,6 +1,4 @@
-
 /*
- *	$Id$
  *	Script processor implementation
  *
  *	This file is part of OTAWA
@@ -21,25 +19,25 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/xom/Builder.h>
-#include <elm/xom/XIncluder.h>
-#include <elm/xom/Element.h>
-#include <elm/xom/Attribute.h>
-#include <elm/xom/Serializer.h>
-#include <elm/system/System.h>
-#include <otawa/script/Script.h>
-#include <otawa/prog/File.h>
-#include <otawa/prog/WorkSpace.h>
-#include <elm/xom/XSLTransform.h>
-#include <otawa/proc/DynProcessor.h>
-#include <elm/xom/Elements.h>
-#include <otawa/proc/ProcessorPlugin.h>
-#include <otawa/prog/Manager.h>
-#include <otawa/hard/Platform.h>
-#include <otawa/proc/DynFeature.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/otawa.h>
 #include <elm/debug.h>
+#include <elm/system/System.h>
+#include <elm/xom/Attribute.h>
+#include <elm/xom/Builder.h>
+#include <elm/xom/Element.h>
+#include <elm/xom/Elements.h>
+#include <elm/xom/Serializer.h>
+#include <elm/xom/XIncluder.h>
+#include <elm/xom/XSLTransform.h>
+
+#include <otawa/hard/Platform.h>
+#include <otawa/otawa.h>
+#include <otawa/proc/DynFeature.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/prog/File.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/script/Script.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace elm;
 
@@ -554,10 +552,10 @@ void Script::work(WorkSpace *ws) {
 							log << "INFO: preparing to run " << *name << io::endl;
 						PropList list = props;
 						makeConfig(step, list);
-						DynProcessor proc(name);
+						Processor *proc = ProcessorPlugin::getProcessor(name);
 						if(timed)
 							sw.start();
-						proc.process(ws, list);
+						ws->run(proc, list, true);
 						if(timed) {
 							sw.stop();
 							cerr << "INFO: time(" << *name << ") = "<< (float(sw.delay()) / 1000) << "ms\n";

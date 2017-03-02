@@ -21,10 +21,12 @@
  */
 
 #include <elm/assert.h>
+
 #include <otawa/prog/FixedTextDecoder.h>
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/proc/Feature.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/File.h>
 

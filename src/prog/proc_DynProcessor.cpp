@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	DynProcessor class implementation
  *
  *	This file is part of OTAWA

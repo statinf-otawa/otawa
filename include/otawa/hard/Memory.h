@@ -23,13 +23,14 @@
 #define OTAWA_HARD_MEMORY_H
 
 #include <elm/assert.h>
+#include <elm/genstruct/HashTable.h>
 #include <elm/genstruct/Table.h>
 #include <elm/string.h>
-#include <otawa/base.h>
-#include <elm/serial2/macros.h>
 #include <elm/serial2/collections.h>
-#include <elm/system/Path.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/serial2/macros.h>
+#include <elm/sys/Path.h>
+
+#include <otawa/proc/AbstractFeature.h>
 #include <otawa/prog/Manager.h>
 
 namespace elm { namespace xom { class Element; } }

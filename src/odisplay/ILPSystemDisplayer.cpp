@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	display::ILPSystemDisplayer class implementation
  *
  *	This file is part of OTAWA
@@ -21,10 +20,12 @@
  */
 
 #include <elm/system/System.h>
+
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/display/ILPSystemDisplayer.h>
 #include <otawa/ipet.h>
 #include <otawa/prog/File.h>
+#include <otawa/prog/Process.h>
 
 namespace otawa { namespace display {
 
