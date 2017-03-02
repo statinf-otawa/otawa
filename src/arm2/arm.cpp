@@ -320,7 +320,7 @@ public:
 	}
 
 	virtual void semInsts(sem::Block &block);
-	virtual sem::cond_t condition(void);
+	virtual Condition condition(void);
 
 protected:
 	Process &proc;
@@ -1013,25 +1013,29 @@ void Inst::semInsts (sem::Block &block) {
 }
 
 
-sem::cond_t Inst::condition(void) {
+Condition Inst::condition(void) {
+
+	// compute condition
 	arm_inst_t *inst = proc.decode_raw(address());
-	sem::cond_t res;
+	sem::cond_t cond;
 	switch (arm_condition(inst)) {
-	case 0: 	res = sem::EQ; 			break;
-	case 1: 	res = sem::NE; 			break;
-	case 2: 	res = sem::UGE; 		break;
-	case 3: 	res = sem::ULT; 		break;
-	case 8: 	res = sem::UGT; 		break;
-	case 9:		res = sem::ULE; 		break;
-	case 10:	res = sem::GE; 			break;
-	case 11:	res = sem::LT; 			break;
-	case 12:	res = sem::GT; 			break;
-	case 13: 	res = sem::LE; 			break;
-	case 14:	res = sem::NO_COND; 	break;
-	default: 	res = sem::ANY_COND;	break;
+	case 0: 	cond = sem::EQ; 		break;
+	case 1: 	cond = sem::NE; 		break;
+	case 2: 	cond = sem::UGE; 		break;
+	case 3: 	cond = sem::ULT; 		break;
+	case 8: 	cond = sem::UGT; 		break;
+	case 9:		cond = sem::ULE; 		break;
+	case 10:	cond = sem::GE; 		break;
+	case 11:	cond = sem::LT; 		break;
+	case 12:	cond = sem::GT; 		break;
+	case 13: 	cond = sem::LE; 		break;
+	case 14:	cond = sem::NO_COND; 	break;
+	default: 	cond = sem::ANY_COND;	break;
 	}
 	arm_free_inst(inst);
-	return res;
+
+	// make the condition
+	return Condition(cond, &sr);
 }
 
 
