@@ -45,6 +45,18 @@ static Identifier<BasicBlock *> BB("", 0);
  * @ingroup cfg
  */
 
+/**
+ * Get the actual kind of an instruction
+ * (taking into the @ref ALT_KIND property).
+ * @param i	Instruction look in.
+ * @return	Actual kind of the instruction.
+ */
+static inline Inst::kind_t kind(Inst *i) {
+	if(i->hasProp(ALT_KIND))
+		return ALT_KIND(i);
+	else
+		return i->kind();
+}
 
 /**
  * Test if instruction is control, instruction itself
@@ -53,7 +65,28 @@ static Identifier<BasicBlock *> BB("", 0);
  * @return		True if it is control, false else.
  */
 static bool isControl(Inst *i) {
-	return (i->isControl() && !IGNORE_CONTROL(i)) || IS_RETURN(i);
+	Inst::kind_t k = kind(i);
+	return ((k & Inst::IS_CONTROL) && !IGNORE_CONTROL(i)) || IS_RETURN(i);
+}
+
+/**
+ * Test if the instruction is a return.
+ * @param i	Instruction to test.
+ * @return	True if i is a return, false else.
+ */
+static bool isReturn(Inst *i) {
+	Inst::kind_t k = kind(i);
+	return (k & Inst::IS_RETURN) || IS_RETURN(i);
+}
+
+/**
+ * Test if the instruction is a call.
+ * @param i	Instruction to test.
+ * @return	True if i is a call, false else.
+ */
+static bool isCall(Inst *i) {
+	Inst::kind_t k = kind(i);
+	return k & Inst::IS_CALL;
 }
 
 
@@ -74,27 +107,8 @@ static bool isBlockStart(Inst *i) {
  * @return		True if flow can continue, false else.
  */
 static bool canFlowAfter(Inst *i) {
-	return (i->isConditional() || i->isCall()) && !IGNORE_SEQ(i);
-}
-
-
-/**
- * Test if the instruction is a return.
- * @param i	Instruction to test.
- * @return	True if i is a return, false else.
- */
-static bool isReturn(Inst *i) {
-	return i->isReturn() || IS_RETURN(i);
-}
-
-
-/**
- * Test if the instruction is a call.
- * @param i	Instruction to test.
- * @return	True if i is a call, false else.
- */
-static bool isCall(Inst *i) {
-	return i->isCall();
+	Inst::kind_t k = kind(i);
+	return ((k & Inst::IS_COND) || isCall(i)) && !IGNORE_SEQ(i);
 }
 
 

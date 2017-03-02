@@ -70,12 +70,6 @@ protected:
 
 // BBProcessor class
 class BBProcessor: public CFGProcessor {
-protected:
-	virtual void processCFG(WorkSpace *ws, CFG *cfg);
-	virtual void processBB(WorkSpace *ws, CFG *cfd, Block *bb) = 0;
-	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
-	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb);
-
 public:
 	BBProcessor(void);
 	inline BBProcessor(AbstractRegistration& reg): CFGProcessor(reg) { }
@@ -83,6 +77,13 @@ public:
 	BBProcessor(cstring name, elm::Version version = elm::Version::ZERO);
 
 protected:
+	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	virtual void processBB(WorkSpace *ws, CFG *cfd, Block *bb) = 0;
+	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb);
+	virtual void destroy(WorkSpace *ws, CFG *cfg);
+	virtual void destroy(WorkSpace *ws, CFG *cfg, Block *b);
+
 	template <class T> void trackBB(const AbstractFeature& feature, const Identifier<T *>& id)
 		{ addCleaner(feature, new BBDeletor<T>(workspace(), id)); }
 	template <class T> void trackBB(const AbstractFeature& feature, const Identifier<T>& id)

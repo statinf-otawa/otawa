@@ -22,11 +22,13 @@
 #ifndef OTAWA_PROGRAM_PROCESS_H
 #define OTAWA_PROGRAM_PROCESS_H
 
+#include <elm/data/List.h>
+#include <elm/data/Vector.h>
+#include <elm/stree/Tree.h>
 #include <elm/string.h>
 #include <elm/system/Path.h>
-#include <elm/stree/Tree.h>
 #include <elm/util/LockPtr.h>
-#include <elm/genstruct/Vector.h>
+
 #include <otawa/instruction.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/features.h>
@@ -42,14 +44,14 @@ class File;
 namespace hard {
 	class Platform;
 	class CacheConfiguration;
+	class Register;
 }
 class Loader;
 class Manager;
 class Processor;
 class Process;
-namespace sim {
-	class Simulator;
-}
+namespace sem { class Block; }
+namespace sim { class Simulator; }
 class Symbol;
 class TextDecoder;
 
@@ -137,6 +139,7 @@ class Process: public PropList, public Lock {
 public:
 	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
+	inline const List<AbstractFeature *>& features(void) const { return provided; }
 
 	// Accessors
 	virtual hard::Platform *platform(void) = 0;
@@ -175,8 +178,7 @@ public:
 	// LineNumber feature
 	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
 		throw (UnsupportedFeatureException);
-	virtual void getAddresses(cstring file, int line,
-		Vector<Pair<Address, Address> >& addresses)
+	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
 		throw (UnsupportedFeatureException);
 
 	// Simulation management
@@ -192,12 +194,9 @@ public:
 	virtual void semInit(sem::Block& block) const;
 
 	// FileIterator
-	class FileIter: public genstruct::Vector<File *>::Iterator {
+	class FileIter: public Vector<File *>::Iter {
 	public:
-		inline FileIter(const Process *process)
-			: genstruct::Vector<File *>::Iterator(process->files) { }
-		inline FileIter(const FileIter& iter)
-			: genstruct::Vector<File *>::Iterator(iter) { }
+		inline FileIter(const Process *process): Vector<File *>::Iter(process->files) { }
 	};
 
 protected:
@@ -206,10 +205,8 @@ protected:
 	void provide(AbstractFeature& feature);
 
 private:
-	void link(WorkSpace *ws);
-	void unlink(WorkSpace *ws);
-	genstruct::Vector<File *> files;
-	genstruct::Vector<AbstractFeature *> provided;
+	Vector<File *> files;
+	List<AbstractFeature *> provided;
 	File *prog;
 	Manager *man;
 	stree::Tree<Address::offset_t, Symbol *> *smap;

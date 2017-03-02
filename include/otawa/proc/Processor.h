@@ -46,6 +46,7 @@ class StatCollector;
 
 // Processor class
 class Processor: public otawa::Monitor {
+	friend class WorkSpace;
 
 	template <class T>
 	class Remover: public elm::Cleaner {
@@ -65,6 +66,7 @@ class Processor: public otawa::Monitor {
 	};
 
 public:
+	static Processor& null;
 
 	// Constructors
 	Processor(void);
@@ -77,10 +79,12 @@ public:
 	// Accessors
 	inline elm::String name(void) const { return _reg->name(); }
 	inline elm::Version version(void) const { return _reg->version(); }
+	inline AbstractRegistration& registration(void) const { return *_reg; }
 
 	// Mutators
 	virtual void configure(const PropList& props);
 	void process(WorkSpace *ws, const PropList& props = PropList::EMPTY);
+	virtual void destroy(WorkSpace *ws);
 
 	// Configuration Properties
 	static Identifier<PropList *> STATS;
@@ -138,7 +142,6 @@ protected:
 	template <class T> void addDeletor(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
 		{ addCleaner(feature, new Deletor<T>(ref)); }
 
-
 	// Methods for customizing
 	virtual void prepare(WorkSpace *ws);
 	virtual void processWorkSpace(WorkSpace *ws);
@@ -162,6 +165,8 @@ protected:
 
 private:
 	void init(const PropList& props);
+	void run(WorkSpace *ws);
+
 	AbstractRegistration *_reg;
 	WorkSpace *ws;
 	typedef Pair<const AbstractFeature *, Cleaner *> clean_t;

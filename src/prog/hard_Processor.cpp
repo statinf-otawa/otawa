@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	hard::Processor class implementation
  *
  *	This file is part of OTAWA
@@ -22,7 +21,9 @@
 
 #include <elm/genstruct/SortedBinMap.h>
 #include <elm/serial2/XOMUnserializer.h>
+
 #include <otawa/hard/CacheConfiguration.h>
+#include <otawa/prog/Process.h>
 #include <otawa/hard/Processor.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/prog/WorkSpace.h>

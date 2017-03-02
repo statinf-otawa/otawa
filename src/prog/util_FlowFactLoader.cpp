@@ -20,19 +20,22 @@
  */
 
 #include <stdio.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/prog/WorkSpace.h>
+
 #include <elm/checksum/Fletcher.h>
 #include <elm/io/InFileStream.h>
 #include <elm/io/BufferedInStream.h>
-#include <otawa/flowfact/features.h>
 #include <elm/xom.h>
 #include <elm/xom/XIncluder.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/system/Path.h>
+
+#include <otawa/flowfact/features.h>
+#include <otawa/hard/Platform.h>
 #include <otawa/prop/DeletableProperty.h>
 #include <otawa/prog/File.h>
-#include <otawa/hard/Platform.h>
+#include <otawa/prog/Process.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/util/FlowFactLoader.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -411,6 +414,14 @@ extern int fft_line;
  * instead of raising a fatal error, the matching flow fact is quietly ignored
  * considering that the label of the library is not linked in the current
  * executable.
+ *
+ * @li <b><tt>force branch ADDRESS ;</tt></b> @n
+ * Force the instruction matching the address to be processed as a simple branch
+ * whatever its former kind is: not a control at all, a return or a call.
+ *
+ * @li <b><tt>force call ADDRESS ;</tt></b> @n
+ * Force the instruction matching the address to be processed as a call control
+ * whatever its former kind is: not a control at all, a return or a simple branch.
  *
  * @par Syntactic items
  *
@@ -926,6 +937,49 @@ void FlowFactLoader::onNoCall(Address address) {
 		onError(_ << " no instruction at  " << address << ".");
 	else
 		NO_CALL(inst) = true;
+}
+
+
+/**
+ * Called for the F4 production: "force-branch ADDRESS".
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onForceBranch(Address address) {
+	if(!address)
+		return;
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else {
+		Inst::kind_t k;
+		if(!inst->hasProp(ALT_KIND))
+			k = inst->kind();
+		else
+			k = ALT_KIND(inst);
+		ALT_KIND(inst) = (k & ~(Inst::IS_CALL | Inst::IS_RETURN)) | Inst::IS_CONTROL;
+	}
+}
+
+/**
+ * Called for the F4 production: "force-call ADDRESS".
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onForceCall(Address address) {
+	if(!address)
+		return;
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else {
+		Inst::kind_t k;
+		if(!inst->hasProp(ALT_KIND))
+			k = inst->kind();
+		else
+			k = ALT_KIND(inst);
+		ALT_KIND(inst) = (k & ~Inst::IS_RETURN) | (Inst::IS_CONTROL | Inst::IS_CALL);
+	}
 }
 
 
@@ -1971,6 +2025,17 @@ p::feature MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEATURE", new Mak
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
 Identifier<bool> IS_RETURN("otawa::IS_RETURN", false);
+
+
+/**
+ * Provide an alternative kind for an instruction, superseding
+ * the current kind of the instruction.
+ * @ingroup ff
+ *
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<Inst::kind_t> ALT_KIND("otawa::ALT_KIND", 0);
 
 
 /**

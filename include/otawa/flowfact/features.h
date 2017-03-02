@@ -22,9 +22,11 @@
 #ifndef OTAWA_FLOWFACT_FEATURES_H_
 #define OTAWA_FLOWFACT_FEATURES_H_
 
-#include <otawa/properties.h>
 #include <elm/xom/Element.h>
+
 #include <otawa/proc/AbstractFeature.h>
+#include <otawa/prog/Inst.h>
+#include <otawa/properties.h>
 
 namespace otawa {
 
@@ -46,6 +48,8 @@ extern Identifier<bool> IGNORE_SEQ;
 extern Identifier<bool> IS_RETURN;
 extern Identifier<bool> NO_CALL;
 extern Identifier<bool> NO_RETURN;
+
+extern Identifier<Inst::kind_t> ALT_KIND;
 
 // loop bounds
 extern Identifier<int> MAX_ITERATION;

@@ -24,10 +24,12 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/util/UniquePtr.h>
 #include <elm/xom.h>
+
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
 #include <otawa/cfgio/Input.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
 

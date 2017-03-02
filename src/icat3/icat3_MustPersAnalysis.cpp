@@ -26,7 +26,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/icache/features.h>
 #include <otawa/proc/EdgeProcessor.h>
-#include "features.h"
+#include "../../include/otawa/icat3/features.h"
 #include "MustPersDomain.h"
 
 namespace otawa { namespace icat3 {

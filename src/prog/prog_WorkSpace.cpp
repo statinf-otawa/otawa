@@ -30,6 +30,8 @@
 #include <otawa/ilp/System.h>
 #include <otawa/manager.h>
 #include <otawa/proc/FeatureDependency.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/proc/Registry.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/prog/WorkSpace.h>
 
@@ -231,12 +233,12 @@ namespace otawa {
  * Build a new wokspace with the given process.
  * @param _proc	Process to use.
  */
-WorkSpace::WorkSpace(Process *_proc): proc(_proc), featMap(), cancelled(false) {
+WorkSpace::WorkSpace(Process *_proc): proc(_proc), cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	ASSERT(_proc);
-	//Manager *man = _proc->manager();
-	//man->frameworks.add(this);
-	proc->link(this);
+	const List<AbstractFeature *>& feats = _proc->features();
+	for(List<AbstractFeature *>::Iter i(feats); i; i++)
+		dep_map.put(*i, new Dependency());
 }
 
 
@@ -248,9 +250,9 @@ WorkSpace::WorkSpace(const WorkSpace *ws): cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << ws << ')');
 	ASSERT(ws);
 	proc = ws->process();
-	//Manager *man = proc->manager();
-	//man->frameworks.add(this);
-	proc->link(this);
+	const List<AbstractFeature *>& feats = ws->process()->features();
+	for(List<AbstractFeature *>::Iter i(feats); i; i++)
+		dep_map.put(*i, new Dependency());
 }
 
 
@@ -260,19 +262,15 @@ WorkSpace::WorkSpace(const WorkSpace *ws): cancelled(false) {
 WorkSpace::~WorkSpace(void) {
 	TRACE(this << ".WorkSpace::~WorkSpace()");
 
-	// clean-up
-	Vector<const AbstractFeature *> deps;
-	for(feat_map_t::Iterator dep(featMap); dep; dep++)
-		deps.add(dep->getFeature());
-	for(int i = 0; i < deps.length(); i++)
-		if(isProvided(*deps[i]))
-			invalidate(*deps[i]);
-	clearProps();
+	// collect root dependencies
+	Vector<Dependency *> roots;
+	for(dep_map_t::Iterator i(dep_map); i; i++)
+		if((*i)->_used.isEmpty() && !roots.contains(*i))
+			roots.add(*i);
 
-	// removal from manager and process
-	//Manager *man = proc->manager();
-	//man->frameworks.remove(this);
-	proc->unlink(this);
+	// invalidate dependencies
+	for(Vector<Dependency *>::Iter i(roots); i; i++)
+		invalidate(i);
 }
 
 
@@ -431,88 +429,168 @@ xom::Element *WorkSpace::config(void) {
 	return conf;
 }
 
-/**
- * Get the dependency graph node associated with the feature and workspace
- * @param feature	Provided feature.
- */
-FeatureDependency* WorkSpace::getDependency(const AbstractFeature* feature) {
-	return featMap.get(feature, NULL);
-}
 
 /**
- * Create a new FeatureDependency associated with the feature.
- * @param feature	Provided feature.
+ * Run the given in the current workspace.
+ * @param proc		Processor to run.
+ * @param props		Configuration to use.
+ * @param del_proc	Set to true if the processor needs to be deleted when it is no more used.
  */
- void WorkSpace::newFeatDep(const AbstractFeature* feature) {
- 	ASSERT(featMap.get(feature, NULL) == NULL);
- 	featMap.put(feature, new FeatureDependency(feature));
-}
+void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 
-/**
- * Invalidates and delete the FeatureDependency associated w/ this feature and workspace
- * It has to be freed by the user.
- * @param feature	Provided feature.
- */
- void WorkSpace::delFeatDep(const AbstractFeature* feature) {
- 	FeatureDependency *dep = featMap.get(feature, NULL);
- 	ASSERT(dep);
- 	featMap.remove(feature);
- 	delete dep;
-}
+	// run the processor
+	proc->configure(props);
+	AbstractRegistration& reg = proc->registration();
 
-/**
- * Tests if the feature has a dependency graph associated with it, in the context of the present workspace
- * @param feature	Provided feature.
- */
-bool WorkSpace::hasFeatDep(const AbstractFeature* feature) {
-	return (featMap.exists(feature));
-}
+	// build the list of required features
+	Vector<const AbstractFeature *> required;
+	for(FeatureIter fuse(reg); fuse; fuse++)
+		if(fuse->kind() == FeatureUsage::require && !required.contains(&fuse->feature()))
+			required.add(&fuse->feature());
 
-/**
- * Record in the workspace that a feature is provided.
- * Also update the feature dependency graph
- * @param feature	Provided feature.
- */
-void WorkSpace::provide(const AbstractFeature& feature, const Vector<const AbstractFeature*> *required) {
-	if(isProvided(feature))
+	// remove non-used invalidated features
+	for(FeatureIter feature(reg); feature; feature++)
+		if(feature->kind() == FeatureUsage::invalidate
+		&& !reg.uses(feature->feature())) {
+			if(proc->logFor(Processor::LOG_DEPS))
+				proc->log << "INVALIDATED: " << feature->feature().name()
+					<< " by " << reg.name() << io::endl;
+			invalidate(feature->feature());
+			required.remove(&feature->feature());
+		}
+
+	// Get used feature
+	for(FeatureIter feature(reg); !isCancelled() && feature; feature++)
+		if(feature->kind() == FeatureUsage::require
+		|| feature->kind() == FeatureUsage::use) {
+			if(proc->logFor(Processor::LOG_DEPS)) {
+				cstring kind = "USED";
+				if(feature->kind() == FeatureUsage::require)
+					kind = "REQUIRED";
+				proc->log << kind << ": " << feature->feature().name() << " by " << reg.name() << io::endl;
+			}
+			try {
+				require(feature->feature(), props);
+			}
+			catch(NoProcessorException& e) {
+				proc->log << "ERROR: no processor to implement " << feature->feature().name() << io::endl;
+				throw UnavailableFeatureException(proc, feature->feature());
+			}
+		}
+	if(isCancelled())
 		return;
 
-	// record the providing of the feature
-	ASSERT(!hasFeatDep(&feature));
-	newFeatDep(&feature);
-	FeatureDependency *pdep = getDependency(&feature);
-	ASSERT(pdep);
+	// check before starting processor
+	for(FeatureIter feature(reg); feature; feature++)
+		if((feature->kind() == FeatureUsage::require
+		|| feature->kind() == FeatureUsage::use)
+		&& !isProvided(feature->feature()))
+			throw otawa::Exception(_ << "feature " << feature->feature().name()
+				<< " is not provided after one cycle of requirements:\n"
+				<< "stopping -- this may denotes circular dependencies.");
 
-	// add dependencies
-	if(required != NULL) {
-		ASSERTP(!required->contains(&feature), feature.name() << " provided and required!");
-		for(int j = 0; j < required->count(); j++) {
-			const AbstractFeature *rfeature = required->get(j);
-			ASSERTP(isProvided(*rfeature), rfeature->name() << " is not provided as it should be !");
-			pdep->add(getDependency(rfeature));
+	// run the analysis
+	proc->run(this);
+
+	// cleanup used invalidated features
+	for(FeatureIter feature(reg); feature; feature++)
+		if(feature->kind() == FeatureUsage::invalidate
+		&& reg.uses(feature->feature())) {
+			if(proc->logFor(Processor::LOG_DEPS))
+				proc->log << "INVALIDATED: " << feature->feature().name() << " by " << reg.name() << io::endl;
+			invalidate(feature->feature());
+			required.remove(&feature->feature());
 		}
-	}
+
+	// create the dependency
+	for(FeatureIter feature(reg); feature; feature++)
+		if(feature->kind() == FeatureUsage::provide) {
+			if(proc->logFor(Processor::LOG_DEPS))
+				proc->log << "PROVIDED: " << feature->feature().name() << " by " << reg.name() << io::endl;
+		}
+	add(proc, del_proc);
 }
+
+
+/**
+ * Add a new dependency.
+ * @param proc		Current processor.
+ * @param del_proc	True if the processor has to be deleted.
+ */
+void WorkSpace::add(Processor *proc, bool del_proc) {
+	ASSERT(proc);
+	Dependency *d = new Dependency(proc, del_proc);
+	for(List<FeatureUsage>::Iter fu(proc->registration().features()); fu; fu++)
+		if((*fu).kind() == FeatureUsage::provide)
+			dep_map.put(&(*fu).feature(), d);
+		else
+			if((*fu).kind() == FeatureUsage::require) {
+				Dependency *ud = dep_map.get(&(*fu).feature());
+				ASSERT(ud);
+				if(!ud->_users.contains(d)) {
+					d->_used.add(ud);
+					ud->_users.add(d);
+				}
+			}
+}
+
+
+/**
+ * Remove a dependency.
+ * @param dep	Dependency to remove.
+ */
+void WorkSpace::remove(Dependency *dep) {
+	ASSERT(dep);
+
+	// remove provided features
+	for(List<FeatureUsage>::Iter fu(dep->_proc->registration().features()); fu; fu++)
+		if((*fu).kind() == FeatureUsage::provide)
+			dep_map.remove(&(*fu).feature());
+
+	// release its own dependencies
+	for(List<Dependency *>::Iter i(dep->_used); i; i++)
+		i->_users.remove(dep);
+
+	// free the memory
+	if(dep->_del_proc)
+		delete dep->_proc;
+	delete dep;
+}
+
 
 /**
  * Invalidate a feature (removing its dependencies)
  * @param feature	Provided feature.
  */
 void WorkSpace::invalidate(const AbstractFeature& feature) {
-	if (isProvided(feature)) {
-		FeatureDependency *fdep = getDependency(&feature);
+	Dependency *d = dep_map.get(&feature, 0);
+	ASSERTP(d, "dependency " << feature.name() << " is not provided!");
+	invalidate(d);
+}
 
-		// get dependents
-		genstruct::Vector<FeatureDependency *> to_inv;
-		for(FeatureDependency::Dependent dep(fdep); dep; dep++)
-			to_inv.add(dep);
 
-		// invalidate them
-		for(int i = 0; i < to_inv.count(); i++)
-			invalidate(*to_inv[i]->getFeature());
+/**
+ * Invalidate a dependency (removing its dependencies)
+ * @param dep	Dependency to invalidate.
+ */
+void WorkSpace::invalidate(Dependency *dep) {
+	Vector<Dependency *> stack;
+	stack.push(dep);
 
-		delFeatDep(&feature);
-		remove(feature);
+	while(stack) {
+		Dependency *d = stack.top();
+
+		// still dependencies to free
+		if(!d->_users.isEmpty())
+			stack.push(d->_users.pop());
+
+		// free dependency: delete it!
+		else {
+			stack.pop();
+			d->_proc->destroy(this);
+			remove(d);
+		}
+
 	}
 }
 
@@ -523,17 +601,7 @@ void WorkSpace::invalidate(const AbstractFeature& feature) {
  * @return			True if it is provided, false else.
  */
 bool WorkSpace::isProvided(const AbstractFeature& feature) {
-	return featMap.get(&feature, 0);
-}
-
-
-/**
- * Remove a feature. It is usually called by processor whose actions remove
- * some properties from the workspace.
- * @param feature	Feature to remove.
- */
-void WorkSpace::remove(const AbstractFeature& feature) {
-	feature.clean(this);
+	return dep_map.hasKey(&feature);
 }
 
 
@@ -543,9 +611,8 @@ void WorkSpace::remove(const AbstractFeature& feature) {
  * @param props		Configuration properties (optional).
  */
 void WorkSpace::require(const AbstractFeature& feature, const PropList& props) {
-	if(!isProvided(feature)) {
+	if(!isProvided(feature))
 		feature.process(this, props);
-	}
 }
 
 
@@ -794,6 +861,53 @@ void WorkSpace::remove(Property *prop) {
 #	else
 		delete prop;
 #	endif
+}
+
+
+/**
+ */
+WorkSpace::Dependency::Dependency( Processor *proc, bool del_proc)
+: _proc(proc), _del_proc(del_proc) {
+}
+
+
+/**
+ */
+WorkSpace::Dependency::Dependency(void): _proc(&Processor::null), _del_proc(false) {
+}
+
+
+/**
+ * Get the platform used by the process.
+ * @return	Process platform.
+ */
+hard::Platform *WorkSpace::platform(void) {
+	return proc->platform();
+}
+
+/**
+ * Get the manager of the workspace.
+ * @return	Workspace manager.
+ */
+Manager *WorkSpace::manager(void) {
+	return proc->manager();
+}
+
+/**
+ * Get the start instruction of the program.
+ * @return	Program start instruciton.
+ */
+Inst *WorkSpace::start(void) {
+	return proc->start();
+}
+
+/**
+ * Find an instruction at the given address.
+ * @param addr	Looked address.
+ * @return		Found instruction or null (bad instruction or not in code memory).
+ */
+Inst *WorkSpace::findInstAt(address_t addr) {
+	return proc->findInstAt(addr);
 }
 
 } // otawa

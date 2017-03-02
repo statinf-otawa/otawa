@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CFGInfo class implementation
  *
  *	This file is part of OTAWA
@@ -27,6 +26,7 @@
 #include <otawa/cfg/features.h>
 #include <otawa/instruction.h>
 #include <otawa/manager.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/DeletableProperty.h>
 

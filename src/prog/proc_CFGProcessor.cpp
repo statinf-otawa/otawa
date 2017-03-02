@@ -120,6 +120,23 @@ void CFGProcessor::doCleanUp(void) {
 
 
 /**
+ * Propagate the destroy phase to CFG resources.
+ * Default implementation does nothing.
+ */
+void CFGProcessor::destroy(WorkSpace *ws, CFG *cfg) {
+}
+
+
+/**
+ */
+void CFGProcessor::destroy(WorkSpace *ws) {
+	const CFGCollection *coll = INVOLVED_CFGS(workspace());
+	for(int i = 0; i < coll->count(); i++)
+		destroy(ws, coll->get(i));
+}
+
+
+/**
  * This property is used to store statistics about the count of processed
  * CFG.
  */

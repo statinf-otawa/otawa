@@ -20,6 +20,7 @@
  */
 
 #include <otawa/cfg/DelayedBuilder.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/cfg.h>
 

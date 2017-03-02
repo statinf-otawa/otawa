@@ -97,6 +97,22 @@ void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 
 /**
+ */
+void BBProcessor::destroy(WorkSpace *ws, CFG *cfg) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+		destroy(ws, cfg, bb);
+}
+
+
+/**
+ * Propagate to blocks the destroy action. Default implementation
+ * does not nothing.
+ */
+void BBProcessor::destroy(WorkSpace *ws, CFG *cfg, Block *b) {
+}
+
+
+/**
  * @class BBCleaner
  * Efficient implementation of a cleaner for properties found on a basic block.
  * To instantiate it, juste overload the process() methods
