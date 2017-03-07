@@ -241,7 +241,6 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
 	if(b->isEnd() || b->isSynth())
 		return;
 	BasicBlock *bb = b->toBasic();
-	return;	// DEBUG:
 
 	// make title
 	out << "\n---\n";
@@ -252,9 +251,11 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
 
 		// display labels
 		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-			out << *label << ":\n";
+			if(label != "")
+				out << *label << ":\n";
 		for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
-			out << *label << ":\n";
+			if(label != "")
+				out << *label << ":\n";
 
 		// display the instruction
 		out << "0x" << ot::address(inst->address()) << ":  ";

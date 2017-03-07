@@ -126,6 +126,8 @@ public:
 	virtual Type *type(void);
 	virtual void semInsts(sem::Block& block);
 	virtual int semInsts(sem::Block& block, int temp);
+	virtual void semKernel(sem::Block& block);
+	virtual int semKernel(sem::Block& block, int temp);
 	virtual int semWriteBack(sem::Block& block, int temp);
 	virtual delayed_t delayType(void);
 	virtual int delaySlots(void);

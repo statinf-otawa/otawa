@@ -262,6 +262,7 @@ static RegisterDecoder register_decoder;
 #define _SCRATCH(d)		sem::scratch(d)
 
 #include "otawa_sem.h"
+#include "otawa_ksem.h"
 
 
 // platform
@@ -320,6 +321,7 @@ public:
 	}
 
 	virtual void semInsts(sem::Block &block);
+	virtual void semKernel(sem::Block &block);
 	virtual Condition condition(void);
 
 protected:
@@ -995,6 +997,8 @@ otawa::Inst *Segment::decode(address_t address) {
 }
 
 
+/**
+ */
 void Inst::semInsts (sem::Block &block) {
 
 	// get the block
@@ -1010,6 +1014,17 @@ void Inst::semInsts (sem::Block &block) {
 			block.setLength(i);
 			break;
 		}
+}
+
+
+/**
+ */
+void Inst::semKernel(sem::Block &block) {
+	arm_inst_t *inst = proc.decode_raw(address());
+	if(inst->ident == ARM_UNKNOWN)
+		return;
+	arm_ksem(inst, block);
+	arm_free_inst(inst);
 }
 
 

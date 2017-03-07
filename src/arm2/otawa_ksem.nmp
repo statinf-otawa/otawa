@@ -1,0 +1,776 @@
+include "defs.nmp"
+
+var sem_rec_first[1, s32]
+
+// ****** 32-bits instruction set extends ******
+
+extend ADD_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		add(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend ADD_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		add(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend AND_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend AND_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend B_Cond
+	otawa_ksem = {
+		seti(t1, __IADDR + 8 + (coerce(int(30), signed_immed_24) :: 0b00));
+		if setl == 1 then seti(R(14), __IADDR + 4); endif;
+		_branch(t1);
+	}
+
+extend BIC_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		not(t1, t1);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend BIC_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, ~shifter_operand.v);
+		and(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend BX_ARM
+	otawa_ksem = {
+		if rd.use_pc then seti(R(15), __IADDR + 8); endif;
+		_branch(rd.i);
+	}
+
+extend CMN_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		neg(t1, t1);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMN_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, -shifter_operand.v);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMP_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend CMP_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		cmp(_CPSR, rn.i, t1);
+	}
+
+extend EOR_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		xor(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend EOR_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		xor(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend LDM
+	otawa_ksem = {
+		if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
+		cnt = 0;
+		ii = 0;
+		otawa_ksem_cnt;
+		seti(t2, 4);
+		switch(adr_mode) {
+		case MULT_DA:
+			seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
+			sub(t3, t1, t2);
+		case MULT_IA:
+			_set(t1, rn.i);
+			seti(t3, cnt * 4); add(t3, t1, t3);
+		case MULT_DB:
+			seti(t1, cnt * 4); sub(t1, rn.i, t1);
+			_set(t3, t1);
+		case MULT_IB:	add(t1, rn.i, t2);
+			add(t1, rn.i, t2);
+			seti(t3, cnt * 4 - 4); add(t3, t1, t3);
+		};
+		ii = 0;
+		sem_rec_first = 1;
+		otawa_ksem_rec;
+		if setw == 1 then _set(rn.i, t3); endif;
+		if reglist<15..15> == 1 then _branch(R(15)); endif;
+	}
+	otawa_ksem_cnt = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then cnt = cnt + 1; endif;
+			ii = ii + 1;
+			otawa_ksem_cnt;
+		endif;
+	}
+	// t1 = sp, t2 = 4
+	otawa_ksem_rec = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
+				load(R(ii), t1, UINT32);
+				sem_rec_first = 0;
+			endif;
+			ii = ii + 1;
+			otawa_ksem_rec;
+		endif;
+	}
+	otawa_ksem_recs = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then
+				scratch(R(ii));
+			endif;
+			ii = ii + 1;
+			otawa_ksem_recs;
+		endif;
+	}
+
+extend LDR_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		load(rd.i, t1, if setb then UINT8 else UINT32 endif);
+		if setpre == 0 then 	add(rn.i, t1, t2);
+		else if setw == 1 then	_set(rn.i, t1);
+		endif; endif;
+	}
+
+extend LDR_shr
+	otawa_ksem = {		
+		if rd.use_pc then
+			if setw == 1 then
+				_if(cond.otawa_cond, _CPSR, 7); 
+			else
+				_if(cond.otawa_cond, _CPSR, 6);
+			endif;
+		endif;
+		
+		if rn.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		if setu == 0 then neg(t1, t1); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;			
+		if setpre == 0 then add(rn.i, rn.i, t1); endif;
+		
+				
+		if rd.use_pc then
+			load(t3, t2, if setb == 1 then UINT8 else UINT32 endif);
+			if setw == 1 then					
+				_set(rn.i, t2);
+				_branch(t3);
+			else					
+				
+				_branch(t3);
+			endif;
+		else
+			if setw == 1 then _set(rn.i, t2); endif;
+			load(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
+		endif;		
+	}
+
+extend LDRH_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		load(rd.i, t1, UINT16);
+		if setpre == 0 then add(rn.i, rn.i, t2);
+		else if setw == 1 then _set(rn.i, t1);
+		endif; endif;
+	}
+
+extend LDRH_shr
+	otawa_ksem = {
+		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		load(rd.i, t2, UINT16);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend LDRSB_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		load(rd.i, t1, INT8);
+		if setpre == 0 then add(rn.i, rn.i, t2);
+		else if setw == 1 then _set(rn.i, t1);
+		endif; endif;
+	}
+
+extend LDRSB_shr
+	otawa_sem = {
+		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		load(rd.i, t2, INT8);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend LDRSH_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		load(rd.i, t1, INT16);
+		if setpre == 0 then add(rn.i, rn.i, t2);
+		else if setw == 1 then _set(rn.i, t1);
+		endif; endif;
+	}
+
+extend LDRSH_shr
+	otawa_ksem = {
+		if rn.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		load(rd.i, t2, INT16);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend MLA
+	otawa_ksem = {
+		if rn.use_pc || rm.use_pc || rs.use_pc then seti(R(15), __IADDR + 8); endif;
+		mul(t1, rm.i, rs.i);
+		add(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MOV_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		_set(rd.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MOV_imm
+	otawa_ksem = {
+		seti(rd.i, shifter_operand.v);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MUL
+	otawa_ksem = {
+		if rs.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		mul(rd.i, rm.i, rs.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend SMULL
+	otawa_ksem = {
+		if rs.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		mul(rdlo.i, rm.i, rs.i);
+		mulh(rdhi.i, rm.i, rs.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend MVN_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		not(rd.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend MVN_imm
+	otawa_ksem = {
+		seti(rd.i, ~shifter_operand.v);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend ORR_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		or(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend ORR_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		or(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend RSB_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		sub(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend RSB_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		sub(rd.i, t1, rn.i);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend STM
+	otawa_ksem = {
+		if rn.use_pc || reglist<15..15> == 1 then seti(R(15), __IADDR + 8); endif;
+		cnt = 0;
+		ii = 0;
+		otawa_ksem_cnt;
+		seti(t2, 4);
+		switch(adr_mode) {
+		case MULT_DA:
+			seti(t1, cnt * 4 - 4); sub(t1, rn.i, t1);
+			sub(t3, t1, t2);
+		case MULT_IA:
+			_set(t1, rn.i);
+			seti(t3, cnt * 4); add(t3, t1, t3);
+		case MULT_DB:
+			seti(t1, cnt * 4); sub(t1, rn.i, t1);
+			_set(t3, t1);
+		case MULT_IB:	add(t1, rn.i, t2);
+			add(t1, rn.i, t2);
+			seti(t3, cnt * 4 - 4); add(t3, t1, t3);
+		};
+		ii = 0;
+		sem_rec_first = 1;
+		otawa_ksem_rec;
+		if setw == 1 then _set(rn.i, t3); endif;
+	}
+	otawa_ksem_cnt = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then cnt = cnt + 1; endif;
+			ii = ii + 1;
+			otawa_ksem_cnt;
+		endif;
+	}
+	// t1 = sp, t2 = 4
+	otawa_ksem_rec = {
+		if ii <= 15 then
+			if reglist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
+				store(R(ii), t1, UINT32);
+				sem_rec_first = 0;
+			endif;
+			ii = ii + 1;
+			otawa_ksem_rec;
+		endif;
+	}
+
+extend STR_imm
+	otawa_ksem = {
+		if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -coerce(card(32), offset12) else offset12 endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		store(rd.i, t1, if setb then UINT8 else UINT32 endif);
+		if setpre == 0 then 	add(rn.i, t1, t2);
+		else if setw == 1 then	_set(rn.i, t1);
+		endif; endif;
+	}
+
+extend STR_shr
+	otawa_ksem = {
+		if rn.use_pc || rd.use_pc || shifter_operand.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		if setu == 0 then neg(t1, t1); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		store(rd.i, t2, if setb == 1 then UINT8 else UINT32 endif);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend STRH_imm
+	otawa_ksem = {
+		if rn.use_pc || rd.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t2, if setu == 0 then -(immh::imml) else (immh::imml) endif);
+		if setpre == 0 then _set(t1, rn.i); else add(t1, rn.i, t2); endif;
+		store(rd.i, t1, UINT16);
+		if setpre == 0 then add(rn.i, rn.i, t2);
+		else if setw == 1 then _set(rn.i, t1);
+		endif; endif;
+	}
+
+extend STRH_shr
+	otawa_ksem = {
+		if rn.use_pc || rd.use_pc || rm.use_pc then seti(R(15), __IADDR + 8); endif;
+		if setu == 0 then neg(t1, rm.i); else _set(t1, rm.i); endif;
+		if setpre == 1 then add(t2, rn.i, t1); else _set(t2, rn.i); endif;
+		store(rd.i, t2, UINT16);
+		if setpre == 0 then add(rn.i, rn.i, t1);
+		else if setw == 1 then _set(rn.i, t2);
+		endif; endif;
+	}
+
+extend SUB_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		sub(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend SUB_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		sub(rd.i, rn.i, t1);
+		if sets then seti(t1, 0); cmp(_CPSR, rd.i, t1); endif;
+	}
+
+extend SWI
+	otawa_ksem = {
+		trap();
+	}
+
+extend SWP
+	otawa_ksem = {
+		scratch(t1);
+		store(t1, rn.i, if setb.value == 1 then 1 else 4 endif);
+		scratch(rd.i);
+	}
+
+extend TEQ_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		xor(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TEQ_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		xor(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TST_shr
+	otawa_ksem = {
+		if shifter_operand.use_pc || rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		shifter_operand.otawa_sem;
+		and(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+extend TST_imm
+	otawa_ksem = {
+		if rn.use_pc then seti(R(15), __IADDR + 8); endif;
+		seti(t1, shifter_operand.v);
+		and(t1, rn.i, t1);
+		seti(t2, 0);
+		cmp(_CPSR, t1, t2);
+	}
+
+
+// ****** thumb instruction set extends ******
+
+extend ADD_imm1_thumb
+	otawa_ksem = {
+		seti(t1, imm);
+		add(rd.i, rn.i, t1);
+		scratch(_CPSR);
+	}
+
+extend ADD_imm2_thumb
+	otawa_ksem = {
+		seti(t1, imm);
+		add(rd.i, rd.i, t1);
+		scratch(_CPSR);
+	}
+
+extend ADD_imm3_thumb
+	otawa_ksem = { seti(rd.i, ((__IADDR + 4) & 0xfffffffc) + exts(imm) << 2); }
+
+extend ADD_imm4_thumb
+	otawa_ksem = { add(rd.i, R(13), exts(imm) << 2); }
+
+extend ADD_imm5_thumb
+	otawa_ksem = { add(R(13), R(13), exts(imm) << 2); }
+
+extend ADD_reg1_thumb
+	otawa_ksem = { add(rd.i, rm.i, rn.i); scratch(_CPSR); }
+
+extend ADD_reg2_thumb
+	otawa_ksem = { add(rd.i, rd.i, rm.i); }
+
+extend AND_thumb
+	otawa_ksem = { and(rd.i, rd.i, rm.i); scratch(_CPSR); }
+
+extend ASR1_thumb
+	otawa_ksem = { seti(t1, imm); asr(rd.i, rm.i, t1); scratch(_CPSR); }
+
+extend ASR2_thumb
+	otawa_ksem = { asr(rd.i, rd.i, rs.i); scratch(_CPSR); }
+
+macro otawa_cond(c) = \
+	switch(c) { \
+	case 0: 	"sem::EQ" \
+	case 1: 	"sem::NE" \
+	case 2:		"sem::UGE" \
+	case 3:		"sem::ULT" \
+	case 8:		"sem::UGT" \
+	case 9:		"sem::ULE" \
+	case 10:	"sem::GE" \
+	case 11:	"sem::LT" \
+	case 12:	"sem::GT" \
+	case 13:	"sem::LE" \
+	default:	"sem::ANY_COND"\
+	}
+extend B_thumb
+	otawa_ksem = {
+		seti(t1, __IADDR + 4 + exts(simm) << 1);
+		if cond == 14 then _branch(t1); else
+		if cond == 15 then trap(); else
+			_if(otawa_cond(cond), _CPSR, 1);
+			_branch(t1);
+		endif; endif;
+	}
+
+extend BIC_thumb
+	otawa_ksem = {
+		not(t1, rm.i);
+		and(rd.i, rd.i, t1);
+		scratch(_CPSR);
+	}
+
+extend BX_thumb
+	otawa_ksem = { _branch(rm.i); }
+
+extend CMN_shr_thumb
+	otawa_ksem = { neg(t1, rm.i); cmp(_CPSR, rn.i, t1); }
+
+extend CMP_imm_thumb
+	otawa_ksem = { seti(t1, imm); cmp(_CPSR, rn.i, t1); }
+
+extend CMP_shr1_thumb
+	otawa_ksem = { cmp(_CPSR, rn.i, rm.i); }
+
+extend CMP_shr2_thumb
+	otawa_ksem = {
+		if H == 1 then cmp(_CPSR, rn.hi, rm.i);
+		else cmp(_CPSR, rn.i, rm.i); endif;
+	}
+
+extend EOR_thumb
+	otawa_ksem = { xor(rd.i, rd.i, rm.i); scratch(_CPSR); }
+
+extend LDMIA_thumb
+	otawa_ksem = {
+		_set(t1, rn.i);
+		seti(t2, 4);
+		ii = 0;
+		sem_rec_first = 1;
+		otawa_ksem_rec;
+		_set(rn.i, t1);
+	}
+	otawa_ksem_rec = {
+		if ii < 8 then
+			if llist<ii..ii> == 1 then
+				if sem_rec_first == 0 then
+					add(t1, t1, t2);
+				endif;
+				load(R(ii), t1, UINT32);
+				sem_rec_first = 0;
+			endif;
+			ii = ii + 1;
+			otawa_ksem_rec;
+		endif;
+	}
+
+extend LDR_imm_thumb
+	otawa_ksem = { seti(t1, imm * 4); add(t1, rn.i, t1); load(rd.i, t1, UINT32); }
+
+extend LDR_shr_thumb
+	otawa_ksem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT32); }
+
+extend LDR_imm2_thumb
+	otawa_ksem = { seti(t1, __IADDR + 8 + imm * 4); load(rd.i, t1, UINT32); }
+
+extend LDR_imm3_thumb
+	otawa_ksem = { seti(t1, exts(imm) * 4); add(t1, R(13), t1); load(rd.i, t1, UINT32); }
+
+extend LDRB_imm_thumb
+	otawa_ksem = { seti(t1, imm); add(t1, rn.i, t1); load(rd.i, t1, UINT8); }
+
+extend LDRB_shr_thumb
+	otawa_ksem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT8); }
+
+extend LDRH_imm_thumb
+	otawa_ksem = { seti(t1, imm * 2); add(t1, rn.i, t1); load(rd.i, t1, UINT16); }
+
+extend LDRH_shr_thumb
+	otawa_ksem = { add(t1, rn.i, rm.i); load(rd.i, t1, UINT16); }
+
+extend LDRSB_thumb
+	otawa_ksem = { add(t1, rn.i, rm.i); load(rd.i, t1, INT8); }
+
+extend  LDRSH_thumb
+	otawa_ksem = { add(t1, rn.i, rm.i); load(rd.i, t1, INT16); }
+
+extend LSL_imm_thumb
+	otawa_ksem = { seti(t1, imm); shl(rd.i, rm.i, t1); scratch(_CPSR); }
+
+extend LSL_shr_thumb
+	otawa_ksem = { shl(rd.i, rd.i, rs.i); scratch(_CPSR); }
+
+extend LSR_imm_thumb
+	otawa_ksem = { seti(t1, imm5); shr(rd.i, rm.i, t1); scratch(_CPSR); }
+
+extend LSR_shr_thumb
+	otawa_ksem = { shr(rd.i, rd.i, rs.i); scratch(_CPSR); }
+
+extend MOV_imm_thumb
+	otawa_ksem = { seti(rd.i, imm); scratch(_CPSR); }
+
+extend MOV_shr_thumb
+	otawa_ksem = { _set(rd.i, rn.i); scratch(_CPSR); }
+
+extend MOV_shr2_thumb
+	otawa_ksem = { _set(if H == 1 then rd.hi else rd.i endif, rm.i); }
+
+extend MUL_thumb
+	otawa_ksem = { mul(rd.i, rd.i, rm.i); scratch(_CPSR); }
+
+extend MVN_thumb
+	otawa_ksem = { not(rd.i, rm.i); scratch(_CPSR); }
+
+extend NEG_thumb
+	otawa_ksem = { neg(rd.i, rm.i); scratch(_CPSR); }
+
+extend ORR_thumb
+	otawa_ksem = { or(rd.i, rd.i, rm.i); scratch(_CPSR); }
+
+extend POP_thumb
+	otawa_ksem = {
+		ii = 0;
+		seti(t2, 4);
+		otawa_ksem_rec;
+		if P == 1 then
+			load(t1, R(13), UINT32);
+			add(R(13), R(13), t2);
+			_branch(t1);
+		endif;
+	}
+	otawa_ksem_rec = {
+		if ii < 8 then
+			if llist<ii..ii> == 1 then
+				load(R(ii), R(13), UINT32);
+				add(R(13), R(13), t2);
+			endif;
+			ii = ii + 1;
+			otawa_ksem_rec;
+		endif;
+	}
+
+extend PUSH_thumb
+	otawa_ksem = {
+		seti(t2, 4);
+		if P == 1 then
+			sub(R(13), R(13), t2);
+			store(t1, R(13), 4);
+		endif;
+		ii = 8;
+		otawa_ksem_rec;
+	}
+	otawa_ksem_rec = {
+		if ii > 0 then
+			ii = ii - 1;
+			if llist<ii..ii> == 1 then
+				sub(R(13), R(13), t2);
+				store(R(ii), R(13), 4);
+			endif;
+			otawa_ksem_rec;
+		endif;
+	}
+
+
+// ****** unsupported ******
+
+extend ADC_shr, RSC_shr, SBC_shr
+	otawa_ksem = {
+		shifter_operand.otawa_sem;
+		scratch(rd.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend ADC_thumb
+	otawa_ksem = {
+		scratch(rd.i);
+		scratch(_CPSR);
+	}
+
+extend ADC_imm, RSC_imm, SBC_imm
+	otawa_ksem = {
+		scratch(rd.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend UMULL, SMLAL, UMLAL
+	otawa_ksem = {
+		scratch(rdlo.i);
+		scratch(rdhi.i);
+		if sets then scratch(_CPSR); endif;
+	}
+
+extend CLZ, BFIC
+	otawa_ksem = { scratch(rd.i); }
+
+extend ROR_thumb, SBC_thumb
+	otawa_ksem = { scratch(rd.i); scratch(_CPSR); }

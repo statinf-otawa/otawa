@@ -349,8 +349,10 @@ Inst *Inst::target(void) {
 
 
 /**
- * Get the list of register read by the instruction.
+ * Accumulate the list of registers read by the instruction in the given register set.
  * @param set	Set filled with platform numbers of read registers.
+ * @warning	This method is only implemented when the owner loader
+ * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 void Inst::readRegSet(RegSet& set) {
 	const elm::genstruct::Table<hard::Register *>&tab = readRegs();
@@ -360,8 +362,10 @@ void Inst::readRegSet(RegSet& set) {
 
 
 /**
- * Get the list of register written by the instruction.
+ * Accumulate the list of registers written by the instruction in the given register set.
  * @param set	Set filled with platform numbers of written registers.
+ * @warning	This method is only implemented when the owner loader
+ * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 void Inst::writeRegSet(RegSet& set) {
 	const elm::genstruct::Table<hard::Register *>&tab = writtenRegs();
@@ -375,6 +379,7 @@ void Inst::writeRegSet(RegSet& set) {
  * @return	Read register table.
  * @warning	This method is only implemented when the owner loader
  * asserts the @ref REGISTER_USAGE_FEATURE.
+ * @deprecated	Use readRegSet() instead.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
 	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
@@ -386,6 +391,7 @@ const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
  * @return	Read register table.
  * @warning	This method is only implemented when the owner loader
  * asserts the @ref REGISTER_USAGE_FEATURE.
+ * @deprecated	Use writeRegSet() instead.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
 	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
@@ -426,6 +432,36 @@ void Inst::semInsts(sem::Block& block) {
  */
 int Inst::semInsts(sem::Block& block, int temp) {
 	semInsts(block);
+	return 0;
+}
+
+
+/**
+ * For a conditional instruction, fill the block with the semantic instructions
+ * without the conditional evaluation part. For a non-conditional instruction,
+ * do the same as semInsts().
+ *
+ * @param block	Block to fill with semantic instructions.
+ */
+void Inst::semKernel(sem::Block& block) {
+	semInsts(block);
+}
+
+
+/**
+ * For a conditional instruction, fill the block with the semantic instructions
+ * without the conditional evaluation part. For a non-conditional instruction,
+ * do the same as semInsts().
+ *
+ * Additional parameter is used for temporary renaming in case of VLIW instruction set.
+ * For VLIW also, it must return of consumed temporaries.
+ *
+ * @param block	Block to fill with semantic instructions.
+ * @param temp	Next temporary number to use.
+ * @return		Number of used temporaries.
+ */
+int Inst::semKernel(sem::Block& block, int temp) {
+	semKernel(block);
 	return 0;
 }
 

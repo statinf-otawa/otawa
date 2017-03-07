@@ -24,9 +24,46 @@
 
 namespace otawa {
 
-class Nop: public VirtualInst {
+/*
+ * ConditionalRestructure provides a minimal implementation to support efficiently
+ * and easily the conditional instruction. Yet, it remains space for improvement:
+ *
+ * * when a condition is refining a current condition, it would be enough to apply
+ *   the refined condition to the initial assertion (as it will separated according to the
+ *   new refinement),
+ *
+ * * the current system supports only condition of the semantic instructions (that are
+ *   the main user of this module); yet, even non-standard condition could be supported
+ *   as the condition system needs only to create an inclusion order on the conditions
+ *   and the possibly to refine a condition getting the refinement and the complement
+ *   of the refinement relatively to the current condition.
+ */
+class MyNOP: public NOP {
 public:
-	Nop(WorkSpace *ws, Inst *i): VirtualInst(ws, i) { }
+	MyNOP(WorkSpace *ws, Inst *i, const Condition& cond): NOP(ws, i), _cond(cond) { }
+
+	virtual void semInsts (sem::Block &block) {
+		if(!_cond.isEmpty())
+			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
+	}
+
+private:
+	Condition _cond;
+};
+
+class CondInst: public VirtualInst {
+public:
+	CondInst(WorkSpace *ws, Inst *i, const Condition& cond): VirtualInst(ws, i), _cond(cond) { }
+
+	virtual void semInsts (sem::Block &block) {
+		if(!_cond.isEmpty()) {
+			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
+			VirtualInst::semKernel(block);
+		}
+	}
+
+private:
+	Condition _cond;
 };
 
 static const t::uint8
@@ -75,7 +112,7 @@ void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 	for(CFG::BlockIter b(g->blocks()); b; b++)
 		split(b);
 	BB(g->entry()) = pair(m.entry(), int(BOTH));
-	BB(g->exit()) = pair(m.entry(), int(BOTH));
+	BB(g->exit()) = pair(m.exit(), int(BOTH));
 	if(g->unknown())
 		BB(g->unknown()) = pair(m.unknown(), int(BOTH));
 
@@ -106,6 +143,7 @@ public:
 				i++;
 				j++;
 			}
+		_conds.setLength(j);
 	}
 
 	/**
@@ -225,19 +263,21 @@ void ConditionalRestructurer::split(Block *b) {
 	cases.add(new Case());
 	for(BasicBlock::InstIter i(bb); i; i++) {
 		Condition c = i->condition();
+		wr.clear();
 		i->writeRegSet(wr);
 
-		// no condition: just add the instruction
-		if(c.isEmpty())
+		// no condition or final branch alone: just add the instruction
+		if(c.isEmpty() || (cases.length() == 1 && i == bb->control())) {
 			for(Vector<Case *>::Iter k(cases); k; k++)
 				k->add(i, wr);
+		}
 
 		// any condition: duplicate all cases
 		else if(c.isAny()) {
 			int l = cases.length();
 			for(int k = 0; k < l; k++) {
-				cases[k]->add(i, wr);
 				cases.add(cases[k]->split(nop(i), wr));
+				cases[k]->add(i, wr);
 			}
 		}
 
@@ -247,24 +287,22 @@ void ConditionalRestructurer::split(Block *b) {
 			for(int k = 0; k < l; k++) {
 				Condition cc = cases[k]->matches(c);
 
-				// special for last branch
-				if(l == 1 && i == bb->control())
-					cases[k]->add(i, wr);
-
 				// cc = no condition => split
-				else if(cc.isEmpty()) {
-					cases[k]->add(i, wr, c);
-					cases.add(cases[k]->split(nop(i), wr, c.revert()));
+				if(cc.isEmpty()) {
+					Condition ic = c.inverse();
+					cases.add(cases[k]->split(nop(i, ic), wr, ic));
+					cases[k]->add(guard(i, c), wr, c);
 				}
 
 				// c subset of cc => add instruction
-				else if(c.subsetOf(cc))
+				else if(cc <= c)
 					cases[k]->add(i, wr, i->isControl() ? TAKEN : NONE);
 
 				// cc subset of c => split
-				else if(cc.subsetOf(c)) {
-					cases[k]->add(i, wr, cc, i->isControl() ? TAKEN : NONE);
-					cases.add(cases[k]->split(nop(i), wr, c.complementOf(cc), i->isControl() ? NOT_TAKEN : NONE));
+				else if(c & cc) {
+					Condition ic = cc - (c & cc);
+					cases.add(cases[k]->split(nop(i, ic), wr, ic, i->isControl() ? NOT_TAKEN : NONE));
+					cases[k]->add(guard(i, c & cc), wr, c & cc, i->isControl() ? TAKEN : NONE);
 				}
 
 				// cc is out of c => not executed
@@ -277,7 +315,7 @@ void ConditionalRestructurer::split(Block *b) {
 
 	// build the block and clean
 	for(Vector<Case *>::Iter k(cases); k; k++) {
-		BB(bb) = pair(static_cast<Block *>(build(k->insts())), int(k->branch()));
+		BB(bb).add(pair(static_cast<Block *>(build(k->insts())), int(k->branch())));
 		delete *k;
 	}
 }
@@ -285,13 +323,26 @@ void ConditionalRestructurer::split(Block *b) {
 
 /**
  * Build a nop for the given instruction.
+ * @param i		Instruction to build nop for.
+ * @param c		Condition supported by the nop.
  */
-Inst *ConditionalRestructurer::nop(Inst *i) {
-	if(_anop != i) {
-		_nop = new Nop(workspace(), i);
+Inst *ConditionalRestructurer::nop(Inst *i, const Condition& c) {
+	if(_anop != i || !c.isEmpty()) {
+		_nop = new MyNOP(workspace(), i, c);
 		_anop = i;
 	}
 	return _nop;
+}
+
+
+/**
+ * Build a guarded instruction shield.
+ * @param i		Guarded instruction.
+ * @param cond	Condition guarding the instruction.
+ * @return		Corresponding guarded instruction.
+ */
+Inst *ConditionalRestructurer::guard(Inst *i, const Condition& cond) {
+	return new CondInst(workspace(), i, cond);
 }
 
 
@@ -300,12 +351,16 @@ Inst *ConditionalRestructurer::nop(Inst *i) {
  * @param b		Block to rebuild.
  */
 void ConditionalRestructurer::make(Block *b) {
+	cerr << "DEBUG:  " << b << io::endl;
 	for(Block::EdgeIter e = b->outs(); e; e++)
 		for(p::id<Pair<Block *, int> >::Getter sb(b, BB); sb; sb++)
-			if((e->isTaken() && ((*sb).snd & TAKEN))
+			if(!e->flags()
+			|| (e->isTaken() && ((*sb).snd & TAKEN))
 			|| (e->isNotTaken() && ((*sb).snd & NOT_TAKEN)))
-				for(p::id<Pair<Block *, int> >::Getter tb(e->target(), BB); tb; tb++)
+				for(p::id<Pair<Block *, int> >::Getter tb(e->target(), BB); tb; tb++) {
 					build((*sb).fst, (*tb).fst, e->flags());
+					cerr << "DEBUG: " << (*sb).fst << " -> " << (*tb).fst << io::endl;
+				}
 }
 
 } // otawa

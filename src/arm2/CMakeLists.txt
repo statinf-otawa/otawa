@@ -20,6 +20,7 @@ include("../../data/cmake/Otawa.cmake")
 MAKE_GLISS_FUNCTION(OTAWA_KIND    "otawa_kind"      "otawa_kind.nmp"   "${IRG}"   "return 0;" "${ARM_AUX}")
 MAKE_GLISS_FUNCTION(OTAWA_TARGET  "otawa_target"    "otawa_target.nmp" "${IRG}"   "return 0;" "${ARM_AUX}")
 MAKE_GLISS_PROCEDURE(OTAWA_SEM    "otawa_sem"       "otawa_sem.nmp"    "${IRG}"   ";"         "${ARM_AUX}")
+MAKE_GLISS_PROCEDURE(OTAWA_KSEM   "otawa_ksem"      "otawa_ksem.nmp"   "${IRG}"   ";"         "${ARM_AUX}")
 MAKE_GLISS_FUNCTION(OTAWA_MULTI   "otawa_multi"     "otawa_multi.nmp"  "${IRG}"   "return 0;" "${ARM_AUX}")
 MAKE_GLISS_FUNCTION(OTAWA_COND    "otawa_condition" "otawa_condition.nmp"   "${IRG}"   "return 0;" "${ARM_AUX}")
 
@@ -30,6 +31,7 @@ set(SOURCES
 	${OTAWA_SEM}
 	${OTAWA_MULTI}
 	${OTAWA_COND}
+	${OTAWA_KSEM}
 )
 
 include_directories(${PROC_PREFIX}/include)
