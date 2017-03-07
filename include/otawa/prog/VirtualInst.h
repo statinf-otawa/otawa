@@ -46,6 +46,7 @@ public:
 	virtual Type *type(void);
 	virtual void semInsts(sem::Block& block);
 	virtual int semInsts(sem::Block& block, int temp);
+	virtual void semKernel(sem::Block& block);
 	virtual int semWriteBack(sem::Block& block, int temp);
 	virtual delayed_t delayType(void);
 	virtual int delaySlots(void);
@@ -62,6 +63,28 @@ protected:
 private:
 	Inst *_inst;
 	VirtualInst *next;
+};
+
+class NOP: public VirtualInst {
+public:
+	NOP(WorkSpace *ws, Inst *inst);
+	NOP(VirtualInstManager& man, Inst *inst);
+
+	virtual void dump(io::Output& out);
+	virtual kind_t kind(void);
+	virtual Inst *target(void);
+	virtual Type *type(void);
+	virtual void semInsts(sem::Block& block);
+	virtual int semInsts(sem::Block& block, int temp);
+	virtual int semWriteBack(sem::Block& block, int temp);
+	virtual delayed_t delayType(void);
+	virtual int delaySlots(void);
+	virtual void readRegSet(RegSet& set);
+	virtual void writeRegSet(RegSet& set);
+	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
+	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
+	virtual int multiCount(void);
+	virtual Condition condition(void);
 };
 
 class VirtualInstManager {

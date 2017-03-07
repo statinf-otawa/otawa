@@ -141,12 +141,13 @@ public:
 		Version(1, 0, 0),
 		"Disassemble instruction to OTAWA instruction description",
 		"H. Cassé <casse@irit.fr>"),
-	regs(*this, option::cmd, "-r", option::cmd, "--regs", option::help, "display register information", option::end),
-	kind(*this, option::cmd, "-k", option::cmd, "--kind", option::help, "display kind of instructions", option::end),
-	sem(*this, option::cmd, "-s", option::cmd, "--semantics", option::help, "display translation of instruction in semantics language", option::end),
-	target(*this, option::cmd, "-t", option::cmd, "--target", option::help, "display target of control instructions", option::end),
-	bytes(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes").description("display bytes composing the instruction")),
-	pipeline(*this, 'p', "pipeline", "display execution pipeline of instructions for the given processor", "PROCESSOR_NAME", ""),
+	regs	(option::SwitchOption::Make(this).cmd("-r").cmd("--regs")		.description("display register information")),
+	kind	(option::SwitchOption::Make(this).cmd("-k").cmd("--kind")		.description("display kind of instructions")),
+	sem		(option::SwitchOption::Make(this).cmd("-s").cmd("--semantics")	.description("display translation of instruction in semantics language")),
+	target	(option::SwitchOption::Make(this).cmd("-t").cmd("--target")		.description("display target of control instructions")),
+	bytes	(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes")		.description("display bytes composing the instruction")),
+	ksem	(option::SwitchOption::Make(this).cmd("-S").cmd("--kernel-sem")	.description("display the kernel semantic instruction (without condition for conditional instructions")),
+	pipeline(option::Value<string>::Make(this).cmd("-p").cmd("--pipeline")	.description("display execution pipeline of instructions for the given processor").argDescription("PROCESSOR_NAME").def("")),
 	max_size(0), proc(NULL)
 	{ }
 
@@ -186,8 +187,46 @@ private:
 
 		// disassemble the BB
 		for(avl_t::Iterator bb(avl); bb; bb++)
-			for(BasicBlock::InstIter inst(bb); inst; inst++)
-				processInst(inst);
+			for(BasicBlock::BundleIter bu(bb); bu; bu++) {
+
+				// display specific to an instruction
+				for(Bundle::Iter i(bu); i; i++)
+					processInst(i);
+
+				// display common to bundle
+				processBundle(bu);
+			}
+	}
+
+	/**
+	 * Disassemble properties of a bundle.
+	 * @param bu	Bundle to display.
+	 */
+	void processBundle(const Bundle& bu) {
+
+		// display semantics
+		if(sem || ksem) {
+			otawa::sem::Block block;
+			if(ksem)
+				bu.semKernel(block);
+			else
+				bu.semInsts(block);
+			cout << "\t\tsemantics\n";
+			otawa::sem::Printer printer(workspace()->platform());
+			for(int i = 0; i < block.count(); i++) {
+				cout << "\t\t\t";
+				printer.print(cout, block[i]);
+				cout << io::endl;
+			}
+		}
+
+		// display pipeline
+		if(pipeline) {
+			hard::Processor::steps_t steps;
+			proc->execute(bu.first(), steps);
+			dumpExeGraph(steps, cout, "\t\t");
+		}
+
 	}
 
 	/**
@@ -278,28 +317,6 @@ private:
 			cout << io::endl;
 		}
 
-		// display semantics
-		if(sem) {
-			otawa::sem::Block block;
-			inst->semInsts(block, -1);
-			int wb = block.count();
-			inst->semWriteBack(block, -1);
-			cout << "\t\tsemantics\n";
-			otawa::sem::Printer printer(workspace()->platform());
-			for(int i = 0; i < block.count(); i++) {
-				if (i == wb) cout << "\t\t\t--------\n";
-				cout << "\t\t\t";
-				printer.print(cout, block[i]);
-				cout << io::endl;
-			}
-		}
-
-		// display pipeline
-		if(pipeline) {
-			hard::Processor::steps_t steps;
-			proc->execute(inst, steps);
-			dumpExeGraph(steps, cout, "\t\t");
-		}
 	}
 
 	void dumpExeGraph(hard::Processor::steps_t& steps, Output out = otawa::cout, String start = "") {
@@ -309,8 +326,8 @@ private:
 		out << endl;
 	}
 
-	option::SwitchOption regs, kind, sem, target, bytes;
-	option::StringOption pipeline;
+	option::SwitchOption regs, kind, sem, target, bytes, ksem;
+	option::Value<string> pipeline;
 	t::uint32 max_size;
 	const hard::Processor *proc;
 };

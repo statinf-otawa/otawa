@@ -1209,7 +1209,6 @@ Condition::Condition(bool unsigned_, cond_t cond, hard::Register *reg)
 : _unsigned(unsigned_), _cond(cond), _reg(reg) {
 }
 
-
 /**
  * Get the semantic condition.
  * @return	Semantic condition.
@@ -1289,13 +1288,12 @@ sem::cond_t Condition::semCond(void) const {
  * @param c		Condition to be a superset of the current condition.
  * @return		True if the current condition is a subset of the condition c.
  */
-bool Condition::subsetOf(const Condition& c) {
+bool Condition::subsetOf(const Condition& c) const {
 	if(_reg != c._reg || _unsigned != c._unsigned)
 		return false;
 	else
-		return (_cond | c._cond) == _cond;
+		return (_cond | c._cond) == c._cond;
 }
-
 
 /**
  * Considering the current condition, return the complement
@@ -1308,10 +1306,65 @@ bool Condition::subsetOf(const Condition& c) {
  * @param c	Condition to get complement for.
  * @return	Complement condition.
  */
-Condition Condition::complementOf(const Condition& c) {
+Condition Condition::complementOf(const Condition& c) const {
 	ASSERT(_reg == c._reg);
 	ASSERT(_unsigned == c._unsigned);
 	return Condition(_unsigned, _cond & ~c._cond, _reg);
+}
+
+/**
+ * Compute the intersection of the current condition with the given one.
+ * Both conditions must match (same register, same domain)!
+ * @param c		Condition to meet with.
+ * @return		Meet of conditions.
+ */
+Condition Condition::meet(const Condition& c) const {
+	ASSERT(_reg == c._reg);
+	ASSERT(_unsigned == c._unsigned);
+	return Condition(_unsigned, _cond & c._cond, _reg);
+}
+
+/**
+ * Compute the union of the current condition with the given one.
+ * Both conditions must match (same register, same domain)!
+ * @param c		Condition to join with.
+ * @return		Meet of conditions.
+ */
+Condition Condition::join(const Condition& c) const {
+	ASSERT(_reg == c._reg);
+	ASSERT(_unsigned == c._unsigned);
+	return Condition(_unsigned, _cond | c._cond, _reg);
+}
+
+/**
+ * Test if the current condition is equal to the given one.
+ * @param c		Condition to compare with.
+ * @return		True if conditions are equal, false else.
+ */
+bool Condition::equals(const Condition& c) const {
+	return _unsigned == c._unsigned && _reg == c._reg && _cond == c._cond;
+}
+
+Condition Condition::inverse(void) const {
+	return Condition(_unsigned, ANY & ~_cond, _reg);
+}
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const Condition& c) {
+	if(c.reg())
+		out << c.reg()->name();
+	out << ':';
+	if(c.isUnsigned())
+		out << 'u';
+	if(c.cond() & Condition::EQ)
+		out << 'E';
+	if(c.cond() & Condition::LT)
+		out << 'L';
+	if(c.cond() & Condition::GT)
+		out << 'G';
+	return out;
 }
 
 } // otawa

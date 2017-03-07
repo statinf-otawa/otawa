@@ -38,6 +38,7 @@ public:
 	void readRegSet(RegSet& set) const;
 	void writeRegSet(RegSet& set) const;
 	void semInsts(sem::Block& block) const;
+	void semKernel(sem::Block& block) const;
 
 	class Iter: public PreIterator<Iter, Inst *> {
 	public:

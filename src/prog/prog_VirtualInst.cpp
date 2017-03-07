@@ -119,6 +119,10 @@ int VirtualInst::semInsts(sem::Block& block, int temp) { return _inst->semInsts(
 
 /**
  */
+void VirtualInst::semKernel(sem::Block& block) { return _inst->semKernel(block); }
+
+/**
+ */
 int VirtualInst::semWriteBack(sem::Block& block, int temp) { return _inst->semWriteBack(block, temp); }
 
 /**
@@ -159,30 +163,105 @@ Condition VirtualInst::condition(void) { return _inst->condition(); }
 
 
 /**
+ * @class NOP
+ * Virtual instruction that represents an instruction that does nothing
+ * (but it occupies the same place as the masked instruction).
  */
-class NOP: public VirtualInst {
-public:
-	NOP(VirtualInstManager& man, Inst *inst): VirtualInst(man, inst) { }
 
-	virtual void dump(io::Output& out) 						{ out << "NOP"; }
-	virtual kind_t kind(void) 								{ return 0; }
-	virtual Inst *target(void) 								{ return 0; }
-	virtual Type *type(void) 								{ return (Type *)&Type::no_type; }
-	virtual void semInsts(sem::Block& block) 				{ }
-	virtual int semInsts(sem::Block& block, int temp) 		{ return temp; }
-	virtual int semWriteBack(sem::Block& block, int temp)	{ return temp; }
-	virtual delayed_t delayType(void) 						{ return DELAYED_None; }
-	virtual int delaySlots(void) 							{ return 0; }
-	virtual void readRegSet(RegSet& set)					{ set.clear(); }
-	virtual void writeRegSet(RegSet& set)					{ set.clear(); }
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void)
-			{ return elm::genstruct::Table<hard::Register *>::EMPTY; }
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void)
-		{ return elm::genstruct::Table<hard::Register *>::EMPTY; }
-	virtual int multiCount(void)							{ return 0; }
-	virtual Condition condition(void)						{ return Condition(); }
+/**
+ */
+NOP::NOP(WorkSpace *ws, Inst *inst): VirtualInst(ws, inst) { }
 
-};
+/**
+ */
+NOP::NOP(VirtualInstManager& man, Inst *inst): VirtualInst(man, inst) { }
+
+/**
+ */
+void NOP::dump(io::Output& out) {
+	out << "NOP";
+}
+
+/**
+ */
+Inst::kind_t NOP::kind(void) {
+	return 0;
+}
+
+/**
+ */
+Inst *NOP::target(void) {
+	return 0;
+}
+
+/**
+ */
+Type *NOP::type(void) {
+	return (Type *)&Type::no_type;
+}
+
+/**
+ */
+void NOP::semInsts(sem::Block& block) {
+}
+
+/**
+ */
+int NOP::semInsts(sem::Block& block, int temp) {
+	return temp;
+}
+
+/**
+ */
+int NOP::semWriteBack(sem::Block& block, int temp) {
+	return temp;
+}
+
+/**
+ */
+delayed_t NOP::delayType(void) {
+	return DELAYED_None;
+}
+
+/**
+ */
+int NOP::delaySlots(void) {
+	return 0;
+}
+
+/**
+ */
+void NOP::readRegSet(RegSet& set) {
+}
+
+/**
+ */
+void NOP::writeRegSet(RegSet& set) {
+}
+
+/**
+ */
+const elm::genstruct::Table<hard::Register *>& NOP::readRegs(void) {
+	return elm::genstruct::Table<hard::Register *>::EMPTY;
+}
+
+/**
+ */
+const elm::genstruct::Table<hard::Register *>& NOP::writtenRegs(void) {
+	return elm::genstruct::Table<hard::Register *>::EMPTY;
+}
+
+/**
+ */
+int NOP::multiCount(void) {
+	return 0;
+}
+
+/**
+ */
+Condition NOP::condition(void) {
+	return Condition();
+}
 
 
 /**

@@ -36,7 +36,8 @@ protected:
 
 private:
 	void split(Block *bb);
-	Inst *nop(Inst *i);
+	Inst *nop(Inst *i, const Condition& cond = Condition());
+	Inst *guard(Inst *i, const Condition& cond);
 	void make(Block *bb);
 
 	Inst *_nop, *_anop;

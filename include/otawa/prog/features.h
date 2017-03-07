@@ -59,6 +59,7 @@ public:
 	Condition(void);
 	Condition(sem::cond_t cond, hard::Register *reg);
 	Condition(bool unsigned_, cond_t cond, hard::Register *reg);
+
 	inline bool isEmpty(void) const { return _cond == 0; }
 	inline bool isAny(void) const { return _cond == ANY; }
 	inline bool isUnsigned(void) const { return _unsigned; }
@@ -66,15 +67,32 @@ public:
 	inline cond_t cond(void) const { return _cond; }
 	inline hard::Register *reg(void) const { return _reg; }
 	sem::cond_t semCond(void) const;
-	bool subsetOf(const Condition& c);
-	Condition complementOf(const Condition& c);
-	inline Condition revert(void) const { return Condition(_unsigned, ANY & ~_cond, _reg); };
+	bool equals(const Condition& c) const;
+	bool subsetOf(const Condition& c) const;
+
+	Condition complementOf(const Condition& c) const;
+	Condition inverse(void) const;
+	Condition meet(const Condition& c) const;
+	Condition join(const Condition& c) const;
+
+	inline operator bool(void) const { return !isEmpty(); }
+	inline Condition operator~(void) const { return inverse(); }
+	inline Condition operator&(const Condition& c) const { return meet(c); }
+	inline Condition operator|(const Condition& c) const { return join(c); }
+	inline Condition operator-(const Condition& c) const { return complementOf(c); }
+	inline bool operator==(const Condition& c) const { return equals(c); }
+	inline bool operator!=(const Condition& c) const { return !equals(c); }
+	inline bool operator<=(const Condition& c) const { return subsetOf(c); }
+	inline bool operator<(const Condition& c) const { return subsetOf(c) && !equals(c); }
+	inline bool operator>=(const Condition& c) const { return c.subsetOf(*this); }
+	inline bool operator>(const Condition& c) const { return c.subsetOf(*this) && !equals(c); }
 
 private:
 	bool _unsigned;
 	cond_t _cond;
 	hard::Register *_reg;
 };
+io::Output& operator<<(io::Output& out, const Condition& c);
 
 // Common properties
 class Symbol;

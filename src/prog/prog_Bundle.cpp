@@ -124,11 +124,28 @@ void Bundle::writeRegSet(RegSet& set) const {
 void Bundle::semInsts(sem::Block& block) const {
 	int tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp = i->semInsts(block, tmp);
+		tmp += i->semInsts(block, tmp);
 	tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp = i->semWriteBack(block, tmp);
+		tmp += i->semWriteBack(block, tmp);
 }
+
+
+/**
+ * Get the kernel of semantics instructions of the bundle.
+ * Only the computation kernel of semantic instructions is
+ * provided without the code dedicated to the condition support.
+ * @param block	To fill the semantic instructions in.
+ */
+void Bundle::semKernel(sem::Block& block) const {
+	int tmp = -1;
+	for(Iter i(*this); i; i++)
+		tmp += i->semKernel(block, tmp);
+	tmp = -1;
+	for(Iter i(*this); i; i++)
+		tmp += i->semWriteBack(block, tmp);
+}
+
 
 /**
  * @class Bundle::Iter;
