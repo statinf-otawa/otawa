@@ -701,6 +701,19 @@ string CFG::format(const Address& addr) {
 	}
 }
 
+
+/**
+ * Count the number of calls to this CFG.
+ * @return	Number of calls to this CFG.
+ */
+int CFG::callCount(void) const {
+	int c = 0;
+	for(CallerIter i = callers(); i; i++)
+		c++;
+	return c;
+}
+
+
 /**
  * @fn int CFG::index(void) const;
  * Get index of the CFG in the current task.

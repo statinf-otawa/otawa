@@ -208,6 +208,7 @@ public:
 	inline BlockIter blocks(void) const { return vertices(); }
 	inline type_t type(void) const { return _type; }
 	inline CallerIter callers(void) const { return CallerIter(_callers); }
+	int callCount(void) const;
 
 private:
 	CFG(Inst *first, type_t type = SUBPROG);

@@ -28,6 +28,7 @@
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/util/Cleaner.h>
+
 #include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/proc/Registration.h>
@@ -111,7 +112,8 @@ protected:
 		IS_TIMED		= 0x01 << CUSTOM_SHIFT,
 		IS_ALLOCATED	= 0x04 << CUSTOM_SHIFT,
 		IS_PREPARED		= 0x08 << CUSTOM_SHIFT,
-		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT;
+		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT,
+		IS_TIED			= 0x20 << CUSTOM_SHIFT;
 	PropList *stats;
 
 	// accessors
