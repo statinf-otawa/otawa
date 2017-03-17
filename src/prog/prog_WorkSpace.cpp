@@ -503,12 +503,15 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 		}
 
 	// create the dependency
+	bool provides = 0;
 	for(FeatureIter feature(reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {
+			provides++;
 			if(proc->logFor(Processor::LOG_DEPS))
 				proc->log << "PROVIDED: " << feature->feature().name() << " by " << reg.name() << io::endl;
 		}
-	add(proc, del_proc);
+	if(provides)
+		add(proc, del_proc);
 }
 
 
@@ -532,6 +535,7 @@ void WorkSpace::add(Processor *proc, bool del_proc) {
 					ud->_users.add(d);
 				}
 			}
+	proc->flags |= Processor::IS_TIED;
 }
 
 
@@ -552,6 +556,7 @@ void WorkSpace::remove(Dependency *dep) {
 		i->_users.remove(dep);
 
 	// free the memory
+	dep->_proc->flags &= ~Processor::IS_TIED;
 	if(dep->_del_proc)
 		delete dep->_proc;
 	delete dep;
