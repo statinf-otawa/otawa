@@ -27,6 +27,8 @@ namespace otawa {
 
 class Bundle {
 public:
+	inline Bundle() : i(0) {}
+	inline Bundle(const Bundle& b) { i = b.i; }
 	inline Bundle(Inst *inst): i(inst) { }
 
 	inline Address address(void) const { return i->address(); }

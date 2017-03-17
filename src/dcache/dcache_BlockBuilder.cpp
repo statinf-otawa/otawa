@@ -319,7 +319,7 @@ const Block& BlockCollection::obtain(const Address& addr) {
 		if(addr == blocks[i]->address())
 			return *blocks[i];
 	blocks.add(new Block(_set, blocks.count(), addr));
-	return *blocks.top();
+	return *blocks.top(); // return the just added block
 }
 
 /**
@@ -455,7 +455,7 @@ void BlockAccess::print(io::Output& out) const {
 	switch(_kind) {
 	case ANY: 	out << "ANY"; break;
 	case BLOCK: out << *data.blk; break;
-	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']'; break;
+	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']' << "(multiple cache-blocks)"; break;
 	default:	ASSERTP(false, "invalid block access kind: " << _kind); break;
 	}
 }

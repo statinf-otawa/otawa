@@ -719,7 +719,7 @@ private:
 	void generateCFGs(String path, int type = GeneratedCFGType::MULTIDOT);
 	void generateXMLs(String path, int type, PropList &props);
 	option::Switch xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
-		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML;
+		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML, outputSimpleCFGXML;
 };
 
 
@@ -940,9 +940,14 @@ void Command::generateXMLs(String path, int type, PropList &props) {
 	Path p(path);
 	xmlOutputFolder(props) = p;
 
-	//DynProcessor dis("mkff::XMLOutput");
-	DynProcessor dis("mkff::DetailedXMLOutput");
-	dis.process(workspace(), props);
+	if(type == 1) {
+		DynProcessor dis("mkff::XMLOutput");
+		dis.process(workspace(), props);
+	}
+	else {
+		DynProcessor dis("mkff::DetailedXMLOutput");
+		dis.process(workspace(), props);
+	}
 }
 
 
@@ -967,6 +972,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	if(outputCFGXML)
 		generateXMLs(String("") << "begin_xml" , 0, props);
+
+	if(outputSimpleCFGXML)
+		generateXMLs(String("") << "begin_xml_s" , 1, props);
 
 	Printer *p;
 
@@ -1029,6 +1037,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 			if(outputCFGXML)
 				generateXMLs(String("") << iteration << "_iteration_xml" , 0, props);
 
+			if(outputSimpleCFGXML)
+				generateXMLs(String("") << iteration << "_iteration_xml_s" , 1, props);
+
 
 			// before performing the analysis, maybe it is better to slice away the unnecessary ?
 			if(slicing || lightSlicing) {
@@ -1057,10 +1068,11 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				if(outputCFG || cfg4LR)
 					generateCFGs(String("") << iteration << "_sliced" /*, GeneratedCFGType::MULTIDOT*/);
 
-				if(outputCFGXML) {
-					// generate the xml file for future uses
+				if(outputCFGXML) // generate the xml file for future uses
 					generateXMLs(String("") << iteration << "_sliced_xml", 0, props);
-				}
+
+				if(outputSimpleCFGXML)
+					generateXMLs(String("") << iteration << "_sliced_xml_s", 1, props);
 
 
 #define REDUCE_LOOP
@@ -1096,6 +1108,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 				if(outputCFGXML)
 					generateXMLs(String("") << iteration << "_reduced_xml", 0, props);
+
+				if(outputSimpleCFGXML)
+					generateXMLs(String("") << iteration << "_reduced_xml_s", 1, props);
+
 #endif
 			} // end of slicing
 
@@ -1137,6 +1153,9 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 	if(outputCFGXML)
 		generateXMLs(String("") << "final_xml", 0, props);
+
+	if(outputSimpleCFGXML)
+		generateXMLs(String("") << "final_xml_s", 1, props);
 
 	if(!debugging) {
 		// display low-level flow facts
@@ -1280,7 +1299,8 @@ Command::Command(void):
 		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end),
 		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end),
 		debugSlicing(*this, option::cmd, "-DS", option::cmd, "--debug_slicing", option::description, "show the debugging message of slicing", option::end),
-		outputCFGXML(*this, option::cmd, "-X", option::cmd, "--xml_output", option::description, "generate XML files of each CFG for the initial, the iterations, and the final phases", option::end)
+		outputCFGXML(*this, option::cmd, "-X", option::cmd, "--xml_output", option::description, "generate XML files of each CFG for the initial, the iterations, and the final phases", option::end),
+		outputSimpleCFGXML(*this, option::cmd, "-Y", option::cmd, "--simple_xml_output", option::description, "generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs", option::end)
 {
 }
 

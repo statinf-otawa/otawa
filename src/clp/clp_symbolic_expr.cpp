@@ -28,7 +28,9 @@
 #include <otawa/data/clp/ClpState.h>
 #include <otawa/data/clp/ClpPack.h>
 #include <otawa/data/clp/SymbolicExpr.h>
+#include <otawa/flowfact/features.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/sem/PathIter.h>
 
 // Debug output for get filters
 #define TRACEGF(t)	//t
@@ -128,7 +130,7 @@ namespace se{
 	void SEConst::canonize(void){}
 
 	/************ SEAddr methods ************/
-	SEAddr* SEAddr::copy(void){ return new SEAddr(_val); }
+	SEAddr* SEAddr::copy(void){ return new SEAddr(_val, _a?_a->copy():NULL); }
 	SymbExpr& SEAddr::operator=(const SEAddr& expr){
 		_op = expr._op;
 		_val = expr._val;
@@ -138,14 +140,37 @@ namespace se{
 		return (_op == expr.op() && _val == expr.val());
 	}
 	String SEAddr::asString(const hard::Platform *pf) {
-		if(_val.isConst())
+		if (_val == -1) {
+			return (_ << '@' << _a->asString(pf));
+		}
+		else if(_val.isConst())
 			return (_ << '@' << hex(_val.lower()));
 		else
 			return (_ << "@(0x" << hex(_val.lower()) \
 					  << ", 0x" << hex(_val.delta()) \
 					  << ", 0x" << hex(_val.mtimes()) << ')');
 	}
-	void SEAddr::canonize(void){}
+	void SEAddr::canonize(void) {
+		// recursive call
+		if (_a)
+			_a->canonize();
+
+		if(_val == -1 && _a && _a->op() == CONST && _a->val() == V::top) { // not a solid address
+			if (_parent->a() == this){
+				// WILL DELETE this !
+				SEConst* temp = new SEConst(V::top);
+				_parent->set_a(temp);
+				delete temp;
+				return;
+			} else if (_parent->b() == this){
+				// WILL DELETE this !
+				SEConst* temp = new SEConst(V::top);
+				_parent->set_b(temp);
+				delete temp;
+				return;
+			}
+		}
+	}
 	genstruct::Vector<V> SEAddr::used_addr(void){
 		genstruct::Vector<V> vect;
 		vect.add(_val);
@@ -529,6 +554,66 @@ namespace se{
 		return notse;
 	}
 
+	bool SECmp::isValid(void) {
+		if(_a->op() != _b->op())
+			return true; // unknown, so guess it is true
+
+		if((_a->op() == CONST) && (_b->op() == CONST)) { // then we can evaluate directly
+			switch(_op){
+			case LE:
+				return (_a->val().lower() <= _b->val().lower());
+			case LT:
+				return (_a->val().lower() < _b->val().lower());
+			case GE:
+				return (_a->val().lower() >= _b->val().lower());
+			case GT:
+				return (_a->val().lower() > _b->val().lower());
+			case EQ:
+				return (*_a == *_b);
+			case NE:
+				return (*_a != *_b);
+			case ULE: // FIXME: to implement
+				return ((clp::uintn_t)(_a->val().lower()) <= (clp::uintn_t)(_b->val().lower()));
+			case ULT:
+				return ((clp::uintn_t)(_a->val().lower()) < (clp::uintn_t)(_b->val().lower()));
+			case UGE:
+				return ((clp::uintn_t)(_a->val().lower()) >= (clp::uintn_t)(_b->val().lower()));
+			case UGT:
+				return ((clp::uintn_t)(_a->val().lower()) > (clp::uintn_t)(_b->val().lower()));
+			default:
+				elm::cerr << "SECmp::isValid(): WARNING! unable to determine the validity for " << this->asString() << io::endl;
+				return true;
+			} // end of the switch
+		} // end of CONST comparisons
+		else if((_a->op() == REG) && (_b->op() == REG)) // always true for relations with registers
+			return true;
+		else if((_a->op() == ADDR) && (_b->op() == ADDR)) // always true for relations with registers
+			return true;
+		else {
+			switch(_op){
+			case EQ:
+				return (*_a == *_b);
+			case NE:
+				return (*_a != *_b);
+			case LT:
+			case GE:
+			case GT:
+			case LE:
+			case ULE:
+			case ULT:
+			case UGE:
+			case UGT:
+			default:
+				elm::cerr << "SECmp::isValid(): WARNING! unable to determine the validity for " << this->asString() << io::endl;
+				return true;
+			}
+
+
+		}
+
+		return true;
+	}
+
 	/*
 	 * To output a set of filters
 	 */
@@ -587,19 +672,27 @@ namespace se{
 		// canonize
 		se->canonize();
 		// check if we have a filter
-		if (se->op() > CMPU && se->a() && se->a()->op() == REG && se->b() &&
-			se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/)
-			return se;
+		if (se->op() > CMPU && se->a() && se->a()->op() == REG && se->b() && se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/) {
+			                // a exists   // a is a REG         // b exits   // b is a CONST
+			if (se->b()->val() == V::top) {
+				return NULL;
+			}
+			else
+				return se;
+		}
 		else{
 			TRACEGF(cerr << "Bad filter: " << se->asString() << "\n";)
 			return NULL;
 		}
 	}
 
-	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
+	// Inst* i is used to get the address as the index in the CLP state pack
+	//SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
+	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, const Bundle &i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
 		/* FIXME: this could be otptimized: we do a CLP analysis from the
 			beginning of the BB each time we replace an address by its value */
-			clp::State state = pack.state_before(i->address(), sem);
+		//clp::State state = pack.state_before(i->address(), sem);
+		clp::State state = pack.state_before(i.address(), sem);
 
 		ASSERT(addr.isConst());
 
@@ -633,8 +726,11 @@ namespace se{
 		se->canonize();
 		// check if we have a filter
 		if (se->op() > CMPU && se->a() && se->a()->op() == ADDR && se->b() &&
-			se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/)
+			se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/) {
+
+
 			return se;
+		}
 		else{
 			TRACEGF(cerr << "Bad filter: " << se->asString() << "\n";)
 			return NULL;
@@ -657,11 +753,12 @@ namespace se{
 	 *		ADDR_FILTERS for filters on memory addresses
 	*/
 	void FilterBuilder::getFilters(void){
-
 		// look all instructions
 		Vector<Inst *> insts;
 		Inst *branch = 0;
 		for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			if(IGNORE_CONTROL(inst))
+				continue;
 			if(inst->isControl()) {
 				if(inst->isConditional())
 					branch = inst;
@@ -670,13 +767,36 @@ namespace se{
 			insts.add(inst);
 		}
 
-		// no conditional branch
+
+		Vector<Bundle> bundles;
+		Bundle branchBundle = 0;
+		for(BasicBlock::BundleIter bbbi(bb); bbbi; bbbi++) {
+			bool foundControl = false;
+			bool ignoreControl = false;
+			for(Bundle::Iter bi(*bbbi); bi; bi++) {
+				if(bi->isControl() && !IGNORE_CONTROL(bi)) {
+					if(bi->isConditional())
+						branchBundle = *bbbi;
+					foundControl = true;
+					break;
+				}
+			}
+			if(foundControl)
+				break;
+			else {
+				bundles.add(*bbbi);
+			}
+		}
+
+
+		// no conditional branch, e.g. goto, call, or return
 		if(!branch)
-			addFilters(0, insts);
+			addFilters(0, bundles);
 
 		// build the conditional filters
 		else
-			iterateBranchPaths(branch, insts);
+			//iterateBranchPaths(branch, insts);
+			iterateBranchPaths(branchBundle, bundles);
 
 		// Set properties on the BB
 		// need to make sure they are clean first
@@ -698,19 +818,30 @@ namespace se{
 		ADDR_FILTERS(bb) = addr_filters;
 	}
 
+
 	/**
 	 * Add the filters for the current instruction list (taken backward).
+	 * makeFilters is called for every instructions in the insts
 	 * @param se		Current conditional branch comparison.
 	 * @param insts		Instructions of the block.
 	 */
-	void FilterBuilder::addFilters(SECmp *se, const Vector<Inst *>& insts) {
+	//void FilterBuilder::addFilters(SECmp *se, const Vector<Inst *>& insts) {
+	void FilterBuilder::addFilters(SECmp *se, const Vector<Bundle>& bundles) {
 		sem::Block block;
 		TRACEGF(String out);
+		/*
 		for(int i = insts.count() - 1; i >= 0; i--) {
 			TRACEGF(out = _ << insts[i] << '\n' << out);
 			block.clear();
 			insts[i]->semInsts(block);
 			se = makeFilters(se, insts[i], block);
+		}
+		*/
+		for(int i = bundles.count() - 1; i >= 0; i--) {
+			TRACEGF(out = _ << bundles[i].address() << '\n' << out);
+			block.clear();
+			bundles[i].semInsts(block);
+			se = makeFilters(se, bundles[i], block);
 		}
 		TRACEGF(cerr << out);
 		delete se;
@@ -729,31 +860,38 @@ namespace se{
 	 * Iterate on all semantics execution paths and call makeFilters().
 	 * @param bb	Current basic block.
 	 */
-	void FilterBuilder::iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts) {
+	//void FilterBuilder::iterateBranchPaths(Inst *branchInst, const Vector<Inst *>& insts) {
+	void FilterBuilder::iterateBranchPaths(const Bundle& branchBundle, const Vector<Bundle>& bundles) {
+		ASSERT(branchBundle);
 
 		// initialize the iterations
 		bool first = true;
 		Vector<path_t> pstack;
-		sem::Block istack, block;
-		inst->semInsts(block);
+		sem::Block semInstStack, block;
+		//branchInst->semInsts(block);
+		branchBundle.semInsts(block);
 		pstack.push(path_t(0, 0, false));
-
 		// iterate on paths
 		while(pstack) {
 
 			// start the path
 			path_t path = pstack.pop();
-			istack.setLength(path.i);
-			if(path.i != 0)
-				istack[path.i - 1]._d = reverseCond(sem::cond_t(istack[path.i - 1].d()));
-
+			semInstStack.setLength(path.i);
+			if(path.i != 0) {
+				semInstStack[path.i - 1]._d = reverseCond(sem::cond_t(semInstStack[path.i - 1].d()));
+			}
 			// traverse instructions of the path
+			// The path.n is the current index of the semantic instruction being inspected.
+			// All semantic instruction ran through is pushed into the istack
+			// When encountering the IF,
 			while(path.n < block.count()) {
-				istack.push(block[path.n]);
+				semInstStack.push(block[path.n]);
 				if(block[path.n].op == sem::IF)
-					pstack.push(path_t(istack.length(), path.n + block[path.n].b() + 1, path.b));
+					pstack.push(path_t(semInstStack.length(), path.n + block[path.n].b() + 1, path.b)); // add the alternative path to the work list
 				else if(block[path.n].op == sem::CONT)
+				{
 					break;
+				}
 				else if(block[path.n].op == sem::BRANCH)
 					path.b = true;
 				path.n++;
@@ -767,219 +905,363 @@ namespace se{
 					reg_filters.add(new SECmp(OR));
 					addr_filters.add(new SECmp(OR));
 				}
-				SECmp *se = makeFilters(NULL, inst, istack);
-				addFilters(se, insts);
+				// we have the control instruction inst, and its previous semantic instructions, we can
+				// use the previous sem insts to build an expression the condition of the branch
+				// the filter is making in the reverse order, so that the expression is reduced and enriched by the previous sem inst.
+				// We first obtain the expression from the branch instruction. The semInstStack only contains the semantic instructions of the branchInst
+				//SECmp *se = makeFilters(NULL, branchInst, semInstStack);
+				SECmp *se = makeFilters(NULL, branchBundle, semInstStack);
+				// Now we use the just-created se to explore more conditions by following up the previous sem insts.
+				addFilters(se, bundles);
 			}
 		}
 	}
 
 	/**
-	 * Accumulate in the reg_filters and addr_filters filters for the
+	 * Prepare semantic blocks according to the path within a given bundle.
+	 * This function is used by makeFilters.
+	 * @semBlocks 	the resulted blocks
+	 * @b			the original semantic block
+	 */
+	void FilterBuilder::prepareSemBlockPaths(Vector<sem::Block>& semBlocks, const sem::Block& b) {
+		// If there is a single IF, and a single BRANCH, then the treated block is of a conditional branch.
+		// Since we are only interested in the taken path's filter, we just return one path in this case
+		int numberOfIFs = 0;
+		int numberOfBRANCHs = 0;
+		Vector<SemInstNode*> leafNodes;
+		Vector<SemInstNode*> toCleanUp;
+		Vector<Pair<Pair<int, SemInstNode*>, bool> > workList; // double pair to create a triple of (next pc to follow, the node, and parent condition is true or false)
+		SemInstNode* root = new SemInstNode(-1, NULL); // root
+		toCleanUp.add(root);
+		workList.push(pair(pair(0, root), true));
+		while(workList.count()) {
+			Pair<Pair<int, SemInstNode*>,bool> popped = workList.pop();
+			SemInstNode* current = popped.fst.snd;
+			bool cond = popped.snd;
+			int i = 0;
+			for(i = popped.fst.fst; i < b.length(); i++) {
+				const sem::inst& si = b[i];
+				if(si.op == sem::IF) {
+					numberOfIFs++;
+					SemInstNode* temp = new SemInstNode(i, cond, current);
+					toCleanUp.add(temp);
+					if(si.cond() != sem::NO_COND) // always jump
+						workList.push(pair(pair(i+1, temp), true));
+					workList.push(pair(pair(i+si.b()+1, temp), false));
+					break;
+				}
+				else {
+					SemInstNode* temp = new SemInstNode(i, cond, current);
+					toCleanUp.add(temp);
+					cond = true; // reset the value in case cond can be false
+					current = temp;
+				}
+
+				if(si.op == sem::BRANCH)
+					numberOfBRANCHs++;
+			} // reaching the end of the sem block, or encountering IF
+
+			// collecting the final block of the path when reaching the end of the block (i/pc >= block size)
+			if(i >= b.length())
+				leafNodes.add(current);
+		}
+
+		bool singlePath = false;
+		if (numberOfIFs == 1 && numberOfBRANCHs == 1) { // normal case for conditional branch
+			// then we just return one path
+			singlePath = true;
+			semBlocks.add(b);
+		}
+		else if (numberOfIFs > 1 && numberOfBRANCHs >= 1) { // need to see if this case ever happens
+			ASSERT(0); // just comment this out when this happens, want to observe this.
+		}
+
+		// constructing the sem blocks to process
+		for(int i = 0; (i < leafNodes.count()) && (singlePath == false); i++) {
+			semBlocks.add(sem::Block());
+			SemInstNode* sin = leafNodes[i];
+			bool parentCond = true;
+			while(sin) {
+				if(sin->getPC() != -1) {
+					if(parentCond == false) { // need to reverse
+						if(b[sin->getPC()].cond() != sem::NO_COND)  // no need to add no cond
+							semBlocks[i].addFirst(sem::_if(invert(b[sin->getPC()].cond()), b[sin->getPC()].a(), b[sin->getPC()].b()));
+					}
+					else
+						semBlocks[i].addFirst(b[sin->getPC()]);
+					parentCond = sin->getCond();
+				}
+				sin = sin->getParent();
+			}
+		}
+		for(Vector<SemInstNode*>::Iter toClean(toCleanUp); toClean; toClean++)
+			delete *toClean;
+	}
+
+
+	/**
+	 * Accumulate in the reg_filters and addr_filters for filter building.
+	 * This function works in the reverse order of the semantic instruction so that the expression can be deduced by the previous (lower address) semantic instructions.
 	 * given block.
 	 * @param se		Current comparison.
 	 * @param cur_inst	Current instruction.
 	 * @param b			Block to work on.
 	 */
-	SECmp *FilterBuilder::makeFilters(SECmp *se, Inst *cur_inst, sem::Block& b) {
+	//SECmp *FilterBuilder::makeFilters(SECmp *se, Inst *cur_inst, sem::Block& b) {
+	SECmp *FilterBuilder::makeFilters(SECmp *se_orig, const Bundle& currentBundle, sem::Block& bb) {
+		SECmp *seToReturn = 0;
 
-		for(int pc=b.length() - 1; pc >= 0; pc--){
-			sem::inst& i = b[pc];
+		Vector<sem::Block> semBlocks;
+		prepareSemBlockPaths(semBlocks, bb);
 
-			// build the matching SE
-			switch(i.op){
+		SECmp *se = 0;
+		bool pathFailed = false;
 
-			case sem::IF: { // If inst is a if:
-					// create a new symbexpr
-					op_t log_op = NONE;
-					switch(i.cond()){
-					case sem::LE: 		log_op = LE; break;
-					case sem::LT: 		log_op = LT; break;
-					case sem::GE: 		log_op = GE; break;
-					case sem::GT: 		log_op = GT; break;
-					case sem::EQ: 		log_op = EQ; break;
-					case sem::NE:		log_op = NE; break;
-					case sem::ULE: 		log_op = ULE; break;
-					case sem::ULT: 		log_op = ULT; break;
-					case sem::UGE: 		log_op = UGE; break;
-					case sem::UGT: 		log_op = UGT; break;
-					case sem::ANY_COND:	log_op = NONE; break;
-					default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
+		if(semBlocks.count() > 2) // need to know if we have more than 2 paths
+			ASSERT(0);
+
+		for(int bi = 0; bi < semBlocks.count(); bi++) {
+			// prepare the se for this path
+			if(se_orig) // make a copy of se_orig
+				se = se_orig->copy();
+			else
+				se = 0;
+
+			sem::Block& b = semBlocks[bi];
+			// traverse reversely in the given semantic instruction block
+			for(int pc=b.length() - 1; pc >= 0; pc--){
+				sem::inst& i = b[pc];
+
+
+				// build the matching SE
+				switch(i.op){
+
+				case sem::IF: { // If inst is a if:
+						// create a new symbexpr
+						op_t log_op = NONE;
+						switch(i.cond()){
+						case sem::LE: 		log_op = LE; break;
+						case sem::LT: 		log_op = LT; break;
+						case sem::GE: 		log_op = GE; break;
+						case sem::GT: 		log_op = GT; break;
+						case sem::EQ: 		log_op = EQ; break;
+						case sem::NE:		log_op = NE; break;
+						case sem::ULE: 		log_op = ULE; break;
+						case sem::ULT: 		log_op = ULT; break;
+						case sem::UGE: 		log_op = UGE; break;
+						case sem::UGT: 		log_op = UGT; break;
+						case sem::ANY_COND:	log_op = NONE; break;
+						//default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
+						default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << currentBundle.address()); break;
+						}
+						if(log_op) {
+							// FIXME
+							// this means if there are more than one IF semantic instructions to process, the one processed first will
+							// be removed from the earth
+							if(se)
+								delete se;
+
+							se = new SECmp(log_op, new SEReg(i.a()));
+						}
 					}
-					if(log_op) {
-						if(se)
-							delete se;
+					break;
 
-						se = new SECmp(log_op, new SEReg(i.a()));
+				case sem::SET:
+					if(se) {
+						SEReg *rd = new SEReg(i.d());
+						SEReg *rs = new SEReg(i.a());
+						se->replace(rd, rs);
+						delete rd;
+						delete rs;
 					}
-				}
-				break;
+					break;
 
-			case sem::SET:
-				if(se) {
-					SEReg *rd = new SEReg(i.d());
-					SEReg *rs = new SEReg(i.a());
-					se->replace(rd, rs);
-					delete rd;
-					delete rs;
-				}
-				break;
-
-			// If inst is another instruction: replace
-			case sem::LOAD:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					// get the address of the register i.a()
-					clp::State state = pack.state_after(cur_inst->address(), pc);
-					clp::Value val = state.get(clp::Value(clp::REG, i.a()));
-					if (val != clp::Value::all){
-						if(!val.isConst()){
-							cerr << "WARNING: unconst address: " << val << endl;
-							// if val is a set, we cannot insert the memory
-							// reference in the filter
-							// TODO: maybe we should 'fork' the filter?
-							// For the moment, if the load concern this expr
-							// we set the se to NULL, to
-							// invalidate the register i.a()
-							genstruct::Vector<V> used_reg = se->used_reg();
-							for(int i = 0; i < used_reg.length(); i++){
-								if(used_reg[i] == rd->val()){
-									delete se;
-									se = NULL;
-									break;
+				// If inst is another instruction: replace
+				case sem::LOAD:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						// get the address of the register i.a()
+						//clp::State state = pack.state_after(cur_inst->address(), pc);
+						clp::State state = pack.state_after(currentBundle.address(), pc);
+						clp::Value val = state.get(clp::Value(clp::REG, i.a()));
+						if (val != clp::Value::all){
+							if(!val.isConst()){
+								cerr << "WARNING: unconst address: " << val << endl;
+								// if val is a set, we cannot insert the memory
+								// reference in the filter
+								// TODO: maybe we should 'fork' the filter?
+								// For the moment, if the load concern this expr
+								// we set the se to NULL, to
+								// invalidate the register i.a()
+								genstruct::Vector<V> used_reg = se->used_reg();
+								for(int i = 0; i < used_reg.length(); i++){
+									if(used_reg[i] == rd->val()){
+										delete se;
+										se = NULL;
+										break;
+									}
 								}
+							} else {
+								SEAddr *a = new SEAddr(val.lower());
+								se->replace(rd, a);
+								delete a;
 							}
-						} else {
-							SEAddr *a = new SEAddr(val.lower());
+						}
+
+						else {
+							SEAddr *a = new SEAddr(-1 ,new SEReg(i.a()));
 							se->replace(rd, a);
 							delete a;
 						}
+
+						delete rd;
 					}
-					delete rd;
-				}
-				break;
+					break;
 
-			case sem::CMPU:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					SECmp *cmp = new SECmp(CMPU, new SEReg(i.a()), new SEReg(i.b()));
-					se->replace(rd, cmp);
-					delete rd;
-					delete cmp;
-				}
-				break;
-
-			case sem::CMP:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					SECmp *cmp = new SECmp(CMP, new SEReg(i.a()), new SEReg(i.b()));
-					se->replace(rd, cmp);
-					delete rd;
-					delete cmp;
-				}
-				break;
-
-			case sem::SETI:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					SEConst *c = new SEConst(i.a());
-					se->replace(rd, c);
-					delete rd;
-					delete c;
-				}
-				break;
-
-			case sem::ADD:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					SEAdd *add = new SEAdd(new SEReg(i.a()), new SEReg(i.b()));
-					se->replace(rd, add);
-					delete rd;
-					delete add;
-				}
-				break;
-
-			case sem::SUB:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					SEAdd *sub = new SEAdd(new SEReg(i.a()), new SENeg(new SEReg(i.b())));
-					se->replace(rd, sub);
-					delete rd;
-					delete sub;
-				}
-				break;
-
-			case sem::SCRATCH:
-				if (se){
-					SEReg *rd = new SEReg(i.d());
-					// if the register rd is used in the expression, we set
-					// se to NULL: we cannot find any further filter where
-					// rd is implied.
-					genstruct::Vector<V> used_reg = se->used_reg();
-					for(int i = 0; i < used_reg.length(); i++){
-						if(used_reg[i] == rd->val()){
-							delete se;
-							se = NULL;
-							break;
-						}
+				case sem::CMPU:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						SECmp *cmp = new SECmp(CMPU, new SEReg(i.a()), new SEReg(i.b()));
+						se->replace(rd, cmp);
+						delete rd;
+						delete cmp;
 					}
-					delete rd;
-				}
-				break;
-			}
-			TRACEGF(String tmpout = _ << '\t' << i);
+					break;
 
-			// if SE, connect it
-			if(se){
-				TRACEGF(tmpout = tmpout << "\t\t=> " << se->asString());
+				case sem::CMP:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						SECmp *cmp = new SECmp(CMP, new SEReg(i.a()), new SEReg(i.b()));
+						se->replace(rd, cmp);
+						delete rd;
+						delete cmp;
+					}
+					break;
 
-				// canonize()
-				se->canonize();
-				TRACEGF(tmpout = tmpout << "\t\t=canonize=> " << se->asString());
+				case sem::SETI:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						SEConst *c = new SEConst(i.a());
+						se->replace(rd, c);
+						delete rd;
+						delete c;
+					}
+					break;
 
-				// find filters...
-				if (se->op() > CMPU && se->a() && se->b()){
-					genstruct::Vector<V> used_reg = se->used_reg();
-					genstruct::Vector<V> used_addr = se->used_addr();
-					bool has_tmp = false;
-					for(int i = 0; i < used_reg.length(); i++)
-						if (! (used_reg[i] >= 0))
-							has_tmp = true;
-					if (!has_tmp){
-						// for each new register
+				case sem::ADD:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						SEAdd *add = new SEAdd(new SEReg(i.a()), new SEReg(i.b()));
+						se->replace(rd, add);
+						delete rd;
+						delete add;
+					}
+					break;
+
+				case sem::SUB:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						SEAdd *sub = new SEAdd(new SEReg(i.a()), new SENeg(new SEReg(i.b())));
+						se->replace(rd, sub);
+						delete rd;
+						delete sub;
+					}
+					break;
+
+				case sem::SCRATCH:
+					if (se){
+						SEReg *rd = new SEReg(i.d());
+						// if the register rd is used in the expression, we set
+						// se to NULL: we cannot find any further filter where
+						// rd is implied.
+						genstruct::Vector<V> used_reg = se->used_reg();
 						for(int i = 0; i < used_reg.length(); i++){
-							if(! known_reg.contains(used_reg[i])){
-								// get the filter
-								SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, cur_inst, pc, used_reg, used_addr);
-								if (newfilter){
-									TRACEGF(tmpout = _ << "\t\t\tNew filter: " << newfilter->asString() << '\n' << tmpout);
-									reg_filters.add(newfilter);
-									known_reg.add(used_reg[i]);
-								}
+							if(used_reg[i] == rd->val()){
+								delete se;
+								se = NULL;
+								break;
 							}
 						}
-						// for each new addr
-						for(int i = 0; i < used_addr.length(); i++){
-							if(! known_addr.contains(used_addr[i])){
-								// get the filter
-								SECmp *newfilter = getFilterForAddr(se->copy(), used_addr[i], pack, cur_inst, pc, used_reg, used_addr);
-								if (newfilter){
-									TRACEGF(tmpout = _ << "\t\t\tNew filter: " << newfilter->asString() << '\n' << tmpout);
-									addr_filters.add(newfilter);
-									known_addr.add(used_addr[i]);
-								}
-							}
-						}
+						delete rd;
 					}
+					break;
 				}
-			} // end if(se)
+				TRACEGF(String tmpout = _ << '\t' << i);
 
-			TRACEGF(tmpout = tmpout << '\n');
-			TRACEGF(cerr << "filter: " << tmpout);
-			TRACEGF(cerr << "{ "; if(se) se->print(cerr, 0); cerr << " }" << endl);
-		} // end for (semantic instructions)
+				// if SE, connect it
+				if(se){
+					TRACEGF(tmpout = tmpout << "\t\t=> " << se->asString());
+
+					// canonize()
+					se->canonize();
+					TRACEGF(tmpout = tmpout << "\t\t=canonize=> " << se->asString());
+
+					// find filters...
+					// This is carried out by looking at the expression. If the expression does not contain any temporary registers
+					// then that means the expression is fully resolved.
+					if (se->op() > CMPU && se->a() && se->b()){
+						genstruct::Vector<V> used_reg = se->used_reg();
+						genstruct::Vector<V> used_addr = se->used_addr();
+						bool has_tmp = false;
+						for(int i = 0; i < used_reg.length(); i++)
+							if (! (used_reg[i] >= 0))
+								has_tmp = true;
+						if (!has_tmp){
+
+							// check if there is a violation on the expression
+							if (se->op() > CMPU && se->a() && se->b()) {
+								if(!se->isValid()) {
+									pathFailed = true;
+									break;
+								}
+							}
+
+							// for each new register
+							for(int i = 0; i < used_reg.length(); i++) {
+								if(! known_reg.contains(used_reg[i])) { // one register can only be added once
+									// get the filter
+									//SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, cur_inst, pc, used_reg, used_addr);
+									SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, currentBundle, pc, used_reg, used_addr);
+									if (newfilter){
+										TRACEGF(tmpout = _ << "\t\t\tNew filter: " << newfilter->asString() << '\n' << tmpout);
+										reg_filters.add(newfilter);
+										known_reg.add(used_reg[i]);
+									}
+								}
+							}
+							// for each new addr
+							for(int i = 0; i < used_addr.length(); i++) {
+								if(! known_addr.contains(used_addr[i])) { // one memory address can be only added once
+									// get the filter
+									//SECmp *newfilter = getFilterForAddr(se->copy(), used_addr[i], pack, cur_inst, pc, used_reg, used_addr);
+									SECmp *newfilter = getFilterForAddr(se->copy(), used_addr[i], pack, currentBundle, pc, used_reg, used_addr);
+									if (newfilter){
+										TRACEGF(tmpout = _ << "\t\t\tNew filter: " << newfilter->asString() << '\n' << tmpout);
+										addr_filters.add(newfilter);
+										known_addr.add(used_addr[i]);
+									}
+								}
+							}
+						} // end of no temp register involved
+					} // end of CMP
+				} // end if(se)
+
+				TRACEGF(tmpout = tmpout << '\n');
+				TRACEGF(cerr << "filter: " << tmpout);
+				TRACEGF(cerr << "{ "; if(se) se->print(cerr, 0); cerr << " }" << endl);
+			} // end of for(int pc=b.length() - 1; pc >= 0; pc--)
+
+			if(!pathFailed) { // if the path is valid
+				if(seToReturn) { // if there already exists a path ....
+					elm::cerr << "WARNING: FilterBuilder::makeFilters() seToReturn has been set as: " << seToReturn->asString() << io::endl;
+				}
+				seToReturn = se;
+			}
+			// now we take another path, if there is any
+		} // end of for(int bi = 0; bi < semBlocks.count(); bi++) // for each path within sem block
 
 		// return current se
-		return se;
+		return seToReturn;
 	}
 
 	/**

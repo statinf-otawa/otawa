@@ -51,10 +51,12 @@ public:
 	Inst *inst(void);
 	State *state(void);
 	inline int ipc(void) { return i; }
+	Value getCurrentAccessAddress(void);
 
 private:
 	ClpProblem *p;
-	BasicBlock::InstIter mi;
+	//BasicBlock::InstIter mi;
+	BasicBlock::BundleIter mi;
 	clp::State s, *cs;
 	int i;
 };

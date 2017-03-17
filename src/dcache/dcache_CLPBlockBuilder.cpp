@@ -121,13 +121,14 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 
 		// add the access
 		if(action) {
-			clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr()));
+			// clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr())); // if LOAD T1, T1, uint32, then T1 is already over-written
+			clp::Value addr = man->getCurrentAccessAddress();
 			while(addrs.length() <= man->ipc())
 				addrs.push(pair(clp::Value::none, BlockAccess::NONE));
 			addr.join(addrs[man->ipc()].fst);
 			addrs[man->ipc()] = pair(addr, action);
 			if(logFor(LOG_INST))
-				log << "\t\t\t" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
+				log << "\t\t\tCLPBlockBuilder:" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
 		}
 
 		// next step
@@ -139,8 +140,8 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 				if(p.snd) {
 					if(p.fst == clp::Value::all)
 						accs.add(BlockAccess(inst, p.snd));
-					else if(p.fst.isConst()) {
-						clp::uintn_t l = p.fst.lower();
+					else if(p.fst.isConst()) { // constant address
+						clp::uintn_t l = p.fst.lower(); // the actual address
 						const hard::Bank *bank = mem->get(l);
 						if(!bank)
 							throw otawa::Exception(_ << "no memory bank for address " << Address(l)
@@ -151,7 +152,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 						accs.add(BlockAccess(inst, p.snd, block));
 					}
 					else {
-						bool over;
+						bool over; // see if the memory range is limited (without overflow)
 						t::uint32 m = elm::mult(elm::abs(p.fst.delta()), p.fst.mtimes(), over);
 						// (l % b) + d * n > (R - 1)b		/ R = row count, b = block size
 						if(over || m >= (cache->rowCount() - 1) * cache->blockSize() - cache->offset(p.fst.lower()))
@@ -164,27 +165,27 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 										<< " accessed from " << man->inst()->address());
 							else if(!bank->isCached())
 								continue;
-							else if(cache->block(l) == cache->block(h)) {
+							else if(cache->block(l) == cache->block(h)) { // if all the access addresses are in the same cached block
 								const Block& block = colls[cache->set(l)].obtain(l);
 								accs.add(BlockAccess(inst, p.snd, block));
 							}
-							else
+							else {
 								accs.add(BlockAccess(inst, p.snd, cache->set(l), cache->set(h)));
+							}
 						}
 					}
 				}
 			}
 			addrs.clear();
-		}
-
-	}
+		} // end of if(addrs && (!step || clp::Manager::newInst(step))) {
+	} // end of steps
 
 	// record the accesses
 	BlockAccess *tab = new BlockAccess[accs.length()];
 	for(int i = 0; i < accs.count(); i++) {
 		tab[i] = accs[i];
 		if(logFor(LOG_BB))
-			log << "\t\t\t" << tab[i] << io::endl;
+			log << "\t\t\tCLPBlockBuilder:" << tab[i] << io::endl;
 	}
 	DATA_BLOCKS(bb) = pair(accs.count(), tab);
 	accs.clear();

@@ -308,8 +308,8 @@ namespace se{
 		 * @param value the memory address
 		 * @param parent a pointer to the parent
 		*/
-		SEAddr(V value, SymbExpr* parent=NULL):
-			SymbExpr(ADDR, NULL, NULL, value, parent) {}
+		SEAddr(V value, SymbExpr* a = NULL, SymbExpr* parent = NULL) : SymbExpr(ADDR, a, NULL, value, parent) { }
+
 		/**
 		 * Copy constructor
 		 * @param expr the expression to copy
@@ -576,6 +576,11 @@ namespace se{
 		 * @return the logical not condition
 		*/
 		SECmp* logicalNot(void);
+
+		/**
+		 * Check if the expression is valid
+		 */
+		bool isValid(void);
 	};
 
 
@@ -587,10 +592,15 @@ namespace se{
 		FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem);
 	private:
 		void getFilters(void);
-		void iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts);
+		//void iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts);
+		void iterateBranchPaths(const Bundle& branchBundle, const Vector<Bundle>& bundles);
 		sem::cond_t reverseCond(sem::cond_t cond);
-		SECmp *makeFilters(SECmp *se, Inst *cur_inst, sem::Block& block);
-		void addFilters(SECmp *se, const Vector<Inst *>& insts);
+		//SECmp *makeFilters(SECmp *se, Inst *cur_inst, sem::Block& block);
+		SECmp *makeFilters(SECmp *se, const Bundle& currentBundle, sem::Block& b);
+		// void addFilters(SECmp *se, const Vector<Inst *>& insts);
+		void addFilters(SECmp *se, const Vector<Bundle>& bundles);
+
+		void prepareSemBlockPaths(Vector<sem::Block>& semBlocks, const sem::Block& b);
 
 		BasicBlock *bb;
 		genstruct::Vector<SECmp *> reg_filters;
@@ -620,6 +630,22 @@ inline elm::io::Output& operator<<(elm::io::Output& out, otawa::se::SymbExpr &se
 	se.print(out);
 	return out;
 }
+
+// used to build sem::Block for different paths when a Block contains if(s)
+class SemInstNode {
+	int semPC;
+	bool parentCondition;
+	SemInstNode* parent;
+	SemInstNode* lChild;
+	SemInstNode* rChild;
+public:
+	inline ~SemInstNode(void) { }
+	inline SemInstNode(int pc, bool b, SemInstNode* p=NULL, SemInstNode* l=NULL, SemInstNode* r=NULL): semPC(pc), parentCondition(b), parent(p), lChild(l), rChild(r) { }
+	inline int getPC(void) { return semPC; }
+	inline SemInstNode* getParent(void) { return parent; }
+	inline bool getCond(void) { return parentCondition; }
+};
+
 
 
 #endif /* OTAWA_DATA_CLP_SYMBOLICEXPR_H_ */

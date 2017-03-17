@@ -108,8 +108,7 @@ namespace otawa {
     	  }
       }
     }
-  }
-
+  } // end of ParExeProc()
 /**
  * @class ParExeQueue
  * Representation of a hardware instruction queue to be used to build a ParExeGraph.

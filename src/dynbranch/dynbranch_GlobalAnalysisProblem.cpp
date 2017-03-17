@@ -74,6 +74,73 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 	for(int i = 0; i < workspace->process()->platform()->regCount(); i++)
 		_tempRegs->add(pv);
 
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	bbCount = 0;
+	int bbCountTotal = 0;
+	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+		if(cfgi->count() > bbCount)
+			bbCount = cfgi->count();
+		bbCountTotal = bbCountTotal + cfgi->count();
+	}
+
+
+	processBBFreq = new unsigned int* [coll->count()];
+	processCFGFreq = new unsigned int [coll->count()];
+
+	for(int i = 0; i < coll->count(); i++) {
+		processCFGFreq[i] = 0;
+		processBBFreq[i] = new unsigned int [bbCount];
+		for (int j = 0; j < bbCount; j++) {
+			processBBFreq[i][j] = 0;
+		}
+	}
+
+	elm::cout << "bbCount = " << bbCount << io::endl;
+	elm::cout << "bbCountTotal vs coll->countBB() = " << bbCountTotal << " vs " << coll->countBB() << io::endl;
+}
+
+void GlobalAnalysisProblem::getStats(void) {
+	elm::cout << "STATS1," << "CFG index" << "," << "BB index" << "," << "BB freq" << "," << "BB Inst" << "," << "BB semInst" << "," << "BB proc. Inst" << "," << "BB proc. semInst" << "," << "BB info" << "," << "CFG info" << "," << "BB count in CFG" << io::endl;
+	elm::cout << "STATS2," << "CFG index" << "," << "CFG freq" << "," << "CFG Inst" << "," << "CFG semInst" << "," << "CFG proc. Inst" << "," << "CFG proc. semInst" << "," "CFG info" << "," << "BB Count" << io::endl;
+
+	unsigned int totalInst = 0;
+	unsigned int totalSemInst = 0;
+	unsigned int totalProcessedInst = 0;
+	unsigned int totalProcessedSemInst = 0;
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+		unsigned int numOfInstCFG = 0;
+		unsigned int numOfSemInstCFG = 0;
+		unsigned int numOfProcessedInstCFG = 0;
+		unsigned int numOfProcessedSemInstCFG = 0;
+		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi; bbi++) {
+			unsigned int numOfInst = 0;
+			unsigned int numOfSemInst = 0;
+			if(bbi->isBasic()) {
+				numOfInst = bbi->toBasic()->count();
+				for(BasicBlock::InstIter insto(bbi->toBasic()) ; insto ; insto++) {
+					sem::Block block;
+					insto->semInsts(block);
+					numOfSemInst = numOfSemInst + block.count();
+				}
+				numOfInstCFG = numOfInstCFG + numOfInst;
+				numOfSemInstCFG = numOfSemInstCFG + numOfSemInst;
+				totalInst = totalInst + numOfInst;
+				totalSemInst = totalSemInst + numOfSemInst;
+			}
+			unsigned int bbFreq = processBBFreq[cfgi->index()][bbi->index()];
+			numOfProcessedInstCFG = numOfProcessedInstCFG + bbFreq*numOfInst;
+			numOfProcessedSemInstCFG = numOfProcessedSemInstCFG + bbFreq*numOfSemInst;
+			totalProcessedInst = totalProcessedInst + bbFreq*numOfInst;
+			totalProcessedSemInst = totalProcessedSemInst + bbFreq*numOfSemInst;
+
+			elm::cout << "STATS1," <<  cfgi->index() << "," << bbi->index() << "," << bbFreq << "," << numOfInst << "," << numOfSemInst << "," << (numOfInst*bbFreq) << "," << (numOfSemInst*bbFreq) << "," << *bbi << "," << *cfgi << "," << cfgi->count() << io::endl;
+		}
+		elm::cout << "STATS2," << cfgi->index() << "," << processCFGFreq[cfgi->index()] << "," << numOfInstCFG << "," << numOfSemInstCFG << "," << numOfProcessedInstCFG << "," << numOfProcessedSemInstCFG << "," << *cfgi << "," << cfgi->count() << io::endl;
+	}
+	elm::cout << "STATS1," << coll->count() << "," << coll->countBB() << "," << _nb_bb_count << "," << totalInst << "," << totalSemInst << "," << totalProcessedInst << "," << totalProcessedSemInst << io::endl;
+	elm::cout << "STATS2," << "," << "," << "," << "," << totalProcessedInst << "," << totalProcessedSemInst << io::endl;
+
 }
 
 GlobalAnalysisProblem::~GlobalAnalysisProblem(void) {
@@ -122,7 +189,13 @@ void GlobalAnalysisProblem::widening(otawa::Block* ob, Domain& a, Domain b) cons
 }
 
 void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
+
 	_nb_bb_count++;
+	//elm::cout << "[" << _nb_bb_count << "] calling update on CFG " << b->cfg()->index() << " BB " << b->index() << " <" << b << ">" << io::endl;
+
+	processBBFreq[b->cfg()->index()][b->index()]++; // calculating the how frequent each blocks has been analyzed
+	if(b->index() == 0) // calculate how many times a function is processed
+		processCFGFreq[b->cfg()->index()]++;
 
 	myGC->doGC();
 

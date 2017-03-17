@@ -79,6 +79,8 @@ public:
 
 	inline unsigned int get_nb_bb_count(void) { return _nb_bb_count; }
 
+	void getStats(void);
+
 private:
 	WorkSpace* ws;
 	dfa::State* istate;
@@ -89,6 +91,10 @@ private:
 	Vector<PotentialValue>* _tempRegs;
 	MyGC* myGC;
 	unsigned int _nb_bb_count;
+
+	int bbCount;
+	unsigned int** processBBFreq;
+	unsigned int* processCFGFreq;
 
 };
 

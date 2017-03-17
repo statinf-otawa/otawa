@@ -27,8 +27,8 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
-#include "../../include/otawa/icat3/features.h"
 
+#include "../../include/otawa/icat3/features.h"
 #include "MustPersDomain.h"
 
 namespace otawa { namespace icat3 {
@@ -70,7 +70,7 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << _cat << " access to " << _acc.address(); }
+	virtual string detail(void) const { return _ << _cat << " access to " << _acc.address() << ", " << _acc; }
 
 	virtual int weight(void) const {
 		switch(_cat) {
@@ -103,6 +103,8 @@ public:
 	virtual rel_t related(void) const { return _rel; }
 	virtual inline void relate(const rel_t &rel) { _rel = rel; }
 	virtual inline void setType(etime::type_t type) { _type = type; }
+
+	inline Address address(void) const { return _acc.address(); }
 
 private:
 	ot::time _cost;
@@ -289,7 +291,7 @@ protected:
 
 private:
 
-	bool use(const PropList *b, int set) {
+	bool use(const PropList *b, int set) { // find out if the given cache set index is associated with the block/edge
 		const Bag<icache::Access>& accs = icache::ACCESSES(b);
 		for(int i = 0; i < accs.count(); i++)
 			if(LBLOCK(accs[i])->set() == set)
@@ -301,14 +303,14 @@ private:
 
 		// prepare ACS
 		MustPersDomain::t a = mustpers->bot();
-		if(e.source())
-			for(Block::EdgeIter i = e.source()->ins(); i; i++)
+		if(e.source()) // if the edge has any source block
+			for(Block::EdgeIter i = e.source()->ins(); i; i++) // join the MUST/PERS from all inputs
 				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
-		else
+		else // otherwise just use the initial MUST/PERS domain
 			mustpers->join(a, mustpers->init());
 
 		// process the source
-		if(e.source() && use(e.source(), set))
+		if(e.source() && use(e.source(), set)) // only process the set that the source block is associated
 			make(e.sink(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
 
 		// process the edge
@@ -321,17 +323,17 @@ private:
 	}
 
 	void make(Block *b, Edge& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
-		for(int i = 0; i < accs.count(); i++) {
+		for(int i = 0; i < accs.count(); i++) { // for each access
 
 			// obtain the access
 			const icache::Access& acc = accs[i];
-			LBlock *lb = LBLOCK(acc);
+			LBlock *lb = LBLOCK(acc); // each access is associated with LBLOCK, so LBLOCK will find the corresponding cache block to the acc (access)
 			if(lb->set() != set)
 				continue;
 
 			// compute the category
-			category_t cat = NC;
-			Block *ch = 0;
+			category_t cat = NC; // default category
+			Block *ch = 0; // the loop header, only useful for the PERS
 			age_t age = mustpers->must(acs)[lb->index()];
 			if(0 <= age && age < A)
 				cat = AH;

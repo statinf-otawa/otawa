@@ -321,7 +321,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 	if(LOOP_HEADER(current) && fixpoint) {
 		genstruct::Vector<Block*> alreadyAdded;
 		if((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty()) {
-			cerr << "WARNING: infinite loop found at " << current << io::endl;
+			cerr << "WARNING: infinite loop found at CFG " << current->cfg()->index() << " BB " << current << io::endl;
 			HAI_INFINITE_LOOP(current) = true;
 		}
 		else
@@ -517,7 +517,7 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 			for(Block::EdgeIter bei=current->outs(); bei; bei++) {
 				if(bei->target() != current)
 					if(!HAI_INFINITE_LOOP(current))
-						ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block.");
+						ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block. (iteration = " << iterations << ")");
 			} // end of each output edge of the current block
 		} // end of the current block is not an exit block, and workList is empty
 	}

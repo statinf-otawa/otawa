@@ -432,8 +432,12 @@ void Value::shl(const Value& val) {
 	if(!val.isConst() || val._base < 0){
 		set(ALL, 0, 1, UMAXn);
 	} else if (_kind != NONE && _kind != ALL) {
-		if (_delta == 0 && _mtimes == 0)
-			set(VAL, _base << val._base, 0, 0);
+		if (_delta == 0 && _mtimes == 0) {
+			// set(VAL, _base << val._base, 0, 0);
+			long a = _base;
+			long b = val._base;
+			set(VAL, a << b, 0, 0);
+		}
 		else
 			set(VAL, _base << val._base, _delta << val._base, _mtimes);
 	}
@@ -449,9 +453,13 @@ Value& Value::shr(const Value& val) {
 		set(ALL, 0, 1, UMAXn);
 	} else
 	if (_kind != NONE && _kind != ALL) {
-		if (_delta == 0 && _mtimes == 0)
-			set(VAL, _base >> val._base, 0, 0);
+		if (_delta == 0 && _mtimes == 0) {
+			//set(VAL, _base >> val._base, 0, 0);
+			long a = _base;
+			long b = val._base;
+			set(VAL, a >> b, 0, 0);
 
+		}
 #		ifdef USE_ORIGINAL_SHR
 		else if (_delta % 2 == 0)
 			set(VAL, _base >> val._base, _delta >> val._base, _mtimes);
@@ -2001,11 +2009,12 @@ public:
 	:	pc(0),
 		has_if(false),
 		bb(0),
-		inst(0),
-		specific_analysis(false),
+		currentInst(0),
+		bBuildFilters(false),
 		_process(proc),
 		istate(0),
-	 	pack(0),
+		currentClpStatePack(0),
+		currentAccessAddress(0),
 	 	_nb_inst(0),
 	 	_nb_sem_inst(0),
 	 	_nb_set(0),
@@ -2294,6 +2303,9 @@ public:
 		}
 	}
 
+	Value getCurrentAccessAddress(void) {
+		return currentAccessAddress;
+	}
 
 	/**
 	 * Interpret one instruction.
@@ -2310,83 +2322,85 @@ public:
 
 		switch(i.op) {
 		case sem::BRANCH: {
-			pc = b.length();
+			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
 			TRACESI(cerr << "\t\t\tbranch(" << get(*state, i.d()) << ")\n");
 			break;
 		}
 		case sem::TRAP:
-			pc = b.length();
+			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
 			TRACESI(cerr << "\t\t\ttrap\n");
 			break;
 		case sem::CONT:
-			pc = b.length();
+			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
 			TRACESI(cerr << "\t\tcont\n");
 			break;
 		case sem::IF:
 			TRACESI(cerr << "\t\t\tif(" << i.sr() << ", " << i.cond() << ", " << i.jump() << ")\n");
-			todo.push(pair(pc + i.b() + 1, new Domain(*state)));
+			listOfIFsToDo.push(pair(pc + i.b() + 1, new Domain(*state)));
 			has_if = true;
 			break;
 		case sem::NOP: break;
 		case sem::LOAD: {
-				_nb_load++;
-				Value addrclp = get(*state, i.a());
-				TRACESI(cerr << "\t\t\tload(" << i.d() << ", " << addrclp << ") = ");
-				// first try to read the values from CLP state
-				if (addrclp == Value::all){
-					set(*state, i.d(), addrclp);
-					_nb_load_top_addr++;
-					TRACESI(cerr << "T\n");
-					TRACEA(cerr << "\t\t\tALARM ! Load at T !\n");
-				} else if (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD){
-					// if the addr is not cst, load only if
-					// there is less than MEMORY_ACCESS_THRESHOLD values to join
-					Value addr(VAL, addrclp.lower());
-					set(*state, i.d(), state->get(addr));
-					for(unsigned int m = 1; m <= addrclp.mtimes(); m++){
-						//cerr << "load for m=" << m << '\n';
-						// join other values with the first
-						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-						Value val = get(*state, i.d());
-						val.join(state->get(addr));
-						set(*state, i.d(), val);
+			_nb_load++;
+			Value addrclp = get(*state, i.a());
+			currentAccessAddress = addrclp;
+			TRACESI(cerr << "\t\t\tload(" << i.d() << ", " << addrclp << ") = ");
+			// first try to read the values from CLP state
+			if (addrclp == Value::all){
+				set(*state, i.d(), addrclp);
+				_nb_load_top_addr++;
+				TRACESI(cerr << "T\n");
+				TRACEA(cerr << "\t\t\tALARM ! Load at T !\n");
+			} else if (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD){
+				// if the addr is not cst, load only if
+				// there is less than MEMORY_ACCESS_THRESHOLD values to join
+				Value addr(VAL, addrclp.lower());
+				set(*state, i.d(), state->get(addr));
+				for(unsigned int m = 1; m <= addrclp.mtimes(); m++){
+					//cerr << "load for m=" << m << '\n';
+					// join other values with the first
+					Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
+					Value val = get(*state, i.d());
+					val.join(state->get(addr));
+					set(*state, i.d(), val);
+				}
+				TRACESI(cerr << get(*state, i.d()) << io::endl);
+			} else {
+				set(*state, i.d(), Value::all);
+				TRACESI(cerr << "T (too many)\n");
+				TRACEA(cerr << "\t\t\tALARM! load too many\n");
+			}
+
+			// if the value is not available, read it from Initialized State
+			if(get(*state, i.d()) == Value::all) {
+				Value val = Value::none;
+				// need to make sure the starting address to load is within the READ_ONLY_AREA
+				bool addressInInitMem = false;
+				if(istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
+					addressInInitMem = true;
+
+				bool warningFlag = true;
+				for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD*2 /*!= clp::UMAXn*/); m++){
+					if((addrclp.mtimes() > MEMORY_ACCESS_THRESHOLD) && warningFlag) {
+						elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << " times)" << io::endl;
+						warningFlag = false;
 					}
-					TRACESI(cerr << get(*state, i.d()) << io::endl);
-				} else {
-					set(*state, i.d(), Value::all);
-					TRACESI(cerr << "T (too many)\n");
-					TRACEA(cerr << "\t\t\tALARM! load too many\n");
-				}
+					Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
+					if(istate && istate->isInitialized((uintn_t)addr.start())) {
+						Value r = readFromMem(addr.lower(), i.type());
+						val.join(r);
+						set(*state, i.d(), val);
+					} // end of each valid address to load
+				} // for each address
+			}
 
-				// if the value is not available, read it from Initialized State
-				if(get(*state, i.d()) == Value::all) {
-					Value val = Value::none;
-					// need to make sure the starting address to load is within the READ_ONLY_AREA
-					bool addressInInitMem = false;
-					if(istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
-						addressInInitMem = true;
-
-					bool warningFlag = true;
-					for(unsigned int m = 0; (m <= addrclp.mtimes()) && addressInInitMem && (addrclp.mtimes() < MEMORY_ACCESS_THRESHOLD*2 /*!= clp::UMAXn*/); m++){
-						if((addrclp.mtimes() > MEMORY_ACCESS_THRESHOLD) && warningFlag) {
-							elm::cerr << "WARNING: accessing more than " << MEMORY_ACCESS_THRESHOLD << " locations in the initialized memory (" << addrclp.mtimes() << " times)" << io::endl;
-							warningFlag = false;
-						}
-						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-						if(istate && istate->isInitialized((uintn_t)addr.start())) {
-							Value r = readFromMem(addr.lower(), i.type());
-							val.join(r);
-							set(*state, i.d(), val);
-						} // end of each valid address to load
-					} // for each address
-				}
-
-				if(get(*state, i.d()) == Value::all)
-						_nb_top_load++;
+			if(get(*state, i.d()) == Value::all)
+					_nb_top_load++;
 			} break;
 
 		case sem::STORE: {
 				Value addrclp = get(*state, i.a());
+				currentAccessAddress = addrclp;
 				TRACESI(cerr << "\t\t\tstore(" << get(*state, i.d()) << ", " << addrclp << ")\n");
 
 				// store at T
@@ -2574,10 +2588,10 @@ public:
 	 * @return Next path state or null.
 	 */
 	clp::State *nextPath(void) {
-		if(!todo)
+		if(!listOfIFsToDo)
 			return 0;
 		else {
-			Pair<int, clp::State *> n = todo.pop();
+			Pair<int, clp::State *> n = listOfIFsToDo.pop();
 			pc = n.fst;
 			return n.snd;
 		}
@@ -2587,11 +2601,13 @@ public:
 	 * Prepare for interpreting the given machine instruction.
 	 * @param inst	Instruction to interpret.
 	 */
-	void prepare(Inst *inst) {
+	//void prepare(Inst *inst) {
+	void prepare(const Bundle& bundle) {
 		b.clear();
-		inst->semInsts(b);
+		//inst->semInsts(b);
+		bundle.semInsts(b);
 		pc = 0;
-		todo.clear();
+		listOfIFsToDo.clear();
 	}
 
 	/**
@@ -2622,14 +2638,14 @@ public:
 
 		this->bb = bb;
 
-		Domain *state;
+		Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
 		has_if = false;
 		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
 		// save the input state in the basic block, join with an existing state
 		// if needed
-		if(!specific_analysis){
+		if(!bBuildFilters) { // in general case
 			if(clp::STATE_IN(bb).exists())
 				clp::STATE_IN(bb).remove();
 
@@ -2640,57 +2656,98 @@ public:
 			return;
 		}
 
+#ifdef USE_INST
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
-			this->inst = inst;
-			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
-			_nb_inst++;
+#else // use bundle
+		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle; bundle++) {
+#endif
 
-			// get instructions
+#ifdef USE_INST
+			this->currentInst = inst;
+#else
+			this->currentInst = (*bundle).first();
+#endif
+			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
+			_nb_inst++; // statistics
+
+			// get semantic instructions
+#ifdef USE_INST
 			prepare(inst);
+#else
+			b.clear();
+			(*bundle).semInsts(b);
+			pc = 0;
+			listOfIFsToDo.clear();
+#endif
+
 			state = &out;
 
-			if(specific_analysis && pack){
-				ipack = pack->newPack(inst->address());
+			// initialize the InstPack for the current instruction/bundle
+			ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
+			if(bBuildFilters && currentClpStatePack) { // when building a filter
+				ipack = currentClpStatePack->newPack(currentInst->address());
 			}
-			// perform interpretation
+
+			// perform interpretation of each semantic instructions of a given instruction bundle
 			while(true) {
 
-				// interpret current
+				// pc is the current index of the semantic instruction to process.
+				// when pc equals to the b.length() that means we are reaching the end of the semantic instruction block
 				while(pc < b.length()) {
 					update(state);
+					_nb_sem_inst++; // for statistics
 
-					_nb_sem_inst++;
-
-
-					if (specific_analysis && pack){
+					// When creating a filter, a data strucuture is created to hold the state for each semantic instruction of each addresses
+					// currentClpStatePack of ClpStatePack:
+					// |---------------------------------------------|
+					// | ipack of InstPack for instruction/bundle 1  |
+					// | .........                                   |
+					// | ipack of InstPack for instruction/bundle n  |
+					// |---------------------------------------------|
+					//
+					// For each ipack, it contains the state for each semantic instruction of the instruction/bundle
+					// |----------------------------------------------|
+					// | state of semInst1_1 for instruction/bundle 1 |
+					// | .........                                    |
+					// | state of semInstM_1 for instruction/bundle 1 |
+					// |----------------------------------------------|
+					// .........
+					// |----------------------------------------------|
+					// | state of semInst1_n for instruction/bundle n |
+					// | .........                                    |
+					// | state of semInstM_n for instruction/bundle n |
+					// |----------------------------------------------|
+					ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
+					if (bBuildFilters && currentClpStatePack){
 						ipack->append(*state);
 					}
-
 				}
 
-				// pop next
+				// this normally happens when processing other processing path formed by the IF sem. inst.
+				// because two different paths for the condition, we need to merge the resulted states from both paths of the IF sem. inst.
+				// so every possibility is covered
 				if(state != &out) {
 					out.join(*state);
 					delete state;
 				}
-				if(!todo)
-					break;
+
+				// if there are alternative path, i.e. because of an IF sem, to handle.
+				if(!listOfIFsToDo)
+					break; // when all the forking states are processed
 				else {
-					Pair<int, Domain *> p = todo.pop();
+					Pair<int, Domain *> p = listOfIFsToDo.pop(); // popping the state prepared previous when an IF was encountered
 					pc = p.fst;
 					state = p.snd;
 				}
 
-			}
-			//TRACEI(cerr << "\t-> " << out << io::endl);
-		}
-
+			} // end of processing semantic instructions of a given instruction/bundle
+		} // end of going through all the instructions/bundles of the basic block
 		// reset tracking
-		this->inst = 0;
+		this->currentInst = 0;
 		this->bb = 0;
 
 		TRACEP(cerr << "s' = " << out << io::endl);
-		if (specific_analysis)
+		if (bBuildFilters)
 			return;
 
 		// save the output state in the basic block
@@ -2732,14 +2789,14 @@ public:
 		return state.set(addr, v);
 	}
 
-	void fillPack(BasicBlock* bb, clp::ClpStatePack *empty_pack){
-		specific_analysis = true;
-		pack = empty_pack;
+	void fillPack(BasicBlock* bb, clp::ClpStatePack *empty_pack) {
+		bBuildFilters = true; // currently only set to true when building filters
+		currentClpStatePack = empty_pack;
 		clp::State output;
 		clp::State input = clp::STATE_IN(*bb);
 		update(output, input, bb);
-		pack = 0;
-		specific_analysis = false;
+		currentClpStatePack = 0;
+		bBuildFilters = false;
 	}
 
 	/**
@@ -2762,17 +2819,18 @@ public:
 private:
 	clp::State _init;
 	sem::Block b;
-	genstruct::Vector<Pair<int, Domain *> > todo;
+	genstruct::Vector<Pair<int, Domain *> > listOfIFsToDo; // when encountering an IF sem. inst., the analysis has to take care of both taken and non-taken cases with filters
 	int pc;
 	bool has_if;
-	Block *bb;
-	Inst *inst;
+	Block *bb; // use for tracking, nothing to do with the analysis itself
+	Inst *currentInst; // use for tracking, nothing to do with the analysis itself
 
 	/* attribute for specific analysis / packing */
-	bool specific_analysis;
+	bool bBuildFilters; // currently only set to true when building filters
 	Process* _process;
 	dfa::State *istate;
-	clp::ClpStatePack *pack;
+	clp::ClpStatePack *currentClpStatePack;
+	clp::Value currentAccessAddress;
 
 	// attributes for statistics purpose
 	clp::STAT_UINT _nb_inst;
@@ -2792,9 +2850,9 @@ private:
 	// store to T management
 	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
 	void warnStoreToTop(void) {
-		if(!inst || !bb)
+		if(!currentInst || !bb)
 			return;
-		Pair<Inst *, Block *> p = pair(inst, bb);
+		Pair<Inst *, Block *> p = pair(currentInst, bb);
 		if(!top_stores.contains(p)) {
 			top_stores.add(p);
 			cerr << "WARNING: (" << p.snd << "):" << p.fst->address() << ": " << p.fst << " store to T (unbounded address)\n";
@@ -3270,10 +3328,11 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
-	mi = BasicBlock::InstIter(bb);
+	//mi = BasicBlock::InstIter(bb);
+	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
-	p->prepare(mi);
+	p->prepare(*mi);
 	i = 0;
 	//p->update(cs);
 	//return NEW_INST | NEW_PATH | NEW_SEM;
@@ -3341,6 +3400,10 @@ State *Manager::state(void) {
 	return cs;
 }
 
+
+Value Manager::getCurrentAccessAddress(void) {
+	return p->getCurrentAccessAddress();
+}
 
 /**
  * @fn int Manager::ipc(void);

@@ -161,6 +161,7 @@ void ACSStack::copy(const ACSStack& a) {
  * @param out	Output to use (default cout).
  */
 void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) const {
+
 	if(isBottom())
 		out << "_";
 	else {
@@ -244,7 +245,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		//{ x }
+#define AI_DEBUG(x)	//	{ x }
 
 template <class S>
 class SimpleControler {
@@ -317,15 +318,15 @@ public:
 
 	void run(void) {
 		c.reset();
-		wl.put(g.entry());
+		wl.put(g.entry()); // working list contains the vertices (blocks) to process
 		while(wl) {
 			vertex_t v = wl.get();
-			AI_DEBUG(cerr << "DEBUG: processing " << v << io::endl;)
-			for(typename graph_t::Successor e(g, v); e; e++) {
+			AI_DEBUG(cerr << "DEBUG: processing " << v->cfg() << "(" << v->cfg()->address() << ")" << " - "  << v << io::endl;)
+			for(typename graph_t::Successor e(g, v); e; e++) { // processing the output edge
 				bool update = c.update(e);
 				if(update) {
 					vertex_t w = g.sinkOf(e);
-					if(!wl.contains(w)) {
+					if(!wl.contains(w)) { // add the sink of the output edge, if it is not in the working list yet
 						wl.put(w);
 						AI_DEBUG(cerr << "DEBUG:     putting " << w << io::endl;)
 					}
@@ -382,8 +383,8 @@ protected:
 			}
 
 		// compute ACS
-		for(int i = 0; i < coll->cache()->setCount(); i++) {
-			if((*coll)[i].count()) {
+		for(int i = 0; i < coll->cache()->setCount(); i++) { // for each set (of the cache) in the LBlock Collection
+			if((*coll)[i].count()) { // if there is any memory associated with the cache-block, then process the set (of cache)
 				if(logFor(LOG_FUN))
 					log << "\tanalyzing set " << i << io::endl;
 				processSet(i);
@@ -394,7 +395,7 @@ protected:
 	void processSet(int set) {
 
 		// perform the computation
-		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0);
+		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0); // initialize the MUST and PERS domains according to the number of LBlocks in the specified set
 		CFGCollectionGraph g(*cfgs);
 		typedef ai::EdgeStore<MustPersDomain, CFGCollectionGraph> store_t;
 		typedef SimpleControler<store_t> controler_t;

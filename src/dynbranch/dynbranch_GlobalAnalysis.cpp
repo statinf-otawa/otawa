@@ -149,6 +149,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	ASSERTP(PotentialValue::countX == Vector<elm::t::uint32>::countX, "PV::CountX = " << PotentialValue::countX << " vs " << Vector<elm::t::uint32>::countX);
 
 	myGC->doGC();
+	// prob->getStats();
 }
 
 

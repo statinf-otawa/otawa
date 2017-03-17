@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
+#include "../../include/otawa/icat3/features.h"
 #include <elm/genstruct/HashTable.h>
 #include <elm/ptr.h>
 #include <otawa/cfg/features.h>
@@ -27,7 +28,6 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/EdgeProcessor.h>
 #include <otawa/prog/WorkSpace.h>
-#include "../../include/otawa/icat3/features.h"
 
 namespace otawa { namespace icat3 {
 
@@ -128,17 +128,17 @@ protected:
 				break;
 			case icache::FETCH:
 			case icache::PREFETCH: {
-					Address a = cache->round(bag[i].address());
+					Address a = cache->round(bag[i].address()); // get the starting address of the associated cached block
 					LBlock *lb = map.get(a, 0);
-					if(!lb) {
-						int set = cache->set(a);
+					if(!lb) { // if the l-block is not registered in the map
+						int set = cache->set(a); // find the index in the cache, better naming? getSet, getSetIndex
 						vecs[set].add(LBlock(a, vecs[set].count(), set));
-						lb = &vecs[set].top();
-						map.put(a, lb);
+						lb = &vecs[set].top(); // lb is assigned to the just created LBlock
+						map.put(a, lb); // put the LB and its associated address in the map
 						if(logFor(LOG_BLOCK))
 							log << "\t\tl-block " << lb->index() << " at " << lb->address() << ", set" << set << io::endl;
 					}
-					LBLOCK(bag[i]) = lb;
+					LBLOCK(bag[i]) = lb; // associated the cache access with the corresponding LBlock
 				}
 				break;
 			default:

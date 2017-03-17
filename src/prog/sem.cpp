@@ -683,7 +683,7 @@ void PathIter::next(void) {
 		pc = todo.pop();
 	else {
 		if(isFork())
-			todo.push(pc + bb[pc].jump());
+			todo.push(pc + bb[pc].jump() + 1); // because the target of the jump is how many semantic instructions to skip, so we need to add 1 to get the one we are interested
 		pc++;
 	}
 }
