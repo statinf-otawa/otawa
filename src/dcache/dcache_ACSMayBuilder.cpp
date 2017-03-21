@@ -22,13 +22,13 @@ MAYProblem::MAYProblem(
 	const BlockCollection& collection,
 	WorkSpace *_fw,
 	const hard::Cache *_cache)
-:	callstate(collection.count(), cache->wayCount()),
+:	callstate(collection.count(), _cache->wayCount()),
 	coll(collection),
 	fw(_fw),
 	line(collection.cacheSet()),
 	cache(_cache),
-	_top(collection.count(), cache->wayCount()),
-	bot(collection.count(), cache->wayCount())
+	_top(collection.count(), _cache->wayCount()),
+	bot(collection.count(), _cache->wayCount())
 {
 		_top.empty();
 }
@@ -150,7 +150,6 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 	if(coll.count() == 0)
 		return;
 	int line = coll.cacheSet();
-
 #ifdef DEBUG
 	cout << "[TRACE] Doing line " << line << "\n";
 #endif
@@ -203,6 +202,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 		temp.add(0);
 
 	// Build the vectors for receiving the ACS...
+	// Now each block is attributed with MAY_ACS, i.e. MAY_ACS(bb) will never be NULL/0 (the default value of MAY_ACS)
 	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			MAY_ACS(bb) = new acs_result_t(temp);

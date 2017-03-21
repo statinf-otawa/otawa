@@ -128,7 +128,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 			addr.join(addrs[man->ipc()].fst);
 			addrs[man->ipc()] = pair(addr, action);
 			if(logFor(LOG_INST))
-				log << "\t\t\tCLPBlockBuilder:" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
+				log << "\t\t\tMemAccess:" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
 		}
 
 		// next step
@@ -185,7 +185,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 	for(int i = 0; i < accs.count(); i++) {
 		tab[i] = accs[i];
 		if(logFor(LOG_BB))
-			log << "\t\t\tCLPBlockBuilder:" << tab[i] << io::endl;
+			log << "\t\t\tBlockAccess:" << tab[i] << io::endl;
 	}
 	DATA_BLOCKS(bb) = pair(accs.count(), tab);
 	accs.clear();

@@ -71,6 +71,8 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
+	inline void injectWriteThroughToCache(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.injectWriteThroughToCache(id); }
+
 
 	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
@@ -89,9 +91,17 @@ private:
 	int set;
 	MUSTProblem mustProb;
 	PERSProblem persProb;
+	const hard::Cache* cache;
 };
 
 //elm::io::Output& operator<<(elm::io::Output& output, const Pair<const MUSTPERS&, const MUSTPERS::Domain>& dom);
+
+inline elm::io::Output& operator<<(elm::io::Output& output, const MUSTPERS::Domain& dom) {
+	output << "MUST: " << const_cast<MUSTPERS::Domain&>(dom).getMust() << " ";
+	output << "PERS: " << const_cast<MUSTPERS::Domain&>(dom).getPers();
+	return output;
+}
+
 
 } }	// otawa::dcache
 

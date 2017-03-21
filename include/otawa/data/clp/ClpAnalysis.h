@@ -85,6 +85,7 @@ private:
 	clp::STAT_UINT _nb_load_top_addr;
 	clp::STAT_UINT _nb_filters;
 	clp::STAT_UINT _nb_top_filters;
+	bool verbose;
 };
 
 } }	// otawa::clp

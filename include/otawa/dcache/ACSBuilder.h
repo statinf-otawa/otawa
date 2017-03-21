@@ -51,12 +51,12 @@ public:
 		}
 
 		inline void inject(const int id) {
-			if (contains(id))
+			if (contains(id)) // if the block is already in the cache
 				for (int i = 0; i < size; i++) {
-					if ((age[i] < age[id]) && (age[i] != -1))
+					if ((age[i] < age[id]) && (age[i] != -1)) // only increment the age for the one whose age is younger
 						age[i]++;
 				}
-			else
+			else // if the block is not in the cache yet, increment the age of all the other blocks
 				for (int i = 0; i < size; i++) {
 					if (age[i] != -1)
 						age[i]++;
@@ -64,6 +64,23 @@ public:
 						age[i] = -1;
 				}
 			age[id] = 0;
+		}
+
+		// To obtain the age of a block a[x], given block b is associated with the writing address
+		// if a[b] < A, then a[x] =
+		// 0     , if x == b
+		// a[x]++, if a[x] < a[b] // increment the age of other blocks which is younger than b, because b is put at the first place (age = 0)
+		// a[x]  , otherwise
+		inline void injectWriteThroughToCache(const int id) {
+			return;
+			if (contains(id)) { // if the block is already in the cache,
+				for (int i = 0; i < size; i++) {
+					if ((age[i] < age[id]) && (age[i] != -1)) // only increment the age for the one whose age is younger
+						age[i]++;
+				}
+				age[id] = 0;
+			}
+			// otherwise
 		}
 
 		inline void ageAll(void) {

@@ -24,7 +24,6 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/ACSMayBuilder.h>
-#include <otawa/cache/features.h>
 #include <otawa/dcache/features.h>
 #include <otawa/dcache/MUSTPERS.h>
 
@@ -76,10 +75,9 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 
 	if(!logFor(LOG_BB))
 		return;
-
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
-	for(int i = 0; i < cfgs->count(); i++)
+	for(int i = 0; i < cfgs->count(); i++) {
 		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++) {
 			cerr << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
@@ -88,6 +86,7 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 				cerr << "\t\t" << b << " -> " << cat_names[dcache::CATEGORY(b)] << io::endl;
 			}
 		}
+	}
 }
 
 
@@ -101,6 +100,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 	int line = coll.cacheSet();
 	MUSTPERS prob(&coll, ws, cache);
 	MUSTPERS::Domain dom = prob.bottom();
+
+	MAYProblem probMay(coll, ws, cache);
+	dcache::ACS* domMay = new dcache::ACS(probMay.bottom());
+
 	acs_stack_t empty_stack;
 	if(logFor(LOG_FUN))
 		log << "\tSET " << line << io::endl;
@@ -118,8 +121,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				log << "\t\t\t" << *bb << io::endl;
 
 			// get the input domain
+			// get the MUST domain
 			acs_table_t *ins = MUST_ACS(bb);
 			prob.setMust(dom, *ins->get(line));
+			// get the PERS domain
 			acs_table_t *pers = PERS_ACS(bb);
 			bool has_pers = pers;
 			if(!has_pers)
@@ -133,7 +138,9 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					stack = &empty_stack;
 				prob.setPers(dom, *pers->get(line), *stack);
 			}
-
+			// get the MAY domain
+			if(MAY_ACS(bb))
+				domMay = MAY_ACS(bb)->get(line);
 			// explore the adresses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
@@ -143,17 +150,16 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					prob.ageAll(dom);
 				}
 				else if(b.block().set() == line) {
-
 					// initialization
 					bool done = false;
+					bool alwaysHit = false;
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
-					ACS *may = 0;
-					if(MAY_ACS(bb) != 0)
-						may = MAY_ACS(bb)->get(line);
 
 					// in MUST ?
-					if(dom.getMust().contains(b.block().index()))
+					if(dom.getMust().contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_HIT;
+						alwaysHit = true;
+					}
 
 					// persistent ?
 					else if(has_pers) {
@@ -175,14 +181,17 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 							}
 							header = ENCLOSING_LOOP_HEADER(header);
 						}
-					}
+					} // end of else if(has_pers)
 
 					// out of MAY ?
-					if(!done && may && !may->contains(b.block().index()))
+					if(!done && domMay && !domMay->contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_MISS;
+						ASSERTP(alwaysHit == false, "AH has been set, this creates a conflict.")
+					}
 
 					// update state
 					prob.inject(dom, b.block().index());
+					((MAYProblem::Domain*)(domMay))->inject(b.block().index());
 				}
 			}
 		}

@@ -115,7 +115,6 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 		break;
 
 	case BlockAccess::LOAD:
-	case BlockAccess::STORE:
 		switch(access.kind()) {
 		case BlockAccess::RANGE:
 			if(access.first() < access.last()) {
@@ -135,6 +134,15 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 		}
 		break;
 
+	case BlockAccess::STORE:
+		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
+			ASSERT(0);
+		}
+		else if(cache->writePolicy() == hard::Cache::WRITE_BACK) {
+			ASSERT(0);
+		}
+		else ASSERT(0);
+		break;
 	case BlockAccess::PURGE:
 		purge(s, access);
 		break;
@@ -219,7 +227,7 @@ Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false)
  * @li DFML_NONE -- no first miss analysis.
  * @ingroup dcache
  */
-Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::FIRSTMISS_LEVEL", DFML_MULTI);
+Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::DATA_FIRSTMISS_LEVEL", DFML_MULTI);
 
 
 /**
@@ -364,7 +372,6 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 
 		// without unrolling
 		else {
-
 			// Do combined MUST/PERS analysis
 			MUSTPERS mustpers(&coll, fw, cache);
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
@@ -434,7 +441,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 			}
 		}
 
-	// process block collections
+	// process block collections (process each set)
 	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
 	for (int i = 0; i < cache->rowCount(); i++) {
 		ASSERT(i == colls[i].cacheSet());
@@ -690,7 +697,8 @@ MUSTPERS::MUSTPERS(const BlockCollection *_lbset, WorkSpace *_fw, const hard::Ca
  	ent(_lbset->count(),  _cache->wayCount()),
 	set(_lbset->cacheSet()),
  	mustProb(_lbset->count(), _lbset->cacheSet(), _fw, _cache, _cache->wayCount()),
-	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount())
+	persProb(_lbset->count(), _lbset, _fw, _cache, _cache->wayCount()),
+	cache(_cache)
 {
 
 		persProb.assign(bot.pers, persProb.bottom());
@@ -734,8 +742,8 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 	MUST_DEBUG("\t\t\tupdating with " << acc);
 	switch(access.action()) {
 
+//	case BlockAccess::STORE:
 	case BlockAccess::LOAD:
-	case BlockAccess::STORE:
 		switch(access.kind()) {
 		case BlockAccess::RANGE:
 			if(access.first() < access.last()) {
@@ -755,6 +763,48 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 		}
 		break;
 
+	case BlockAccess::STORE:
+		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
+			switch(access.kind()) {
+			case BlockAccess::RANGE:
+				if(access.first() < access.last()) {
+					if(set < access.first() || set > access.last()) // set ------- first ------- last -------- set, if the current set is outside the block access range
+						break;
+				}
+				else if(access.first() < set || set < access.last()) // set ------- last ---------first --------- set, the 2nd outside case
+					break;
+				/* no break, if the set lies inside */
+			case BlockAccess::ANY:
+				ageAll(s);
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					inject(s, access.block().index());
+				break;
+			}
+		}
+		else if(cache->writePolicy() == hard::Cache::WRITE_BACK) {
+			// FIXME: follow the LOAD, needs to check
+			switch(access.kind()) {
+			case BlockAccess::RANGE:
+				if(access.first() < access.last()) {
+					if(set < access.first() || set > access.last())
+						break;
+				}
+				else if(access.first() < set || set < access.last())
+					break;
+					/* no break */
+			case BlockAccess::ANY:
+				ageAll(s);
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					injectWriteThroughToCache(s, access.block().index());
+				break;
+			}
+		}
+		else ASSERT(0);
+		break;
 	case BlockAccess::PURGE:
 		mustProb.purge(s.must, access);
 		persProb.purge(s.pers, access);

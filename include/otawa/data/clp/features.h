@@ -28,6 +28,8 @@ namespace otawa {
 
 namespace clp {
 
+extern Identifier<bool> VERBOSE;
+
 class ClpProblem;
 
 class Manager {
