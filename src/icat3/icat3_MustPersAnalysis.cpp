@@ -26,7 +26,7 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/icache/features.h>
 #include <otawa/proc/EdgeProcessor.h>
-#include "../../include/otawa/icat3/features.h"
+#include <otawa/icat3/features.h>
 #include "MustPersDomain.h"
 
 namespace otawa { namespace icat3 {
@@ -237,7 +237,7 @@ public:
 	};
 
 	// Indexed concept
-	inline int index(Block *v) const { return v->index(); }
+	inline int index(Block *v) const { return v->id(); }
 	inline int count(void) const { return _coll.countBB(); }
 
 private:
@@ -247,7 +247,7 @@ private:
 #define AI_DEBUG(x)		//{ x }
 
 template <class S>
-class SimpleControler {
+class DefaultEdgeControler {
 public:
 	typedef typename S::t t;
 	typedef typename S::graph_t graph_t;
@@ -255,45 +255,44 @@ public:
 	typedef typename graph_t::vertex_t vertex_t;
 	typedef typename graph_t::edge_t edge_t;
 
-	SimpleControler(S& store)
+	DefaultEdgeControler(S& store)
 		: d(store.domain()), g(store.graph()), s(store) { }
 
 	void reset(void) {
 		s.reset();
 	}
 
-	bool update(edge_t e) {
-		vertex_t v = g.sourceOf(e);
-		AI_DEBUG(cerr << "DEBUG: examining " << e << io::endl;)
+	bool update(vertex_t v) {
+		AI_DEBUG(cerr << "DEBUG: examining " << v << io::endl;)
 
-		// join of predecessors
+		// entry of a CFG
 		if(v == g.entry()) {
-			d.copy(tmp, d.init());
-			AI_DEBUG(cerr << "DEBUG:\t\tinitial vertex!\n";)
+			s.set(v, d.init());
+			AI_DEBUG(cerr << "DEBUG:     INIT = = "; d.print(d.init(), cerr); cerr << io::endl;)
+			return true;
 		}
+
+		// ⊔{(w, v) ∈ E} U(w, v, IN[w])
+		d.copy(t1, d.bot());
+		for(typename graph_t::Predecessor e(g, v); e; e++) {
+			vertex_t w = g.sourceOf(e);
+			d.copy(t2, s.get(w));
+			AI_DEBUG(cerr << "DEBUG:     IN(" << *e << ") = "; d.print(t2, cerr); cerr << io::endl;)
+			d.update(e, t2);
+			AI_DEBUG(cerr << "DEBUG:     updated by " << *e << ": "; d.print(t2, cerr); cerr << io::endl;)
+			d.join(t1, t2);
+			AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
+		}
+
+		// any update?
+		AI_DEBUG(cerr << "DEBUG:\t"; d.print(t1, cerr); cerr << " = "; d.print(s.get(v), cerr); cerr << io::endl;)
+		if(d.equals(t1, s.get(v)))
+			return false;
 		else {
-			d.copy(tmp, d.bot());
-			for(typename graph_t::Predecessor pe(g, v); pe; pe++) {
-				const t& v = s.get(pe);
-				AI_DEBUG(cerr << "DEBUG:     input of " << *pe << ": "; d.print(v, cerr); cerr << io::endl;)
-				d.join(tmp, v);
-				AI_DEBUG(cerr << "DEBUG:     result in "; d.print(tmp, cerr); cerr << io::endl;)
-			}
+			AI_DEBUG(cerr << "DEBUG:\t\t" << v << " updated!\n";)
+			s.set(v, t1);
+			return true;
 		}
-
-		// update
-		AI_DEBUG(cerr << "DEBUG:\t\tin  state: "; d.print(tmp, cerr); cerr << io::endl;)
-		d.update(v, e, tmp);
-		AI_DEBUG(cerr << "DEBUG:\t\tnew  state: "; d.print(tmp, cerr); cerr << io::endl;)
-		AI_DEBUG(cerr << "DEBUG:\t\tprev state: "; d.print(s.get(e), cerr); cerr << io::endl;)
-
-		// any change?
-		bool update = !d.equals(tmp, s.get(e));
-		if(update) {
-			s.set(e, tmp);
-			AI_DEBUG(cerr << "DEBUG:\t\t" << e << " updated!\n";)
-		}
-		return update;
 	}
 
 	inline graph_t graph(void) const { return g; }
@@ -303,7 +302,7 @@ private:
 	typename S::domain_t& d;
 	graph_t& g;
 	S& s;
-	t tmp;
+	t t1, t2;
 };
 
 template <class C>
@@ -321,16 +320,15 @@ public:
 		while(wl) {
 			vertex_t v = wl.get();
 			AI_DEBUG(cerr << "DEBUG: processing " << v << io::endl;)
-			for(typename graph_t::Successor e(g, v); e; e++) {
-				bool update = c.update(e);
-				if(update) {
+			bool update = c.update(v);
+			if(update) {
+				for(typename graph_t::Successor e(g, v); e; e++) {
 					vertex_t w = g.sinkOf(e);
 					if(!wl.contains(w)) {
 						wl.put(w);
 						AI_DEBUG(cerr << "DEBUG:     putting " << w << io::endl;)
 					}
 				}
-
 			}
 			AI_DEBUG(cerr << io::endl;)
 		}
@@ -374,12 +372,11 @@ protected:
 			return;
 
 		// prepare containers
-		for(CFGCollection::BBIterator b(cfgs); b; b++)
-			for(Block::EdgeIter e = b->outs(); e; e++) {
-				(*MUST_STATE(e)).configure(*coll);
-				(*PERS_STATE(e)).configure(*coll);
-				track(MUST_PERS_ANALYSIS_FEATURE, MUST_STATE(e));
-			}
+		for(CFGCollection::BBIterator b(cfgs); b; b++) {
+			(*MUST_IN(b)).configure(*coll);
+			(*PERS_IN(b)).configure(*coll);
+			track(MUST_PERS_ANALYSIS_FEATURE, MUST_IN(b));
+		}
 
 		// compute ACS
 		for(int i = 0; i < coll->cache()->setCount(); i++) {
@@ -396,23 +393,19 @@ protected:
 		// perform the computation
 		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0);
 		CFGCollectionGraph g(*cfgs);
-		typedef ai::EdgeStore<MustPersDomain, CFGCollectionGraph> store_t;
-		typedef SimpleControler<store_t> controler_t;
-		ai::EdgeStore<MustPersDomain, CFGCollectionGraph> s(d, g);
+		typedef ai::ArrayStore<MustPersDomain, CFGCollectionGraph> store_t;
+		typedef DefaultEdgeControler<store_t> controler_t;
+		store_t s(d, g);
 		controler_t c(s);
 		BreadthFirstAI<controler_t> ai(c);
 		ai.run();
 
 		// store the result
-		for(CFGCollection::BBIterator b(cfgs); b; b++)
-			for(Block::EdgeIter e = b->outs(); e; e++) {
-				(*MUST_STATE(e))[set] = d.must(s.get(e));
-				(*PERS_STATE(e))[set] = d.pers(s.get(e));
-			}
-
-		for(CFGCollection::BBIterator b(cfgs); b; b++)
-			for(Block::EdgeIter e = b->outs(); e; e++)
-				MustPersDomain::t v((*MUST_STATE(e))[set], (*PERS_STATE(e))[set]);
+		for(CFGCollection::BBIterator b(cfgs); b; b++) {
+			cerr << "DEBUG: storing for " << *b << ": "; d.print(s.get(b), cerr); cerr << io::endl;
+			(*MUST_IN(b))[set] = d.must(s.get(b));
+			(*PERS_IN(b))[set] = d.pers(s.get(b));
+		}
 	}
 
 	const LBlockCollection *coll;
@@ -468,7 +461,7 @@ p::feature MUST_PERS_ANALYSIS_FEATURE("otawa::icat3::MUST_PERS_ANALYSIS_FEATURE"
  * @par Feature
  * @li @ref MUST_PERS_ANALYSIS_FEATURE
  */
-p::id<Container<ACS> > MUST_STATE("otawa::icat3::MUST_STATE");
+p::id<Container<ACS> > MUST_IN("otawa::icat3::MUST_IN");
 
 /**
  * Properties giving the ACS for the PERS analysis at a particular
@@ -480,6 +473,6 @@ p::id<Container<ACS> > MUST_STATE("otawa::icat3::MUST_STATE");
  * @par Feature
  * @li @ref MUST_PERS_ANALYSIS_FEATURE
  */
-p::id<Container<ACSStack> > PERS_STATE("otawa::icat3::PERS_STATE");
+p::id<Container<ACSStack> > PERS_IN("otawa::icat3::PERS_IN");
 
 } }		// otawa::icat3

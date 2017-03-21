@@ -275,11 +275,11 @@ public:
 		map[i] = _dom.join(map[i], s);
 	}
 
+	inline void reset(void) { clear(); }
 	inline t get(vertex_t v) const { return map[_graph.index(v)]; }
-
 	inline t get(edge_t e) const { return map[_graph.index(_graph.sourceOf(e))]; }
-
 	inline D& domain(void) const { return _dom; }
+	inline G& graph(void) const { return _graph; }
 
 private:
 	D& _dom;

@@ -43,7 +43,7 @@ public:
 	void fetch(t& a, const LBlock *lb);
 	void update(const icache::Access& access, t& a);
 	void update(const Bag<icache::Access>& accs, t& a);
-	void update(Block *v, Edge *e, t& a);
+	void update(Edge *e, t& a);
 	bool equals(const t& a, const t& b);
 
 private:
@@ -70,7 +70,7 @@ public:
 	void fetch(LBlock *b, ACS& a);
 	void update(const icache::Access& access, t& a);
 	void update(const Bag<icache::Access>& accs, t& a);
-	void update(Block *v, Edge *e, t& a);
+	void update(Edge *e, t& a);
 	bool equals(const t& a, const t& b);
 
 private:
@@ -111,7 +111,7 @@ public:
 	inline bool contains(const t& a, int i) { return(a.must[i] != BOT_AGE); }
 	void update(const icache::Access& access, t& a);
 	void update(const Bag<icache::Access>& accs, t& a);
-	void update(Block *v, Edge *e, t& a);
+	void update(Edge *e, t& a);
 	bool equals(const t& a, const t& b);
 	inline const MustDomain::t& must(const t& a) { return a.must; }
 	inline const PersDomain::t& pers(const t& a) { return a.pers; }

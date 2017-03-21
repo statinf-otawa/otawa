@@ -37,12 +37,12 @@ namespace otawa { namespace etime {
 
 class MissEvent: public Event {
 public:
-	MissEvent(Inst *inst, ot::time cost, LBlock *lb)
-		: Event(inst), _lb(lb), _cost(cost) {	}
+	MissEvent(Inst *inst, place_t place, ot::time cost, LBlock *lb)
+		: Event(inst, place), _lb(lb), _cost(cost) {	}
 
 	virtual kind_t kind(void) const { return FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return BLOCK; }
+	virtual type_t type(void) const { return LOCAL; }
 
 	virtual occurrence_t occurrence(void) const {
 		switch(CATEGORY(_lb)) {
@@ -93,8 +93,8 @@ private:
 
 class BranchPredictionEvent: public Event {
 public:
-	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var, Block *wbb)
-		: Event(inst), _var(var), _cost(cost), _occ(occ), _wbb(wbb) { }
+	BranchPredictionEvent(Inst *inst, place_t place, ot::time cost, occurrence_t occ, ilp::Var *var, Block *wbb)
+		: Event(inst, place), _var(var), _cost(cost), _occ(occ), _wbb(wbb) { }
 
 	virtual kind_t kind(void) const { return BRANCH; }
 	virtual ot::time cost(void) const { return _cost; }
@@ -126,11 +126,12 @@ private:
 
 class DataMissEvent: public Event {
 public:
-	DataMissEvent(Inst *inst, ot::time cost, dcache::BlockAccess& acc, BasicBlock *bb): Event(inst), _cost(cost), _acc(acc), _bb(bb) { }
+	DataMissEvent(Inst *inst, place_t place, ot::time cost, dcache::BlockAccess& acc, BasicBlock *bb)
+	: Event(inst, place), _cost(cost), _acc(acc), _bb(bb) { }
 
 	virtual kind_t kind(void) const { return MEM; }
 	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return BLOCK; }
+	virtual type_t type(void) const { return LOCAL; }
 
 	virtual occurrence_t occurrence(void) const {
 		switch(dcache::CATEGORY(_acc)) {
@@ -279,7 +280,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			}
 
 			// create the event
-			Event *event = new MissEvent(*inst, cost, blocks[i]);
+			Event *event = new MissEvent(*inst, BLOCK, cost, blocks[i]);
 			if(logFor(LOG_BB))
 				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 			EVENT(bb).add(event);
@@ -320,7 +321,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				cost = action == write ? mem->worstWriteAccess() : mem->worstReadAccess();
 
 			// make the event
-			Event *event = new DataMissEvent(acc.instruction(), cost, acc, bb);
+			Event *event = new DataMissEvent(acc.instruction(), BLOCK,  cost, acc, bb);
 			if(logFor(LOG_BB))
 				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 			EVENT(bb).add(event);
@@ -343,7 +344,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 						occ = ALWAYS;
 					else
 						occ = NEVER;
-					Event *event = new BranchPredictionEvent(out->target()->toBasic()->first(), bht->getCondPenalty(), occ, 0, bb);
+					Event *event = new BranchPredictionEvent(out->target()->toBasic()->first(), BLOCK, bht->getCondPenalty(), occ, 0, bb);
 					if(logFor(LOG_BB))
 						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 					EVENT(*out).add(event);
@@ -383,7 +384,7 @@ void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, Block *wbb) 
 		else if(out->sink()->isSynth())
 			tinst = out->sink()->toSynth()->callee()->first();
 		ASSERT(tinst);
-		Event *event = new BranchPredictionEvent(tinst, bht->getCondPenalty(), SOMETIMES, var, wbb);
+		Event *event = new BranchPredictionEvent(tinst, BLOCK, bht->getCondPenalty(), SOMETIMES, var, wbb);
 		if(logFor(LOG_BB))
 			log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 		EVENT(*out).add(event);

@@ -93,8 +93,10 @@ protected:
 
 		// is it cached (assuming a BB does not span over several banks)?
 		const hard::Bank *bank = mem->get(bb->address());
-		if(!bank->isCached())
+		if(!bank->isCached()) {
+			warn(_ << "no bank contains " << bb);
 			return;
+		}
 
 		// split the BB in block accesses
 		// ASSUMPTION: a bundle cannot be bigger than 1 cache block!
@@ -158,7 +160,112 @@ p::declare AccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.require(hard::MEMORY_FEATURE)
 	.provide(ACCESSES_FEATURE)
+	.provide(BLOCK_ACCESSES_FEATURE)
 	.make<AccessBuilder>()
+	.extend<BBProcessor>();
+
+
+/**
+ */
+class EdgeAccessBuilder: public BBProcessor {
+public:
+	static p::declare reg;
+	EdgeAccessBuilder(void): BBProcessor(reg), icache(0), mem(0) { }
+
+protected:
+
+	virtual void setup(WorkSpace *ws) {
+		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+		ASSERT(conf);
+		icache = conf->instCache();
+		if(!icache && logFor(LOG_FUN))
+			log << "\tno instruction cache available; nothing to do.\n";
+		mem = hard::MEMORY(ws);
+		ASSERT(mem);
+	}
+
+	virtual void processWorkSpace(WorkSpace *ws) {
+		if(icache)
+			BBProcessor::processWorkSpace(ws);
+	}
+
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+		if(!b->isBasic())
+			return;
+		BasicBlock *bb = b->toBasic();
+
+		// is it cached?
+		// ASSUMPTION: a BB does not span over several banks)
+		const hard::Bank *bank = mem->get(bb->address());
+		if(!bank->isCached()) {
+			warn(_ << "no bank contains " << bb);
+			return;
+		}
+
+		// split the BB in block accesses
+		// ASSUMPTION: a bundle cannot be bigger than 1 cache block!
+		Address last_block;
+		Inst *last_bundle = 0;
+		BasicBlock::BundleIter bundle(bb);
+
+		// first bundle of the block (no last block)
+		if(bundle) {
+			// First bundle access
+			accs.add(icache::Access(icache::FETCH, *bundle, (*bundle).address()));
+			last_block = icache->round((*bundle).address());
+			last_bundle = *bundle;
+			bundle++;
+			if(logFor(LOG_BLOCK))
+				log << "\t\t\t" << accs.top() << io::endl;
+		}
+
+		// process following bundle
+		for(; bundle; ++bundle) {
+
+			// Last bundle crossed cache block boundary
+			if(icache->round((*bundle).address() - 1) != last_block) {
+				last_block = icache->round((*bundle).address() - 1);
+				accs.add(icache::Access(icache::FETCH, last_bundle, last_block));
+				if (logFor(LOG_BLOCK))
+					log << "\t\t\t" << accs.top() << io::endl;
+			}
+
+			// Bundle starts in a new block
+			if(icache->round((*bundle).address()) != last_block) {
+				last_block = icache->round((*bundle).address());
+				accs.add(icache::Access(icache::FETCH, *bundle, last_block));
+				if (logFor(LOG_BLOCK))
+					log << "\t\t\t" << accs.top() << io::endl;
+			}
+
+			last_bundle = *bundle;
+		}
+
+		// Last bundle of the BB crossed cache block boundary
+		if(last_bundle && icache->round(bb->topAddress() - 1) != last_block) {
+			accs.add(icache::Access(icache::FETCH, last_bundle, icache->round(bb->last()->address())));
+			if (logFor(LOG_BLOCK))
+				log << "\t\t\t" << accs.top() << io::endl;
+		}
+
+		// build the property
+		for(Block::EdgeIter e = bb->outs(); e; e++)
+			ACCESSES(e) = accs;
+		accs.clear();
+	}
+
+private:
+	const hard::Cache *icache;
+	const hard::Memory *mem;
+	genstruct::Vector<Access> accs;
+};
+
+p::declare EdgeAccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(1, 0, 0))
+	.require(hard::CACHE_CONFIGURATION_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.provide(ACCESSES_FEATURE)
+	.provide(EDGE_ACCESSES_FEATURE)
+	.make<EdgeAccessBuilder>()
 	.extend<BBProcessor>();
 
 
@@ -171,6 +278,33 @@ p::declare AccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(
  * @li @ref ACCESSES
  */
 p::feature ACCESSES_FEATURE("otawa::icache::ACCESSES_FEATURE", AccessBuilder::reg);
+
+
+
+/**
+ * This feature ensures that information about the instruction
+ * cache behavior has been added to the CFG using
+ * @ref ACCESSES property located on the edges.
+ *
+ * This feature implies the avaiability of @ref ACCESSES_FEATURE.
+ *
+ * @par Properties
+ * @li @ref ACCESSES
+ */
+p::feature EDGE_ACCESSES_FEATURE("otawa::icache::EDGE_ACCESSES_FEATURE", EdgeAccessBuilder::reg);
+
+
+/**
+ * This feature ensures that information about the instruction
+ * cache behavior has been added to the CFG using
+ * @ref ACCESSES property located on the blocks.
+ *
+ * This feature implies the avaiability of @ref ACCESSES_FEATURE.
+ *
+ * @par Properties
+ * @li @ref ACCESSES
+ */
+p::feature BLOCK_ACCESSES_FEATURE("otawa::icache::BLOCK_ACCESSES_FEATURE", AccessBuilder::reg);
 
 
 

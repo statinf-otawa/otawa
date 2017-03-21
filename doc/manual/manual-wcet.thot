@@ -1,6 +1,6 @@
 ====== Computing a WCET ======
 
-Although @(OTAWA) is designed as a generic framework to develop static analyses for WCET computation, some facilities are provided to compute WCET using dedicated scripts.
+Although @(OTAWA) is designed as a generic framework to develop static analyzes for WCET computation, some facilities are provided to compute WCET using dedicated scripts.
 
 @(OTAWA) can implement several approaches to WCET computation, IPET (Implicit Path Enumeration Technique) is currently the more mature one. In addition, IPET seems to be the method that has been the most developed and that gave the most interesting and precise results.
 
