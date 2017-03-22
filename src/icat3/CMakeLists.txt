@@ -3,6 +3,7 @@ set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall")
 
 add_library(icat3 SHARED
+	icat3_CatBuilder.cpp
 	icat3_EdgeEventBuilder.cpp
 	icat3_hook.cpp
 	icat3_LBlockBuilder.cpp

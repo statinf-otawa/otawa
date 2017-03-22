@@ -57,6 +57,8 @@ private:
 io::Output& operator<<(io::Output& out, const Access& acc);
 
 extern p::feature ACCESSES_FEATURE;
+extern p::feature BLOCK_ACCESSES_FEATURE;
+extern p::feature EDGE_ACCESSES_FEATURE;
 extern p::id<Bag<Access> > ACCESSES;
 
 } } // otawa::icache

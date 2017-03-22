@@ -10,7 +10,7 @@
 @OTAWA=**OTAWA**
 
 @include manual-install.thot
-@include manual-oipet.thot
+@include manual-wcet.thot
 @include manual-appli.thot
 @include manual-cfg.thot
 @include manual-props.thot

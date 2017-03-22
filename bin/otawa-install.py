@@ -299,13 +299,15 @@ class Package:
 	
 	def __init__(self, name):
 		self.name = name
-		self.tools = []
 		self.download = None
-		self.uses = []
-		self.requires = []
 		self.build = None
-		self.test = Test()
-		self.done = False
+
+		
+		#self.tools = []
+		#self.uses = []
+		#self.requires = []
+		#self.test = Test()
+		#self.done = False
 	
 	def do_test(self, mon):
 		return self.test.test(mon)
@@ -406,7 +408,10 @@ except urllib2.URLError as e:
 # list action
 if args.list:
 	for pack in DB.values():
-		MONITOR.say(pack.name)
+		msg = pack.name
+		if not pack.file:
+			msg = msg + " (source)"
+		MONITOR.say(msg)
 	exit(0)
 
 

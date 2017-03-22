@@ -21,6 +21,9 @@
 #ifndef OTAWA_ETIME_FEATURES_H_
 #define OTAWA_ETIME_FEATURES_H_
 
+#include <elm/data/List.h>
+#include <elm/data/Vector.h>
+#include <otawa/cfg/CFG.h>
 #include <otawa/proc/Feature.h>
 
 namespace otawa {
@@ -62,12 +65,13 @@ typedef enum type_t {
 	LOCAL = 0,
 	AFTER = 1,
 	NOT_BEFORE = 2,
-
-	// deprecated
-	EDGE = AFTER,
-	BLOCK = LOCAL,
-
 } type_t;
+
+typedef enum place_t {
+	NO_PLACE = 0,
+	PREFIX = 1,
+	BLOCK = 2
+} place_t;
 
 
 // Event class
@@ -75,9 +79,10 @@ class Event: public PropList {
 public:
 	typedef Pair<Inst *, const hard::PipelineUnit *> rel_t;
 
-	Event(Inst *inst);
+	Event(Inst *inst, place_t place);
 	virtual ~Event(void);
 	inline Inst *inst(void) const { return _inst; }
+	inline place_t place(void) const { return _place; }
 
 	// accessors
 	virtual kind_t kind(void) const = 0;
@@ -105,8 +110,36 @@ public:
 
 private:
 	Inst *_inst;
+	place_t _place;
 };
+io::Output& operator<<(io::Output& out, place_t place);
 io::Output& operator<<(io::Output& out, Event *event);
+
+
+class Unit: public PropList {
+public:
+	typedef List<Edge *>::Iter ContribIter;
+	typedef List<Event *>::Iter EventIter;
+
+	inline Unit(void): _e(0) { }
+	inline Unit(Edge *e): _e(e) { }
+	inline Edge *edge(void) const { return _e; }
+	inline ContribIter contribs(void) const { return ContribIter(_cs); }
+	inline EventIter events(void) const { return EventIter(_es); }
+
+	inline void add(Edge *e) { _cs.add(e); }
+	inline void add(Event *e) { _es.add(e); }
+
+private:
+	Edge *_e;
+	List<Edge *> _cs;
+	List<Event *> _es;
+};
+
+
+// time feature
+extern p::feature TIME_UNIT_FEATURE;
+extern p::id<Unit *> TIME_UNIT;
 
 // event feature
 extern p::feature STANDARD_EVENTS_FEATURE;
@@ -115,12 +148,12 @@ extern Identifier<Event *> EVENT;
 extern Identifier<Event *> PREFIX_EVENT;
 
 // configuration feature
-extern Identifier<bool> PREDUMP;
-extern Identifier<int> EVENT_THRESHOLD;
-extern Identifier<bool> RECORD_TIME;
+extern p::id<bool> PREDUMP;
+extern p::id<int> EVENT_THRESHOLD;
+extern p::id<bool> RECORD_TIME;
 extern p::feature EDGE_TIME_FEATURE;
-extern Identifier<ot::time> LTS_TIME;
-extern Identifier<ot::time> HTS_OFFSET;
+extern p::id<ot::time> LTS_TIME;
+extern p::id<ot::time> HTS_OFFSET;
 
 } }	// otawa::etime
 

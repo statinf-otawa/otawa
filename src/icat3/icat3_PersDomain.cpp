@@ -190,11 +190,9 @@ void PersDomain::update(const Bag<icache::Access>& os, t& a) {
  * @param e	Transition edge.
  * @param a	ACS stack to update.
  */
-void PersDomain::update(Block *v, Edge *e, t& a) {
+void PersDomain::update(Edge *e, t& a) {
 
 	// update source and edge
-	const Bag<icache::Access>& os = icache::ACCESSES(v);
-	update(os, a);
 	const Bag<icache::Access>& os2 = icache::ACCESSES(e);
 	update(os2, a);
 
@@ -202,7 +200,7 @@ void PersDomain::update(Block *v, Edge *e, t& a) {
 	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
 		enter(a);
 	else if(LOOP_EXIT_EDGE(e))
-		for(LoopIter h(v); h; h++) {
+		for(LoopIter h(e->source()); h; h++) {
 			leave(a);
 			if(h == LOOP_EXIT_EDGE(e))
 				break;

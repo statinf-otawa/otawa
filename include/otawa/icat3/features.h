@@ -133,22 +133,24 @@ extern p::id<Container<ACS> > PERS_INIT;
 extern p::id<Container<ACS> > MAY_INIT;
 extern p::feature MUST_PERS_ANALYSIS_FEATURE;
 extern p::feature MAY_ANALISYS_FEATURE;
-extern p::id<Container<ACS> > MUST_STATE;
-extern p::id<Container<ACSStack> > PERS_STATE;
-extern p::id<Container<ACS> > MAY_STATE;
+extern p::id<Container<ACS> > MUST_IN;
+extern p::id<Container<ACSStack> > PERS_IN;
+extern p::id<Container<ACS> > MAY_OUT;
 
 typedef enum category_t {
-	NO_CAT = 0,
+	UC = 0,
 	AH = 1,
-	PERS = 2,
+	PE = 2,
 	AM = 3,
 	NC = 4
 } category_t;
 io::Output& operator<<(io::Output& out, category_t cat);
+
+// event-oriented results
 extern p::feature EDGE_EVENTS_FEATURE;
 
-// simple category approach
-extern p::feature EDGE_CATEGORY_FEATURE;
+// category results
+extern p::feature CATEGORY_FEATURE;
 extern p::id<category_t> CATEGORY;
 extern p::id<Block *> HEADER;
 

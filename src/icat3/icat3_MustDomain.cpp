@@ -131,9 +131,7 @@ void MustDomain::update(const Bag<icache::Access>& os, ACS& a) {
  * @param e		Edge transition.
  * @param a		ACS to update.
  */
-void MustDomain::update(Block *v, Edge *e, ACS& a) {
-	const Bag<icache::Access>& va = icache::ACCESSES(v);
-	update(va, a);
+void MustDomain::update(Edge *e, ACS& a) {
 	const Bag<icache::Access>& ea = icache::ACCESSES(e);
 	update(ea, a);
 }

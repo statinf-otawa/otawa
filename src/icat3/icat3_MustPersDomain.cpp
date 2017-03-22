@@ -98,10 +98,11 @@ void MustPersDomain::update(const Bag<icache::Access>& os, t& a) {
  * @param e		Traversed edge.
  * @param a		ACS to update.
  */
-void MustPersDomain::update(Block *v, Edge *e, t& a) {
-	_must.update(v, e, a.must);
-	_pers.update(v, e, a.pers);
+void MustPersDomain::update(Edge *e, t& a) {
+	_must.update(e, a.must);
+	_pers.update(e, a.pers);
 }
+
 
 /**
  * Test if two ACS are equal.

@@ -86,7 +86,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 	// initialization
 	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge; edge++)
-		todo.put(pair(edge->sink(), ContextualPath()));
+		todo.put(pair(edge->sink(), *CONTEXT(cfg)));
 
 	// traverse until the end
 	while(todo) {

@@ -31,18 +31,48 @@ namespace otawa { namespace etime {
  * are processed to generate block time.
  *
  * The basic idea is that each analysis contributes to the WCET by defining the events
- * (changes of the execution time) applying to instruction or a block. As a result, these events
- * are hooked to the basic block they apply to and design (a) which instruction is concerned,
+ * (changes of the execution time) applying to instructions or a blocks. As a result, these events
+ * are hooked to the basic block they apply to and defines (a) which instruction is concerned,
  * (b) which part of the instruction execution they apply to (memory access, stage, functional unit, etc)
  * and (c) how they contribute to the time.
  *
- * In addition, a event may a contribution to the constraints of the ILP system and may be asked
- * to provide a overestimation or an underestimation of their occurrence according to their
+ * In addition, an event may c contribute to the constraints of the ILP system and may be asked
+ * to provide an overestimation or an underestimation of their occurrence according to their
  * contribution (worst case time or best case time) to the WCET.
  *
  * From the events, several policies may be applied to compute the times, to select
  * the granularity and the precision of the computed time or to choose a way to split
  * the CFG into blocks.
+ *
+ * The execution times are computed based on a= "time unit". An execution unit is made
+ * of a block, for which time is computed, and a prefix (made of 0 or several other blocks).
+ * The prefix allows to more precisely take into account the overlap effect of sequential
+ * execution of blocks. In the current version, we only support prefixes of 1 block but this
+ * may be extended in the next versions of this plugin.
+ *
+ * The time unit are stored and built for each basic block by examining the predecessors
+ * and counting the occurrences of this time using the corresponding edge. Because of the
+ * CFG structure of OTAWA, the following rules are applied to build the prefixes of a basic
+ * block v for a predecessor w:
+ * @li if w is a basic block, the time unit has only one prefix block w on edge (w, v);
+ * @li if w is the CFG entry and the CFG is the task entry, no prefix is considered;
+ * @li if w is the CFG entry and the CFG may have several calls: for each call u through
+ *     t synthetic block and u is a basic block, there is on prefix u on edge (u, t);
+ *     if u is not a basic block (unfrequent but may happen to transformations of CFG),
+ *     we consider there is a prefix on edge (u, t) but no prefix block;
+ * @li if w is a synthetic block calling function f with only one last basic block u, the
+ *     prefix is u and the edge (w, v);
+ * @li if w is a synthetic block calling function f with several last basic blocks u, the
+ *     prefixes is u with edges (u, exit);
+ * @li else there is no prefix along edge (w, v).
+ *
+ * The structure of the CFG and the possible transformations of it does not allow to always
+ * get (a) a right prefix and (b) a count of this prefix. Yet, as these cases are so infrequent
+ * and as they be replaced by an overestimation of the actual time, they do not represent
+ * an issue in the WCET computation.
+ *
+ * When building the set of time unit, one has to keep in mind that the sum of the frequency
+ * of the time unit edge must be equal to the frequency of the current block!
  */
 
 
@@ -223,8 +253,9 @@ Identifier<Event *> PREFIX_EVENT("otawa::etime::PREFIX_EVENT", 0);
 /**
  * Build an event.
  * @param inst	Instruction it applies to.
+ * @param place	Place of the event (prefix or block itself).
  */
-Event::Event(Inst *inst): _inst(inst) {
+Event::Event(Inst *inst, place_t place): _inst(inst), _place(place) {
 }
 
 
@@ -387,6 +418,155 @@ io::Output& operator<<(io::Output& out, Event *event) {
 	return out;
 }
 
+/**
+ */
+io::Output& operator<<(io::Output& out, place_t place) {
+	static cstring labs[] = {
+		"none",
+		"prefix",
+		"block"
+	};
+	out << labs[place];
+	return out;
+}
+
+
+/**
+ * @class TimeUnit
+ * An time unit represents the unit of time evaluation of etime. It corresponds
+ * mainly to an edge where the timing information will be hooked and a block for which
+ * the time is computed. Most of the time, it is composed of a prefix block to
+ * take into account precisely the overlapping of instructions blocks.
+ *
+ * Because of the synthetic blocks, there is sometimes a difference between the
+ * edge supporting the count of time unit occurrences, count edge, and the edge
+ * supporting the event of the transition from prefix to current block, event edge.
+ *
+ * @ingroup etime
+ */
+
+
+/**
+ * Provide the basic implementation of @ref TIME_UNIT_FEATURE based
+ * on the description of the @ref etime module.
+ */
+class TimeUnitBuilder: public BBProcessor {
+public:
+	static p::declare reg;
+	TimeUnitBuilder(p::declare& r = reg): BBProcessor(reg) { }
+
+protected:
+
+	Unit *add(Edge *e) {
+		Unit *tu = new Unit(e);
+		TIME_UNIT(e->sink()).add(tu);
+		tu->add(e);
+		return tu;
+	}
+
+	Unit *add(Unit *tu, Edge *e) {
+		tu->add(e);
+		return tu;
+	}
+
+	inline void _log(Unit *tu) {
+		if(logFor(LOG_INST))
+			logTU(tu);
+	}
+
+	void logTU(Unit *tu) {
+		Block *v;
+		for(Unit::ContribIter i = tu->contribs(); tu; tu++)
+			v = i->sink();
+		log << "\t\t\t\tadded TU to " << v << " for ";
+		bool fst = true;
+		for(Unit::ContribIter i = tu->contribs(); tu; tu++) {
+			if(fst)
+				fst = false;
+			else
+				log << ", ";
+			log << *i;
+		}
+		log << io::endl;
+	}
+
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+		if(!b->isBasic())
+			return;
+		BasicBlock *v = b->toBasic();
+
+		// post: x_v = ∑{(w, v) in E} X_w,v
+		for(Block::EdgeIter e = v->ins(); e; e++) {
+			Block *w = e->source();
+
+			// w is basic (X_w,v = x_w,v)
+			if(w->isBasic())
+				_log(add(e));
+
+			// entry case
+			else if(w->isEntry()) {
+				if(w->cfg()->callCount() == 0)		// X_w,v = x_w,v
+					_log(add(e));
+				else								// X_w,v = x_w,v = ∑{call(u, f)} x_c = ∑{u call f} ∑{(t, u) in E} x_t,u
+					for(CFG::CallerIter c = w->cfg()->callers(); c; c++)
+						for(Block::EdgeIter ce = c->ins();  c; c++)
+							_log(add(add(e), ce));
+			}
+
+			// synthetic case
+			else {
+				ASSERT(w->isSynth());
+				if(!w->cfg())									// X_w,v = x_w,v
+					_log(add(e));
+				else if(w->cfg()->exit()->countIns() == 1) {
+					Edge *ce = w->cfg()->exit()->ins();
+					Block *u = ce->source();
+					if(u->isBasic())							// X_w,v = x_w,v
+						_log(add(add(e), ce));
+				}
+				else if(w->cfg()->callCount() == 1)				// X_w,v = x_w = ∑{(u, ωf) in E} x_u,ωf /\ |call(w, f)| = 1
+					for(Block::EdgeIter re = w->cfg()->exit()->ins(); re; re++)
+						_log(add(add(e), re));
+				else											// X_w,v = x_w,v
+					_log(add(e));
+			}
+
+		}
+	}
+
+};
+
+p::declare TimeUnitBuilder::reg = p::init("otawa::etime::TimeUnitBuilder", Version(1, 0, 0))
+	.extend<BBProcessor>()
+	.make<TimeUnitBuilder>();
+
+
+/**
+ * This feature ensures that the time units has been built for each basic block.
+ *
+ * @par Properties
+ * @li @ref TIME_UNIT
+ *
+ * @ingroup etime
+ */
+p::feature TIME_UNIT_FEATURE("otawa::etime::TIME_UNIT_FEATURE", p::make<TimeUnitBuilder>());
+
+
+/**
+ * Provides the time unit hooked to a basic block. Depending on the number of prefixes
+ * to compute the time of a block, the basic block may have zero to several of
+ * these annotations tied.
+ *
+ * @par Hooks
+ * @li @ref BasicBlock
+ *
+ * @par Features
+ * @li @ref TIME_UNIT_FEATURE
+ *
+ * @ingroup etime
+ */
+p::id<Unit *> TIME_UNIT("otawa::etime::TIME_UNIT", 0);
+
 
 class Plugin: public ProcessorPlugin {
 public:
@@ -400,4 +580,3 @@ public:
 
 otawa::etime::Plugin otawa_etime;
 ELM_PLUGIN(otawa_etime, OTAWA_PROC_HOOK);
-

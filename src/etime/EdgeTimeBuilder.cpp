@@ -217,7 +217,7 @@ void EventCollector::contribute(case_t c, ilp::Var *var) {
  */
 void EventCollector::make(ilp::System *sys) {
 	int s = PREFIX_OFF ;
-	if(evt->type() == EDGE)
+	if(evt->place() == BLOCK)
 		s = BLOCK_OFF;
 	for(int c = s; c < SIZE; ++c) {
 		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
@@ -247,15 +247,12 @@ inline bool EventCollector::isOn(case_t c) {
  * Build an event selector case.
  */
 EventCollector::case_t EdgeTimeBuilder::make(const Event *e, EdgeTimeBuilder::place_t place, bool on) {
-	if(e->type() == EDGE)
-		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
-	else
-		switch(place) {
-		case EdgeTimeBuilder::IN_PREFIX:	return on ? EventCollector::PREFIX_ON : EventCollector::PREFIX_OFF;
-		case EdgeTimeBuilder::IN_BLOCK:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
-		case EdgeTimeBuilder::IN_EDGE:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
-		default:							ASSERT(false); return EventCollector::PREFIX_ON;
-		}
+	switch(place) {
+	case EdgeTimeBuilder::IN_PREFIX:	return on ? EventCollector::PREFIX_ON : EventCollector::PREFIX_OFF;
+	case EdgeTimeBuilder::IN_BLOCK:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
+	case EdgeTimeBuilder::IN_EDGE:		return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
+	default:							ASSERT(false); return EventCollector::PREFIX_ON;
+	}
 }
 
 
@@ -1407,7 +1404,7 @@ p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTi
  * Configuration property of EDGE_TIME_FEATURE, if true, enable the production
  * of LTS_TIME and HTS_OFFSET on the edge.
  */
-Identifier<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
+p::id<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
 
 /**
  * Produced only if the RECORD_TIME configuration is set,
@@ -1416,7 +1413,7 @@ Identifier<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
+p::id<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
 
 /**
  * Produced only if the RECORD_TIME configuration is set,
@@ -1426,14 +1423,14 @@ Identifier<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
  * @par Hooks
  * @li @ref Edge
  */
-Identifier<ot::time> HTS_OFFSET("otawa::etime::HTS_OFFSET", 0);
+p::id<ot::time> HTS_OFFSET("otawa::etime::HTS_OFFSET", 0);
 
 
 /**
  * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated
  * execution graphs.
  */
-Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
+p::id<bool> PREDUMP("otawa::etime::PREDUMP", false);
 
 
 /**
@@ -1441,6 +1438,6 @@ Identifier<bool> PREDUMP("otawa::etime::PREDUMP", false);
  * events to consider to time a block. If a value of n is passed, at most 2^n times will be computed
  * and if a block gets a bigger number of events, it will be split.
  */
-Identifier<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 12);
+p::id<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 12);
 
 } }	// otawa::etime

@@ -27,17 +27,17 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
-
 #include "../../include/otawa/icat3/features.h"
+
 #include "MustPersDomain.h"
 
 namespace otawa { namespace icat3 {
 
 io::Output& operator<<(io::Output& out, category_t cat) {
 	static cstring labels[] = {
-		"none",
+		"UC",
 		"AH",
-		"PERS",
+		"PE",
 		"AM",
 		"NC"
 	};
@@ -50,9 +50,9 @@ io::Output& operator<<(io::Output& out, category_t cat) {
  */
 class ICacheEvent: public etime::Event {
 public:
-	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, Block *b, Block *head = 0,
+	ICacheEvent(const icache::Access& acc, etime::place_t place, ot::time cost, category_t cat, const PropList *site, Block *head = 0,
 			etime::type_t type = etime::LOCAL, rel_t rel = pair(null<Inst>(), null<const hard::PipelineUnit>()))
-		: Event(acc.instruction()), _cost(cost), _acc(acc), _b(b), _cat(cat), _head(head), _type(type), _rel(rel) {	}
+		: Event(acc.instruction(), place), _cost(cost), _acc(acc), _site(site), _cat(cat), _head(head), _type(type), _rel(rel) {	}
 
 	virtual etime::kind_t kind(void) const { return etime::FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
@@ -61,7 +61,7 @@ public:
 	virtual etime::occurrence_t occurrence(void) const {
 		switch(_cat) {
 		case AH:	return etime::NEVER;
-		case PERS:	return etime::SOMETIMES;
+		case PE:	return etime::SOMETIMES;
 		case AM:	return etime::ALWAYS;
 		case NC:	return etime::SOMETIMES;
 		default:	ASSERT(0); return etime::SOMETIMES;
@@ -70,14 +70,14 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << _cat << " access to " << _acc.address() << ", " << _acc; }
+	virtual string detail(void) const { return _ << _cat << " access to " << _acc.address(); }
 
 	virtual int weight(void) const {
 		switch(_cat) {
 		case AH:	return 0;
 		case AM:
-		case NC:	return WEIGHT(_b);
-		case PERS:	{
+		case NC:	return WEIGHT(_site);
+		case PE:	{
 						Block *parent = otawa::ENCLOSING_LOOP_HEADER(_head);
 						if(!parent)
 								return 1;
@@ -89,12 +89,12 @@ public:
 	}
 
 	virtual bool isEstimating(bool on) {
-		return on && _cat == PERS;	// only when on = true!
+		return on && _cat == PE;	// only when on = true!
 	}
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
 		ASSERT(on);
-		ASSERT(_cat == PERS)
+		ASSERT(_cat == PE)
 		for(Block::EdgeIter i = _head->ins(); i; i++)
 			if(!BACK_EDGE(*i))
 				cons->addLeft(1, ipet::VAR(i));
@@ -104,12 +104,10 @@ public:
 	virtual inline void relate(const rel_t &rel) { _rel = rel; }
 	virtual inline void setType(etime::type_t type) { _type = type; }
 
-	inline Address address(void) const { return _acc.address(); }
-
 private:
 	ot::time _cost;
 	const icache::Access& _acc;
-	Block *_b;
+	const PropList *_site;
 	category_t _cat;
 	Block *_head;
 	etime::type_t _type;
@@ -118,264 +116,137 @@ private:
 
 
 /**
- * Abstract class to generate the instruction cache access categories.
  */
-class AbstractCategoryBuilder: public Processor {
-	static p::declare reg;
-	AbstractCategoryBuilder(void): Processor(reg), coll(0), mustpers(0), A(0), mem(0) { }
-
-protected:
-
-	virtual void processCategory(Block *b, icache::Access& acc, category_t cat, Block *hd = 0) = 0;
-
-	virtual void processWorkSpace(WorkSpace *ws) {
-
-		// gather needed information
-		coll = icat3::LBLOCKS(ws);
-		ASSERT(coll);
-		A = coll->A();
-		const CFGCollection *cfgs = *otawa::INVOLVED_CFGS(ws);
-		ASSERT(cfgs);
-		mem = hard::MEMORY(ws);
-		ASSERT(mem);
-
-		// process basic blocks
-		for(int set = 0; set < coll->cache()->setCount(); set++)
-			if((*coll)[set].count() > 0) {
-				if(logFor(LOG_FUN))
-					log << "\tprocessing set " << set << io::endl;
-				MustPersDomain mustpers_inst(*coll, set);
-				mustpers = &mustpers_inst;
-				for(CFGCollection::BBIterator b(cfgs); b; b++)
-					if(b->isBasic())
-						for(BasicBlock::BasicIns e(b->toBasic()); e; e++) {
-							if(logFor(LOG_BLOCK))
-								log << "\t\tbasic edge " << (*e).source() << ", " << (*e).edge() << ", " << (*e).sink() << io::endl;
-							make(e, set);
-						}
-			}
-	}
-
-private:
-
-	bool use(const PropList *b, int set) {
-		const Bag<icache::Access>& accs = icache::ACCESSES(b);
-		for(int i = 0; i < accs.count(); i++)
-			if(LBLOCK(accs[i])->set() == set)
-				return true;
-		return false;
-	}
-
-	void make(const BasicBlock::BasicEdge& e, int set) {
-
-		// prepare ACS
-		MustPersDomain::t a = mustpers->bot();
-		if(e.source())
-			for(Block::EdgeIter i = e.source()->ins(); i; i++)
-				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
-		else
-			mustpers->join(a, mustpers->init());
-
-		// process the source
-		if(e.source() && use(e.source(), set))
-			make(e.sink(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
-
-		// process the edge
-		if(e.edge() && use(e.edge(), set))
-			make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
-
-		// process the
-		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
-		make(e.sink(), *e.edge(), icache::ACCESSES(e.sink()), a, set, false);
-	}
-
-	void make(Block *b, Edge& site, Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
-		for(int i = 0; i < accs.count(); i++) {
-
-			// obtain the access
-			const icache::Access& acc = accs[i];
-			LBlock *lb = LBLOCK(acc);
-			if(lb->set() != set)
-				continue;
-
-			// compute the category
-			category_t cat = NC;
-			Block *ch = 0;
-			age_t age = mustpers->must(acs)[lb->index()];
-			if(0 <= age && age < A)
-				cat = AH;
-			else if(b) {
-				LoopIter h(b);
-				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
-					age = mustpers->pers(acs).stack()[i][lb->index()];
-					if(0 <= age && age < A) {
-						ch = h;
-						cat = PERS;
-						break;
-					}
-				}
-			}
-
-			processCategory(b, accs[i], cat, ch);
-
-			// if required, obtain the time
-			time_t t = 0;
-			if(cat != AH) {
-				const hard::Bank *bnk = mem->get(lb->address());
-				ASSERT(bnk);
-				t = bnk->latency();
-			}
-
-			// build the event
-			etime::Event *e = new ICacheEvent(acc, t, cat, b, ch);
-			if(prefix) {
-				if(logFor(LOG_INST))
-					log << "\t\t\tprefix event " << e << io::endl;
-				etime::PREFIX_EVENT(site).add(e);
-			}
-			else {
-				if(logFor(LOG_INST))
-					log << "\t\t\tblock event " << e << io::endl;
-				etime::EVENT(site).add(e);
-			}
-			mustpers->update(acc, acs);
-		}
-	}
-
-	const LBlockCollection *coll;
-	MustPersDomain *mustpers;
-	int A;
-	const hard::Memory *mem;
-};
-
-
-/**
- */
-class EdgeEventBuilder: public Processor {
+class EdgeEventBuilder: public BBProcessor {
 public:
 	static p::declare reg;
-	EdgeEventBuilder(void): Processor(reg), coll(0), mustpers(0), A(0), mem(0) { }
+	EdgeEventBuilder(void): BBProcessor(reg), coll(0), mustpers(0), acss(0), A(0), mem(0) { }
 
 protected:
 
+	static const bool PREFIX = true, BLOCK = false;
+	typedef MustPersDomain::t acs_t;
+
+	/**
+	 */
 	virtual void setup(WorkSpace *ws) {
-	}
-
-	virtual void processWorkSpace(WorkSpace *ws) {
-
-		// gather needed information
 		coll = icat3::LBLOCKS(ws);
 		ASSERT(coll);
 		A = coll->A();
-		const CFGCollection *cfgs = *otawa::INVOLVED_CFGS(ws);
-		ASSERT(cfgs);
 		mem = hard::MEMORY(ws);
 		ASSERT(mem);
-
-		// process basic blocks
-		for(int set = 0; set < coll->cache()->setCount(); set++)
-			if((*coll)[set].count() > 0) {
-				if(logFor(LOG_FUN))
-					log << "\tprocessing set " << set << io::endl;
-				MustPersDomain mustpers_inst(*coll, set);
-				mustpers = &mustpers_inst;
-				for(CFGCollection::BBIterator b(cfgs); b; b++)
-					if(b->isBasic())
-						for(BasicBlock::BasicIns e(b->toBasic()); e; e++) {
-							if(logFor(LOG_BLOCK))
-								log << "\t\tbasic edge " << (*e).source() << ", " << (*e).edge() << ", " << (*e).sink() << io::endl;
-							make(e, set);
-						}
-			}
+		mustpers = new MustPersDomain *[coll->sets()];
+		acss = new acs_t[coll->sets()];
+		for(int i = 0; i < coll->sets(); i++)
+			mustpers[i] = new MustPersDomain(*coll, i);
 	}
 
-private:
-
-	bool use(const PropList *b, int set) { // find out if the given cache set index is associated with the block/edge
-		const Bag<icache::Access>& accs = icache::ACCESSES(b);
-		for(int i = 0; i < accs.count(); i++)
-			if(LBLOCK(accs[i])->set() == set)
-				return true;
-		return false;
+	/**
+	 */
+	virtual void cleanup(WorkSpace *ws) {
+		for(int i = 0; i < coll->sets(); i++)
+			delete mustpers[i];
+		delete [] mustpers;
+		delete [] acss;
 	}
 
-	void make(const BasicBlock::BasicEdge& e, int set) {
-
-		// prepare ACS
-		MustPersDomain::t a = mustpers->bot();
-		if(e.source()) // if the edge has any source block
-			for(Block::EdgeIter i = e.source()->ins(); i; i++) // join the MUST/PERS from all inputs
-				mustpers->join(a, MustPersDomain::t((*MUST_STATE(i))[set], (*PERS_STATE(i))[set]));
-		else // otherwise just use the initial MUST/PERS domain
-			mustpers->join(a, mustpers->init());
-
-		// process the source
-		if(e.source() && use(e.source(), set)) // only process the set that the source block is associated
-			make(e.sink(), *e.edge(), icache::ACCESSES(e.source()), a, set, true);
-
-		// process the edge
-		if(e.edge() && use(e.edge(), set))
-			make(e.sink(), *e.edge(), icache::ACCESSES(e.edge()), a, set, false);
-
-		// process the
-		a = MustPersDomain::t((*MUST_STATE(e.edge()))[set], (*PERS_STATE(e.edge()))[set]);
-		make(e.sink(), *e.edge(), icache::ACCESSES(e.sink()), a, set, false);
-	}
-
-	void make(Block *b, Edge& site, const Bag<icache::Access>& accs, MustPersDomain::t& acs, int set, bool prefix) {
-		for(int i = 0; i < accs.count(); i++) { // for each access
-
-			// obtain the access
-			const icache::Access& acc = accs[i];
-			LBlock *lb = LBLOCK(acc); // each access is associated with LBLOCK, so LBLOCK will find the corresponding cache block to the acc (access)
-			if(lb->set() != set)
-				continue;
-
-			// compute the category
-			category_t cat = NC; // default category
-			Block *ch = 0; // the loop header, only useful for the PERS
-			age_t age = mustpers->must(acs)[lb->index()];
-			if(0 <= age && age < A)
-				cat = AH;
-			else if(b) {
-				LoopIter h(b);
-				for(int i = mustpers->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
-					age = mustpers->pers(acs).stack()[i][lb->index()];
-					if(0 <= age && age < A) {
-						ch = h;
-						cat = PERS;
-						break;
-					}
-				}
+	/**
+	 */
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *v) {
+		used.clear();
+		for(Identifier<etime::Unit *>::Getter i(v, etime::TIME_UNIT); i; i++) {
+			etime::Unit *tu = *i;
+			for(etime::Unit::ContribIter e = tu->contribs(); e; e++) {
+				processAccesses(*tu, etime::PREFIX, e->source(), e->source(), e->source());
+				processAccesses(*tu, etime::PREFIX, otawa::LOOP_EXIT_EDGE(e) ? e->sink() : e->source(), e->source(), e);
+				if(otawa::LOOP_EXIT_EDGE(e))
+					used.clear();	// to support loop level popup in PERS
 			}
-
-			// if required, obtain the time
-			time_t t = 0;
-			if(cat != AH) {
-				const hard::Bank *bnk = mem->get(lb->address());
-				ASSERT(bnk);
-				t = bnk->latency();
-			}
-
-			// build the event
-			etime::Event *e = new ICacheEvent(acc, t, cat, b, ch);
-			if(prefix) {
-				if(logFor(LOG_INST))
-					log << "\t\t\tprefix event " << e << io::endl;
-				etime::PREFIX_EVENT(site).add(e);
-			}
-			else {
-				if(logFor(LOG_INST))
-					log << "\t\t\tblock event " << e << io::endl;
-				etime::EVENT(site).add(e);
-			}
-			//cerr << "DEBUG: OBSERVE: " << site.sink() << " <- " << site.source() << ": " << set << ": " << e << io::endl;
-			mustpers->update(acc, acs);
+			processAccesses(*tu, etime::BLOCK, v, v, v);
 		}
 	}
 
+	/**
+	 * Generate and store the events.
+	 * @param tu	Time unit to put the event in.
+	 * @param place	Place of the contribution.
+	 * @param cv	Counting vertex.
+	 * @param iv	Input vertex.
+	 * @param cont	Contribution.
+	 */
+	void processAccesses(etime::Unit& tu, etime::place_t place, Block *cv, Block *iv, const PropList *cont) {
+		const Bag<icache::Access>& accs = icache::ACCESSES(cont);
+		for(int i = 0; i < accs.count(); i++) {
+			LBlock *lb = LBLOCK(accs[i]);
+
+			// need initialization?
+			if(!used.contains(lb->set())) {
+				used.add(lb->set());
+				acss[lb->set()] = acs_t((*MUST_IN(iv))[lb->set()], (*PERS_IN(iv))[lb->set()]);
+			}
+
+			// build the events
+			etime::Event *evt = makeEvent(cv, place, accs[i], acss[lb->set()]);
+			if(logFor(LOG_INST)) {
+				log	<< "\t\t\t"
+					<< (place == etime::PREFIX ? "prefix" : "block")
+					<< " event " << evt << io::endl;
+			}
+			tu.add(evt);
+
+			// update state
+			mustpers[lb->set()]->update(accs[i], acss[lb->set()]);
+		}
+	}
+
+	/**
+	 * Generate the events for the given access.
+	 * @param cv	Counting vertex.
+	 * @param place	Place in the time unit.
+	 * @param acc	Access to process.
+	 * @param acs	ACS before the access.
+	 * @return 		Built event.
+	 */
+	etime::Event *makeEvent(Block *cv, etime::place_t place, const icache::Access& acc, acs_t& acs) {
+		LBlock *lb = LBLOCK(acc);
+		ASSERT(lb);
+
+		// compute the category
+		category_t cat = NC;
+		Block *ch = 0;
+		age_t age = (mustpers[lb->set()]->must(acs))[lb->index()];
+		if(0 <= age && age < A)
+			cat = AH;
+		else {
+			LoopIter h(cv);
+			for(int i = mustpers[lb->set()]->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
+				age = mustpers[lb->set()]->pers(acs).stack()[i][lb->index()];
+				if(0 <= age && age < A) {
+					ch = h;
+					cat = PE;
+					break;
+				}
+			}
+		}
+
+		// if required, obtain the time
+		ot::time t = 0;
+		if(cat != AH) {
+			const hard::Bank *bank = mem->get(lb->address());
+			if(!bank)
+				t = mem->worstReadTime();
+			else
+				t = bank->readLatency();
+		}
+
+		// build the event
+		return new ICacheEvent(acc, place, t, cat, cv, ch);
+	}
+
 	const LBlockCollection *coll;
-	MustPersDomain *mustpers;
+	MustPersDomain **mustpers;
+	acs_t *acss;
+	Vector<int> used;
 	int A;
 	const hard::Memory *mem;
 };
@@ -387,7 +258,8 @@ p::declare EdgeEventBuilder::reg = p::init("otawa::icat3::EdgeEventBuilder", Ver
 	.require(LBLOCKS_FEATURE)
 	.require(MUST_PERS_ANALYSIS_FEATURE)
 	.require(hard::MEMORY_FEATURE)
-	.require(COLLECTED_CFG_FEATURE);
+	.require(COLLECTED_CFG_FEATURE)
+	.require(etime::TIME_UNIT_FEATURE);
 
 
 /**
