@@ -273,12 +273,12 @@ public:
 		}
 
 		// ⊔{(w, v) ∈ E} U(w, v, IN[w])
-		d.copy(t1, d.bot());
-		for(typename graph_t::Predecessor e(g, v); e; e++) {
-			vertex_t w = g.sourceOf(e);
+		d.copy(t1, d.bot()); // t1 is the holder of the state
+		for(typename graph_t::Predecessor e(g, v); e; e++) { // iterates through the incoming edges to v
+			vertex_t w = g.sourceOf(e); // w is the predecessor of e
 			d.copy(t2, s.get(w));
 			AI_DEBUG(cerr << "DEBUG:     IN(" << *e << ") = "; d.print(t2, cerr); cerr << io::endl;)
-			d.update(e, t2);
+			d.update(e, t2); // update with the ACCESSes on both the predecessor w and e
 			AI_DEBUG(cerr << "DEBUG:     updated by " << *e << ": "; d.print(t2, cerr); cerr << io::endl;)
 			d.join(t1, t2);
 			AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)

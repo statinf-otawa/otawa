@@ -476,11 +476,11 @@ protected:
 
 	void logTU(Unit *tu) {
 		Block *v;
-		for(Unit::ContribIter i = tu->contribs(); tu; tu++)
+		for(Unit::ContribIter i = tu->contribs(); i; i++)
 			v = i->sink();
 		log << "\t\t\t\tadded TU to " << v << " for ";
 		bool fst = true;
-		for(Unit::ContribIter i = tu->contribs(); tu; tu++) {
+		for(Unit::ContribIter i = tu->contribs(); i; i++) {
 			if(fst)
 				fst = false;
 			else
@@ -508,8 +508,8 @@ protected:
 				if(w->cfg()->callCount() == 0)		// X_w,v = x_w,v
 					_log(add(e));
 				else								// X_w,v = x_w,v = ∑{call(u, f)} x_c = ∑{u call f} ∑{(t, u) in E} x_t,u
-					for(CFG::CallerIter c = w->cfg()->callers(); c; c++)
-						for(Block::EdgeIter ce = c->ins();  c; c++)
+					for(CFG::CallerIter c = w->cfg()->callers(); c;c++)
+						for(Block::EdgeIter ce = c->ins();  ce; ce++)
 							_log(add(add(e), ce));
 			}
 
@@ -538,7 +538,8 @@ protected:
 
 p::declare TimeUnitBuilder::reg = p::init("otawa::etime::TimeUnitBuilder", Version(1, 0, 0))
 	.extend<BBProcessor>()
-	.make<TimeUnitBuilder>();
+	.make<TimeUnitBuilder>()
+	.provide(etime::TIME_UNIT_FEATURE);
 
 
 /**

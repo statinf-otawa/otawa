@@ -77,8 +77,8 @@ private:
 	void join(ACS& d, const ACS& s);
 	void update(const icache::Access& access, ACS& a);
 	bool equals(const ACS& a1, const ACS& a2);
-	void enter(t& a);
-	void leave(t& a);
+	void enter(t& a, Block* b);
+	void leave(t& a, Block* b);
 
 	int n;
 	t _bot, _top;
@@ -87,6 +87,7 @@ private:
 	int A;
 	t _init;
 	ACS tmp;
+	Vector<Block*> _enteredLoop;
 };
 
 
