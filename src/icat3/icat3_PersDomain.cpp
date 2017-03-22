@@ -193,8 +193,10 @@ void PersDomain::update(const Bag<icache::Access>& os, t& a) {
 void PersDomain::update(Edge *e, t& a) {
 
 	// update source and edge
-	const Bag<icache::Access>& os2 = icache::ACCESSES(e);
-	update(os2, a);
+	const Bag<icache::Access>& sa = icache::ACCESSES(e->source());
+	update(sa, a);
+	const Bag<icache::Access>& ea = icache::ACCESSES(e);
+	update(ea, a);
 
 	// handle enter/leave from loops
 	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))

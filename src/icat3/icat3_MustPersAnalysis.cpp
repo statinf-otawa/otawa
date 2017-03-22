@@ -402,7 +402,6 @@ protected:
 
 		// store the result
 		for(CFGCollection::BBIterator b(cfgs); b; b++) {
-			cerr << "DEBUG: storing for " << *b << ": "; d.print(s.get(b), cerr); cerr << io::endl;
 			(*MUST_IN(b))[set] = d.must(s.get(b));
 			(*PERS_IN(b))[set] = d.pers(s.get(b));
 		}
