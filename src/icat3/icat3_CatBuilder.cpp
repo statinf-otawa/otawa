@@ -60,7 +60,6 @@ public:
 		if(!used.contains(lb->set())) {
 			used.add(lb->set());
 			acss[lb->set()] = acs_t((*MUST_IN(_b))[lb->set()], (*PERS_IN(_b))[lb->set()]);
-			cerr << "DEBUG: getting acs for " << lb << ": "; mustpers[lb->set()]->print(acss[lb->set()], cerr); cerr << io::endl;
 		}
 		return acss[lb->set()];
 	}
@@ -139,23 +138,23 @@ protected:
 	 */
 	void processAccesses(Block *v, Bag<icache::Access>& accs) {
 		for(int i = 0; i < accs.count(); i++) {
-			cerr << "DEBUG: " << accs[i] << io::endl;
 			LBlock *lb = LBLOCK(accs[i]);
 			age_t age = man->mustAge(lb);
+			category_t cat = NC;
 			if(0 <= age && age < A)
-				CATEGORY(accs[i]) = AH;
+				cat = AH;
 			else {
 				LoopIter h(v);
 				for(int d = man->depth(lb) - 1; d >= 0 && h; d--, h++) {
 					age = man->persAge(lb, d);
 					if(0 <= age && age < A) {
-						CATEGORY(accs[i]) = NC;
+						cat = PE;
 						HEADER(accs[i]) = h;
 						break;
 					}
 				}
-				CATEGORY(accs[i]) = NC;
 			}
+			CATEGORY(accs[i]) = cat;
 			if(logFor(LOG_BLOCK)) {
 				log << "\t\t\t\t" << accs[i] << ": " << CATEGORY(accs[i]);
 				if(CATEGORY(accs[i]) == PE)
