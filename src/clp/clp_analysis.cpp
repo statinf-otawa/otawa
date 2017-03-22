@@ -82,6 +82,10 @@ using namespace otawa;
 
 namespace otawa { namespace clp {
 
+
+Identifier<bool> VERBOSE("otawa::clp::VERBOSE", false);
+
+
 /**
  * @defgroup clp	CLP Analysis
  *
@@ -2935,7 +2939,8 @@ Analysis::Analysis(p::declare& r)
 	_nb_top_load(0),
 	_nb_load_top_addr(0),
 	_nb_filters(0),
-	_nb_top_filters(0)
+	_nb_top_filters(0),
+	verbose(false)
 { }
 
 
@@ -3043,7 +3048,8 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_top_load = prob.get_nb_top_load();
 
 	clockWorkSpace = clock() - clockWorkSpace;
-	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob.get_nb_clp_bb_count() << " blocks" << io::endl;
+	if(verbose)
+		elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob.get_nb_clp_bb_count() << " blocks" << io::endl;
 
 //	watchWorkSpace.stop();
 //	otawa::ot::time t = watchWorkSpace.delay();
@@ -3059,6 +3065,7 @@ void Analysis::configure(const PropList &props) {
 	Processor::configure(props);
 	for(Identifier<init_t>::Getter init(props, INITIAL); init; init++)
 		inits.add(init);
+	verbose = VERBOSE(props);
 }
 
 
