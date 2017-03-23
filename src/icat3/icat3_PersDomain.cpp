@@ -191,6 +191,8 @@ void PersDomain::update(const Bag<icache::Access>& os, t& a) {
  * @param a	ACS stack to update.
  */
 void PersDomain::update(Edge *e, t& a) {
+	if(a.isBottom())
+		return;
 
 	// update source and edge
 	const Bag<icache::Access>& sa = icache::ACCESSES(e->source());
@@ -201,12 +203,15 @@ void PersDomain::update(Edge *e, t& a) {
 	// handle enter/leave from loops
 	if(LOOP_EXIT_EDGE(e))
 		for(LoopIter h(e->source()); h; h++) {
+			cerr << "DEBUG: leaving " << *h << io::endl;
 			leave(a);
 			if(h == LOOP_EXIT_EDGE(e))
 				break;
 		}
-	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
+	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e)) {
+		cerr << "DEBUG: entering " << e->target() << io::endl;
 		enter(a);
+	}
 }
 
 /**

@@ -200,7 +200,7 @@ public:
 		}
 
 		inline bool ended(void) const { return i.ended() && c.ended(); }
-		inline void next(void) { i++; if(!i && c) { c++; i = c->ins(); } }
+		inline void next(void) { i++; if(!i && c) { i = c->ins(); c++; } }
 		inline Edge *item(void) const { return i; }
 
 	private:
@@ -223,7 +223,7 @@ public:
 		}
 
 		inline bool ended(void) const { return i.ended() && c.ended(); }
-		inline void next(void) { i++; if(!i && c) { c++; i = c->ins(); } }
+		inline void next(void) { i++; if(!i && c) { i = c->ins(); c++; } }
 		inline Edge *item(void) const { return i; }
 
 	private:
@@ -244,7 +244,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		//{ x }
+#define AI_DEBUG(x)		{ x }
 
 template <class S>
 class DefaultEdgeControler {

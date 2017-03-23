@@ -132,6 +132,8 @@ void MustDomain::update(const Bag<icache::Access>& os, ACS& a) {
  * @param a		ACS to update.
  */
 void MustDomain::update(Edge *e, ACS& a) {
+	if(equals(a, bot()))
+		return;
 	const Bag<icache::Access>& sa = icache::ACCESSES(e->source());
 	update(sa, a);
 	const Bag<icache::Access>& ea = icache::ACCESSES(e);
