@@ -197,31 +197,32 @@ void PersDomain::update(Edge *e, t& a) {
 	update(sa, a);
 	const Bag<icache::Access>& ea = icache::ACCESSES(e);
 	update(ea, a);
+
 	// handle enter/leave from loops
-	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
-		enter(a, e->target());
-	else if(LOOP_EXIT_EDGE(e))
+	if(LOOP_EXIT_EDGE(e))
 		for(LoopIter h(e->source()); h; h++) {
-			leave(a, e->source());
+			leave(a);
 			if(h == LOOP_EXIT_EDGE(e))
 				break;
 		}
+	if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
+		enter(a);
 }
 
 /**
  * Called when a new level is entered.
  * @param a		ACS stack to update.
  */
-void PersDomain::enter(t& a, Block* b) {
+void PersDomain::enter(t& a) {
 	a.push(_top.whole());
-	_enteredLoop.push(b);
 }
 
-void PersDomain::leave(t& a, Block* b) {
-	if(_enteredLoop.contains(b)) {
-		a.pop();
-		_enteredLoop.remove(b);
-	}
+/**
+ * Called when a new level is left.
+ * @param a		ACS stack to update.
+ */
+void PersDomain::leave(t& a) {
+	a.pop();
 }
 
 /**
