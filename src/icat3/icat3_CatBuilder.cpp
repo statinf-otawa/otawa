@@ -78,9 +78,15 @@ public:
 	}
 
 	int persAge(const LBlock *lb, int depth) {
-		return mustpers[lb->set()]->pers(get(lb))[depth][lb->index()];
+		if(depth < 0)
+			return mustpers[lb->set()]->pers(get(lb)).whole()[lb->index()];
+		else
+			return mustpers[lb->set()]->pers(get(lb))[depth][lb->index()];
 	}
 
+	void print(const LBlock *lb, Output& out = cout) {
+		mustpers[lb->set()]->print(get(lb), out);
+	}
 
 private:
 	const LBlockCollection& coll;
@@ -141,25 +147,41 @@ protected:
 			LBlock *lb = LBLOCK(accs[i]);
 			age_t age = man->mustAge(lb);
 			category_t cat = NC;
+
+			// in Must ACS => AH
 			if(0 <= age && age < A)
 				cat = AH;
-			else {
-				LoopIter h(v);
-				for(int d = man->depth(lb) - 1; d >= 0 && h; d--, h++) {
-					age = man->persAge(lb, d);
-					if(0 <= age && age < A) {
-						cat = PE;
-						HEADER(accs[i]) = h;
-						break;
+
+			// in PERS ACS in loops?
+			else if(man->depth(lb) > 0) {
+				age = man->persAge(lb, man->depth(lb) - 1);
+				if(0 <= age && age < A) {
+					cat = PE;
+					LoopIter h(v);
+					for(int d = man->depth(lb) - 2; d >= 0 && h; d--, h++) {
+						age = man->persAge(lb, d);
+						if(0 <= age && age < A) {
+							HEADER(accs[i]) = h;
+							break;
+						}
 					}
 				}
 			}
+
+			// in PERS at top level
+			if(cat == NC) {
+				age = man->persAge(lb, -1);
+				if(0 <= age && age < A)
+					cat = PE;
+			}
+
+			// assign category
 			CATEGORY(accs[i]) = cat;
 			if(logFor(LOG_BLOCK)) {
 				log << "\t\t\t\t" << accs[i] << ": " << CATEGORY(accs[i]);
 				if(CATEGORY(accs[i]) == PE)
 					log << " (" << HEADER(accs[i]) << ")";
-				log << io::endl;
+				log << " ACS = "; man->print(lb, log); log << io::endl;
 			}
 		}
 	}

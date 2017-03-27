@@ -173,68 +173,43 @@ void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) con
 }
 
 
+/**
+ * The set of CFG making a task is viewed with this class a tuple T = (V, E, F, ν, φ) where:
+ * V is the set of all blocks of all CFG including basic blocks, ν_f or ω_f entry and exit point of function f,
+ * E ⊆ V × Vs the set of edges,
+ * F ⊆ V × V contains the pair of (entry, exit) blocks of the functions in the task,
+ * ν is the entry of the entry function of the task — this means ∃ω ∈ V ∧ (ν, ω) ∈ F,
+ * φ: V → F ∪ { ⊥ }  associates to a function call the pair of entry, exit blocks of the function or ⊥ if the block is not a call.
+ */
 class CFGCollectionGraph {
 public:
 	CFGCollectionGraph(const CFGCollection& coll): _coll(coll) { }
 
 	typedef Block *vertex_t;
 	typedef Edge *edge_t;
+	typedef CFG::CallerIter Callers;
+	typedef Block::EdgeIter Successor;
+	typedef Block::EdgeIter Predecessor;
 
 	inline vertex_t entry(void) const { return _coll.entry()->entry(); }
 	inline vertex_t exit(void) const { return _coll.entry()->exit(); }
 	inline vertex_t sinkOf(edge_t e) const { if(!e->sink()->isSynth()) return e->sink(); else return e->sink()->toSynth()->callee()->entry(); }
 	inline vertex_t sourceOf(edge_t e) const { if(!e->source()->isSynth()) return e->source(); else return e->source()->toSynth()->callee()->exit(); }
 
-	class Predecessor: public PreIterator<Predecessor, Edge *> {
-	public:
-		Predecessor(const CFGCollectionGraph& graph, vertex_t v) {
-			if(!v->isEntry())
-				i = v->ins();
-			else {
-				c = v->cfg()->callers();
-				if(c) {
-					i = c->ins();
-					c++;
-				}
-			}
-		}
-
-		inline bool ended(void) const { return i.ended() && c.ended(); }
-		inline void next(void) { i++; if(!i && c) { i = c->ins(); c++; } }
-		inline Edge *item(void) const { return i; }
-
-	private:
-		Block::EdgeIter i;
-		CFG::CallerIter c;
-	};
-
-	class Successor: public PreIterator<Predecessor, Edge *> {
-	public:
-		Successor(const CFGCollectionGraph& graph, vertex_t v) {
-			if(!v->isExit())
-				i = v->outs();
-			else {
-				c = v->cfg()->callers();
-				if(c) {
-					i = c->outs();
-					c++;
-				}
-			}
-		}
-
-		inline bool ended(void) const { return i.ended() && c.ended(); }
-		inline void next(void) { i++; if(!i && c) { i = c->ins(); c++; } }
-		inline Edge *item(void) const { return i; }
-
-	private:
-		Block::EdgeIter i;
-		CFG::CallerIter c;
-	};
+	inline bool isEntry(vertex_t v) const { return v->isEntry(); }
+	inline bool isExit(vertex_t v) const { return v->isExit(); }
+	inline bool isCall(vertex_t v) const { return v->isSynth() && v->toSynth()->callee(); }
+	inline vertex_t entryOf(vertex_t v) const { return v->toSynth()->callee()->entry(); }
+	inline vertex_t exitOf(vertex_t v) const { return v->toSynth()->callee()->exit(); }
+	inline Callers callers(vertex_t v) const { return v->cfg()->callers(); }
 
 	class Iterator: public CFGCollection::BBIterator {
 	public:
 		inline Iterator(const CFGCollectionGraph& g): CFGCollection::BBIterator(&g._coll) { }
 	};
+
+	inline Successor succs(vertex_t v) const { return v->outs(); }
+	inline Predecessor preds(vertex_t v) const { return v->ins(); }
 
 	// Indexed concept
 	inline int index(Block *v) const { return v->id(); }
@@ -244,7 +219,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-#define AI_DEBUG(x)		{ x }
+#define AI_DEBUG(x)		//{ x }
 
 template <class S>
 class DefaultEdgeControler {
@@ -273,16 +248,17 @@ public:
 		}
 
 		// ⊔{(w, v) ∈ E} U(w, v, IN[w])
-		d.copy(t1, d.bot()); // t1 is the holder of the state
-		for(typename graph_t::Predecessor e(g, v); e; e++) { // iterates through the incoming edges to v
-			vertex_t w = g.sourceOf(e); // w is the predecessor of e
-			d.copy(t2, s.get(w));
-			AI_DEBUG(cerr << "DEBUG:     IN(" << *e << ") = "; d.print(t2, cerr); cerr << io::endl;)
-			d.update(e, t2); // update with the ACCESSes on both the predecessor w and e
-			AI_DEBUG(cerr << "DEBUG:     updated by " << *e << ": "; d.print(t2, cerr); cerr << io::endl;)
-			d.join(t1, t2);
-			AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
-		}
+		d.copy(t1, d.bot());
+		if(g.isEntry(v))
+			for(typename graph_t::Callers c = g.callers(v); c; c++)
+				for(typename graph_t::Predecessor e = g.preds(c); e; e++)
+					join(e);
+		else
+			for(typename graph_t::Predecessor e = g.preds(v); e; e++)
+				if(g.isCall(g.sourceOf(e)))
+					join(g.exitOf(g.sourceOf(e)));
+				else
+					join(e);
 
 		// any update?
 		AI_DEBUG(cerr << "DEBUG:\t"; d.print(t1, cerr); cerr << " = "; d.print(s.get(v), cerr); cerr << io::endl;)
@@ -295,10 +271,27 @@ public:
 		}
 	}
 
-	inline graph_t graph(void) const { return g; }
+	inline graph_t& graph(void) const { return g; }
 	inline const typename S::domain_t& domain(void) const { return d; }
 
 private:
+
+	void join(typename graph_t::vertex_t v) {
+		AI_DEBUG(cerr << "DEBUG:     joining IN(" << v << ") = "; d.print(s.get(v), cerr); cerr << io::endl;)
+		d.join(t1, s.get(v));
+		AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
+	}
+
+	void join(typename graph_t::edge_t e) {
+		vertex_t w = g.sourceOf(e);
+		d.copy(t2, s.get(w));
+		AI_DEBUG(cerr << "DEBUG:     IN(" << e << ") = "; d.print(t2, cerr); cerr << io::endl;)
+		d.update(e, t2); // update with the ACCESSes on both the predecessor w and e
+		AI_DEBUG(cerr << "DEBUG:     updated by " << e << ": "; d.print(t2, cerr); cerr << io::endl;)
+		d.join(t1, t2);
+		AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
+	}
+
 	typename S::domain_t& d;
 	graph_t& g;
 	S& s;
@@ -306,37 +299,50 @@ private:
 };
 
 template <class C>
-class BreadthFirstAI {
+class BreadthFirstDriver {
 public:
 	typedef typename C::graph_t graph_t;
 	typedef typename C::domain_t domain_t;
 	typedef typename graph_t::vertex_t vertex_t;
 
-	BreadthFirstAI(C& controler): c(controler), g(c.graph()) { }
+	BreadthFirstDriver(C& controler): c(controler), g(c.graph()) { }
 
 	void run(void) {
 		c.reset();
+		// TODO --> avoid an if in controller
+		//for(typename graph_t::Successor e = g.succs(g.entry()); e; e++)
+		//	wl.put(g.sinkOf(e));
 		wl.put(g.entry());
 		while(wl) {
 			vertex_t v = wl.get();
 			AI_DEBUG(cerr << "DEBUG: processing " << v << io::endl;)
 			bool update = c.update(v);
 			if(update) {
-				for(typename graph_t::Successor e(g, v); e; e++) {
-					vertex_t w = g.sinkOf(e);
-					if(!wl.contains(w)) {
-						wl.put(w);
-						AI_DEBUG(cerr << "DEBUG:     putting " << w << io::endl;)
-					}
-				}
+				if(g.isCall(v))
+					put(g.entryOf(v));
+				else if(g.isExit(v))
+					for(typename graph_t::Callers c = g.callers(v); c; c++)
+						for(typename graph_t::Successor e = g.succs(c); e; e++)
+							put(g.sinkOf(e));
+				else
+					for(typename graph_t::Successor e = g.succs(v); e; e++)
+						put(g.sinkOf(e));
 			}
 			AI_DEBUG(cerr << io::endl;)
 		}
 	}
 
 private:
+
+	void put(vertex_t v) {
+		if(!wl.contains(v)) {
+			wl.put(v);
+			AI_DEBUG(cerr << "DEBUG:     putting " << v << io::endl;)
+		}
+	}
+
 	C& c;
-	graph_t g;
+	graph_t& g;
 	ListQueue<vertex_t> wl;
 };
 
@@ -397,7 +403,7 @@ protected:
 		typedef DefaultEdgeControler<store_t> controler_t;
 		store_t s(d, g);
 		controler_t c(s);
-		BreadthFirstAI<controler_t> ai(c);
+		BreadthFirstDriver<controler_t> ai(c);
 		ai.run();
 
 		// store the result
