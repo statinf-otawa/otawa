@@ -85,8 +85,10 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	ListQueue<item_t> todo;
 
 	// initialization
+	ContextualPath path = *CONTEXT(cfg);
+	path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
 	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge; edge++)
-		todo.put(pair(edge->sink(), *CONTEXT(cfg)));
+		todo.put(pair(edge->sink(), path));
 
 	// traverse until the end
 	while(todo) {
