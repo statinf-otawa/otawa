@@ -1648,19 +1648,31 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 	else {
 
 		// get the address
-		Address addr = scanAddress(element, path).address();
+		Address addr = scanAddress(element, path, true).address();
 		if(addr.isNull()) {
 			onWarning(_ << "ignoring this call whose address cannot be found: " << xline(element));
 			return;
 		}
 		Inst *inst = _fw->process()->findInstAt(addr);
 		if(!inst)
-			throw ProcessorException(*this,
-				_ << " no instruction at  " << addr << " from " << xline(element));
-		path.push(ContextualStep::FUNCTION, addr);
+			throw ProcessorException(*this, _ << " no instruction at  " << addr << " from " << xline(element));
+		path.push(ContextualStep::CALL, addr);
 
 		// scan the content
+		bool pushed = false;
+		Option<xom::String> name = element->getAttributeValue("name");
+		if(name) {
+			Inst *i = workspace()->process()->findInstAt(*name);
+			if(i) {
+				path.push(ContextualStep::FUNCTION, i->address());
+				pushed = true;
+			}
+		}
 		scanXContent(element, path);
+
+		// pop call
+		if(pushed)
+			path.pop();
 		path.pop();
 	}
 
