@@ -195,7 +195,7 @@ protected:
 		BasicBlock *bb = b->toBasic();
 
 		// is it cached?
-		// ASSUMPTION: a BB does not span over several banks)
+		// ASSUMPTION: a BB does not span over several banks
 		const hard::Bank *bank = mem->get(bb->address());
 		if(!bank->isCached()) {
 			warn(_ << "no bank contains " << bb);
@@ -249,7 +249,7 @@ protected:
 		}
 
 		// build the property
-		for(Block::EdgeIter e = bb->outs(); e; e++)
+		for(Block::EdgeIter e = bb->ins(); e; e++)
 			ACCESSES(e) = accs;
 		accs.clear();
 	}
@@ -260,7 +260,7 @@ private:
 	genstruct::Vector<Access> accs;
 };
 
-p::declare EdgeAccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(1, 0, 0))
+p::declare EdgeAccessBuilder::reg = p::init("otawa::icache::EdgeAccessBuilder", Version(1, 0, 0))
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.require(hard::MEMORY_FEATURE)
 	.provide(ACCESSES_FEATURE)
