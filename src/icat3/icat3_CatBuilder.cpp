@@ -127,8 +127,13 @@ protected:
 	/**
 	 */
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *v) {
-		for(Block::EdgeIter e = v->ins(); e; e++) {
-			man->start(v);
+		for(Block::EdgeIter e = v->outs(); e; e++) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\t\t\tprocess " << *e << io::endl;
+			if(v->isSynth() && v->toSynth()->callee())
+				man->start(v->toSynth()->callee()->exit());
+			else
+				man->start(v);
 			processAccesses(v, icache::ACCESSES(v));
 			processAccesses(v, icache::ACCESSES(e));
 		}

@@ -62,7 +62,7 @@ protected:
 				string n = a.substring(8);
 				AbstractFeature *f = ProcessorPlugin::getFeature(&n);
 				if(!f)
-					cerr << "WARNING: cannot find feature " << n << ". Action forgiven.\n";
+					throw otawa::Exception(_ << "cannot find feature " << n);
 				else
 					workspace()->require(*f, props);
 			}
@@ -71,7 +71,7 @@ protected:
 				string n = a.substring(8);
 				Processor *p = ProcessorPlugin::getProcessor(&n);
 				if(!p)
-					cerr << "WARNING: cannot find feature " << n << ". Action forgiven.\n";
+					throw otawa::Exception(_ << "cannot find feature " << n);
 				else {
 					p->process(workspace(), props);
 					delete p;
