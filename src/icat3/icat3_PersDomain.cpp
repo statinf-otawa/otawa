@@ -157,9 +157,15 @@ void PersDomain::join(t& d, const t& s) {
 
 	// a" s.t. ∀ i ∈ [0, n[, a"[i] = J_p(a[i], a'[i])
 	else {
-		for(int i = 0; i < d.depth(); i++)
+		for(int i = 0; i < min(d.depth(), s.depth()); i++)
 			join(d[i], s[i]);
 		join(d.whole(), s.whole());
+		if(d.depth() < s.depth()) {
+			for(int i = d.depth(); i < s.depth(); i++) {
+				enter(d);
+				d[i] = s[i];
+			}
+		}
 	}
 }
 

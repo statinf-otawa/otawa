@@ -72,13 +72,13 @@ public:
 	void update(const Bag<icache::Access>& accs, t& a);
 	void update(Edge *e, t& a);
 	bool equals(const t& a, const t& b);
+	void enter(t& a);
+	void leave(t& a);
 
 private:
 	void join(ACS& d, const ACS& s);
 	void update(const icache::Access& access, ACS& a);
 	bool equals(const ACS& a1, const ACS& a2);
-	void enter(t& a);
-	void leave(t& a);
 
 	int n;
 	t _bot, _top;
@@ -115,8 +115,11 @@ public:
 	bool equals(const t& a, const t& b);
 	inline const MustDomain::t& must(const t& a) { return a.must; }
 	inline const PersDomain::t& pers(const t& a) { return a.pers; }
+	void doCall(t& a, Block *b);
+	void doReturn(t& a, Block *b);
 
 private:
+	static p::id<int> DEPTH;
 	MustDomain _must;
 	PersDomain _pers;
 	int n;

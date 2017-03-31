@@ -207,7 +207,7 @@ public:
 		// entry of a CFG
 		if(v == g.entry()) {
 			s.set(v, d.init());
-			AI_DEBUG(cerr << "DEBUG:     INIT = = "; d.print(d.init(), cerr); cerr << io::endl;)
+			AI_DEBUG(cerr << "DEBUG:     INIT = "; d.print(d.init(), cerr); cerr << io::endl;)
 			return true;
 		}
 
@@ -216,11 +216,11 @@ public:
 		if(g.isEntry(v))
 			for(typename graph_t::Callers c = g.callers(v); c; c++)
 				for(typename graph_t::Predecessor e = g.preds(c); e; e++)
-					join(e);
+					doCall(g.sourceOf(e), c);
 		else
 			for(typename graph_t::Predecessor e = g.preds(v); e; e++)
 				if(g.isCall(g.sourceOf(e)))
-					join(g.exitOf(g.sourceOf(e)));
+					doReturn(g.exitOf(g.sourceOf(e)), v);
 				else
 					join(e);
 
@@ -239,6 +239,24 @@ public:
 	inline const typename S::domain_t& domain(void) const { return d; }
 
 private:
+
+	void doCall(typename graph_t::vertex_t v, typename graph_t::vertex_t w) {
+		d.copy(t2, s.get(v));
+		AI_DEBUG(cerr << "DEBUG:     entering IN(" << v << ") = "; d.print(t2, cerr); cerr << io::endl;)
+		d.doCall(t2, w);
+		AI_DEBUG(cerr << "DEBUG:     resulting in "; d.print(t2, cerr); cerr << io::endl;)
+		d.join(t1, t2);
+		AI_DEBUG(cerr << "DEBUG:     joined to "; d.print(t1, cerr); cerr << io::endl;)
+	}
+
+	void doReturn(typename graph_t::vertex_t v, typename graph_t::vertex_t w) {
+		d.copy(t2, s.get(v));
+		AI_DEBUG(cerr << "DEBUG:     leaving IN(" << v << ") = "; d.print(t2, cerr); cerr << io::endl;)
+		d.doReturn(t2, w);
+		AI_DEBUG(cerr << "DEBUG:     resulting in "; d.print(t2, cerr); cerr << io::endl;)
+		d.join(t1, t2);
+		AI_DEBUG(cerr << "DEBUG:     joined to "; d.print(t1, cerr); cerr << io::endl;)
+	}
 
 	void join(typename graph_t::vertex_t v) {
 		AI_DEBUG(cerr << "DEBUG:     joining IN(" << v << ") = "; d.print(s.get(v), cerr); cerr << io::endl;)

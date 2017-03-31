@@ -114,4 +114,16 @@ bool MustPersDomain::equals(const t& a, const t& b) {
 	return _must.equals(a.must, b.must) && _pers.equals(a.pers, b.pers);
 }
 
+void MustPersDomain::doCall(t& a, Block *b) {
+	DEPTH(b) = a.pers.depth();
+}
+
+void MustPersDomain::doReturn(t& a, Block *b) {
+	int d = DEPTH(b);
+	while(a.pers.depth() > d)
+		_pers.leave(a.pers);
+}
+
+p::id<int> MustPersDomain::DEPTH("", -1);
+
 } }	// otawa::icat3
