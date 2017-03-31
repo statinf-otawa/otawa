@@ -173,4 +173,20 @@ namespace otawa { namespace ai {
  * @ingroup ai
  */
 
+/**
+ * @class CFGCollectionGraph
+ *
+ * Class representing a graph where an AI (Abstract Interpretation) can be performed.
+ * This class is compatible with classes of module @ref ai.
+ *
+ * It supports the set of CFG making a task: it is viewed with this class a tuple T = (V, E, F, ν, φ) where:
+ * @li V is the set of all blocks of all CFG including basic blocks, ν_f or ω_f entry and exit point of function f,
+ * @li E ⊆ V × V the set of edges,
+ * @li F ⊆ V × V contains the pair of (entry, exit) blocks of the functions in the task,
+ * @li ν is the entry of the main function of the task — this means ∃ω ∈ V ∧ (ν, ω) ∈ F,
+ * @li φ: V → F ∪ { ⊥ }  associates to a function call the pair of entry, exit blocks of the function or ⊥ if the block is not a call.
+ *
+ * @ingroup ai
+ */
+
 } } 	// otawa::ai

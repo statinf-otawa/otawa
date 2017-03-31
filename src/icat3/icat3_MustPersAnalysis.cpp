@@ -21,6 +21,7 @@
  */
 
 #include <elm/data/ListQueue.h>
+#include <otawa/ai/CFGCollectionGraph.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/ai.h>
 #include <otawa/prog/WorkSpace.h>
@@ -181,43 +182,6 @@ void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) con
  * ν is the entry of the entry function of the task — this means ∃ω ∈ V ∧ (ν, ω) ∈ F,
  * φ: V → F ∪ { ⊥ }  associates to a function call the pair of entry, exit blocks of the function or ⊥ if the block is not a call.
  */
-class CFGCollectionGraph {
-public:
-	CFGCollectionGraph(const CFGCollection& coll): _coll(coll) { }
-
-	typedef Block *vertex_t;
-	typedef Edge *edge_t;
-	typedef CFG::CallerIter Callers;
-	typedef Block::EdgeIter Successor;
-	typedef Block::EdgeIter Predecessor;
-
-	inline vertex_t entry(void) const { return _coll.entry()->entry(); }
-	inline vertex_t exit(void) const { return _coll.entry()->exit(); }
-	inline vertex_t sinkOf(edge_t e) const { if(!e->sink()->isSynth()) return e->sink(); else return e->sink()->toSynth()->callee()->entry(); }
-	inline vertex_t sourceOf(edge_t e) const { if(!e->source()->isSynth()) return e->source(); else return e->source()->toSynth()->callee()->exit(); }
-
-	inline bool isEntry(vertex_t v) const { return v->isEntry(); }
-	inline bool isExit(vertex_t v) const { return v->isExit(); }
-	inline bool isCall(vertex_t v) const { return v->isSynth() && v->toSynth()->callee(); }
-	inline vertex_t entryOf(vertex_t v) const { return v->toSynth()->callee()->entry(); }
-	inline vertex_t exitOf(vertex_t v) const { return v->toSynth()->callee()->exit(); }
-	inline Callers callers(vertex_t v) const { return v->cfg()->callers(); }
-
-	class Iterator: public CFGCollection::BBIterator {
-	public:
-		inline Iterator(const CFGCollectionGraph& g): CFGCollection::BBIterator(&g._coll) { }
-	};
-
-	inline Successor succs(vertex_t v) const { return v->outs(); }
-	inline Predecessor preds(vertex_t v) const { return v->ins(); }
-
-	// Indexed concept
-	inline int index(Block *v) const { return v->id(); }
-	inline int count(void) const { return _coll.countBB(); }
-
-private:
-	const CFGCollection& _coll;
-};
 
 #define AI_DEBUG(x)		//{ x }
 
@@ -398,8 +362,8 @@ protected:
 
 		// perform the computation
 		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0);
-		CFGCollectionGraph g(*cfgs);
-		typedef ai::ArrayStore<MustPersDomain, CFGCollectionGraph> store_t;
+		ai::CFGCollectionGraph g(*cfgs);
+		typedef ai::ArrayStore<MustPersDomain, ai::CFGCollectionGraph> store_t;
 		typedef DefaultEdgeControler<store_t> controler_t;
 		store_t s(d, g);
 		controler_t c(s);
