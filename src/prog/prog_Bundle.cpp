@@ -124,10 +124,10 @@ void Bundle::writeRegSet(RegSet& set) const {
 void Bundle::semInsts(sem::Block& block) const {
 	int tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp += i->semInsts(block, tmp);
+		tmp -= i->semInsts(block, tmp); // the tmp should keep descreasing as the more negative values means more temp registers are required
 	tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp += i->semWriteBack(block, tmp);
+		tmp -= i->semWriteBack(block, tmp);
 }
 
 
@@ -140,10 +140,10 @@ void Bundle::semInsts(sem::Block& block) const {
 void Bundle::semKernel(sem::Block& block) const {
 	int tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp += i->semKernel(block, tmp);
+		tmp -= i->semKernel(block, tmp);
 	tmp = -1;
 	for(Iter i(*this); i; i++)
-		tmp += i->semWriteBack(block, tmp);
+		tmp -= i->semWriteBack(block, tmp);
 }
 
 

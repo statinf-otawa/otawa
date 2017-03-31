@@ -592,21 +592,28 @@ namespace se{
 		FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem);
 	private:
 		void getFilters(void);
-		//void iterateBranchPaths(Inst *inst, const Vector<Inst *>& insts);
 		void iterateBranchPaths(const Bundle& branchBundle, const Vector<Bundle>& bundles);
 		sem::cond_t reverseCond(sem::cond_t cond);
-		//SECmp *makeFilters(SECmp *se, Inst *cur_inst, sem::Block& block);
-		SECmp *makeFilters(SECmp *se, const Bundle& currentBundle, sem::Block& b);
-		// void addFilters(SECmp *se, const Vector<Inst *>& insts);
+		SECmp *makeFilters(SECmp *se, const Bundle& currentBundle, sem::Block& b, bool branch);
 		void addFilters(SECmp *se, const Vector<Bundle>& bundles);
 
 		void prepareSemBlockPaths(Vector<sem::Block>& semBlocks, const sem::Block& b);
 
 		BasicBlock *bb;
+		// filters for the taken edge
 		genstruct::Vector<SECmp *> reg_filters;
 		genstruct::Vector<SECmp *> addr_filters;
-		genstruct::Vector<V> known_reg;
-		genstruct::Vector<V> known_addr;
+
+		// filters for the non-taken edge
+		genstruct::Vector<SECmp *> reg_filters_not;
+		genstruct::Vector<SECmp *> addr_filters_not;
+
+		// filters for the currently processing path
+		genstruct::Vector<SECmp *> curr_reg_filters;
+		genstruct::Vector<SECmp *> curr_addr_filters;
+		genstruct::Vector<V> curr_known_reg;
+		genstruct::Vector<V> curr_known_addr;
+
 		clp::ClpStatePack pack;
 	};
 

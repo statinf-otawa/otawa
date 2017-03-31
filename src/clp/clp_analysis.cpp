@@ -2012,6 +2012,7 @@ public:
 	ClpProblem(Process *proc)
 	:	pc(0),
 		has_if(false),
+		has_branch(false),
 		bb(0),
 		currentInst(0),
 		bBuildFilters(false),
@@ -2184,19 +2185,11 @@ public:
 		TRACEP(cerr << "s = " << dom << io::endl);
 		if(!edge->isBoth() && se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
-			genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(source);
-			genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(source);
 
-			// if not taken, invert conditions
-			// TODO Fixme! Generate two sets of predicates!
-			bool to_free = false;
-			if(!edge->isTaken()) {
-				to_free = true;
-				for(int i = 0; i < reg_filters.count(); i++)
-					reg_filters[i] = reg_filters[i]->logicalNot();
-				for(int i = 0; i < addr_filters.count(); i++)
-					addr_filters[i] = addr_filters[i]->logicalNot();
-			}
+			genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(edge);
+			genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(edge);
+
+			String taken = edge->isTaken()?"":"NOT ";
 
 			// filter registers
 			Domain all = Domain::EMPTY, init;
@@ -2210,6 +2203,7 @@ public:
 				else if(filter->op() == se::OR) {
 					all.join(dom);
 					dom.copy(init);
+
 					continue;
 				}
 
@@ -2267,13 +2261,13 @@ public:
 			// complete computation
 			dom.join(all);
 
-			// free filters if required
-			if(to_free) {
-				for(int i = 0; i < reg_filters.count(); i++)
-					delete reg_filters[i];
-				for(int i = 0; i < addr_filters.count(); i++)
-					delete addr_filters[i];
-			}
+//			// free filters if required
+//			if(to_free) {
+//				for(int i = 0; i < reg_filters.count(); i++)
+//					delete reg_filters[i];
+//				for(int i = 0; i < addr_filters.count(); i++)
+//					delete addr_filters[i];
+//			}
 		}
 		TRACEP(cerr << "s' = " << dom << io::endl);
 	}
@@ -2328,6 +2322,8 @@ public:
 		case sem::BRANCH: {
 			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
 			TRACESI(cerr << "\t\t\tbranch(" << get(*state, i.d()) << ")\n");
+			if(has_if)
+				has_branch = true;
 			break;
 		}
 		case sem::TRAP:
@@ -2643,7 +2639,6 @@ public:
 		this->bb = bb;
 
 		Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
-		has_if = false;
 		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
@@ -2664,6 +2659,8 @@ public:
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 #else // use bundle
 		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle; bundle++) {
+			has_if = false;
+			has_branch = false;
 #endif
 
 #ifdef USE_INST
@@ -2762,10 +2759,10 @@ public:
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
 		// if the block has an IF instruction
-		if(has_if /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
+		if(has_branch /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
 			//TODO: delete 'old' reg_filters if needed
 			//use Symbolic Expressions to get filters for this basic block
-			TRACEP(cerr << "> IF detected, getting filters..." << io::endl);
+			TRACEP(cerr << "> IF+BRANCH detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
 	}
@@ -2826,6 +2823,7 @@ private:
 	genstruct::Vector<Pair<int, Domain *> > listOfIFsToDo; // when encountering an IF sem. inst., the analysis has to take care of both taken and non-taken cases with filters
 	int pc;
 	bool has_if;
+	bool has_branch;
 	Block *bb; // use for tracking, nothing to do with the analysis itself
 	Inst *currentInst; // use for tracking, nothing to do with the analysis itself
 

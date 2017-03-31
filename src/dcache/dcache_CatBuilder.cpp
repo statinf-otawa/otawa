@@ -257,7 +257,7 @@ Identifier<otawa::Block *> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<cache::category_t> CATEGORY("otawa::dcache::CATEGORY", cache::INVALID_CATEGORY);
+Identifier<cache::category_t> CATEGORY("otawa::dcache::CATEGORY", cache::NOT_CLASSIFIED); // changed from INVALID_CATEGORY, which can be used to check the soundness
 
 
 /**
