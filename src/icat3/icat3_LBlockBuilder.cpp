@@ -58,6 +58,13 @@ LBlockCollection::LBlockCollection(int sets, const hard::Cache *cache)
 
 /**
  */
+LBlockSet::~LBlockSet(void) {
+	for(int i = 0; i < size(); i++)
+		delete get(i);
+}
+
+/**
+ */
 class LBlockBuilder: public Processor {
 public:
 	static p::declare reg;
@@ -66,7 +73,7 @@ public:
 protected:
 
 	typedef genstruct::HashTable<Address, LBlock *> map_t;
-	typedef genstruct::Vector<genstruct::Vector<LBlock> > lblocks_t;
+	typedef genstruct::Vector<genstruct::Vector<LBlock *> > lblocks_t;
 
 	virtual void processWorkSpace(WorkSpace *ws) {
 
@@ -128,13 +135,13 @@ protected:
 				break;
 			case icache::FETCH:
 			case icache::PREFETCH: {
-					Address a = cache->round(bag[i].address()); // get the starting address of the associated cached block
+					Address a = cache->round(bag[i].address());
 					LBlock *lb = map.get(a, 0);
-					if(!lb) { // if the l-block is not registered in the map
-						int set = cache->set(a); // find the index in the cache, better naming? getSet, getSetIndex
-						vecs[set].add(LBlock(a, vecs[set].count(), set));
-						lb = &vecs[set].top(); // lb is assigned to the just created LBlock
-						map.put(a, lb); // put the LB and its associated address in the map
+					if(!lb) {
+						int set = cache->set(a);
+						lb = new LBlock(a, vecs[set].count(), set);
+						vecs[set].add(lb);
+						map.put(a, lb);
 						if(logFor(LOG_BLOCK))
 							log << "\t\tl-block " << lb->index() << " at " << lb->address() << ", set" << set << io::endl;
 					}

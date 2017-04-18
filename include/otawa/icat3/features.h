@@ -51,10 +51,11 @@ private:
 };
 
 class LBlockCollection;
-class LBlockSet: public Bag<LBlock> {
+class LBlockSet: public Bag<LBlock *> {
 	friend class LBlockCollection;
 public:
 	inline LBlockSet(void): _coll(0), _set(-1) { }
+	~LBlockSet(void);
 	inline const LBlockCollection& collection(void) const { return *_coll; }
 	inline int index(void) const { return _set; }
 private:

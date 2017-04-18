@@ -76,7 +76,7 @@ void ACS::print(int set, const LBlockCollection& coll, io::Output& out) const {
 			fst = false;
 		else
 			out << ", ";
-		out << coll[set][i].address() << ": ";
+		out << coll[set][i]->address() << ": ";
 		if((*this)[i] == coll.A())
 			out << 'A';
 		else if((*this)[i] == BOT_AGE)
