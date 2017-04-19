@@ -38,6 +38,13 @@ static void reset_counts(void) {
 	loop_max = -1;
 	loop_total = -1;
 }
+
+otawa::Address checked_add(otawa::Address a, elm::t::int32 off) {
+	if(a.isNull())
+		return otawa::Address::null;
+	else
+		return a + off;
+}
 %}
 
 %name-prefix "util_fft_"
@@ -234,9 +241,9 @@ full_address:
 |	STRING
 		{ $$ = new otawa::Address(loader->addressOf(*$1)); delete $1; }
 |	STRING '+' INTEGER
-		{ $$ = new otawa::Address(loader->addressOf(*$1) + $3); delete $1; }
+		{ $$ = new otawa::Address(checked_add(loader->addressOf(*$1), $3)); delete $1; }
 |	STRING '-' INTEGER
-		{ $$ = new otawa::Address(loader->addressOf(*$1) - $3); delete $1; }
+		{ $$ = new otawa::Address(checked_add(loader->addressOf(*$1), - $3)); delete $1; }
 |	STRING ':' INTEGER
 		{ $$ = new otawa::Address(loader->addressOf(*$1, $3)); delete $1; }
 ;

@@ -21,8 +21,8 @@
 #ifndef OTAWA_UTIL_BAG_H
 #define OTAWA_UTIL_BAG_H
 
+#include <elm/array.h>
 #include <elm/assert.h>
-#include <elm/util/array.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/Pair.h>
 

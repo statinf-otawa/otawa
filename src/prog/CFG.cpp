@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/util/array.h>
+#include <elm/array.h>
 
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/features.h>
@@ -659,8 +659,6 @@ String CFG::label(void) {
 		id = FUNCTION_LABEL(fst);
 		if(!id)
 			id = LABEL(fst);
-		if(!id)
-			id = _ << address();
 	}
 	return id;
 }
