@@ -162,7 +162,7 @@ class LoopInfoProblem {
 		DominanceOrder(void): _info(0) { }
 		DominanceOrder(DomInfo& info): _info(&info) { }
 
- 		inline int doCompare(Block *bb1, Block *bb2) {
+ 		inline int doCompare(Block *bb1, Block *bb2) const {
  			if(_info->dom(bb1, bb2))
  				return +1;
  			else if(_info->dom(bb2, bb1))

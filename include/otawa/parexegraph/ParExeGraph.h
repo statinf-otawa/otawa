@@ -329,6 +329,8 @@ namespace otawa {
 			GenGraph<ParExeNode,ParExeEdge>::OutIterator iter;
 		};
 
+	protected:
+		virtual void customDump(io::Output& out);
 
 	};
 
