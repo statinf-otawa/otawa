@@ -1022,6 +1022,14 @@ string escape(const string& s) {
 	return buf.toString();
 }
 
+/**
+ * This function is called to display custom output
+ * on the dumped graph. It can be overriden to provide
+ * custom output. As a default, do nothing.
+ * @param out	Stream to output to (.dot label textual format).
+ */
+void ParExeGraph::customDump(io::Output& out) {
+}
 
 // ---------------------------------------
 void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
@@ -1080,10 +1088,17 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     }
     dotFile << "\"];\n";
 
+    // custom information
+    dotFile << "\"custom\" [shape=record, label= \"";
+    customDump(dotFile);
+    dotFile << "\"];\n";
+
     // edges between info, legend, code
     if(info)
     	dotFile << "\"info\" -> \"legend\";\n";
-    dotFile << "\"legend\" -> \"code\";\n\n";
+    dotFile << "\"legend\" -> \"code\";\n";
+    dotFile << "\"code\" -> \"custom\";\n";
+    dotFile << io::endl;
 
     // display _prev_node if connected
 	for (Successor node(_first_node); node; ++node) {

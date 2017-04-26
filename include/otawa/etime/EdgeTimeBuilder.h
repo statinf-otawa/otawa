@@ -30,8 +30,24 @@
 namespace otawa { namespace etime {
 
 class ConfigSet;
+class EdgeTimeBuilder;
 
-class EdgeTimeBuilder: public GraphBBTime<ParExeGraph> {
+class EdgeTimeGraph: public ParExeGraph {
+public:
+	EdgeTimeGraph(
+		WorkSpace * ws,
+		ParExeProc *proc,
+		elm::genstruct::Vector<Resource *> *hw_resources,
+		ParExeSequence *seq,const PropList& props = PropList::EMPTY);
+	inline void setBuilder(const EdgeTimeBuilder& b) { builder = &b; }
+protected:
+	virtual void customDump(io::Output& out);
+private:
+	const EdgeTimeBuilder *builder;
+};
+
+class EdgeTimeBuilder: public GraphBBTime<EdgeTimeGraph> {
+	friend class EdgeTimeGraph;
 public:
 	static p::declare reg;
 	EdgeTimeBuilder(p::declare& r = reg);
@@ -49,7 +65,7 @@ protected:
 	typedef Pair<Event *, place_t> event_t;
 	typedef genstruct::Vector<event_t> event_list_t;
 	typedef genstruct::Vector<ConfigSet> config_list_t;
-	virtual ParExeGraph *make(ParExeSequence *seq);
+	virtual EdgeTimeGraph *make(ParExeSequence *seq);
 	virtual void processEdge(WorkSpace *ws, CFG *cfg);
 	virtual void processSequence(void);
 	virtual void clean(ParExeGraph *graph);
@@ -98,7 +114,7 @@ private:
 	genstruct::Vector<event_t> all_events;
 	event_list_t events;
 	ParExeSequence *seq;
-	ParExeGraph *graph;
+	EdgeTimeGraph *graph;
 	ParExeNode *bnode;
 	ParExeEdge *bedge;
 	BasicBlock *source, *target;
@@ -108,6 +124,7 @@ private:
 
 	// configuration
 	bool record;
+	t::uint32 event_mask;
 };
 
 } }	// otawa::etime

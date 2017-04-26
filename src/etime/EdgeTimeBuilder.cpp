@@ -41,6 +41,60 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 
 
 /**
+ * @class EdgeTimeGraph
+ * Execution graph class to customize the debug output with events.
+ */
+
+/**
+ */
+EdgeTimeGraph::EdgeTimeGraph(
+	WorkSpace * ws,
+	ParExeProc *proc,
+	elm::genstruct::Vector<Resource *> *hw_resources,
+	ParExeSequence *seq,const PropList& props)
+: ParExeGraph(ws, proc, hw_resources, seq, props), builder(0) {
+}
+
+template <class T, class U>
+inline io::Output& operator<<(io::Output& out, const Pair<T, U>& p)
+	{ out << "(" << p.fst << ", " << p.snd << ")"; return out; }
+
+/**
+ */
+void EdgeTimeGraph::customDump(io::Output& out) {
+	out << "{";
+	out << "events|";
+	bool first = true;
+	for(int i = 0; i < builder->all_events.count(); i++) {
+
+		// display separator
+		if(first)
+			first = false;
+		else
+			out << "\\l";
+
+		// define activation
+		int bit = -1;
+		for(int j = 0; j < builder->events.count(); j++)
+			if(builder->events[j] == builder->all_events[i]) {
+				bit = j;
+				break;
+			}
+		if(bit < 0)
+			out << "\\[*\\] ";
+		else if(builder->event_mask & (1 << bit))
+			out << "\\[1\\] ";
+		else
+			out << "\\[-\\] ";
+
+		// display event
+		out << builder->all_events[i].fst->inst()->address() << " " << builder->all_events[i].fst->detail();
+	}
+	out << "}";
+}
+
+
+/**
  * @class Config
  * Represents a configuration for computing cost of a BB.
  * Each bits represents the state of an event:
@@ -292,7 +346,7 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 /**
  */
 EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
-:	GraphBBTime<ParExeGraph>(r),
+:	GraphBBTime<EdgeTimeGraph>(r),
  	_explicit(false),
  	sys(0),
  	predump(false),
@@ -309,7 +363,7 @@ EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
 
 
 void EdgeTimeBuilder::configure(const PropList& props) {
-	GraphBBTime<ParExeGraph>::configure(props);
+	GraphBBTime<EdgeTimeGraph>::configure(props);
 	_explicit = ipet::EXPLICIT(props);
 	predump = PREDUMP(props);
 	event_th = EVENT_THRESHOLD(props);
@@ -416,9 +470,9 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
  * @param seq	Sequence to build graph for.
  * @return		Built graph.
  */
-ParExeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
+EdgeTimeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 	PropList props;
-	ParExeGraph *graph = new ParExeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
+	EdgeTimeGraph *graph = new EdgeTimeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
 	graph->build();
 	return graph;
 }
@@ -580,6 +634,7 @@ void EdgeTimeBuilder::processSequence(void) {
 	// build the graph
 	PropList props;
 	graph = make(seq);
+	graph->setBuilder(*this);
 	ASSERTP(graph->firstNode(), "no first node found: empty execution graph");
 
 	// applying static events (always, never)
@@ -640,18 +695,18 @@ void EdgeTimeBuilder::processSequence(void) {
 	// compute all cases
 	t::uint32 prev = 0;
 	genstruct::Vector<ConfigSet> confs;
-	for(t::uint32 mask = 0; mask < t::uint32(1 << events.count()); mask++) {
+	for(event_mask = 0; event_mask < t::uint32(1 << events.count()); event_mask++) {
 
 		// adjust the graph
 		for(int i = 0; i < events.count(); i++) {
-			if((prev & (1 << i)) != (mask & (1 << i))) {
-				if(mask & (1 << i))
+			if((prev & (1 << i)) != (event_mask & (1 << i))) {
+				if(event_mask & (1 << i))
 					apply(events[i].fst, insts[i]);
 				else
 					rollback(events[i].fst, insts[i]);
 			}
 		}
-		prev = mask;
+		prev = event_mask;
 
 		// predump implementation
 		if(_do_output_graphs && predump)
@@ -663,10 +718,10 @@ void EdgeTimeBuilder::processSequence(void) {
 		// dump it if needed
 		if(_do_output_graphs) {
 			if (source)
-				outputGraph(graph, target->index(), source->index(), mask,
+				outputGraph(graph, target->index(), source->index(), event_mask,
 						_ << source << " -> " << target << " (cost = " << cost << ")");
 			else
-				outputGraph(graph, target->index(), 0, mask, _ << target << " (cost = " << cost << ")");
+				outputGraph(graph, target->index(), 0, event_mask, _ << target << " (cost = " << cost << ")");
 		}
 
 		// add the new time
@@ -680,7 +735,7 @@ void EdgeTimeBuilder::processSequence(void) {
 			}
 		if(j >= confs.length())
 			confs.add(ConfigSet(cost));
-		confs[j].add(Config(mask));
+		confs[j].add(Config(event_mask));
 	}
 
 	//if(isVerbose())
