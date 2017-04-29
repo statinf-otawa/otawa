@@ -68,7 +68,7 @@ namespace otawa {
  */
 
 p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
-	.require(COLLECTED_CFG_FEATURE)
+	.use(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
 	//.provide(LOOP_HEADERS_FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)

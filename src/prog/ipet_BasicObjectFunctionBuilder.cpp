@@ -77,7 +77,7 @@ void BasicObjectFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 				time = TIME(edge);
 			else
 				time = TIME(bb);
-			if (time < 0)
+			if (time < 0 && bb->isBasic())
 				throw ProcessorException(*this, _ << "no time on BB " << bb);
 			system->addObjectFunction(time, VAR(edge));
 		}

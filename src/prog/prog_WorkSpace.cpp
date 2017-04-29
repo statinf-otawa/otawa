@@ -528,9 +528,10 @@ void WorkSpace::add(Processor *proc, bool del_proc) {
 			dep_map.put(&(*fu).feature(), d);
 		else
 			if((*fu).kind() == FeatureUsage::require) {
-				Dependency *ud = dep_map.get(&(*fu).feature());
-				ASSERT(ud);
-				if(!ud->_users.contains(d)) {
+				Dependency *ud = dep_map.get(&(*fu).feature(), 0);
+				if(!ud)
+					throw otawa::Exception(_ << proc->name() << " requires " << (*fu).feature().name() << " but it seems it has invalidated it!");
+				else if(!ud->_users.contains(d)) {
 					d->_used.add(ud);
 					ud->_users.add(d);
 				}
