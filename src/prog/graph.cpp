@@ -1,9 +1,8 @@
 /*
- *	$Id$
- *	Graph class implementation
+ *	graph module implementation and documentation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-08, IRIT UPS.
+ *	Copyright (c) 2008, IRIT UPS.
  * 
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -20,29 +19,101 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/Graph.h>
-#include <elm/io.h>
-
-using namespace elm;
+#include <otawa/graph/GenGraph.h>
+#include <otawa/graph/Graph.h>
+#include <otawa/graph/PreorderIterator.h>
 
 namespace otawa { namespace graph {
 
-
 /**
- * @defgroup graph Graph Handling
- * 
+ * @defgroup graph Graph Management
+ *
  * OTAWA provides several graph implementations and algorithm to use them.
  * A graph is OTAWA-compliant if it implements the @ref otawa::concept::DiGraph
  * concept and any provided algorithm may be applied to it.
- * 
+ *
  * The graph implements includes:
  * @li @ref otawa::graph::Graph,
  * @li @ref otawa::graph::GenGraph.
- * 
+ *
  * The following algorithm are provided:
  * @li @ref otawa::graph::PreorderIterator.
  */
 
+/**
+ * @class GenGraph
+ *
+ * GenGraph is a subclass of @ref graph::Graph and provides a simple way to
+ * customize nodes and edges.
+ *
+ * To use GenGraph, it is convenient to declare the following typedef depending
+ * on your custom predeclared Node and Edge classes:
+ * @code
+ * class Node;
+ * class Edge;
+ * typedef GenGraph<Node, Edge> graph_t;
+ * @endcode
+ *
+ * Then, you can declare your custom Node class (where you can store what you
+ * want):
+ * @code
+ * class Node: public graph_t::GenNode {
+ * public:
+ *	...
+ * };
+ * @endcode
+ *
+ * The Edge a bit more tricky: you have to provide both ends of the edge
+ * to the constructor as below:
+ * @code
+ * class Edge: public graph_t::GenEdge {
+ * public:
+ *	Edge(Node *src, Node *snk, ...): graph_t::GenEdge(src, snk) { }
+ *	inline effect_t effect(void) const { return _eff; }
+ *	...
+ * };
+ * @endcode
+ *
+ * For finish, you have just to declare the Graph itself:
+ * @code
+ * class Graph: public graph_t {
+ * public:
+ * 	...
+ * };
+ * @endcode
+ *
+ * The obtained class implements a bidirectional graph with all facilities
+ * provided for @ref Graph available.
+ *
+ * @ingroup graph
+ */
+
+/**
+ * @class GenGraph<N, E> <otawa/util/GenGraph.h>
+ * GenGraph is inherited from @ref Graph class but enforce the type checking of
+ * the objects of graph: only nodes of type N and edges of type E are
+ * accepted.
+ * @param N	Type of nodes (must inherit from @ref GenGraph<N, E>::Node).
+ * @param E Type of edges (must inherit from @ref GenGraph<N, E>::Edge).
+ * @ingroup graph
+ */
+
+
+/**
+ * @class PreorderIterator
+ * An iterator allowing to traverse the graph using preorder, that is, a
+ * node is only traversed when its predecessors has been traversed.
+ * @param G	Type of traversed graph.
+ * @ingroup graph
+ */
+
+
+/**
+ * PreorderIterator::PreorderIterator(const G *graph, typename G::Vertex *entry);
+ * Build a preorder iterator.
+ * @param graph	Graph to traverse.
+ * @param entry	Entry of the graph.
+ */
 
 /**
  * @class Graph
@@ -50,12 +121,12 @@ namespace otawa { namespace graph {
  * It is not usually used as is : it may be embedded in some other object
  * representing a graph and the Node and Edge classes is redefined to be valued
  * according the requirement of the represented graph.
- * 
+ *
  * @par Implemented concepts
  * @li @ref otawa::concept::DiGraph
  * @li @ref otawa::concept::BiDiGraph
  * @li @ref otawa::concept::DiGraphWithIndexedVertex
- * 
+ *
  * @ingroup graph
  */
 
@@ -99,12 +170,12 @@ void Graph::add(Node *node) {
  */
 void Graph::remove(Node *node) {
 	ASSERT(node->graph() == this);
-	
+
 	// Remove from the vector
 	nodes.removeAt(node->idx);
 	for(int i = node->idx; i < nodes.length(); i++)
 		nodes[i]->idx--;
-	
+
 	// Remove from the links
 	node->unlink();
 	node->_graph = 0;
@@ -117,7 +188,7 @@ void Graph::remove(Node *node) {
  * @param edge	Edge to destroy.
  */
 void Graph::remove(graph::Edge *edge) {
-	
+
 	// Remove edge from successor list
 	graph::Edge *prev = 0;
 	for(graph::Edge *cur = edge->src->outs; cur != edge; prev = cur, cur = cur->sedges)
@@ -126,7 +197,7 @@ void Graph::remove(graph::Edge *edge) {
 		prev->sedges = edge->sedges;
 	else
 		edge->src->outs = edge->sedges;
-		
+
 	// Remove edge from predecessor list
 	prev = 0;
 	for(graph::Edge *cur = edge->tgt->ins; cur != edge; prev = cur, cur = cur->tedges)
@@ -135,7 +206,7 @@ void Graph::remove(graph::Edge *edge) {
 		prev->tedges = edge->tedges;
 	else
 		edge->tgt->ins = edge->tedges;
-	
+
 	// Delete it finally
 	delete edge;
 }
@@ -159,7 +230,7 @@ int Graph::outDegree(Node *vertex) const {
  * @param succ	Successor vertex.
  * @param ref	Reference vertex.
  * @return		True if succ is successor, false else.
- */ 
+ */
 bool Graph::isSuccessorOf(Node *succ, Node *ref) const {
 	for(OutIterator edge(*this, ref); edge; edge++)
 		if(sinkOf(edge) == succ)
@@ -186,7 +257,7 @@ int Graph::inDegree(Node *vertex) const {
  * @param pred	Predecessor vertex.
  * @param ref	Reference vertex.
  * @return		True if pred is predecessor, false else.
- */ 
+ */
 bool Graph::isPredecessorOf(Node *pred, Node *ref) const {
 	for(OutIterator edge(*this, ref); edge; edge++)
 		if(sourceOf(edge) == pred)

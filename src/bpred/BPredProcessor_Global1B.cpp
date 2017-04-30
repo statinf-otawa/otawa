@@ -105,7 +105,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		
 		for(unsigned int i = 0 ; i< bcgs.length();++i) {
 			BCG* g=bcgs[i];
-			for(BCG::Iterator n(g);n;n++)
+			for(BCG::Iter n(g);n;n++)
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
@@ -115,7 +115,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes_BBHG;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BBHGNode*> v;
-		for(BBHG::Iterator node(bbhg);node;node++) {
+		for(BBHG::Iter node(bbhg);node;node++) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
@@ -196,7 +196,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					for(unsigned int ig=0;ig<bcgs.length();ig++) {
 						if(bcgs[ig]->getHistory() == v[i]->getHistory()) {
 							bcg=bcgs[ig];
-							for(BCG::Iterator n(bcg);n;n++) {
+							for(BCG::Iter n(bcg);n;n++) {
 								bool withT=false, withNT=false;
 								if(v[i]->isSuccessor(n,withT,withNT)) {
 									NEW_SPECIAL_CONSTRAINT(C21,EQ,0);
@@ -292,7 +292,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		NEW_SPECIAL_CONSTRAINT(C3_start,LE,1);
 		NEW_SPECIAL_CONSTRAINT(C3_end,LE,1);
 		
-		for(BCG::Iterator n(bcgs[ig]);n;n++) {
+		for(BCG::Iter n(bcgs[ig]);n;n++) {
 			Var *Xb=ipet::VAR(getBB(n->getCorrespondingBBNumber(),cfg));
 			ASSERT(Xb);
 			if(n->isEntry()) {
@@ -517,7 +517,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, gen
 	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BBHGNode*> v;
-		for(BBHG::Iterator node(bbhg);node;node++) {
+		for(BBHG::Iter node(bbhg);node;node++) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
@@ -806,7 +806,7 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 
 
 	// Rajout des sorties
-	for(BBHG::Iterator bb(&bbhg); bb; bb++){
+	for(BBHG::Iter bb(&bbhg); bb; bb++){
 			bb->setExit(bb->getCorrespondingBB()==cfg->exit(),false,false);
 	}
 

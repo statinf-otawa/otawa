@@ -81,13 +81,13 @@ void BHGDrawer::make(){
 	// Construct the Graph
 	genstruct::HashTable<void*, display::Node*> map;
 
-	for(BHG::Iterator bb(_bhg); bb; bb++){
+	for(BHG::Iter bb(_bhg); bb; bb++){
 		display::Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
 
-	for(BHG::Iterator bb(_bhg); bb; bb++){
+	for(BHG::Iter bb(_bhg); bb; bb++){
 		display::Node *node = map.get(*bb);
 		for(BHG::OutIterator succ(bb); succ; succ++){
 			BHGEdge* edge = succ;

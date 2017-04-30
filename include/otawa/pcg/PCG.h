@@ -35,7 +35,7 @@ using namespace elm::io;
 
 class PCGBlock;
 
-class PCGEdge: public PropList, public GenGraph<PCGBlock, PCGEdge>::GenEdge {
+class PCGEdge: public PropList, public graph::GenGraph<PCGBlock, PCGEdge>::GenEdge {
 public:
 	PCGEdge(PCGBlock *caller, SynthBlock *block, PCGBlock *callee);
 	inline SynthBlock *block(void) const { return _block; }
@@ -45,7 +45,7 @@ private:
 	SynthBlock *_block;
 };
 
-class PCGBlock: public PropList, public GenGraph<PCGBlock, PCGEdge>::GenNode {
+class PCGBlock: public PropList, public graph::GenGraph<PCGBlock, PCGEdge>::GenNode {
 public:
 	PCGBlock(CFG *cfg);
 	virtual ~PCGBlock(void);
@@ -58,18 +58,18 @@ private:
 	CFG *_cfg;
 };
 
-class PCG: public PropList, public GenGraph<PCGBlock, PCGEdge> {
+class PCG: public PropList, public graph::GenGraph<PCGBlock, PCGEdge> {
 	friend class PCGBuilder;
 public:
 
 	PCG(PCGBlock *entry);
 	inline PCGBlock *entry(void) const { return _entry; }
 
-	class iter: public GenGraph<PCGBlock, PCGEdge>::Iterator {
+	class Iter: public graph::GenGraph<PCGBlock, PCGEdge>::Iter {
 		friend class PCG;
-		inline iter(const PCG *pcg): GenGraph<PCGBlock, PCGEdge>::Iterator(pcg) { }
+		inline Iter(const PCG *pcg): graph::GenGraph<PCGBlock, PCGEdge>::Iter(pcg) { }
 	};
-	inline iter blocks(void) const { return iter(this); }
+	inline Iter blocks(void) const { return Iter(this); }
 
 private:
 	PCGBlock *_entry;

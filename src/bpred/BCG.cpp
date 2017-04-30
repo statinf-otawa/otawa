@@ -26,7 +26,7 @@ namespace otawa { namespace bpred {
 
 /// BCGEdge
 BCGEdge::BCGEdge(BCGNode *source, BCGNode *target, bool taken) :
-				GenGraph<BCGNode,BCGEdge>::GenEdge(source,target) {
+		otawa::graph::GenGraph<BCGNode,BCGEdge>::GenEdge(source,target) {
 	this->m_edge_taken = taken;
 	
 }

@@ -211,7 +211,7 @@ namespace otawa {
 	 *
 	 */
 
-	class ParExeGraph: public GenGraph<ParExeNode, ParExeEdge> {
+	class ParExeGraph: public graph::GenGraph<ParExeNode, ParExeEdge> {
 		friend class InstIterator;
 		friend class ParExeNode;
 	protected:
@@ -339,7 +339,7 @@ namespace otawa {
 	 *
 	 */
 	// a node in an execution graph (ParExeGraph)
-	class ParExeNode: public GenGraph<ParExeNode,ParExeEdge>::GenNode{
+	class ParExeNode: public graph::GenGraph<ParExeNode,ParExeEdge>::GenNode{
 	private:
 		ParExeStage *_pipeline_stage;								// pipeline stage to which the node is related
 		ParExeInst *_inst;											// instruction to which the node is related
@@ -401,7 +401,7 @@ namespace otawa {
 	 *
 	 */
 	// an edge in an execution graph (ParExeGraph)
-	class ParExeEdge: public GenGraph<ParExeNode,ParExeEdge>::GenEdge{
+	class ParExeEdge: public graph::GenGraph<ParExeNode,ParExeEdge>::GenEdge{
 	public:
 		typedef enum edge_type_t {SOLID = 1, SLASHED = 2} edge_type_t_t;
 	private:

@@ -129,11 +129,9 @@ set(libotawa_SOURCES
 	"util_MemBlockMap.cpp"
 	"util_ContextTree.cpp"
 	"util_Bag.cpp"
-	"util_Graph.cpp"
 	"util_Node.cpp"
 	"util_Edge.cpp"
-	"util_GenGraph.cpp"
-	"graph_PreorderIterator.cpp"
+	"graph.cpp"
 
 #	flow facts
 	"flowfact_ContextualLoopBound.cpp"

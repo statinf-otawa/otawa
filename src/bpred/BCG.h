@@ -34,7 +34,7 @@ class BCGEdge;
 
 
 
-class BCG : public otawa::GenGraph<BCGNode,BCGEdge> {
+class BCG : public otawa::graph::GenGraph<BCGNode,BCGEdge> {
 private:
 	int m_class;
 	otawa::dfa::BitSet *m_history;
@@ -49,7 +49,7 @@ public:
 
 
 
-class BCGEdge : public otawa::GenGraph<BCGNode,BCGEdge>::GenEdge {
+class BCGEdge : public otawa::graph::GenGraph<BCGNode,BCGEdge>::GenEdge {
 private:
 	bool m_edge_taken;
 public:
@@ -61,7 +61,7 @@ public:
 
 
 
-class BCGNode : public otawa::GenGraph<BCGNode,BCGEdge>::GenNode{
+class BCGNode : public otawa::graph::GenGraph<BCGNode,BCGEdge>::GenNode{
 private:
 	bool m_entry;
 	bool m_exit;
