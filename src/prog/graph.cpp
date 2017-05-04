@@ -134,7 +134,7 @@ namespace otawa { namespace graph {
 /**
  */
 void Graph::clear(void) {
-	for(Iterator node(this); node; node++) {
+	for(Iter node(this); node; node++) {
 		for(graph::Edge *edge = node->outs, *next; edge; edge = next) {
 			next = edge->sedges;
 			delete edge;

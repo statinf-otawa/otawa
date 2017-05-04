@@ -36,6 +36,7 @@ namespace otawa { namespace graph {
 template <class N, class E>
 class GenGraph: private graph::Graph {
 public:
+	typedef GenGraph<N, E> self_t;
 	typedef N *Vertex;
 	typedef E *Edge;
 
@@ -76,7 +77,7 @@ public:
 	
 	// Iterator class
 	class Iter: public elm::PreIterator<Iter, N *> {
-		graph::Graph::Iterator iter;
+		graph::Graph::Iter iter;
 	public:
 		inline Iter(const GenGraph<N, E> *graph): iter(graph) { }
 		inline Iter(const GenGraph<N, E>& graph): iter(&graph) { }
@@ -135,6 +136,18 @@ public:
 
 	// DiGraphWithIndexedVertex concept
 	inline int indexOf(N *vertex) const { return Graph::indexOf(vertex); }
+
+	template <class T>
+	class VertexMap: public Graph::VertexMap<T> {
+	public:
+		inline VertexMap(self_t& graph): Graph::VertexMap<T>(graph) { }
+		inline Option<const T &> get(Vertex key) const { return Graph::VertexMap<T>::get(key); }
+		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index()]; else return def; }
+		inline bool hasKey(Vertex key) const { return Graph::VertexMap<T>::hasKey(key); }
+		void put(Vertex key, const T &value) { Graph::VertexMap<T>::put(key, value); }
+		void remove(Vertex key) { Graph::VertexMap<T>::remove(key); }
+		typedef GenGraph<N, E>::Iter KeyIterator;
+	};
 
 	// private
 	inline static const graph::Node *_(const GenNode *node) { return node; }; 

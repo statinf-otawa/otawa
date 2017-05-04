@@ -23,6 +23,7 @@
 #define OTAWA_GRAPH_GRAPH_H
 
 #include <elm/assert.h>
+#include <elm/data/Array.h>
 #include <elm/PreIterator.h>
 #include <elm/genstruct/FragTable.h>
 #include <elm/genstruct/Table.h>
@@ -143,12 +144,10 @@ public:
  	inline Node *at(int i) const { return nodes[i]; }
 	
 	// Iterator class
-	class Iterator: public elm::genstruct::FragTable<Node *>::Iterator {
+	class Iter: public elm::genstruct::FragTable<Node *>::Iterator {
 	public:
-		inline Iterator(const Graph *graph)
+		inline Iter(const Graph *graph)
 			: elm::genstruct::FragTable<Node *>::Iterator(graph->nodes) { }
-		inline Iterator(const Iterator& iter)
-			: elm::genstruct::FragTable<Node *>::Iterator(iter) { }
 	};
 
 	// MutableCollection concept
@@ -159,7 +158,7 @@ public:
 	void remove(Node *node);
 	template <template <class _> class C> void removeAll(const C<Node *> &items)
 		{ for(typename C<Node *>::Iterator item(items); item; item++) remove(item); }
-	inline void remove(const Iterator& iter) { nodes.remove(iter); }
+	inline void remove(const Iter& iter) { nodes.remove(iter); }
 	
 	// DiGraph concept
 	Node *sinkOf(graph::Edge *edge) const { return edge->sink(); }
@@ -203,22 +202,35 @@ public:
 
 	// DiGraphWithVertexMAp concept
 	template <class T>
-	class VertexMap: public genstruct::AllocatedTable<T> {
+	class VertexMap  {
 	public:
-		inline VertexMap(Graph& graph): genstruct::AllocatedTable<T>(graph.count()), g(graph), set(graph.count()) { }
-		inline Option<const Vertex &> get(Vertex key) const { if(hasKey(key)) return some((*this)[key->index()]); else return none; }
-		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index()]; else return def; }
-		inline bool hasKey(Vertex key) const { return set.bit(key->index()); }
-		void put(Vertex key, const T &value) { set(key->index(), value); set.set(key->index()); }
-		void remove(Vertex key) { set.clear(key->index()); }
+		inline VertexMap(Graph& g): _g(g), _tab(g.count()), _set(g.count()) { }
+		inline Option<const T &> get(Vertex key) const { if(hasKey(key)) return some(_tab[key->index()]); else return none; }
+		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return _tab[key->index()]; else return def; }
+		inline bool hasKey(Vertex key) const { return _set.bit(key->index()); }
+		void put(Vertex key, const T &value) { _tab[key->index()] = value; _set.set(key->index()); }
+		void remove(Vertex key) { _set.clear(key->index()); }
 
-		// TODO Iterator, Pair Iterator
-		typedef Graph::Iterator KeyIterator;
-		// TODO remove(PairIterator)
+		class KeyIter: public Graph::Iter {
+		public:
+			inline KeyIter(const VertexMap<T>& m): Graph::Iter(m._g) { }
+		};
+
+		class Iter: public PreIterator<Iter, T> {
+		public:
+			inline Iter(const VertexMap<T>& m): _m(m), _i(m._set) { }
+			inline bool ended(void) const { return _i.ended(); }
+			inline const T& item(void) const { return _m._tab[_i]; }
+			inline void next(void) { _i++; }
+		private:
+			const VertexMap<T>& _m;
+			BitVector::OneIterator _i;
+		};
 
 	private:
-		Graph& g;
-		BitVector set;
+		Graph& _g;
+		AllocArray<T> _tab;
+		BitVector _set;
 	};
 
 private:
