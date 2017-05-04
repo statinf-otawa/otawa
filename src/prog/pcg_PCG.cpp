@@ -67,7 +67,7 @@ PCGBlock::~PCGBlock(void) {
 /**
  */
 PCGEdge::PCGEdge(PCGBlock *caller, SynthBlock *block, PCGBlock *callee)
-: GenGraph<PCGBlock, PCGEdge>::GenEdge(caller, callee), _block(block) {
+: graph::GenGraph<PCGBlock, PCGEdge>::GenEdge(caller, callee), _block(block) {
 }
 
 }	// otawa

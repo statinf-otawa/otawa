@@ -79,7 +79,7 @@ namespace otawa { namespace bpred {
  * @return 		The BCG Node found.
  */
 BCGNode* getBCGNode(int id,BCG* bcg) {
-	for(BCG::Iterator node(bcg);node;node++) {
+	for(BCG::Iter node(bcg);node;node++) {
 		if(node->getCorrespondingBBNumber()== id) return node;
 	}
 	return NULL;
@@ -179,7 +179,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 	///////////////////////////////////////////////
 	for(int g=0;g<graphs.length();++g) {
 		BCG* bcg = graphs[g];
-		for(BCG::Iterator br(bcg);br; br++) {
+		for(BCG::Iter br(bcg);br; br++) {
 			
 			// on recupere le BB correspondant depuis le cfg
 			BasicBlock* bb=getBB(br->getCorrespondingBBNumber(), cfg);

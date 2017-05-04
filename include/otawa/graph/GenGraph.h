@@ -30,12 +30,13 @@
 #	define OTAWA_GCAST(t, e) static_cast<t>(e)
 #endif
 
-namespace otawa {
+namespace otawa { namespace graph {
 
 // GenGraph class
 template <class N, class E>
 class GenGraph: private graph::Graph {
 public:
+	typedef GenGraph<N, E> self_t;
 	typedef N *Vertex;
 	typedef E *Edge;
 
@@ -75,15 +76,19 @@ public:
  	inline N *at(int i) const { return OTAWA_GCAST(N *, at(i)); }
 	
 	// Iterator class
-	class Iterator: public elm::PreIterator<Iterator, N *> {
-		graph::Graph::Iterator iter;
+	class Iter: public elm::PreIterator<Iter, N *> {
+		graph::Graph::Iter iter;
 	public:
-		inline Iterator(const GenGraph<N, E> *graph): iter(graph) { }
-		inline Iterator(const GenGraph<N, E>::Iterator& iterator): iter(iterator.iter) { }
+		inline Iter(const GenGraph<N, E> *graph): iter(graph) { }
+		inline Iter(const GenGraph<N, E>& graph): iter(&graph) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline N *item(void) const  { return OTAWA_GCAST(N *, iter.item()); }
 		inline void next(void) { iter.next(); }
 	};
+	inline Iter nodes(void) const { return Iter(this); }
+	inline Iter items(void) const { return nodes(); }
+	inline Iter operator*(void) const { return nodes(); }
+	inline operator Iter(void) const { return nodes(); }
 
 	// MutableCollection concept
 	inline void clear(void) { graph::Graph::clear(); }
@@ -132,6 +137,18 @@ public:
 	// DiGraphWithIndexedVertex concept
 	inline int indexOf(N *vertex) const { return Graph::indexOf(vertex); }
 
+	template <class T>
+	class VertexMap: public Graph::VertexMap<T> {
+	public:
+		inline VertexMap(self_t& graph): Graph::VertexMap<T>(graph) { }
+		inline Option<const T &> get(Vertex key) const { return Graph::VertexMap<T>::get(key); }
+		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index()]; else return def; }
+		inline bool hasKey(Vertex key) const { return Graph::VertexMap<T>::hasKey(key); }
+		void put(Vertex key, const T &value) { Graph::VertexMap<T>::put(key, value); }
+		void remove(Vertex key) { Graph::VertexMap<T>::remove(key); }
+		typedef GenGraph<N, E>::Iter KeyIterator;
+	};
+
 	// private
 	inline static const graph::Node *_(const GenNode *node) { return node; }; 
 	inline static const graph::Edge *_(const GenEdge *edge) { return edge; }; 
@@ -141,6 +158,6 @@ public:
 	inline graph::Graph *_(void) { return this; }
 };
 
-} // otawa
+} }	// otawa::graph
 
 #endif	// OTAWA_UTIL_GRAPH_GRAPH_H

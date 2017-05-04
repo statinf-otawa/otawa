@@ -165,7 +165,7 @@ public:
 	class Iterator: public PreIterator<Iterator, Vertex> {
 	public:
 		inline Iterator(const PCGAdapter& ad)
-			: iter(ad._pcg) { look(); }
+			: iter(ad._pcg->blocks()) { look(); }
 	 	inline bool ended(void) const { return iter.ended(); }
 	 	inline Vertex item(void) const { return *iter; }
 	 	void next(void) { iter.next(); look(); }
@@ -177,7 +177,7 @@ public:
 				iter.next();
 			}
 		}
-		PCG::Iterator iter;
+		typename PCG::Iter iter;
 	};
 
 private:

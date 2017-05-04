@@ -80,13 +80,13 @@ void BCGDrawer::make(){
 	
 	// Construct the Graph
 	genstruct::HashTable<void*, display::Node*> map;
-	for(BCG::Iterator bb(_bcg); bb; bb++){
+	for(BCG::Iter bb(_bcg); bb; bb++){
 		display::Node *node = _graph->newNode();
 		map.put(*bb, node);
 		onNode(*bb, node);
 	}
 
-	for(BCG::Iterator bb(_bcg); bb; bb++){
+	for(BCG::Iter bb(_bcg); bb; bb++){
 		display::Node *node = map.get(*bb);
 		for(BCG::OutIterator succ(bb); succ; succ++){
 			BCGEdge* edge = succ;

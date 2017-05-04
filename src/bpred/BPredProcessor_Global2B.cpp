@@ -107,7 +107,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 		
 		for(unsigned int i = 0 ; i< graphs.length();++i) {
 			BCG* g=graphs[i];
-			for(BCG::Iterator n(g);n;n++)
+			for(BCG::Iter n(g);n;n++)
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
@@ -128,7 +128,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::genstr
 		NEW_SPECIAL_CONSTRAINT(Ce,LE,1);
 
 		// Boucle sur les BB de la classe addr
-		for(BCG::Iterator n(bcg);n;n++) {
+		for(BCG::Iter n(bcg);n;n++) {
 			// Recuperation de la variable associee au BB
 			BasicBlock* bb = getBB(n->getCorrespondingBBNumber(),cfg);
 			ASSERT(bb);
@@ -699,7 +699,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 		
 		for(unsigned int i = 0 ; i< graphs.length();++i) {
 			BCG* g=graphs[i];
-			for(BCG::Iterator n(g);n;n++)
+			for(BCG::Iter n(g);n;n++)
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
@@ -738,7 +738,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::genstruct::Vector<BHGNode*> v;
-		for(BHG::Iterator node(bhg);node;node++) {
+		for(BHG::Iter node(bhg);node;node++) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
@@ -786,7 +786,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	NEW_SPECIAL_CONSTRAINT(H3,LE,1);
 #endif
 	
-	for(BHG::Iterator node(bhg) ; node ; node++ ) {
+	for(BHG::Iter node(bhg) ; node ; node++ ) {
 		Var *Xi = ipet::VAR( node->getCorrespondingBB());
 		ASSERT(Xi);
 
@@ -1047,7 +1047,7 @@ void BPredProcessor::generateBHG(CFG* cfg,BHG& bhg) {
 
 
 	// Rajout des sorties
-	for(BHG::Iterator bb(&bhg); bb; bb++){
+	for(BHG::Iter bb(&bhg); bb; bb++){
 		int n=0;
 		for(BHG::OutIterator succ(bb); succ; succ++){
 			if(succ->isTaken()) 
@@ -1089,7 +1089,7 @@ void BPredProcessor::historyPlusOne(dfa::BitSet& h) {
  */
 bool BPredProcessor::isClassEntry(BHG* bhg, BHGNode* src) {
 	genstruct::HashTable<BHGNode*,BHGNode*> visited_nodes;
-	for(BHG::Iterator node(bhg);node;node++) {
+	for(BHG::Iter node(bhg);node;node++) {
 		if(node->isEntry() && src->getHistory() != node->getHistory() ) {
 			for(BHG::OutIterator s_node(node);s_node;s_node++) {
 				visited_nodes.clear();
@@ -1118,7 +1118,7 @@ bool BPredProcessor::isClassExit(BHG* bhg, BHGNode* src, bool& src_withT,bool& s
 	genstruct::HashTable<BHGNode*,BHGNode*> visited_nodes;
 	src_withNT = src_withT = false;
 	bool res = false;
-	for(BHG::Iterator node(bhg);node;node++) {
+	for(BHG::Iter node(bhg);node;node++) {
 		if(node->isExit() && src->getHistory() != node->getHistory() ) {
 			for(BHG::OutIterator s_src(src);s_src;s_src++) {
 				visited_nodes.clear();
@@ -1189,7 +1189,7 @@ void BPredProcessor::generateBCGs(elm::genstruct::Vector<BCG*>& bcgs, BHG& bhg) 
 		
 		// recherche de tous les noeuds d'une classe
 		 v_class_nodes.clear();
-		for(BHG::Iterator node(&bhg); node ; node++) {
+		for(BHG::Iter node(&bhg); node ; node++) {
 			if(node->getHistory() == h)
 				v_class_nodes.add(node);
 				
@@ -1448,7 +1448,7 @@ void BPredProcessor::processCFG__Global2B(WorkSpace *ws,CFG* cfg) {
 		for(unsigned int i = 0 ; i < bcgs.length() ; i++) {
 			int nb_nodes=0;
 			BCG* bcg=bcgs[i];
-			for(BCG::Iterator node(bcg);node;node++)
+			for(BCG::Iter node(bcg);node;node++)
 				nb_nodes++;
 			
 			this->stat_nbbr.add(nb_nodes);
