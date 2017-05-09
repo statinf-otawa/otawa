@@ -384,6 +384,7 @@ namespace otawa {
 		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
 		inline elm::String name(void) { return _name; }
 		inline int delay(int index) {return (*_delay)[index];}
+		inline int delayLength() { return _delay->length(); }
 		inline void setDelay(int index, int value) { 
 			while (index >= _delay->length()) _delay->add(-1);
 			(*_delay)[index] = value;

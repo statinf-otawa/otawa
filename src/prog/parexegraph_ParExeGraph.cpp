@@ -1117,7 +1117,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 			int j = 0;
 			dotFile << "{ ";
 			while (j < width && i < num) {
-				if (node->delay(i) >= 0)
+				if (node->delayLength() > i && node->delay(i) >= 0)
 					dotFile << node->delay(i);
 				if (j < width - 1 && i < num - 1)
 					dotFile << " | ";
@@ -1166,7 +1166,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 				int j=0;
 				dotFile << "{ ";
 				while (j<width && i<num) {
-					if (node->delay(i)>=0)
+					if (node->delayLength() > i && node->delay(i)>=0)
 						dotFile << node->delay(i);
 					if (j<width-1 && i<num-1)
 						dotFile << " | ";
