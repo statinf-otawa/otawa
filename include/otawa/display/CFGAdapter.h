@@ -57,9 +57,9 @@ public:
 	};
 	
 	// Collection concept
-	class Iterator: public PreIterator<Iterator, Vertex> {
+	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iterator(const CFGAdapter& adapter): i(adapter.cfg->blocks()) { }
+		inline Iter(const CFGAdapter& adapter): i(adapter.cfg->blocks()) { }
 		inline bool ended(void) const { return i.ended(); }
 		inline Vertex item(void) const { return Vertex(*i); }
 		inline void next(void) { i.next(); }
@@ -81,6 +81,7 @@ public:
 		T *vals;
 	};
 	
+	inline Vertex sinkOf(Edge e) const { return e.sink(); }
 	inline CFGAdapter(CFG *_cfg, WorkSpace *_ws = 0): cfg(_cfg), ws(_ws) { }
 	inline int count(void) const{ return cfg->count(); }
 	CFG *cfg;

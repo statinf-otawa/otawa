@@ -198,14 +198,14 @@ public:
 	};
 	
 	// DiGraphWithIndexedVertex concept
-	inline int indexOf(Node *vertex) const { return vertex->index(); }
+	inline int indexOf(const Node *vertex) const { return vertex->index(); }
 
 	// DiGraphWithVertexMAp concept
 	template <class T>
 	class VertexMap  {
 	public:
-		inline VertexMap(Graph& g): _g(g), _tab(g.count()), _set(g.count()) { }
-		inline Option<const T &> get(Vertex key) const { if(hasKey(key)) return some(_tab[key->index()]); else return none; }
+		inline VertexMap(const Graph& g): _g(g), _tab(g.count()), _set(g.count()) { }
+		inline Option<T> get(Vertex key) const { if(hasKey(key)) return some(_tab[key->index()]); else return none; }
 		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return _tab[key->index()]; else return def; }
 		inline bool hasKey(Vertex key) const { return _set.bit(key->index()); }
 		void put(Vertex key, const T &value) { _tab[key->index()] = value; _set.set(key->index()); }
@@ -228,7 +228,7 @@ public:
 		};
 
 	private:
-		Graph& _g;
+		const Graph& _g;
 		AllocArray<T> _tab;
 		BitVector _set;
 	};

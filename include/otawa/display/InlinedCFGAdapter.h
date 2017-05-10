@@ -84,9 +84,9 @@ public:
 	};
 	
 	// Collection concept
-	class Iterator: public PreIterator<Iterator, Vertex> {
+	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iterator(const InlinedCFGAdapter& adapter): i(adapter.cfg->blocks()), stop(false) { }
+		inline Iter(const InlinedCFGAdapter& adapter): i(adapter.cfg->blocks()), stop(false) { }
 		inline bool ended(void) const { return i.ended(); }
 		inline Vertex item(void) const { return Vertex(*i); }
 		inline void next(void)
@@ -206,12 +206,14 @@ public:
 		t::uint64 *bAddrs; // the key of the table, which is the address of the Block
 	};
 	
+	inline Vertex sinkOf(Edge e) const { return e.sink(); }
+
 	inline InlinedCFGAdapter(CFG *_cfg, WorkSpace *_ws = 0):
 			CFGAdapter(_cfg, _ws),
 			cfg(_cfg), ws(_ws) { }
 	inline int count(void) const { // getting the number of the block by traversing through the iterator
 		int num = 0;
-		for(Iterator iterator(*this); iterator; iterator++)
+		for(Iter iterator(*this); iterator; iterator++)
 			num++;
 		return num;
 	}

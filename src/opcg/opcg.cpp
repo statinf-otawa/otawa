@@ -162,9 +162,9 @@ public:
 	//inline bool isEmpty (void) const { return _pcg->pcgbs(); }
 	//inline operator bool (void) const { return !isEmpty(); }
 
-	class Iterator: public PreIterator<Iterator, Vertex> {
+	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iterator(const PCGAdapter& ad)
+		inline Iter(const PCGAdapter& ad)
 			: iter(ad._pcg->blocks()) { look(); }
 	 	inline bool ended(void) const { return iter.ended(); }
 	 	inline Vertex item(void) const { return *iter; }
@@ -179,6 +179,8 @@ public:
 		}
 		typename PCG::Iter iter;
 	};
+
+	inline Vertex sinkOf(const Edge& e) const { return e.sink(); }
 
 private:
 	PCG *_pcg;
