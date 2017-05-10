@@ -20,6 +20,7 @@
  */
 
 #include <otawa/display/Displayer.h>
+#include <otawa/display/GenDisplayer.h>
 #include <otawa/proc/ProcessorPlugin.h>
 
 namespace otawa { namespace display {
@@ -115,6 +116,19 @@ void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Vertex
 void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Edge& e, Text& label, EdgeStyle& style) const {
 }
 
+
+/**
+ * @class GenDisplayer
+ * This class provides display of graph (based on @ref Displayer class) for @ref GenGraph
+ * graphs. It takes as parameter:
+ * @li a @ref GenGraph -- for the graph itself,
+ * @li a @ref GenDisplayer::Decorator -- to generate the content of vertices and the labels of edges.
+ *
+ * @param V		Class for vertices (same as passed to GenGraph).
+ * @param E		Class for edges (same as passed to GenGraph).
+ *
+ * @ingroup display
+ */
 
 /**
  * @class Displayer

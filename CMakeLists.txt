@@ -40,6 +40,8 @@ if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
   set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--kill-at -Wl,--add-stdcall-alias")
 endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
 
+include_directories(include)
+
 
 # install directories
 if(MINGW_LINUX OR WIN32)
@@ -273,7 +275,8 @@ elseif(WIN32)
 	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
 	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
 else()
-	find_library(LIBELM elm PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../elm/src)
+	message(STATUS "ELM_PATH=${ELM_PATH}")
+	find_library(LIBELM elm NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../elm/src" "${CMAKE_INSTALL_PREFIX}/bin")
 	if(NOT LIBELM)
 		message(FATAL_ERROR "libelm is mandatory!")
 	else()
@@ -281,7 +284,7 @@ else()
 		get_filename_component(dir "${LIBELM}" DIRECTORY)
 		include_directories("${dir}/../include")
 	endif()
-	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBGEL gel NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
 	if(NOT LIBGEL)
 		message(FATAL_ERROR "libgel is mandatory!")
 	else()
@@ -289,7 +292,7 @@ else()
 		get_filename_component(dir "${LIBGEL}" DIRECTORY)
 		include_directories("${dir}/../include")
 	endif()
-	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBGEL_DWARF gel_dwarf NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
 endif()
 
 
@@ -345,7 +348,6 @@ if(SYSTEM_VIEW_ENABLED)
 else()
 	message(STATUS "no system view tool found")
 endif()
-
 
 # add subdirectories
 add_subdirectory(src)

@@ -34,7 +34,7 @@ namespace otawa { namespace graph {
 
 // GenGraph class
 template <class N, class E>
-class GenGraph: private graph::Graph {
+class GenGraph {
 public:
 	typedef GenGraph<N, E> self_t;
 	typedef N *Vertex;
@@ -69,9 +69,9 @@ public:
 	};
 
 	// Collection concept
-	inline int count(void) const { return Graph::count(); }
-	inline bool contains(N *item) const { return Graph::contains(item); }
-	inline bool isEmpty(void) const { return Graph::isEmpty(); }
+	inline int count(void) const { return _g.count(); }
+	inline bool contains(N *item) const { return _g.contains(item); }
+	inline bool isEmpty(void) const { return _g.isEmpty(); }
  	inline operator bool(void) const { return !isEmpty(); }
  	inline N *at(int i) const { return OTAWA_GCAST(N *, at(i)); }
 	
@@ -79,8 +79,8 @@ public:
 	class Iter: public elm::PreIterator<Iter, N *> {
 		graph::Graph::Iter iter;
 	public:
-		inline Iter(const GenGraph<N, E> *graph): iter(graph) { }
-		inline Iter(const GenGraph<N, E>& graph): iter(&graph) { }
+		inline Iter(const GenGraph<N, E> *graph): iter(&graph->_g) { }
+		inline Iter(const GenGraph<N, E>& graph): iter(&graph._g) { }
 		inline bool ended(void) const { return iter.ended(); }
 		inline N *item(void) const  { return OTAWA_GCAST(N *, iter.item()); }
 		inline void next(void) { iter.next(); }
@@ -91,19 +91,19 @@ public:
 	inline operator Iter(void) const { return nodes(); }
 
 	// MutableCollection concept
-	inline void clear(void) { graph::Graph::clear(); }
-	inline void add(GenNode *node) { graph::Graph::add(node); }
+	inline void clear(void) { _g.clear(); }
+	inline void add(GenNode *node) { _g.add(node); }
 	template <template <class _> class C> void addAll(const C<N *> &items)
-		{ graph::Graph::addAll(items); }
-	inline void remove(GenNode *node) { graph::Graph::remove(node); }
+		{ _g.addAll(items); }
+	inline void remove(GenNode *node) { _g.remove(node); }
 	template <template <class _> class C> void removeAll(const C<N *> &items)
-		{ graph::Graph::removeAll(items); }
-	inline void remove(GenEdge *edge) { graph::Graph::remove(edge); }
+		{ _g.removeAll(items); }
+	inline void remove(GenEdge *edge) { _g.remove(edge); }
 
 	// DiGraph concept
-	inline N *sinkOf(E *edge) const { return OTAWA_GCAST(N *, Graph::sinkOf(edge)); }
-	inline int outDegree(N *vertex) const { return Graph::outDegree(vertex); }
-	inline bool isSuccessorOf(N *succ, N *ref) const { return Graph::isSuccessorOf(succ, ref); }
+	inline N *sinkOf(E *edge) const { return OTAWA_GCAST(N *, _g.sinkOf(edge)); }
+	inline int outDegree(N *vertex) const { return _g.outDegree(vertex); }
+	inline bool isSuccessorOf(N *succ, N *ref) const { return _g.isSuccessorOf(succ, ref); }
 
 	// OutIterator class
 	class OutIterator: public elm::PreIterator<OutIterator, E *> {
@@ -116,11 +116,12 @@ public:
 	private:
 		Graph::OutIterator iter;
 	};
+	typedef OutIterator Successor;
 	
 	// DiGraph concept
-	inline N *sourceOf(E *edge) const { return OTAWA_GCAST(N *, Graph::sourceOf(edge)); }
-	inline int inDegree(N *vertex) const { return Graph::inDegree(vertex); }
-	inline bool isPredecessorOf(N *succ, N *ref) const { return Graph::isPredecessorOf(succ, ref); }
+	inline N *sourceOf(E *edge) const { return OTAWA_GCAST(N *, _g.sourceOf(edge)); }
+	inline int inDegree(N *vertex) const { return _g.inDegree(vertex); }
+	inline bool isPredecessorOf(N *succ, N *ref) const { return _g.isPredecessorOf(succ, ref); }
 
 	// InIterator class
 	class InIterator: public elm::PreIterator<InIterator, E *> {
@@ -133,15 +134,16 @@ public:
 	private:
 		Graph::InIterator iter;
 	};
+	typedef InIterator Predecessor;
 
 	// DiGraphWithIndexedVertex concept
-	inline int indexOf(N *vertex) const { return Graph::indexOf(vertex); }
+	inline int indexOf(const N *vertex) const { return _g.indexOf(vertex); }
 
 	template <class T>
 	class VertexMap: public Graph::VertexMap<T> {
 	public:
-		inline VertexMap(self_t& graph): Graph::VertexMap<T>(graph) { }
-		inline Option<const T &> get(Vertex key) const { return Graph::VertexMap<T>::get(key); }
+		inline VertexMap(const self_t& graph): Graph::VertexMap<T>(graph._g) { }
+		inline Option<T> get(Vertex key) const { return Graph::VertexMap<T>::get(key); }
 		inline const T &get(Vertex key, const T &def) const { if(hasKey(key)) return (*this)[key->index()]; else return def; }
 		inline bool hasKey(Vertex key) const { return Graph::VertexMap<T>::hasKey(key); }
 		void put(Vertex key, const T &value) { Graph::VertexMap<T>::put(key, value); }
@@ -156,6 +158,9 @@ public:
 	inline static graph::Node *_(GenNode *node) { return node; }; 
 	inline static graph::Edge *_(Edge *edge) { return edge; }; 
 	inline graph::Graph *_(void) { return this; }
+
+private:
+	graph::Graph _g;
 };
 
 } }	// otawa::graph

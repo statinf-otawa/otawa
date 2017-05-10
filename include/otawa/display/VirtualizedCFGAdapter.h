@@ -119,10 +119,9 @@ public:
 	};
 	
 	// Collection concept
-	class Iterator: public PreIterator<Iterator, Vertex> {
+	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iterator(const VirtualizedCFGAdapter& adapter): i(adapter.cfg->blocks()), stop(false), currentSynth(0), returnSynth(0), blockToReturn(0), edgeToReturn(0) {
-			//synthList.push(currentSynth);
+		inline Iter(const VirtualizedCFGAdapter& adapter): i(adapter.cfg->blocks()), stop(false), currentSynth(0), returnSynth(0), blockToReturn(0), edgeToReturn(0) {
 		}
 		inline bool ended(void) const { return i.ended(); }
 		inline Vertex item(void) const { return Vertex(*i, currentSynth, blockToReturn, returnSynth, edgeToReturn); }
@@ -273,10 +272,12 @@ public:
 	 */
 	inline int count(void) const {
 		int num = 0;
-		for(Iterator iterator(*this); iterator; iterator++)
+		for(Iter iterator(*this); iterator; iterator++)
 			num++;
 		return num;
 	}
+
+	inline Vertex sinkOf(Edge e) const { return e.sink(); }
 
 	CFG *cfg;
 	WorkSpace *ws;
