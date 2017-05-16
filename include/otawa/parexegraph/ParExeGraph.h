@@ -358,7 +358,7 @@ namespace otawa {
 
 	public:
 		inline ParExeNode(ParExeGraph *graph, ParExeStage *stage, ParExeInst *inst)
-			: ParExeGraph::GenNode((otawa::graph::Graph *) graph),
+			: ParExeGraph::GenNode(graph),
 			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
 			int num = graph->numResources();
 			_delay = new elm::genstruct::Vector<int>(num);

@@ -44,7 +44,7 @@ public:
 	class GenNode: private graph::Node {
 		friend class GenGraph<N, E>;
 	protected:
-		inline GenNode(/*GenGraph<N, E>*/ graph::Graph *graph = 0): graph::Node(graph) { }
+		inline GenNode(GenGraph<N, E> *g = 0): graph::Node(&g->_g) { }
 		virtual ~GenNode(void) { }
 	public:
 		//inline graph::Graph *graph(void) const { return graph::Node::graph(); }
