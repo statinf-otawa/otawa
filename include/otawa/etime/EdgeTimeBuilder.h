@@ -101,7 +101,7 @@ private:
 	int splitConfs(const config_list_t& confs, const event_list_t& events, bool& lower);
 	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
 	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
-	int countVarEvents(const event_list_t& events);
+	int countDynEvents(const event_list_t& events);
 
 	// ILP state
 	bool _explicit;

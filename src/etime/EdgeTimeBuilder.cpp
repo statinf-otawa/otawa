@@ -504,7 +504,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	sortEvents(all_events, target, IN_BLOCK, edge);
 
 	// usual simple case: few events
-	//if(countVarEvents(all_events) <= event_th) {
+	if(countDynEvents(all_events) <= event_th) {
 		int index = 0;
 
 		// fill the prefix
@@ -523,17 +523,17 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		// perform the computation
 		processSequence();
 		return;
-	//}
-#	if 0
+	}
+
 	// remove prefix case
 	all_events.clear();
 	sortEvents(all_events, target, IN_BLOCK, edge);
-	if(countVarEvents(all_events)) {
+	if(countDynEvents(all_events) <= event_th) {
 
 		// fill the current block
 		int index = 0;
-		for(BasicBlock::InstIterator inst(target); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+		for(BasicBlock::InstIter inst(target); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
 			seq->addLast(par_exe_inst);
 		}
 
@@ -541,6 +541,12 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		processSequence();
 		return;
 	}
+
+	// for now, just crash
+	else
+		ASSERTP(false, "too many events!")
+
+#	if 0
 
 	// split case
 
@@ -610,7 +616,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
  * @param events	Event list to process.
  * @return			Number of variable events.
  */
-int EdgeTimeBuilder::countVarEvents(const event_list_t& events) {
+int EdgeTimeBuilder::countDynEvents(const event_list_t& events) {
 	int cnt = 0;
 	for(int i = 0; i < events.length(); i++)
 		if(events[i].fst->occurrence() == SOMETIMES)
