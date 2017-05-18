@@ -22,7 +22,7 @@
 #ifndef OTAWA_ILP_SYSTEM_H
 #define OTAWA_ILP_SYSTEM_H
 
-#include <elm/dyndata/Iter.h>
+#include <elm/dyndata/Collection.h>
 #include <elm/io/OutStream.h>
 #include <elm/string.h>
 #include <otawa/ilp/Constraint.h>
