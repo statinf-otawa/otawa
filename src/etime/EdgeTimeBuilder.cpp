@@ -90,7 +90,7 @@ void EdgeTimeGraph::customDump(io::Output& out) {
 		// display event
 		out << builder->all_events[i].fst->inst()->address() << " " << builder->all_events[i].fst->detail();
 	}
-	out << "}";
+	out << "\\l}";
 }
 
 
