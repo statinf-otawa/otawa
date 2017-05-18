@@ -526,6 +526,8 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	}
 
 	// remove prefix case
+	if(logFor(LOG_BLOCK))
+		log << "\t\t\ttoo many dynamic events (" << countDynEvents(all_events) << "). Discarding prefix: overestimation increase\n";
 	all_events.clear();
 	sortEvents(all_events, target, IN_BLOCK, edge);
 	if(countDynEvents(all_events) <= event_th) {
@@ -543,8 +545,11 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	}
 
 	// for now, just crash
-	else
+	else {
+		if(logFor(LOG_BLOCK))
+			log << "\t\t\ttoo many dynamic events: " << countDynEvents(all_events) << ". Giving up. Sorry.\n";
 		ASSERTP(false, "too many events!")
+	}
 
 #	if 0
 
