@@ -22,9 +22,9 @@
 #ifndef OTAWA_ILP_CONSTRAINT_H
 #define OTAWA_ILP_CONSTRAINT_H
 
-#include <otawa/ilp/Var.h>
-#include <elm/datastruct/Iterator.h>
+#include <elm/dyndata/Collection.h>
 #include <elm/utility.h>
+#include <otawa/ilp/Var.h>
 #include "Expression.h"
 
 namespace otawa { namespace ilp {
@@ -52,7 +52,7 @@ public:
 	virtual void add(double coef, Var *var = 0) = 0;
 	virtual void sub(double coef, Var *var = 0) = 0;
 
-	virtual elm::datastruct::IteratorInst<Term> *terms(void) = 0;
+	virtual dyndata::AbstractIter<Term> *terms(void) = 0;
 	inline void addLeft(double coef, Var *var = 0)  { add(coef, var); }
 	inline void addRight(double coef, Var *var = 0) { add(-coef, var); }
 
@@ -64,10 +64,10 @@ public:
 	void add(const Expression& e);
 	void sub(const Expression& e);
 
-	class TermIterator: public elm::datastruct::Iterator<Term> {
+	class TermIterator: public dyndata::Iter<Term> {
 		public:
-			inline TermIterator(elm::datastruct::IteratorInst<Term> *_inst) : elm::datastruct::Iterator<Term>(_inst) { }
-			inline TermIterator(Constraint *_cons) : elm::datastruct::Iterator<Term>(_cons->terms()) {
+			inline TermIterator(dyndata::AbstractIter<Term> *_inst): dyndata::Iter<Term>(_inst) { }
+			inline TermIterator(Constraint *_cons) : dyndata::Iter<Term>(_cons->terms()) {
 		}
 
 	};

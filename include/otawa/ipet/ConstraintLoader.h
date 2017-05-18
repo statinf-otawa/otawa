@@ -22,7 +22,7 @@
 #define OTAWA_IPET_CONSTRAINT_LOADER_H
 
 #include <elm/string.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/string.h>
 #include <otawa/base.h>

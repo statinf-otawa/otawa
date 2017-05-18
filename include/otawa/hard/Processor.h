@@ -27,7 +27,7 @@
 #include <elm/genstruct/Table.h>
 #include <otawa/prog/Inst.h>
 #include <elm/util/strong_type.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <otawa/prog/Manager.h>
 
 namespace otawa {
@@ -308,7 +308,7 @@ public:
 	inline t::uint64 getFrequency(void) const { return frequency; }
 
 	static const Processor null;
-	static Processor *load(const elm::system::Path& path) throw(LoadException);
+	static Processor *load(const elm::sys::Path& path) throw(LoadException);
 	static Processor *load(xom::Element *element) throw(LoadException);
 
 	typedef elm::genstruct::Vector<Step> steps_t;

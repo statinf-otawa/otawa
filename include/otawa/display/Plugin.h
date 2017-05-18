@@ -22,7 +22,7 @@
 #ifndef OTAWA_DISPLAY_DRIVER_PLUGIN_H_
 #define OTAWA_DISPLAY_DRIVER_PLUGIN_H_
 
-#include <elm/system/Plugin.h>
+#include <elm/sys/Plugin.h>
 #include <otawa/display/Driver.h>
 
 namespace otawa { namespace display {
@@ -35,7 +35,7 @@ using namespace elm;
 #define OTAWA_DISPLAY_VERSION	Version(1, 0, 0)
 
 // Plugin class
-class Plugin: public elm::system::Plugin, public Driver {
+class Plugin: public elm::sys::Plugin, public Driver {
 public:
 	Plugin(
 		elm::CString name,

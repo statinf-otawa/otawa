@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/system/System.h>
+#include <elm/sys/System.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Registry.h>
@@ -407,7 +407,7 @@ void Processor::run(WorkSpace *ws) {
 		log << "RUNNING: " << name() << " (" << version() << ')' << io::endl;
 
 	// record time
-	elm::system::StopWatch swatch;
+	elm::sys::StopWatch swatch;
 	if(isTimed())
 		swatch.start();
 
@@ -601,7 +601,7 @@ Identifier<bool> Processor::TIMED("otawa::Processor::TIMED", false);
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-Identifier<elm::system::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 0);
+Identifier<elm::sys::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 0);
 
 
 /**

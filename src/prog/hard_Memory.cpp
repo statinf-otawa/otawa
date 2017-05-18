@@ -408,7 +408,7 @@ Memory *Memory::load(elm::xom::Element *element) throw(LoadException) {
  * @param path	Path to the file.
  * @return		Built cache configuration.
  */
-Memory *Memory::load(const elm::system::Path& path) throw(LoadException) {
+Memory *Memory::load(const elm::sys::Path& path) throw(LoadException) {
 	elm::serial2::XOMUnserializer unserializer(&path);
 	Memory *conf = new Memory();
 	try {

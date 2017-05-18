@@ -56,7 +56,7 @@ DisplayedCFG::~DisplayedCFG(void) {
 	}
 }
 
-class BlockIter: public datastruct::IteratorInst<const AbstractGraph::Vertex *> {
+class BlockIter: public dyndata::AbstractIter<const AbstractGraph::Vertex *> {
 public:
 	inline BlockIter(const CFG::BlockIter& iter): i(iter) { }
 	virtual bool ended(void) const { return i.ended(); }
@@ -66,7 +66,7 @@ private:
 	CFG::BlockIter i;
 };
 
-class EdgeIter: public datastruct::IteratorInst<const AbstractGraph::Edge *> {
+class EdgeIter: public dyndata::AbstractIter<const AbstractGraph::Edge *> {
 public:
 	inline EdgeIter(const Block::EdgeIter& iter): i(iter) { }
 	virtual bool ended(void) const { return i.ended(); }
@@ -78,19 +78,19 @@ private:
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Vertex *> *DisplayedCFG::vertices(void) const {
+dyndata::AbstractIter<const AbstractGraph::Vertex *> *DisplayedCFG::vertices(void) const {
 	return new BlockIter(_cfg->blocks());
 }
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Edge *> *DisplayedCFG::outs(const AbstractGraph::Vertex& v) const {
+dyndata::AbstractIter<const AbstractGraph::Edge *> *DisplayedCFG::outs(const AbstractGraph::Vertex& v) const {
 	return new EdgeIter(block(v)->outs());
 }
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Edge *> *DisplayedCFG::ins(const AbstractGraph::Vertex& v) const {
+dyndata::AbstractIter<const AbstractGraph::Edge *> *DisplayedCFG::ins(const AbstractGraph::Vertex& v) const {
 	return new EdgeIter(block(v)->ins());
 }
 

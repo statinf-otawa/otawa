@@ -48,9 +48,9 @@ public:
 	DisplayedCFG(CFG& cfg);
 	~DisplayedCFG(void);
 
-	virtual datastruct::IteratorInst<const AbstractGraph::Vertex *> *vertices(void) const;
-	virtual datastruct::IteratorInst<const AbstractGraph::Edge *> *outs(const AbstractGraph::Vertex& v) const;
-	virtual datastruct::IteratorInst<const AbstractGraph::Edge *> *ins(const AbstractGraph::Vertex& v) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Vertex *> *vertices(void) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *outs(const AbstractGraph::Vertex& v) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *ins(const AbstractGraph::Vertex& v) const;
 	virtual const AbstractGraph::Vertex& sourceOf(const AbstractGraph::Edge& v) const;
 	virtual const AbstractGraph::Vertex& sinkOf(const AbstractGraph::Edge& v) const;
 	virtual string id(const AbstractGraph::Vertex& v) const;

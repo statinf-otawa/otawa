@@ -45,7 +45,7 @@ public:
 	virtual void add(double coef, Var *var);
 	virtual void sub(double coef, Var *var);
 
-	virtual elm::datastruct::IteratorInst<Term> *terms(void);
+	virtual dyndata::AbstractIter<Term> *terms(void);
 
 private:
 	Expression expr;

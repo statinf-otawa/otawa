@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/system/System.h>
+#include <elm/sys/System.h>
 
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/display/ILPSystemDisplayer.h>
@@ -126,9 +126,9 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 		path = _ << ENTRY_CFG(ws)->label() << "-ilp.html";
 	io::OutStream *file;
 	try {
-		file = elm::system::System::createFile(path);
+		file = elm::sys::System::createFile(path);
 	}
-	catch(elm::system::SystemException& exn) {
+	catch(elm::sys::SystemException& exn) {
 		throw new ProcessorException(*this, _ << "cannot create file \"" << path << "\": " << exn.message());
 	}
 	cout.setStream(*file);

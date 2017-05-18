@@ -91,7 +91,7 @@ public:
 	virtual comparator_t comparator(void) const;
 	virtual void add(double coef, ilp::Var *var = 0);
 	virtual void sub(double coef, ilp::Var *var = 0);
-	elm::datastruct::IteratorInst<ilp::Constraint::Term> *terms(void);
+	dyndata::AbstractIter<ilp::Constraint::Term> *terms(void);
 	virtual void setComparator(comparator_t comp) { cmp = comp; }
 	virtual void setLabel(const string& label) { _label = label; }
 
@@ -121,7 +121,7 @@ private:
 
 	Factor *getFacts();
 	// TermIterInst class
-	class TermIterInst: public elm::datastruct::IteratorInst<ilp::Constraint::Term> {
+	class TermIterInst: public dyndata::AbstractIter<ilp::Constraint::Term> {
 
 		Factor *cur;
 		public:
@@ -222,8 +222,8 @@ public:
 	virtual int countConstraints(void);
 	virtual void exportLP(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout);
-	elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void);
-	elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void);
+	dyndata::AbstractIter<ilp::Constraint *> *constraints(void);
+	dyndata::AbstractIter<ilp::Constraint::Term> *objTerms(void);
 
 	class LocalVar: public ilp::Var {
 	public:
@@ -358,7 +358,7 @@ private:
 	void removeConstraint(Constraint *cons);
 
 	// ConstIterInst
-	class ConstIterInst: public elm::datastruct::IteratorInst<ilp::Constraint*> {
+	class ConstIterInst: public dyndata::AbstractIter<ilp::Constraint*> {
 		System *sys;
 		Constraint *cur;
 	public:
@@ -451,7 +451,7 @@ inline Constraint::Factor *Constraint::Factor::next(void) const {
 	return nxt;
 }
 
-elm::datastruct::IteratorInst<ilp::Constraint::Term> *Constraint::terms(void) {
+dyndata::AbstractIter<ilp::Constraint::Term> *Constraint::terms(void) {
 		 return(new TermIterInst(this));
 }
 
@@ -594,11 +594,11 @@ Var *System::getVar(ilp::Var *var) {
 	return lvar;
 }
 
-elm::datastruct::IteratorInst<ilp::Constraint*> *System::constraints(void) {
+dyndata::AbstractIter<ilp::Constraint*> *System::constraints(void) {
 	 return(new ConstIterInst(this));
 }
 
-elm::datastruct::IteratorInst<ilp::Constraint::Term> *System::objTerms(void) {
+dyndata::AbstractIter<ilp::Constraint::Term> *System::objTerms(void) {
 	 return(new Constraint::TermIterInst(ofun));
 }
 /**

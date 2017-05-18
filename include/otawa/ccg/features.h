@@ -104,7 +104,7 @@ private:
 
 
 // Graph class
-class Graph: public GenGraph<Node, Edge> {
+class Graph: public graph::GenGraph<Node, Edge> {
 public:
 
 	// Properties

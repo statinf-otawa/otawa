@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <otawa/hard/Register.h>
-#include <elm/util/Formatter.h>
+#include <elm/string/Formatter.h>
 #include <elm/io/BlockInStream.h>
 #include <elm/util/VarArg.h>
 
@@ -29,7 +29,7 @@ using namespace elm;
 namespace otawa { namespace hard {
 
 // RegisterFormatter
-class RegisterFormatter: private util::Formatter {
+class RegisterFormatter: private Formatter {
 	io::BlockInStream templ;
 	io::Output output;
 	int index;

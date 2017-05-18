@@ -31,7 +31,7 @@ class Node;
 class Var;
 
 // Edge class
-class Edge: public GenGraph<Node, Edge>::GenEdge, public PropList {
+class Edge: public graph::GenGraph<Node, Edge>::GenEdge, public PropList {
 public:
 	Edge(Node *source, Node *target);
 	~Edge(void);

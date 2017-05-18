@@ -117,7 +117,7 @@ string VarTextDecoder::getBytes(Address addr, int size) {
 	t::uint8 byte;
 	for(int i = 0; i < size; i++) {
 		workspace()->process()->get(addr + i, byte);
-		buf << io::f(byte).right().width(2).pad('0');
+		buf << io::fmt(byte).right().width(2).pad('0');
 	}
 	return buf.toString();
 }

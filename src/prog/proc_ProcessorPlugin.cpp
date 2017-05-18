@@ -20,8 +20,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/system/Plugger.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Plugger.h>
+#include <elm/sys/Path.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/proc/Registry.h>
 //#include <otawa/otawa.h>
@@ -35,7 +35,7 @@ extern Identifier<bool> IS_FEATURE;
 
 
 // processor plugger
-static elm::system::Plugger plugger(OTAWA_PROC_NAME, OTAWA_PROC_VERSION);
+static elm::sys::Plugger plugger(OTAWA_PROC_NAME, OTAWA_PROC_VERSION);
 static bool initialized_paths = false;
 
 
@@ -126,9 +126,9 @@ extern Manager MANAGER;
 void ProcessorPlugin::init(void) {
 	initialized_paths = true;
 	plugger.resetPaths();
-	elm::system::Path path = elm::system::Path::current().append(".otawa/proc");
+	elm::sys::Path path = elm::sys::Path::current().append(".otawa/proc");
 	plugger.addPath(path);
-	path = elm::system::Path::home().append(".otawa/proc");
+	path = elm::sys::Path::home().append(".otawa/proc");
 	plugger.addPath(path);
 	path = MANAGER.prefixPath() / "lib/otawa";
 	plugger.addPath(path);
@@ -179,7 +179,7 @@ ProcessorPlugin *ProcessorPlugin::get(string name) {
  * Add a path to the list of looked paths.
  * @param path	Path to add.
  */
-void ProcessorPlugin::addPath(const elm::system::Path& path) {
+void ProcessorPlugin::addPath(const elm::sys::Path& path) {
 	if(!initialized_paths)
 		init();
 	plugger.addPath(path);
@@ -190,7 +190,7 @@ void ProcessorPlugin::addPath(const elm::system::Path& path) {
  * Remove the given path from the looked path.
  * @param path	Path to remove.
  */
-void ProcessorPlugin::removePath(const elm::system::Path& path) {
+void ProcessorPlugin::removePath(const elm::sys::Path& path) {
 	if(!initialized_paths)
 		init();
 	plugger.removePath(path);

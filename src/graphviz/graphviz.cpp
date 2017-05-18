@@ -152,7 +152,7 @@ public:
 					gen(out);
 					delete file;
 				}
-				catch(system::SystemException& e) {
+				catch(sys::SystemException& e) {
 					throw display::Exception(e.message());
 				}
 			}
@@ -215,12 +215,12 @@ private:
 		out << "];\n";
 
 		// generate the nodes
-		for(datastruct::Iterator<const Vertex *> v(g.vertices()); v; v++)
+		for(dyndata::Iter<const Vertex *> v(g.vertices()); v; v++)
 			gen(out, **v);
 
 		// generate the edges
-		for(datastruct::Iterator<const Vertex *> v(g.vertices()); v; v++)
-			for(datastruct::Iterator<const Edge *> e(g.outs(**v)); e; e++)
+		for(dyndata::Iter<const Vertex *> v(g.vertices()); v; v++)
+			for(dyndata::Iter<const Edge *> e(g.outs(**v)); e; e++)
 				gen(out, **e);
 
 		out << "}\n";

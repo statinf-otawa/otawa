@@ -70,13 +70,13 @@ class GenDisplayer {
 			}
 		}
 
-		virtual datastruct::IteratorInst<const Vertex *> *vertices(void) const
-			{ return datastruct::abstract_iter<const Vertex *>(_vs.items()); }
+		virtual dyndata::AbstractIter<const Vertex *> *vertices(void) const
+			{ return dyndata::iter<const Vertex *>(_vs.items()); }
 
-		virtual datastruct::IteratorInst<const Edge *> *outs(const Vertex& v) const
-			{ return datastruct::abstract_iter<const Edge *>(static_cast<const MyVertex &>(v).succs.items()); }
-		virtual datastruct::IteratorInst<const Edge *> *ins(const Vertex& v) const
-			{ return datastruct::abstract_iter<const Edge *>(static_cast<const MyVertex &>(v).preds.items()); }
+		virtual dyndata::AbstractIter<const Edge *> *outs(const Vertex& v) const
+			{ return dyndata::iter<const Edge *>(static_cast<const MyVertex &>(v).succs.items()); }
+		virtual dyndata::AbstractIter<const Edge *> *ins(const Vertex& v) const
+			{ return dyndata::iter<const Edge *>(static_cast<const MyVertex &>(v).preds.items()); }
 
 		virtual const Vertex& sourceOf(const Edge& e) const
 			{ return *_vs[_g.sourceOf(static_cast<const MyEdge &>(e)._e)->index()]; }

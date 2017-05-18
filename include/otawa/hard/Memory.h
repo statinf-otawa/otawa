@@ -182,7 +182,7 @@ public:
 
 	inline const genstruct::Table<const Bank *>& banks(void) const { return _banks; }
 	inline const genstruct::Table<const Bus *>& buses(void) const  { return _buses; }
-	static Memory *load(const elm::system::Path& path) throw(LoadException);
+	static Memory *load(const elm::sys::Path& path) throw(LoadException);
 	static Memory *load(xom::Element *element) throw(LoadException);
 	const Bank *get(Address address) const;
 

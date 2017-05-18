@@ -39,7 +39,7 @@ namespace otawa { namespace ccg {
  * Build a new CCG edge.
  */
 Edge::Edge(Node *source, Node *target) :
-	GenGraph<Node, Edge>::GenEdge(source,target)
+	graph::GenGraph<Node, Edge>::GenEdge(source,target)
 {
 }
 

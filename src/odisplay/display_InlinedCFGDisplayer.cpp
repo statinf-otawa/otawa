@@ -79,20 +79,20 @@ InlinedCFG::~InlinedCFG(void) {
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Vertex *> *InlinedCFG::vertices(void) const {
+dyndata::AbstractIter<const AbstractGraph::Vertex *> *InlinedCFG::vertices(void) const {
 	return new InlinedCFGBlockIter(_cfg->blocks());
 }
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Edge *> *InlinedCFG::outs(const AbstractGraph::Vertex& v) const {
+dyndata::AbstractIter<const AbstractGraph::Edge *> *InlinedCFG::outs(const AbstractGraph::Vertex& v) const {
 	Block* b = block(v);
 	return new InlinedCFGEdgeIter(b->outs(), b);
 }
 
 /**
  */
-datastruct::IteratorInst<const AbstractGraph::Edge *> *InlinedCFG::ins(const AbstractGraph::Vertex& v) const {
+dyndata::AbstractIter<const AbstractGraph::Edge *> *InlinedCFG::ins(const AbstractGraph::Vertex& v) const {
 	return new InlinedCFGEdgeIter(block(v)->ins(), 0);
 }
 

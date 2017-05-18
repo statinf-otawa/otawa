@@ -45,7 +45,7 @@ class InlinedCFG: public AbstractGraph {
 		otawa::Block *target; // only use for artificial edge
 	};
 
-	class InlinedCFGBlockIter: public datastruct::IteratorInst<const AbstractGraph::Vertex *> {
+	class InlinedCFGBlockIter: public dyndata::AbstractIter<const AbstractGraph::Vertex *> {
 	public:
 		inline InlinedCFGBlockIter(const CFG::BlockIter& iter): i(iter), stop(false) { }
 		virtual bool ended(void) const;
@@ -58,7 +58,7 @@ class InlinedCFG: public AbstractGraph {
 		genstruct::SLList<CFG*> travledCFG;		// use to make sure that there can only be one instance of each CFG (two calls of a CFG V will goes to the same CFG)
 	};
 
-	class InlinedCFGEdgeIter: public datastruct::IteratorInst<const AbstractGraph::Edge *> {
+	class InlinedCFGEdgeIter: public dyndata::AbstractIter<const AbstractGraph::Edge *> {
 	public:
 		InlinedCFGEdgeIter(const Block::EdgeIter& iter, Block* b);
 		virtual bool ended(void) const;
@@ -78,9 +78,9 @@ public:
 	~InlinedCFG(void);
 
 	// the pure virtual functions
-	virtual datastruct::IteratorInst<const AbstractGraph::Vertex *> *vertices(void) const;
-	virtual datastruct::IteratorInst<const AbstractGraph::Edge *> *outs(const AbstractGraph::Vertex& v) const;
-	virtual datastruct::IteratorInst<const AbstractGraph::Edge *> *ins(const AbstractGraph::Vertex& v) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Vertex *> *vertices(void) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *outs(const AbstractGraph::Vertex& v) const;
+	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *ins(const AbstractGraph::Vertex& v) const;
 	virtual const AbstractGraph::Vertex& sourceOf(const AbstractGraph::Edge& v) const;
 	virtual const AbstractGraph::Vertex& sinkOf(const AbstractGraph::Edge& v) const;
 	virtual string id(const AbstractGraph::Vertex& v) const;

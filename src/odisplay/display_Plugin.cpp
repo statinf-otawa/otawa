@@ -41,7 +41,7 @@ Plugin::Plugin(
 	elm::CString name,
 	const elm::Version& version,
 	const elm::Version& plugger_version
-): elm::system::Plugin(name, plugger_version, OTAWA_DISPLAY_NAME) {
+): elm::sys::Plugin(name, plugger_version, OTAWA_DISPLAY_NAME) {
 }
 
 

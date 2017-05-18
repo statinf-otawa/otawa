@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/system/System.h>
+#include <elm/sys/System.h>
 #include <otawa/ipet.h>
 #include <otawa/prog/Process.h>
 #include <otawa/util/BBRatioDisplayer.h>
@@ -98,9 +98,9 @@ void BBRatioDisplayer::setup(WorkSpace *ws) {
 		if(logFor(LOG_PROC))
 			log << "\toutputting to " << path << io::endl;
 		try {
-			stream = elm::system::System::createFile(path);
+			stream = elm::sys::System::createFile(path);
 		}
-		catch(elm::system::SystemException& exn) {
+		catch(elm::sys::SystemException& exn) {
 			throw ProcessorException(*this, _ << "cannot open \"" << path << "\"");
 		}
 		out.setStream(*stream);
@@ -194,7 +194,7 @@ Identifier<bool> BBRatioDisplayer::TO_FILE("otawa::BBRatioDisplayer::TO_FILE", f
 /**
  * Configure the @ref BBRatioDisplayer to perform its output to the named file.
  */
-Identifier<elm::system::Path> BBRatioDisplayer::PATH("otawa::BBRatioDisplayer::PATH", "");
+Identifier<elm::sys::Path> BBRatioDisplayer::PATH("otawa::BBRatioDisplayer::PATH", "");
 
 
 } // otawa

@@ -24,7 +24,7 @@
 #define OTAWA_DFA_FASTSTATE_H_
 
 #include <elm/types.h>
-#include <elm/util/array.h>
+#include <elm/array.h>
 #include <elm/alloc/StackAllocator.h>
 #include <otawa/hard/Platform.h>
 #include "State.h"

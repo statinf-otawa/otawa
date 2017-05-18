@@ -21,8 +21,8 @@
 #ifndef OTAWA_DISPLAY_DISPLAYER_H_
 #define OTAWA_DISPLAY_DISPLAYER_H_
 
-#include <elm/datastruct/Collection.h>
 #include <elm/data/List.h>
+#include <elm/dyndata/Collection.h>
 #include <elm/sys/Path.h>
 #include <otawa/display/display.h>
 #include <otawa/prop/AbstractIdentifier.h>
@@ -46,9 +46,9 @@ public:
 	};
 
 	virtual ~AbstractGraph(void);
-	virtual datastruct::IteratorInst<const Vertex *> *vertices(void) const = 0;
-	virtual datastruct::IteratorInst<const Edge *> *outs(const Vertex& v) const = 0;
-	virtual datastruct::IteratorInst<const Edge *> *ins(const Vertex& v) const = 0;
+	virtual dyndata::AbstractIter<const Vertex *> *vertices(void) const = 0;
+	virtual dyndata::AbstractIter<const Edge *> *outs(const Vertex& v) const = 0;
+	virtual dyndata::AbstractIter<const Edge *> *ins(const Vertex& v) const = 0;
 	virtual const Vertex& sourceOf(const Edge& v) const = 0;
 	virtual const Vertex& sinkOf(const Edge& v) const = 0;
 	virtual string id(const Vertex& v) const = 0;

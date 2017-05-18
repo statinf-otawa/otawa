@@ -22,7 +22,7 @@
 #define OTAWA_DYNAMIC_BRANCHING_ANALYSIS_H
 
 #include <elm/genstruct/Vector.h>
-#include <elm/system/StopWatch.h>
+#include <elm/sys/StopWatch.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>
 #include <otawa/cfg.h>

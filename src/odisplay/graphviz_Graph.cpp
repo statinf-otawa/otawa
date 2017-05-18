@@ -23,11 +23,11 @@
 #include "graphviz.h"
 #include <otawa/display/Driver.h>
 #include <elm/io/UnixOutStream.h>
-#include <elm/system/ProcessBuilder.h>
-#include <elm/system/System.h>
+#include <elm/sys/ProcessBuilder.h>
+#include <elm/sys/System.h>
 
 using namespace elm::io;
-using namespace elm::system;
+using namespace elm::sys;
 
 namespace otawa { namespace display {
 
@@ -193,7 +193,7 @@ void GraphVizGraph::display(void) throw(DisplayException) {
 		default:
 			throw DisplayException("unsupported layout");
 	}
-	elm::system::ProcessBuilder builder(command);
+	ProcessBuilder builder(command);
 
 	// Select the type
 	CString param_type;

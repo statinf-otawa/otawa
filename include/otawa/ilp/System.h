@@ -22,10 +22,10 @@
 #ifndef OTAWA_ILP_SYSTEM_H
 #define OTAWA_ILP_SYSTEM_H
 
+#include <elm/dyndata/Iter.h>
 #include <elm/io/OutStream.h>
 #include <elm/string.h>
 #include <otawa/ilp/Constraint.h>
-#include <elm/datastruct/Iterator.h>
 #include <otawa/proc/Monitor.h>
 
 #include "features.h"
@@ -53,8 +53,8 @@ public:
 	virtual Var *newVar(const string& name = "") = 0;
 	virtual int countVars(void) = 0;
 	virtual int countConstraints(void) = 0;
-	virtual elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void) = 0;
-	virtual elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void) = 0;
+	virtual dyndata::AbstractIter<ilp::Constraint*> *constraints(void) = 0;
+	virtual dyndata::AbstractIter<ilp::Constraint::Term> *objTerms(void) = 0;
 	virtual void exportLP(io::Output& out = elm::cout) = 0;
 	virtual void dumpSystem(io::Output& out = elm::cout);
 	virtual void dumpSolution(io::Output& out = elm::cout) = 0;
@@ -79,24 +79,24 @@ public:
 	void dumpCPlex(elm::io::OutStream& out = elm::io::out);
 	void dumpMOSEK(elm::io::OutStream& out = elm::io::out);
 
-	class ConstIterator: public elm::datastruct::Iterator<Constraint*> {
+	class ConstIterator: public dyndata::Iter<Constraint *> {
 		public:
 
-		inline ConstIterator(elm::datastruct::IteratorInst<Constraint*> *_inst):
-			elm::datastruct::Iterator<Constraint*>(_inst) { }
-		inline ConstIterator(System *_sys) : elm::datastruct::Iterator<Constraint*>(_sys->constraints()) {
+		inline ConstIterator(dyndata::AbstractIter<Constraint*> *_inst):
+			dyndata::Iter<Constraint *>(_inst) { }
+		inline ConstIterator(System *_sys): dyndata::Iter<Constraint *>(_sys->constraints()) {
 
 		}
 
 	};
 
-	class ObjTermIterator: public elm::datastruct::Iterator<Constraint::Term> {
+	class ObjTermIterator: public dyndata::Iter<Constraint::Term> {
 		public:
 
-		inline ObjTermIterator(elm::datastruct::IteratorInst<Constraint::Term> *_inst):
-			elm::datastruct::Iterator<Constraint::Term>(_inst) { }
+		inline ObjTermIterator(dyndata::AbstractIter<Constraint::Term> *_inst):
+			dyndata::Iter<Constraint::Term>(_inst) { }
 		inline ObjTermIterator(System *_sys):
-			elm::datastruct::Iterator<Constraint::Term>(_sys->objTerms()) { }
+			dyndata::Iter<Constraint::Term>(_sys->objTerms()) { }
 	};
 };
 

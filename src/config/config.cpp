@@ -23,7 +23,7 @@
 #include <elm/options.h>
 #include <elm/string/StringBuffer.h>
 #include <elm/genstruct/HashTable.h>
-#include <elm/system/Plugger.h>
+#include <elm/sys/Plugger.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>
 #include <elm/sys/System.h>
@@ -312,7 +312,7 @@ private:
 	void list(cstring kind, cstring name, cstring version) {
 		// this implementation (a) does not support the new plugin system
 		// and (b) hook any plugin without control and display all plugins as is.
-		elm::system::Plugger plugger(name, version, otawa::Manager::buildPaths(kind));
+		elm::sys::Plugger plugger(name, version, otawa::Manager::buildPaths(kind));
 		if(!verbose)
 			plugger.setQuiet(true);
 
@@ -344,7 +344,7 @@ private:
 
 		// look plugins
 		elm::Vector<sys::Plugin *> found;
-		for(elm::system::Plugger::Iterator plugin(plugger); plugin; plugin++) {
+		for(elm::sys::Plugger::Iterator plugin(plugger); plugin; plugin++) {
 			if(verbose)
 				cerr << "INFO: plugging " << plugin.path() << io::endl;
 			sys::Plugin *handle = plugin.plug();

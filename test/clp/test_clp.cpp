@@ -19,8 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/test.h>
 #include <otawa/data/clp/ClpValue.h>
-#include <elm/util/test.h>
 
 using namespace elm;
 using namespace otawa;

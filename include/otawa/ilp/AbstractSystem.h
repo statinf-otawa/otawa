@@ -42,7 +42,7 @@ public:
 	virtual const string& label(void) const;
 	virtual void add(double coef, Var *var = 0);
 	virtual void sub(double coef, Var *var = 0);
-	virtual elm::datastruct::IteratorInst<Term> *terms(void);
+	virtual dyndata::AbstractIter<Term> *terms(void);
 	virtual void setComparator(comparator_t comp);
 	virtual void setLabel(const string& label);
 
@@ -82,8 +82,8 @@ public:
 	virtual Var *newVar(const string& name);
 	virtual int countVars(void);
 	virtual int countConstraints(void);
-	virtual elm::datastruct::IteratorInst<ilp::Constraint*> *constraints(void);
-	virtual elm::datastruct::IteratorInst<ilp::Constraint::Term> *objTerms(void);
+	virtual dyndata::AbstractIter<ilp::Constraint*> *constraints(void);
+	virtual dyndata::AbstractIter<ilp::Constraint::Term> *objTerms(void);
 	virtual void exportLP(io::Output& out);
 	virtual void dumpSolution(io::Output& out);
 	virtual Var *newVar(Var::type_t type, const string& name);

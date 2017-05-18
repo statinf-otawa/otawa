@@ -53,7 +53,7 @@ private:
  * @param monitor		Monitor for IO.
  * @param verbosity		Verbose messages if true.
  */
-XSLTScript::XSLTScript(const elm::system::Path& path, Monitor& monitor, bool verbosity) throw(otawa::Exception)
+XSLTScript::XSLTScript(const elm::sys::Path& path, Monitor& monitor, bool verbosity) throw(otawa::Exception)
 : io::Monitor(monitor), doc(0), xsl(0), temp(0), state(ERROR), configured(false), verbose(verbosity) {
 
 	// open the file

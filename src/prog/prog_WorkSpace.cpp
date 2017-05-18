@@ -400,7 +400,7 @@ ilp::System *WorkSpace::newILPSystem(bool max) {
  * @throw LoadException		If the file cannot be found or if it does not match
  * the OTAWA XML type.
  */
-void WorkSpace::loadConfig(const elm::system::Path& path) {
+void WorkSpace::loadConfig(const elm::sys::Path& path) {
 	xom::Builder builder;
 	xom::Document *doc = builder.build(&path);
 	if(!doc)
@@ -420,7 +420,7 @@ void WorkSpace::loadConfig(const elm::system::Path& path) {
 xom::Element *WorkSpace::config(void) {
 	xom::Element *conf = CONFIG_ELEMENT(this);
 	if(!conf) {
-		elm::system::Path path = CONFIG_PATH(this);
+		elm::sys::Path path = CONFIG_PATH(this);
 		if(path) {
 			loadConfig(path);
 			conf = CONFIG_ELEMENT(this);

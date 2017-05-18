@@ -508,7 +508,7 @@ const Processor Processor::null;
  * @param path	Path to the file.
  * @throw LoadException 	Thrown if an error is found.
  */
-hard::Processor *Processor::load(const elm::system::Path& path) throw(LoadException) {
+hard::Processor *Processor::load(const elm::sys::Path& path) throw(LoadException) {
 	Processor *_processor = new Processor();
 	try {
 		elm::serial2::XOMUnserializer unser(&path);

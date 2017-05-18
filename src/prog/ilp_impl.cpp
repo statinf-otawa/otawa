@@ -109,7 +109,7 @@ void ConstraintImpl::sub(double coef, Var *var) {
 }
 
 
-class ConstraintTermIterator: public elm::datastruct::IteratorInst<Term>  {
+class ConstraintTermIterator: public dyndata::AbstractIter<Term>  {
 public:
 	ConstraintTermIterator(Expression *e): iter(e) { step(); }
 	virtual bool ended(void) const { return iter.ended(); }
@@ -123,7 +123,7 @@ private:
 
 /**
  */
-elm::datastruct::IteratorInst<Term> *ConstraintImpl::terms(void) {
+dyndata::AbstractIter<Term> *ConstraintImpl::terms(void) {
 	return new ConstraintTermIterator(&expr);
 }
 

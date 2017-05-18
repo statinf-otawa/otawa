@@ -21,7 +21,7 @@
 #ifndef OTAWA_HARD_PLATFORM_H
 #define OTAWA_HARD_PLATFORM_H
 
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <otawa/properties.h>
 #include <otawa/hard/Register.h>
 #include <otawa/prog/Manager.h>

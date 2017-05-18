@@ -8,7 +8,7 @@
 #define OTAWA_SIM_SIMULATOR_H
 
 #include <otawa/hard/Platform.h>
-#include <elm/system/Plugin.h>
+#include <elm/sys/Plugin.h>
 #include <otawa/properties.h>
 
 namespace otawa {
@@ -33,7 +33,7 @@ extern Identifier<bool> USE_CONTROL;
 
 
 // Simulator class
-class Simulator: public elm::system::Plugin {
+class Simulator: public elm::sys::Plugin {
 public:
 	Simulator(elm::CString name,
 		const elm::Version& version,

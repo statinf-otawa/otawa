@@ -24,7 +24,7 @@
 
 #include <elm/xom.h>
 #include <elm/genstruct/Vector.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <elm/io/Monitor.h>
 #include <otawa/properties.h>
 
@@ -34,7 +34,7 @@ using namespace elm;
 
 class XSLTScript: private io::Monitor {
 public:
-	XSLTScript(const elm::system::Path& path, Monitor& monitor = elm::monitor, bool verbosity = false) throw(otawa::Exception);
+	XSLTScript(const elm::sys::Path& path, Monitor& monitor = elm::monitor, bool verbosity = false) throw(otawa::Exception);
 	virtual ~XSLTScript(void);
 	xom::Document *document(void) const { return doc; }
 	void setConfiguration(cstring name = "configuration");

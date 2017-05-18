@@ -20,7 +20,7 @@
  *	02110-1301  USA
  */
 
-#include <elm/util/test.h>
+#include <elm/test.h>
 #include <otawa/dfa/MemorySet.h>
 
 using namespace otawa;

@@ -636,7 +636,7 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		if (time) {
 			isDebug = false;
-			system::StopWatch watch;
+			sys::StopWatch watch;
 			watch.start();
 			for (int i=0; i < NB_EXEC; i++) {addTargetToBB(bb);}
 			watch.stop();

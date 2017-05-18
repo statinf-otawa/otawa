@@ -24,7 +24,7 @@
 #include <elm/io.h>
 #include <elm/util/Cleaner.h>
 #include <elm/util/Version.h>
-#include <elm/system/StopWatch.h>
+#include <elm/sys/StopWatch.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/HashTable.h>
 #include <elm/util/Cleaner.h>
@@ -101,7 +101,7 @@ public:
 	static Identifier<log_level_t>& LOG_LEVEL;
 
 	// Statistics Properties
-	static Identifier<elm::system::time_t> RUNTIME;
+	static Identifier<elm::sys::time_t> RUNTIME;
 
 	// Deprecated
 	Processor(const PropList& props);

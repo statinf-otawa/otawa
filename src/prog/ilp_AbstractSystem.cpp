@@ -24,7 +24,7 @@
 namespace elm { namespace datastruct {
 
 template <class T, class I>
-class IteratorMaker: public datastruct::IteratorInst<T> {
+class IteratorMaker: public dyndata::AbstractIter<T> {
 public:
 	inline IteratorMaker(const I& iter): i(iter) { }
 	virtual ~IteratorMaker(void) { }
@@ -138,7 +138,7 @@ void AbstractConstraint::sub(double coef, Var *var) {
 
 /**
  */
-elm::datastruct::IteratorInst<Term> *AbstractConstraint::terms(void) {
+dyndata::AbstractIter<Term> *AbstractConstraint::terms(void) {
 	return new datastruct::IteratorMaker<Term, Expression::Iterator>(Expression::Iterator(&_expr));
 }
 
@@ -243,15 +243,15 @@ int AbstractSystem::countConstraints(void) {
 
 /**
  */
-elm::datastruct::IteratorInst<Constraint*> *AbstractSystem::constraints(void) {
-	return new datastruct::IteratorMaker<Constraint *, ConstIter>(ConstIter(this));
+dyndata::AbstractIter<Constraint*> *AbstractSystem::constraints(void) {
+	return new dyndata::IterInst<Constraint *, ConstIter>(ConstIter(this));
 }
 
 
 /**
  */
-elm::datastruct::IteratorInst<Constraint::Term> *AbstractSystem::objTerms(void) {
-	return new datastruct::IteratorMaker<Term, Expression::Iterator>(Expression::Iterator(&obj));
+dyndata::AbstractIter<Constraint::Term> *AbstractSystem::objTerms(void) {
+	return new dyndata::IterInst<Term, Expression::Iterator>(Expression::Iterator(&obj));
 }
 
 

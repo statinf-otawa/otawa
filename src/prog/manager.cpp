@@ -22,7 +22,7 @@
 
 //#include <config.h>
 #include "../../config.h"
-#include <elm/system/System.h>
+#include <elm/sys/System.h>
 #include <elm/xom.h>
 #include <elm/xom/XSLTransform.h>
 #include <gel/gel.h>
@@ -41,12 +41,12 @@ namespace otawa {
 // Private
 String Manager::buildPaths(cstring kind, string paths) {
 	StringBuffer buf;
-	buf << "./.otawa/" << kind << elm::system::Path::PATH_SEPARATOR
-		<< elm::system::Path::home() << "/.otawa/" << kind << elm::system::Path::PATH_SEPARATOR;
+	buf << "./.otawa/" << kind << elm::sys::Path::PATH_SEPARATOR
+		<< elm::sys::Path::home() << "/.otawa/" << kind << elm::sys::Path::PATH_SEPARATOR;
 #	ifdef HAS_RELOCATION
-		buf << (Manager::prefixPath() / "lib/otawa" / kind) << elm::system::Path::PATH_SEPARATOR;
+		buf << (Manager::prefixPath() / "lib/otawa" / kind) << elm::sys::Path::PATH_SEPARATOR;
 		if(kind == "proc")
-			buf << (Manager::prefixPath() / "lib/otawa") << elm::system::Path::PATH_SEPARATOR;
+			buf << (Manager::prefixPath() / "lib/otawa") << elm::sys::Path::PATH_SEPARATOR;
 #	endif
 	buf << paths;
 	return buf.toString();
@@ -150,7 +150,7 @@ void Manager::setVerbosity(const PropList& props) {
 	}
 
 	// look in environment
-	if(elm::system::System::hasEnv(VERBOSE_ENV))
+	if(elm::sys::System::hasEnv(VERBOSE_ENV))
 		verbose = 1;
 	else
 		verbose = 0;
@@ -208,7 +208,7 @@ sim::Simulator *Manager::findSimulator(elm::CString name) {
  * @param	Path to the binary.
  * @return	Path to the configuration file if any, false else.
  */
-elm::system::Path Manager::retrieveConfig(const elm::system::Path& path) {
+elm::sys::Path Manager::retrieveConfig(const elm::sys::Path& path) {
 
 	// retrieve the loader
 	Loader *loader = findFileLoader(path);
@@ -269,7 +269,7 @@ elm::system::Path Manager::retrieveConfig(const elm::system::Path& path) {
  * The two first cases let the user to provide their own plugin for, as an
  * example, to develop a new loader plugin.
  */
-WorkSpace *Manager::load(const elm::system::Path&  path, const PropList& props) {
+WorkSpace *Manager::load(const elm::sys::Path&  path, const PropList& props) {
 	setVerbosity(props);
 
 	// Just load binary ?
@@ -293,7 +293,7 @@ CString Manager::copyright = "Copyright (c) 2016, University of Toulouse";
  * @param path	Path to the looked file.
  * @return		Found loader or NULL.
  */
-Loader *Manager::findFileLoader(const elm::system::Path& path) {
+Loader *Manager::findFileLoader(const elm::sys::Path& path) {
 	Output log(io::err);
 
 	gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
@@ -310,10 +310,10 @@ Loader *Manager::findFileLoader(const elm::system::Path& path) {
 	if(isVerbose()) {
 		log << "INFO: looking for loader \"" << path << "\"\n";
 		log << "INFO: searchpaths:\n";
-		for(elm::system::Plugger::PathIterator path(loader_plugger); path; path++)
+		for(elm::sys::Plugger::PathIterator path(loader_plugger); path; path++)
 			log << "INFO:	- " << *path << io::endl;
 		log << "INFO: available loaders\n";
-		for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+		for(elm::sys::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
 			log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
 	}
 	return findLoader(name.toCString());
@@ -328,7 +328,7 @@ Loader *Manager::findFileLoader(const elm::system::Path& path) {
  * @throws	LoadException	Error during load.
  */
 WorkSpace *Manager::loadBin(
-	const elm::system::Path& path,
+	const elm::sys::Path& path,
 	const PropList& props)
 {
 	PropList used_props(props);
@@ -372,10 +372,10 @@ WorkSpace *Manager::loadBin(
 			log << "INFO: looking for loader \"" << name << "\"\n";
 			log << "INFO: prefix path = " << prefixPath() << io::endl;
 			log << "INFO: searchpaths:\n";
-			for(elm::system::Plugger::PathIterator path(loader_plugger); path; path++)
+			for(elm::sys::Plugger::PathIterator path(loader_plugger); path; path++)
 				log << "INFO:	- " << *path << io::endl;
 			log << "INFO: available loaders\n";
-			for(elm::system::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+			for(elm::sys::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
 				log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
 		}
 		loader = findLoader(name.toCString());
@@ -417,7 +417,7 @@ WorkSpace *Manager::loadBin(
  * @throws	LoadException	Error during load.
  */
 WorkSpace *Manager::loadXML(
-	const elm::system::Path& path,
+	const elm::sys::Path& path,
 	const PropList& props)
 {
 	setVerbosity(props);
@@ -462,7 +462,7 @@ WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
 		resetVerbosity();
 		throw LoadException("no binary available.");
 	}
-	elm::system::Path bin_path = (CString)bin->getAttributeValue("ref");
+	elm::sys::Path bin_path = (CString)bin->getAttributeValue("ref");
 	if(!bin_path) {
 		resetVerbosity();
 		throw LoadException("no binary available.");
@@ -485,7 +485,7 @@ WorkSpace *Manager::load(const PropList& props) {
 		return load(elem, props);
 
 	// Look for a file name
-	elm::system::Path path = CONFIG_PATH(props);
+	elm::sys::Path path = CONFIG_PATH(props);
 	if(path)
 		return load(path, props);
 
@@ -513,7 +513,7 @@ ilp::System *Manager::newILPSystem(string name) {
 
 	// if not found, look the list of available
 	if(!plugin) {
-		elm::system::Plugger::Iterator plug(ilp_plugger);
+		elm::sys::Plugger::Iterator plug(ilp_plugger);
 		if(!plug.ended())
 			plugin = static_cast<ilp::ILPPlugin *>(plug.plug());
 	}
@@ -534,10 +534,10 @@ ilp::System *Manager::newILPSystem(string name) {
  * file resources of OTAWA.
  * @return	Prefix path.
  */
-  elm::system::Path Manager::prefixPath(void) {
+  elm::sys::Path Manager::prefixPath(void) {
 	static Path prefix;
 	if(!prefix) {
-	  elm::system::Path upath = elm::system::System::getUnitPath((void *)buildPaths);
+	  elm::sys::Path upath = elm::sys::System::getUnitPath((void *)buildPaths);
 		if(upath)
 			prefix = upath.parent().parent();
 	}
@@ -652,7 +652,7 @@ Identifier<bool> NO_STACK("otawa::NO_STACK", false);
 /**
  * Path to the XML configuration file used in this computation.
  */
-Identifier<elm::system::Path>
+Identifier<elm::sys::Path>
 	CONFIG_PATH("otawa::CONFIG_PATH", "");
 
 
@@ -666,7 +666,7 @@ Identifier<elm::xom::Element *>
 /**
  * Path to the XML configuration file of the processor.
  */
-Identifier<elm::system::Path>
+Identifier<elm::sys::Path>
 	PROCESSOR_PATH("otawa::PROCESSOR_PATH", "");
 
 
@@ -686,7 +686,7 @@ Identifier<hard::Processor *> PROCESSOR("otawa::PROCESSOR", 0);
 /**
  * Gives the path of file containing the cache configuration.
  */
-Identifier<elm::system::Path> CACHE_CONFIG_PATH("otawa::CACHE_CONFIG_PATH", "");
+Identifier<elm::sys::Path> CACHE_CONFIG_PATH("otawa::CACHE_CONFIG_PATH", "");
 
 
 /**
@@ -706,7 +706,7 @@ Identifier<string> NO_RETURN_FUNCTION("otawa::NO_RETURN_FUNCTION", "");
 /**
  * Passed to Manager::load() to give the path of the file describing the memory.
  */
-Identifier<elm::system::Path> MEMORY_PATH("otawa::MEMORY_PATH", "");
+Identifier<elm::sys::Path> MEMORY_PATH("otawa::MEMORY_PATH", "");
 
 
 /**

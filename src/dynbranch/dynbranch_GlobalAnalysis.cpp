@@ -76,7 +76,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	istate = dfa::INITIAL_STATE(ws);
 
-	system::StopWatch watch ;
+	sys::StopWatch watch ;
 
 	if(PotentialValue::MAGIC == 0)
 		PotentialValue::MAGIC = 0xCAFEBABE;

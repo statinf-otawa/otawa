@@ -28,8 +28,8 @@
 #include <elm/io/OutFileStream.h>
 #include <elm/options.h>
 #include <elm/option/StringOption.h>
-#include <elm/system/Path.h>
-#include <elm/system/System.h>
+#include <elm/sys/Path.h>
+#include <elm/sys/System.h>
 #include <elm/xom/Serializer.h>
 #include <elm/option/ValueOption.h>
 
@@ -999,7 +999,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				checksum::Fletcher sum;
 				io::InFileStream stream(file->name());
 				sum.put(stream);
-				elm::system::Path path = file->name();
+				elm::sys::Path path = file->name();
 				p->printCheckSum(cout, path, sum.sum());
 			}
 			cout << io::endl;

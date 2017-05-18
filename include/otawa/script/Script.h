@@ -22,7 +22,7 @@
 #ifndef OTAWA_SCRIPT_SCRIPT_H_
 #define OTAWA_SCRIPT_SCRIPT_H_
 
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <otawa/proc/Processor.h>
 #include <elm/util/ErrorHandler.h>
 
@@ -92,7 +92,7 @@ private:
 	void onError(xom::Node *node, const string& msg);
 	void onWarning(xom::Node *node, const string& msg);
 	void makeConfig(xom::Element *elem, PropList& props);
-	elm::system::Path path;
+	elm::sys::Path path;
 	PropList props;
 	genstruct::Vector<ScriptItem *> items;
 	bool only_config, timed;
@@ -100,7 +100,7 @@ private:
 };
 
 // script path
-extern Identifier<elm::system::Path> PATH;
+extern Identifier<elm::sys::Path> PATH;
 extern Identifier<Pair<string, string> > PARAM;
 extern Identifier<xom::Element *> SCRIPT;
 extern Identifier<xom::Element *> PLATFORM;

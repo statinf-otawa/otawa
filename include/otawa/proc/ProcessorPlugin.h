@@ -23,8 +23,8 @@
 #define OTAWA_PROC_PROCESSORPLUGIN_H_
 
 #include <elm/genstruct/Table.h>
-#include <elm/system/Plugin.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Plugin.h>
+#include <elm/sys/Path.h>
 #include <otawa/proc/Registration.h>
 #include <elm/util/ErrorHandler.h>
 
@@ -37,15 +37,15 @@ namespace otawa {
 #define OTAWA_PROC_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_PROC_NAME, name " V" version " (" date ") [" OTAWA_PROC_VERSION "]")
 
 // ProcessorPlugin class
-class ProcessorPlugin: public elm::system::Plugin {
+class ProcessorPlugin: public elm::sys::Plugin {
 public:
 	ProcessorPlugin(make& make);
 	ProcessorPlugin(cstring name, const elm::Version& version, const elm::Version& plugger_version);
 	~ProcessorPlugin(void);
 	virtual elm::genstruct::Table<AbstractRegistration *>& processors(void) const;
 
-	static void addPath(const elm::system::Path& path);
-	static void removePath(const elm::system::Path& path);
+	static void addPath(const elm::sys::Path& path);
+	static void removePath(const elm::sys::Path& path);
 	static ProcessorPlugin *get(string name);
 	static Processor *getProcessor(cstring name);
 	static AbstractFeature *getFeature(cstring name);

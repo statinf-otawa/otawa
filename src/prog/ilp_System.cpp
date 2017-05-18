@@ -243,12 +243,12 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	out << ";\n";
 
 	// Output the constraints
-	for(datastruct::Iterator<Constraint *> cons(constraints()); cons; cons++) {
+	for(dyndata::Iter<Constraint *> cons(constraints()); cons; cons++) {
 
 		// print positives
 		bool pos = false;
 		fst = true;
-		for(datastruct::Iterator<Term> term(cons->terms()); term; term++) {
+		for(dyndata::Iter<Term> term(cons->terms()); term; term++) {
 			if((*term).snd > 0) {
 				if(!fst)
 					out << ' ';
@@ -274,7 +274,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 		// print negatives
 		bool neg = false;
 		fst = true;
-		for(datastruct::Iterator<Term> term(cons->terms()); term; term++)
+		for(dyndata::Iter<Term> term(cons->terms()); term; term++)
 			if((*term).snd < 0) {
 				out << ' ';
 				printTerm(out, Term((*term).fst, -(*term).snd), dumper, fst);

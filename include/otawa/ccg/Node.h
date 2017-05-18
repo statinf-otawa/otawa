@@ -28,7 +28,7 @@
 
 namespace otawa { namespace ccg {
 
-class Node: public GenGraph<otawa::ccg::Node, otawa::ccg::Edge>::GenNode {
+class Node: public graph::GenGraph<otawa::ccg::Node, otawa::ccg::Edge>::GenNode {
 public:
 	Node(LBlock *node);
 	LBlock *lblock(){return lbl;};

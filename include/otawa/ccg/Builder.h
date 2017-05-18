@@ -38,7 +38,7 @@ namespace ccg {
 // Collection class
 class Collection {
 	friend class Builder;
-	AllocatedTable<Graph *> ccgs;
+	genstruct::AllocatedTable<Graph *> ccgs;
 	inline Collection(int cnt): ccgs(cnt)
 		{ for(int i = 0; i < cnt; i++) ccgs[i] = 0; }
 public:

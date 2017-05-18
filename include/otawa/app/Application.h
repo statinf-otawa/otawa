@@ -79,7 +79,7 @@ private:
 	option::ListOption<string> params;
 	option::ListOption<string> ff;
 	LogOption log_level;
-	elm::system::Path path;
+	elm::sys::Path path;
 	genstruct::Vector<string> _args;
 	PropList props;
 	PropList *props2;

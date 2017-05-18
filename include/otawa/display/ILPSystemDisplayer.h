@@ -24,7 +24,7 @@
 
 #include <otawa/proc/Processor.h>
 #include <otawa/prop/Identifier.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <elm/io.h>
 #include <elm/genstruct/HashTable.h>
 

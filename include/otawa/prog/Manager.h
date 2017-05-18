@@ -22,11 +22,11 @@
 #ifndef OTAWA_MANAGER_H
 #define OTAWA_MANAGER_H
 
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/MessageException.h>
 #include <elm/xom.h>
-#include <elm/system/Plugger.h>
+#include <elm/sys/Plugger.h>
 #include <otawa/properties.h>
 #include <otawa/base.h>
 
@@ -66,30 +66,30 @@ public:
 		MEMORY_NAME,
 		COMPILATION_DATE,
 		VERSION;
-	static elm::system::Path prefixPath(void);
+	static elm::sys::Path prefixPath(void);
 	static String buildPaths(cstring kind, string paths = "");
 
 	Manager(void);
 	~Manager(void);
 	Loader *findLoader(elm::CString name);
 	sim::Simulator *findSimulator(elm::CString name);
-	WorkSpace *load(const elm::system::Path& path,
+	WorkSpace *load(const elm::sys::Path& path,
 		const PropList& props = PropList::EMPTY);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
 	WorkSpace *load(xom::Element *elem, const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "");
-	elm::system::Path retrieveConfig(const elm::system::Path& path);
-	Loader *findFileLoader(const elm::system::Path& path);
+	elm::sys::Path retrieveConfig(const elm::sys::Path& path);
+	Loader *findFileLoader(const elm::sys::Path& path);
 	static CString copyright;
 
 private:
-	WorkSpace *loadBin(const elm::system::Path& path, const PropList& props);
-	WorkSpace *loadXML(const elm::system::Path& path, const PropList& props);
+	WorkSpace *loadBin(const elm::sys::Path& path, const PropList& props);
+	WorkSpace *loadXML(const elm::sys::Path& path, const PropList& props);
 
 	genstruct::Vector<hard::Platform *> platforms;
-	elm::system::Plugger ilp_plugger;
-	elm::system::Plugger loader_plugger;
-	elm::system::Plugger sim_plugger;
+	elm::sys::Plugger ilp_plugger;
+	elm::sys::Plugger loader_plugger;
+	elm::sys::Plugger sim_plugger;
 	bool isVerbose(void);
 	void setVerbosity(const PropList& props);
 	void resetVerbosity(void);
@@ -113,18 +113,18 @@ extern Identifier<bool> NO_SYSTEM;
 extern Identifier<bool> NO_STACK;
 extern Identifier<string> NO_RETURN_FUNCTION;
 
-extern Identifier<elm::system::Path> CONFIG_PATH;
+extern Identifier<elm::sys::Path> CONFIG_PATH;
 extern Identifier<elm::xom::Element *> CONFIG_ELEMENT;
 
-extern Identifier<elm::system::Path> CACHE_CONFIG_PATH;
+extern Identifier<elm::sys::Path> CACHE_CONFIG_PATH;
 extern Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
 extern Identifier<hard::CacheConfiguration *> CACHE_CONFIG;
 
-extern Identifier<elm::system::Path> MEMORY_PATH;
+extern Identifier<elm::sys::Path> MEMORY_PATH;
 extern Identifier<elm::xom::Element *> MEMORY_ELEMENT;
 extern Identifier<hard::Memory *> MEMORY_OBJECT;
 
-extern Identifier<elm::system::Path> PROCESSOR_PATH;
+extern Identifier<elm::sys::Path> PROCESSOR_PATH;
 extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
 extern Identifier<hard::Processor *> PROCESSOR;
 

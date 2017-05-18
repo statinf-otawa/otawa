@@ -27,7 +27,7 @@
 #include <elm/xom.h>
 #include <elm/xom/XIncluder.h>
 #include <elm/io/BlockInStream.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 
 #include <otawa/flowfact/features.h>
 #include <otawa/hard/Platform.h>

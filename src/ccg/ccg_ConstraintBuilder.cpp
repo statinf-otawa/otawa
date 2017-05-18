@@ -34,7 +34,6 @@
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialInstCacheManager.h>
 #include <otawa/instruction.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/util/LBlockBuilder.h>
@@ -243,7 +242,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
 			cons17->addLeft(1, BB_VAR(lbloc));
 
-			for(GenGraph<Node, Edge>::OutIterator edge(Graph::NODE(lbloc));
+			for(graph::GenGraph<Node, Edge>::OutIterator edge(Graph::NODE(lbloc));
 			edge; edge++) {
 				cons17->addRight(1, VAR(edge));
 				Node *target = edge->target();
@@ -267,7 +266,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			used = false;
 			bool finds = false;
 			ilp::Var * psi;
-			for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
+			for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
 			inedge; inedge++) {
 
 				cons->addRight(1, VAR(inedge));
@@ -325,7 +324,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		 		cons2 = system->newConstraint(Constraint::EQ);
 		 		cons2->addLeft(1, HIT_VAR(lbloc));
 	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
+		 		for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
 		 		inedge; inedge++) {
 		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
 //		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
@@ -402,7 +401,7 @@ void ConstraintBuilder::addConstraintHeader(
 				BasicBlock *header = cont->bb();
 				bool used = false;
 				Constraint *cons32 = system->newConstraint(Constraint::LE);
-				for(GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(boc));
+				for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(boc));
 				inedge; inedge++) {
 					Node *source = inedge->source();
 					if(source->lblock()->id() != 0

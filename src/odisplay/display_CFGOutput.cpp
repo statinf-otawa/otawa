@@ -22,7 +22,7 @@
 
 #include <otawa/display/CFGOutput.h>
 #include <otawa/proc/Processor.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/display/GenDrawer.h>
 #include <otawa/display/CFGAdapter.h>

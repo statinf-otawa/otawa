@@ -7,7 +7,7 @@
 #ifndef OTAWA_PLUGINS_ILP_PLUGIN_H
 #define OTAWA_PLUGINS_ILP_PLUGIN_H
 
-#include <elm/system/Plugin.h>
+#include <elm/sys/Plugin.h>
 
 namespace otawa { namespace ilp {
 
@@ -21,7 +21,7 @@ class System;
 #define OTAWA_ILP_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_ILP_NAME, name " V" version " (" date ") [" OTAWA_ILP_VERSION "]")
 
 // ILPPlugin class
-class ILPPlugin: public elm::system::Plugin {
+class ILPPlugin: public elm::sys::Plugin {
 public:
 	ILPPlugin(make& maker);
 	ILPPlugin(

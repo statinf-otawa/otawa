@@ -2957,7 +2957,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	clock_t clockWorkSpace;
 	clockWorkSpace = clock();
 
-	system::StopWatch watchWorkSpace;
+	sys::StopWatch watchWorkSpace;
 	watchWorkSpace.start();
 
 	typedef WideningListener<ClpProblem> ClpListener;

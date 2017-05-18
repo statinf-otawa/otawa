@@ -7,7 +7,7 @@
 #ifndef OTAWA_PROG_LOADER_H
 #define OTAWA_PROG_LOADER_H
 
-#include <elm/system/Plugin.h>
+#include <elm/sys/Plugin.h>
 #include <otawa/base.h>
 #include <otawa/properties.h>
 #include <otawa/prog/Process.h>
@@ -28,7 +28,7 @@ namespace sim {
 #define OTAWA_LOADER_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_LOADER_NAME, name " V" version " (" date ") [" OTAWA_LOADER_VERSION "]")
 
 // Loader class
-class Loader: public elm::system::Plugin {
+class Loader: public elm::sys::Plugin {
 	friend class Manager;
 protected:
 	virtual ~Loader(void) { };
@@ -37,7 +37,7 @@ public:
 		CString name,
 		Version version,
 		Version plugger_version,
-		const elm::system::Plugin::aliases_t & aliases = elm::system::Plugin::aliases_t::null);
+		const elm::sys::Plugin::aliases_t & aliases = elm::sys::Plugin::aliases_t::null);
 	Loader(make& maker);
 
 	virtual CString getName(void) const = 0;

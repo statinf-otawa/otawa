@@ -26,8 +26,7 @@
 #include <elm/string.h>
 #include <elm/util/VarArg.h>
 #include <elm/util/strong_type.h>
-#include <elm/util/AutoComparator.h>
-#include <elm/util/HashKey.h>
+#include <elm/hash.h>
 #include <elm/types.h>
 #include <elm/type_info.h>
 

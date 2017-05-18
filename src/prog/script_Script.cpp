@@ -20,7 +20,7 @@
  */
 
 #include <elm/debug.h>
-#include <elm/system/System.h>
+#include <elm/sys/System.h>
 #include <elm/xom/Attribute.h>
 #include <elm/xom/Builder.h>
 #include <elm/xom/Element.h>
@@ -364,7 +364,7 @@ void Script::work(WorkSpace *ws) {
 	if(!doc)
 		throw otawa::Exception(_ << "script " << path << " is not valid XML !");
 	xom::XIncluder::resolveInPlace(doc);
-	elm::system::Path initial_base = doc->getBaseURI();
+	elm::sys::Path initial_base = doc->getBaseURI();
 	initial_base = initial_base.parent().absolute();
 
 	// look the version
@@ -687,7 +687,7 @@ void Script::declareGlobals(xom::XSLTransform& trans) {
  * This identifier configures the @ref Script to use the given path.
  * @ingroup script
  */
-Identifier<elm::system::Path> PATH("otawa::script::PATH", "");
+Identifier<elm::sys::Path> PATH("otawa::script::PATH", "");
 
 
 /**

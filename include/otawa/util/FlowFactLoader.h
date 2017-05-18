@@ -25,7 +25,7 @@
 #include <elm/genstruct/Vector.h>
 #include <elm/io.h>
 #include <elm/string.h>
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <elm/types.h>
 #include <elm/utility.h>
 #include <otawa/base.h>

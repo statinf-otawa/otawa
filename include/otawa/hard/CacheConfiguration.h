@@ -22,7 +22,7 @@
 #ifndef OTAWA_HARD_CONFIGURATION_CACHE_H
 #define OTAWA_HARD_CONFIGURATION_CACHE_H
 
-#include <elm/system/Path.h>
+#include <elm/sys/Path.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/proc/Accessor.h>
 #include <otawa/proc/Feature.h>
@@ -39,7 +39,7 @@ class CacheConfiguration {
 public:
 	static const CacheConfiguration NO_CACHE;
 	static CacheConfiguration *load(elm::xom::Element *element);
-	static CacheConfiguration *load(const elm::system::Path& path);
+	static CacheConfiguration *load(const elm::sys::Path& path);
 
 	inline CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0);
 	virtual ~CacheConfiguration(void);
