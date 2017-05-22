@@ -1504,6 +1504,6 @@ p::id<bool> PREDUMP("otawa::etime::PREDUMP", false);
  * events to consider to time a block. If a value of n is passed, at most 2^n times will be computed
  * and if a block gets a bigger number of events, it will be split.
  */
-p::id<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 12);
+p::id<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 15);
 
 } }	// otawa::etime
