@@ -134,8 +134,8 @@ protected:
 				man->start(v->toSynth()->callee()->exit());
 			else
 				man->start(v);
-			processAccesses(v, icache::ACCESSES(v));
-			processAccesses(v, icache::ACCESSES(e));
+			processAccesses(v, *icache::ACCESSES(v));
+			processAccesses(v, *icache::ACCESSES(e));
 		}
 	}
 
