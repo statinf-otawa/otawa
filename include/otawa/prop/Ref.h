@@ -65,7 +65,7 @@ public:
 	inline T& ref(void) const { return id().ref(props()); }
 	inline T *addr(void) const { return id().addr(props()); }
 	inline void print(io::Output& out) const { _id.print(out, _prop.getProp(&_id)); }
-	inline operator T&(void) const { return ref(); }
+	inline operator const T&(void) const { return _id.get(_prop, _id.defaultValue()); }
 	inline T operator->(void) const { return _id.get(_prop, _id.defaultValue()); }
 
 	// mutators
