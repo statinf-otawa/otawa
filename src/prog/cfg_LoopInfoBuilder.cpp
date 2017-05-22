@@ -356,8 +356,16 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 				result.remove(*targetSet);
 
 				// last bit is the left outermost header
-				for(dfa::BitSet::Iterator bit(result); bit; bit++)
-					LOOP_EXIT_EDGE(outedge) = prob.get(*bit);
+				int h = -1;
+				//cerr << "DEBUG: edge " << *outedge << io::endl;
+				for(dfa::BitSet::Iterator bit(result); bit; bit++) {
+					h = bit;
+					//cerr << "DEBUG: h = " << h << io::endl;
+				}
+				if(h >= 0) {
+					LOOP_EXIT_EDGE(outedge) = prob.get(h);
+					//cerr << "DEBUG: create loop exit!\n";
+				}
 			}
 	}
 
