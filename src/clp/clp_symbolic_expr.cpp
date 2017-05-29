@@ -163,10 +163,11 @@ namespace se{
 	}
 	String SEAddr::asString(const hard::Platform *pf) {
 		if (_val == -1) {
-			return (_ << '@' << _a->asString(pf));
+			return (_ << "@" << _a->asString(pf));
 		}
-		else if(_val.isConst())
-			return (_ << '@' << hex(_val.lower()));
+		else if(_val.isConst()) {
+			return (_ << "@" << hex(_val.lower()));
+		}
 		else
 			return (_ << "@(0x" << hex(_val.lower()) \
 					  << ", 0x" << hex(_val.delta()) \
@@ -191,6 +192,11 @@ namespace se{
 				delete temp;
 				return;
 			}
+		}
+		else if(_val == -1 && _a && _a->op() == CONST) {
+			_val = _a->val();
+			delete _a;
+			_a = NULL;
 		}
 	}
 	genstruct::Vector<V> SEAddr::used_addr(void){
@@ -892,7 +898,7 @@ namespace se{
 			if(path.b) {
 				if(first)
 					first = false;
-				else { // adding OR between sets of filters from paths
+				else {
 					reg_filters.add(new SECmp(OR));
 					addr_filters.add(new SECmp(OR));
 				}
@@ -1111,31 +1117,38 @@ namespace se{
 						// get the address of the register i.a()
 						//clp::State state = pack.state_after(cur_inst->address(), pc);
 						clp::State state = pack.state_after(currentBundle.address(), pc);
-						clp::Value val = state.get(clp::Value(clp::REG, i.a()));
-						if (val != clp::Value::all){
-							if(!val.isConst()){
-								cerr << "WARNING: unconst address: " << val << endl;
-								// if val is a set, we cannot insert the memory
-								// reference in the filter
-								// TODO: maybe we should 'fork' the filter?
-								// For the moment, if the load concern this expr
-								// we set the se to NULL, to
-								// invalidate the register i.a()
-								genstruct::Vector<V> used_reg = se->used_reg();
-								for(int i = 0; i < used_reg.length(); i++){
-									if(used_reg[i] == rd->val()){
-										delete se;
-										se = NULL;
-										break;
+						if(i.a() >= 0) {
+							clp::Value val = state.get(clp::Value(clp::REG, i.a()));
+							if (val != clp::Value::all){
+								if(!val.isConst()){
+									cerr << "WARNING: unconst address: " << val << endl;
+									// if val is a set, we cannot insert the memory
+									// reference in the filter
+									// TODO: maybe we should 'fork' the filter?
+									// For the moment, if the load concern this expr
+									// we set the se to NULL, to
+									// invalidate the register i.a()
+									genstruct::Vector<V> used_reg = se->used_reg();
+									for(int i = 0; i < used_reg.length(); i++){
+										if(used_reg[i] == rd->val()){
+											delete se;
+											se = NULL;
+											break;
+										}
 									}
+								} else {
+									SEAddr *a = new SEAddr(val.lower());
+									se->replace(rd, a);
+									delete a;
 								}
-							} else {
-								SEAddr *a = new SEAddr(val.lower());
+							}
+
+							else {
+								SEAddr *a = new SEAddr(-1 ,new SEReg(i.a()));
 								se->replace(rd, a);
 								delete a;
 							}
-						}
-
+						} // if register to specify the address is not a temp register
 						else {
 							SEAddr *a = new SEAddr(-1 ,new SEReg(i.a()));
 							se->replace(rd, a);
@@ -1213,6 +1226,13 @@ namespace se{
 						delete rd;
 					}
 					break;
+
+				default:
+					// wipe out the expression as the default behavior
+					delete se;
+					se = NULL;
+					break;
+
 				} // end of switch
 				TRACEGF(String tmpout = _ << '\t' << i);
 
@@ -1292,6 +1312,7 @@ namespace se{
 				else
 					seToReturn = se;
 			}
+			pathFailed = false; // reset the flag
 			// now we take another path, if there is any
 		} // end of for(int bi = 0; bi < semBlocks.count(); bi++) // for each path within sem block
 
@@ -1328,8 +1349,11 @@ namespace se{
 		for(int bi = 0; bi < semBlocks.count(); bi++)
 			for(int bii = 0; bii < temp_addr_filters[bi].count(); bii++)
 				if(!temp_known_addr_repeat.contains(temp_addr_filters[bi][bii]->a()->val())) {
-					curr_addr_filters.add(temp_addr_filters[bi][bii]);
-					curr_known_addr.add(temp_addr_filters[bi][bii]->a()->val());
+					int index = curr_known_addr.indexOf(temp_addr_filters[bi][bii]->a()->val(), 0);
+					if(!((index != -1) && (curr_addr_filters[index]->b()->val() == temp_addr_filters[bi][bii]->b()->val()))) {
+						curr_addr_filters.add(temp_addr_filters[bi][bii]);
+						curr_known_addr.add(temp_addr_filters[bi][bii]->a()->val());
+					}
 				}
 
 		return seToReturn;
