@@ -78,7 +78,7 @@ public:
 		: reg(&registration), iter(reg->_feats) { step(); }
 	inline const FeatureUsage *item(void) const { return &iter.item(); }
 	inline void next(void) { iter.next(); step(); }
-	inline bool ended(void) const { return !reg; }
+	inline bool ended(void) const { return iter.ended(); }
 	
 private:
 	void step(void);

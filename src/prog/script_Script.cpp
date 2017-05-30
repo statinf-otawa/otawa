@@ -268,11 +268,8 @@ ScriptItem *ScriptItem::parse(xom::Element& elt) {
 
 
 // Registration
-Registration<Script> Script::reg(
-	"otawa::script::Script",
-	Version(1, 0, 0),
-	p::end
-);
+p::declare Script::reg = p::init("otawa::script::Script", Version(1, 0, 0))
+	.make<Script>();
 
 
 // ScriptErrorHandler class

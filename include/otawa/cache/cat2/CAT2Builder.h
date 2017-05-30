@@ -37,7 +37,7 @@ namespace otawa {
 class CAT2Builder: public CFGProcessor {
 public:
 	CAT2Builder(AbstractRegistration& registration = reg);
-	static Registration<CAT2Builder> reg;
+	static p::declare reg;
 
 	virtual void processCFG(WorkSpace*, otawa::CFG*);
 	virtual void setup(WorkSpace*);

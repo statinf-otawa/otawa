@@ -67,6 +67,7 @@ public:
 
 	class Iter: public graph::GenGraph<PCGBlock, PCGEdge>::Iter {
 		friend class PCG;
+	public:
 		inline Iter(const PCG *pcg): graph::GenGraph<PCGBlock, PCGEdge>::Iter(pcg) { }
 	};
 	inline Iter blocks(void) const { return Iter(this); }

@@ -31,11 +31,8 @@ namespace otawa { namespace hard {
  * Dump to output the hardware configuration details.
  */
 
-Registration<Dumper> Dumper::reg(
-	"otawa::hard::Dumper",
-	Version(1, 0, 0),
-	p::end
-);
+p::declare Dumper::reg = p::init("otawa::hard::Dumper", Version(1, 0, 0))
+	.make<Dumper>();
 
 
 /**

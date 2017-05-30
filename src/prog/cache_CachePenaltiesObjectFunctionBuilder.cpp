@@ -19,12 +19,9 @@ using namespace otawa::ilp;
 
 namespace otawa { namespace ipet {
 
-Registration<CachePenaltiesObjectFunctionBuilder> CachePenaltiesObjectFunctionBuilder::reg(
-	"otawa::ipet::CachePenaltiesObjectFunctionBuilder",
-	Version(1, 0, 1),
-	p::require, &ASSIGNED_VARS_FEATURE,
-	p::end
-);
+p::declare CachePenaltiesObjectFunctionBuilder::reg = p::init("otawa::ipet::CachePenaltiesObjectFunctionBuilder", Version(1, 0, 1))
+	.make<CachePenaltiesObjectFunctionBuilder>()
+	.require(ASSIGNED_VARS_FEATURE);
 
 /**
  * @class CachePenaltiesObjectFunctionBuilder

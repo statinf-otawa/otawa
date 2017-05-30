@@ -20,13 +20,9 @@ namespace otawa { namespace cache {
  * @ingroup proc
  */
 
-MetaRegistration LBlockProcessor::reg(
-	"otawa::LBlockProcessor", Version(1, 0, 0),
-	p::base, &Processor::reg,
-	p::require, &cache::COLLECTED_LBLOCKS_FEATURE,
-	p::require, &hard::CACHE_CONFIGURATION_FEATURE,
-	p::end
-);
+p::declare LBlockProcessor::reg = p::init("otawa::LBlockProcessor", Version(1, 0, 0))
+	.require(cache::COLLECTED_LBLOCKS_FEATURE)
+	.require(hard::CACHE_CONFIGURATION_FEATURE);
 
 
 /**

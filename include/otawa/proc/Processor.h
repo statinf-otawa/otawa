@@ -75,7 +75,7 @@ public:
 	Processor(String name, Version version);
 	Processor(String name, Version version, AbstractRegistration& registration);
 	virtual ~Processor(void);
-	static MetaRegistration reg;
+	static p::declare reg;
 
 	// Accessors
 	inline elm::String name(void) const { return _reg->name(); }

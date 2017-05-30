@@ -31,7 +31,7 @@ class FixedTextDecoder: public Processor {
 public:
 	static FixedTextDecoder _;
 	FixedTextDecoder(void);
-	static Registration<FixedTextDecoder> reg;
+	static p::declare reg;
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);

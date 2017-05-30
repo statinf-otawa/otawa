@@ -4,13 +4,11 @@ namespace otawa { namespace oslice {
 
 p::feature COND_BRANCH_COLLECTOR_FEATURE("otawa::oslice::COND_BRANCH_COLLECTOR_FEATURE", new Maker<CondBranchCollector>());
 
-Registration<CondBranchCollector> CondBranchCollector::reg(
-	"otawa::oslice::CondBranchCollector", Version(1, 0, 0),
-	p::require, &COLLECTED_CFG_FEATURE,
-	p::provide, &COND_BRANCH_COLLECTOR_FEATURE,
-	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
-	p::end
-);
+p::declare CondBranchCollector::reg = p::init("otawa::oslice::CondBranchCollector", Version(1, 0, 0))
+	.make<CondBranchCollector>()
+	.require(COLLECTED_CFG_FEATURE)
+	.provide(COND_BRANCH_COLLECTOR_FEATURE)
+	.provide(INSTRUCTION_COLLECTOR_FEATURE);
 
 /**
  */
@@ -35,7 +33,7 @@ bool CondBranchCollector::interested(Inst* i) {
 
 class UnknownTargetCollector: public InstCollector {
 public:
-	static Registration<UnknownTargetCollector> reg;
+	static p::declare reg;
 	UnknownTargetCollector(AbstractRegistration& _reg = reg);
 
 protected:
@@ -70,12 +68,10 @@ void UnknownTargetCollector::cleanup(WorkSpace *ws) {
 
 p::feature UNKNOWN_TARGET_COLLECTOR_FEATURE("otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE", new Maker<UnknownTargetCollector>());
 
-Registration<UnknownTargetCollector> UnknownTargetCollector::reg(
-	"otawa::oslice::UnknownTargetCollector", Version(1, 0, 0),
-	p::require, &COLLECTED_CFG_FEATURE,
-	p::provide, &UNKNOWN_TARGET_COLLECTOR_FEATURE,
-	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
-	p::end
-);
+p::declare UnknownTargetCollector::reg = p::init("otawa::oslice::UnknownTargetCollector", Version(1, 0, 0))
+	.make<UnknownTargetCollector>()
+	.require(COLLECTED_CFG_FEATURE)
+	.provide(UNKNOWN_TARGET_COLLECTOR_FEATURE)
+	.provide(INSTRUCTION_COLLECTOR_FEATURE);
 
 } }

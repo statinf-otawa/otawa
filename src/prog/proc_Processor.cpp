@@ -203,22 +203,17 @@ public:
 	CustomRegistration(AbstractRegistration& reg): AbstractRegistration(&reg)
 		{ }
 	virtual Processor *make(void) const { return 0; }
-	virtual bool isFinal(void) const { return true; }
 };
 
 // Registration
-MetaRegistration Processor::reg(
-	"otawa::Processor",
-	Version(1, 1, 0),
-	p::base, 0,
-	p::config, &Processor::OUTPUT,
-	p::config, &Processor::LOG,
-	p::config, &Processor::VERBOSE,
-	p::config, &Processor::STATS,
-	p::config, &Processor::TIMED,
-	p::config, &Processor::LOG_LEVEL,
-	p::end
-);
+p::declare Processor::reg = p::init("otawa::Processor", Version(1, 2, 0))
+	.base(AbstractRegistration::null)
+	.config(OUTPUT)
+	.config(LOG)
+	.config(VERBOSE)
+	.config(STATS)
+	.config(TIMED)
+	.config(LOG_LEVEL);
 
 
 /**
@@ -252,9 +247,8 @@ MetaRegistration Processor::reg(
  * Build a simple anonymous processor.
  */
 Processor::Processor(void): stats(0), ws(0), _progress(0) {
-	_reg = new NullRegistration();
+	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
-	_reg->_base = &reg;
 }
 
 
@@ -284,7 +278,7 @@ Processor::Processor(AbstractRegistration& registration)
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
 : stats(0), ws(0), _progress(0) {
-	_reg = new NullRegistration();
+	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &registration;
 	_reg->_name = name;
@@ -301,7 +295,7 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  */
 Processor::Processor(elm::String name, elm::Version version,
 const PropList& props): stats(0) {
-	_reg = new NullRegistration();
+	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
 	_reg->_name = name;
@@ -317,7 +311,7 @@ const PropList& props): stats(0) {
  */
 Processor::Processor(String name, Version version)
 : stats(0), ws(0), _progress(0) {
-	_reg = new NullRegistration();
+	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
 	_reg->_name = name;
@@ -331,7 +325,7 @@ Processor::Processor(String name, Version version)
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(const PropList& props): stats(0) {
-	_reg = new NullRegistration();
+	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
 	init(props);

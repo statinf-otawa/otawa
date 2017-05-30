@@ -18,7 +18,7 @@ namespace otawa { namespace ipet {
 // CachePenaltiesObjectFunctionBuilder class
 class CachePenaltiesObjectFunctionBuilder: public BBProcessor {
 public:
-	static Registration<CachePenaltiesObjectFunctionBuilder> reg;
+	static p::declare reg;
 	CachePenaltiesObjectFunctionBuilder(void);
 
 	virtual void configure(const PropList& props = PropList::EMPTY);

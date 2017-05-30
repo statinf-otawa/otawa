@@ -82,11 +82,8 @@ void FixedTextDecoder::setup(WorkSpace *fw) {
 
 
 // Registration
-Registration<FixedTextDecoder> FixedTextDecoder::reg(
-	"otawa::FixedTextDecoder",
-	Version(1, 0, 0),
-	p::provide, &DECODED_TEXT,
-	p::end
-);
+p::declare FixedTextDecoder::reg = p::init("otawa::FixedTextDecoder", Version(1, 0, 0))
+	.make<FixedTextDecoder>()
+	.provide(DECODED_TEXT);
 
 } // otawa

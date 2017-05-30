@@ -38,7 +38,7 @@ typedef elm::avl::Set<BasicBlock*> BBSet; // used by buildReverseSynthLink, for 
 
 class CondBranchCollector: public InstCollector {
 public:
-	static Registration<CondBranchCollector> reg;
+	static p::declare reg;
 	CondBranchCollector(AbstractRegistration& _reg = reg);
 
 protected:

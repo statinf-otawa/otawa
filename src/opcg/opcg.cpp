@@ -123,7 +123,7 @@ public:
 	class Vertex {
 	public:
 		inline Vertex(void): blk(0) { }
-		inline Vertex(PCGBlock *block): blk(block) { }
+		inline Vertex(PCGBlock *block): blk(block) { cerr << "DEBUG: " << block << io::endl; }
 		inline bool operator==(const Vertex& vertex) const { return blk == vertex.blk; }
 		PCGBlock *blk;
 	};
@@ -164,8 +164,7 @@ public:
 
 	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iter(const PCGAdapter& ad)
-			: iter(ad._pcg->blocks()) { look(); }
+		inline Iter(const PCGAdapter& ad): iter(ad._pcg->blocks()) { look(); cerr << "DEBUG: ok!\n"; }
 	 	inline bool ended(void) const { return iter.ended(); }
 	 	inline Vertex item(void) const { return *iter; }
 	 	void next(void) { iter.next(); look(); }
@@ -176,6 +175,8 @@ public:
 					break;
 				iter.next();
 			}
+			if(iter)
+				cerr << "DEBUG: ==> " << *iter << io::endl;
 		}
 		typename PCG::Iter iter;
 	};
@@ -206,11 +207,11 @@ public:
 		Output &content,
 		ShapeStyle &style
 	) {
-		/*content << vertex.blk->getName();
-		int cnt = BBCounter::COUNT(vertex.blk),
-			total = BBCounter::TOTAL(vertex.blk);
-		if(cnt >= 0)
-			content << "\nBB: " << cnt << " / " << total;*/
+		content << vertex.blk->getName();
+		//int cnt = BBCounter::COUNT(vertex.blk),
+		//	total = BBCounter::TOTAL(vertex.blk);
+		//if(cnt >= 0)
+		//	content << "\nBB: " << cnt << " / " << total;
 	}
 	
 	static void decorate(
@@ -311,13 +312,16 @@ protected:
 		builder.process(workspace(), props);
 		PCG *pcg = PROGRAM_CALL_GRAPH(workspace());
 		ASSERT(pcg);
+
+		//for(PCG::Iter i(pcg); i; i++)
+		//	cerr << "DEBUG: " << *i << io::endl;
 	
 		// Select the interesting PCG blocks
 		/*if(chain)
 			selectChain(pcg, chain);
-		else
-			for(PCG::PCGIterator block(pcg); block; block++)
-				SELECTED(block) = accept(block);*/
+		else*/
+			for(PCG::Iter block(pcg); block; block++)
+				SELECTED(block) = accept(block);
 		
 		// count BB if required
 		/* if(bb_cnt) {
@@ -328,8 +332,8 @@ protected:
 		// Display the PCG
 		PCGAdapter ad(pcg);
 		GenDrawer<PCGAdapter, PCGDecorator> drawer(ad);
-		/*drawer.kind = (kind_t)out.value();
-		drawer.path = entry + "." + out_values[out.value()].name;*/
+		drawer.kind = (kind_t)out.value();
+		drawer.path = entry + "." + out_values[out.value()].name;
 		drawer.draw();
 		
 	}

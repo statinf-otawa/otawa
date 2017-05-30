@@ -9,8 +9,8 @@ namespace otawa { namespace oslice {
 
 class InstCollector: public otawa::Processor {
 public:
+	static p::declare reg;
 	InstCollector(AbstractRegistration& _reg = reg);
-	static Registration<InstCollector> reg;
 
 protected:
 	// called by the children

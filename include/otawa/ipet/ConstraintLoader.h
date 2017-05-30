@@ -51,7 +51,7 @@ class ConstraintLoader: public CFGProcessor {
 
 public:
 	static Identifier<String> PATH;
-	static Registration<ConstraintLoader> reg;
+	static p::declare reg;
 	ConstraintLoader(AbstractRegistration& r = reg);
 
 protected:

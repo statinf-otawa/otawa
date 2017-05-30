@@ -47,12 +47,10 @@ Identifier<bool (*)(otawa::Inst*)> FPTR_FOR_COLLECTING("otawa::oslice::FPTR_FOR_
 p::feature INSTRUCTION_COLLECTOR_FEATURE("otawa::oslice::INSTRUCTION_COLLECTOR_FEATURE", new Maker<InstCollector>());
 
 
-Registration<InstCollector> InstCollector::reg(
-	"otawa::oslice::InstCollector", Version(1, 0, 0),
-	p::require, &COLLECTED_CFG_FEATURE,
-	p::provide, &INSTRUCTION_COLLECTOR_FEATURE,
-	p::end
-);
+p::declare InstCollector::reg = p::init("otawa::oslice::InstCollector", Version(1, 0, 0))
+	.make<InstCollector>()
+	.require(COLLECTED_CFG_FEATURE)
+	.provide(INSTRUCTION_COLLECTOR_FEATURE);
 
 /**
  */

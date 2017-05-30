@@ -523,14 +523,13 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 void WorkSpace::add(Processor *proc, bool del_proc) {
 	ASSERT(proc);
 	Dependency *d = new Dependency(proc, del_proc);
-	for(List<FeatureUsage>::Iter fu(proc->registration().features()); fu; fu++)
-		if((*fu).kind() == FeatureUsage::provide)
-			dep_map.put(&(*fu).feature(), d);
-		else
-			if((*fu).kind() == FeatureUsage::require) {
-				Dependency *ud = dep_map.get(&(*fu).feature(), 0);
+	for(FeatureIter fu(proc->registration()); fu; fu++)
+		if(fu->kind() == FeatureUsage::provide)
+			dep_map.put(&fu->feature(), d);
+		else if(fu->kind() == FeatureUsage::require) {
+				Dependency *ud = dep_map.get(&fu->feature(), 0);
 				if(!ud)
-					throw otawa::Exception(_ << proc->name() << " requires " << (*fu).feature().name() << " but it seems it has invalidated it!");
+					throw otawa::Exception(_ << proc->name() << " requires " << fu->feature().name() << " but it seems it has invalidated it!");
 				else if(!ud->_users.contains(d)) {
 					d->_used.add(ud);
 					ud->_users.add(d);

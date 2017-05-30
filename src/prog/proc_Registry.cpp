@@ -85,6 +85,7 @@ AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg) {
  * @param base		Base registration.
  */
 AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
+	ASSERT(base);
 	_base = base;
 	_name = base->_name;
 	_version = base->_version;
@@ -99,6 +100,7 @@ AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
  */
 AbstractRegistration::AbstractRegistration(string name, Version version, AbstractRegistration *base)
 : _name(name), _version(version), _base(base) {
+	ASSERT(base);
 }
 
 
@@ -217,42 +219,26 @@ void AbstractRegistration::initialize(void) {
 
 
 /**
- * Initialize a registration from an argument list.
- * @param name		Processor name.
- * @param version	Processor version.
- * @param tag		First tag.
- * @param args		List of pair (tag, value) ended by a @ref otawa::p::end value.
+ * Test if the current abstract registration is null.
+ * @return	True if it is null, false else.
  */
-void AbstractRegistration::init(cstring name, const Version& version, int tag, VarArg& args) {
-	_name = name;
-	_version = version;
-	while(tag != p::end) {
-		switch(tag) {
-		case p::require:
-			_feats.add(FeatureUsage(FeatureUsage::require, *args.next<const AbstractFeature *>()));
-			break;
-		case p::provide:
-			_feats.add(FeatureUsage(FeatureUsage::provide, *args.next<const AbstractFeature *>()));
-			break;
-		case p::invalidate:
-			_feats.add(FeatureUsage(FeatureUsage::invalidate, *args.next<const AbstractFeature *>()));
-			break;
-		case p::use:
-			_feats.add(FeatureUsage(FeatureUsage::use, *args.next<const AbstractFeature *>()));
-			break;
-		case p::base:
-			_base = args.next<AbstractRegistration *>();
-			break;
-		case p::config:
-			configs.add(args.next<AbstractIdentifier *>());
-			break;
-		default:
-			ASSERTP(0, "bad registration argument for processor " << name << " (" << version << ")");
-		}
-		tag = args.next<int>();
-	}
-	record();
+bool AbstractRegistration::isNull(void) const {
+	return false;
 }
+
+
+class NullRegistration: public AbstractRegistration {
+public:
+	NullRegistration(void): AbstractRegistration(this) { }
+	virtual Processor *make(void) const { return 0; }
+	virtual bool isNull(void) const { return true; }
+};
+
+
+/**
+ * Null abstract registration.
+ */
+AbstractRegistration& AbstractRegistration::null = Single<NullRegistration>::_;
 
 
 /**
@@ -282,42 +268,12 @@ void ConfigIter::step(void) {
 /**
  */
 void FeatureIter::step(void) {
-	while(reg && iter.ended()) {
-		if((reg = &reg->base()))
-			iter = List<FeatureUsage>::Iter(reg->_feats);
+	while(!reg->isNull() && iter.ended()) {
+		reg = reg->_base;
+		iter = List<FeatureUsage>::Iter(reg->_feats);
 	}
 }
 
-
-/*
- * @class Registration
- * A registration for a processor of type T.
- * @param T		Type of the registered processor.
- */
-
-
-/**
- * @fn Registration::Registration(void);
- * Default constructor.
- */
-
-
-/**
- * @fn Registration::Registration(cstring name, const Version& version, int tag, ...);
- * @param name		Name of the processor.
- * @param version	Version of the processor.
- * @param tag		First tag.
- * @param ...		List of pairs (tag, value) ended by @ref otawa::p::end .
- */
-
-
-/**
- * @fn Registration::Registration(cstring name, const Version& version, int tag, VarArgs& args);
- * @param name		Name of the processor.
- * @param version	Version of the processor.
- * @param tag		First tag.
- * @param args		List of pairs (tag, value) ended by @ref otawa::p::end .
- */
 
 namespace p {
 
@@ -356,10 +312,9 @@ namespace p {
  * @ingroup proc
  */
 
-
 /**
  */
-declare::declare(otawa::p::init& maker)
+declare::declare(const otawa::p::init& maker)
 	: AbstractRegistration(maker._name, maker._version, maker._base ? maker._base : &Processor::reg)
 {
 	setFeatures(maker.features);
@@ -381,12 +336,6 @@ Processor *declare::make(void) const {
 		return _maker->make();
 	else
 		return 0;
-}
-
-/**
- */
-bool declare::isFinal(void) const {
-	return true;
 }
 
 }	// p

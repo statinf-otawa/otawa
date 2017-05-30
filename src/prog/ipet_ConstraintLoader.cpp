@@ -129,13 +129,14 @@ Identifier<string> ConstraintLoader::PATH("otawa::ipet::ConstraintLoader::PATH",
  */
 
 
-Registration<ConstraintLoader> ConstraintLoader::reg(
-	"otawa::ipet::ConstraintLoader", Version(1, 0, 0),
-	p::base,	&CFGProcessor::reg,
-	p::require,	&otawa::ipet::ILP_SYSTEM_FEATURE,
-	p::require,	&otawa::ipet::ASSIGNED_VARS_FEATURE,
-	p::end
-);
+/**
+ */
+p::declare ConstraintLoader::reg = p::init("otawa::ipet::ConstraintLoader", Version(1, 0, 0))
+	.extend<CFGProcessor>()
+	.make<ConstraintLoader>()
+	.require(otawa::ipet::ILP_SYSTEM_FEATURE)
+	.require(otawa::ipet::ASSIGNED_VARS_FEATURE);
+
 
 /**
  * Constructor.

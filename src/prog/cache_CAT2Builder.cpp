@@ -51,18 +51,15 @@ using namespace cache;
 CAT2Builder::CAT2Builder(AbstractRegistration& registration): CFGProcessor(registration) {
 }
 
-Registration<CAT2Builder> CAT2Builder::reg(
-	"otawa::CAT2Builder",
-	Version(1, 0, 0),
-	p::require, &DOMINANCE_FEATURE,
-	p::require, &LOOP_HEADERS_FEATURE,
-	p::require, &LOOP_INFO_FEATURE,
-	p::require, &COLLECTED_LBLOCKS_FEATURE,
-	p::require, &ICACHE_ACS_FEATURE,
-	p::require, &ICACHE_FIRSTLAST_FEATURE,
-	p::provide, &ICACHE_CATEGORY2_FEATURE,
-	p::end
-);
+p::declare CAT2Builder::reg = p::init("otawa::CAT2Builder", Version(1, 0, 0))
+	.make<CAT2Builder>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.require(LOOP_INFO_FEATURE)
+	.require(COLLECTED_LBLOCKS_FEATURE)
+	.require(ICACHE_ACS_FEATURE)
+	.require(ICACHE_FIRSTLAST_FEATURE)
+	.provide(ICACHE_CATEGORY2_FEATURE);
 
 
 /**

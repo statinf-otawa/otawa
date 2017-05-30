@@ -71,7 +71,7 @@ public:
 
 	Script(void);
 	virtual void configure (const PropList &props);
-	static Registration<Script> reg;
+	static p::declare reg;
 
 	virtual void onError(error_level_t level, const string &message);
 

@@ -26,7 +26,6 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/cfg.h>
 #include <otawa/util/LBlockBuilder.h>
-//#include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/parexegraph/ParExeGraph.h>
 #include <elm/io/OutFileStream.h>
@@ -170,7 +169,7 @@ namespace otawa {
 
     public:
 		//GraphBBTime(const PropList& props = PropList::EMPTY);
-		static Registration<GraphBBTime<G> > reg;
+		static p::declare reg;
 		GraphBBTime(AbstractRegistration& _reg = reg);
 		virtual void configure(const PropList& props);
 
@@ -224,22 +223,15 @@ namespace otawa {
 	}*/
 
 template <class G>
-GraphBBTime<G>::GraphBBTime(AbstractRegistration& _reg)
-: BBProcessor(_reg) {
-	/*require(hard::PROCESSOR_FEATURE);
-	require(hard::MEMORY_FEATURE);
-	provide(ipet::BB_TIME_FEATURE);*/
-}
+GraphBBTime<G>::GraphBBTime(AbstractRegistration& _reg): BBProcessor(_reg) { }
 
 template <class G>
-Registration<GraphBBTime<G> > GraphBBTime<G>::reg(
-		"", Version(1, 0, 0),
-		p::base, &BBProcessor::reg,
-		p::require, &hard::PROCESSOR_FEATURE,
-		p::require, &hard::MEMORY_FEATURE,
-		p::provide, &ipet::BB_TIME_FEATURE,
-		p::end
-	);
+p::declare GraphBBTime<G>::reg = p::init("", Version(1, 0, 0))
+	.make<GraphBBTime<G> >()
+	.base(BBProcessor::reg)
+	.require(hard::PROCESSOR_FEATURE)
+	.require(hard::MEMORY_FEATURE)
+	.provide(ipet::BB_TIME_FEATURE);
 
 
 template <class G>

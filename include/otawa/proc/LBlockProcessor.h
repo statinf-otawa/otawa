@@ -20,7 +20,7 @@ class BasicBlock;
 class LBlockProcessor: public Processor {
 public:
 	LBlockProcessor(AbstractRegistration &registration = reg);
-	static MetaRegistration reg;
+	static p::declare reg;
 
 protected:
 	inline const hard::Cache *cache(void) const { return _cache; }

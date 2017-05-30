@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	Registration class interface
+ *	AbstractRegistration class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2005-7, IRIT UPS.
@@ -35,17 +34,6 @@ using namespace elm;
 class Processor;
 class AbstractFeature;
 namespace proc { class declare; }
-
-// fast initialization
-namespace p {
-	const int end = 0;
-	const int require = 1;		// AbstractFeature *
-	const int provide = 2;		// AbstractFeature *
-	const int invalidate = 3;	// AbstractFeature *
-	const int use = 4;			// AbstractFeature *
-	const int base = 5;			// AbstractRegistration *
-	const int config = 6;		// AbstractIdentifier *
-} // p
 
 // FeatureUsage class
 class FeatureUsage {
@@ -84,11 +72,12 @@ public:
 	inline const List<FeatureUsage>& features(void) const { return _feats; }
 
 	virtual Processor *make(void) const = 0;
-	virtual bool isFinal(void) const = 0;
 	bool provides(const AbstractFeature& feature);
 	bool requires(const AbstractFeature& feature);
 	bool invalidates(const AbstractFeature& feature);
 	bool uses(const AbstractFeature& feature);
+	virtual bool isNull(void) const;
+	static AbstractRegistration& null;
 
 	// Private use only
 	void initialize(void);
@@ -98,7 +87,6 @@ protected:
 	AbstractRegistration(AbstractRegistration *base);
 	AbstractRegistration(string name, Version version, AbstractRegistration *base);
 	virtual ~AbstractRegistration(void) { }
-	void init(cstring name, const Version& version, int tag, VarArg& args);
 	void setFeatures(const List<FeatureUsage>& features);
 	void setConfigs(const List<AbstractIdentifier *>& configs);
 	void record(void);
@@ -113,38 +101,6 @@ private:
 	AbstractRegistration *_base;
 	List<AbstractIdentifier *> configs;
 	List<FeatureUsage> _feats;
-};
-
-
-// NullRegistration class
-class NullRegistration: public AbstractRegistration {
-public:
-	virtual Processor *make(void) const { return 0; }
-	virtual bool isFinal(void) const { return false; }
-};
-
-
-// MetaRegistration class
-class MetaRegistration: public AbstractRegistration {
-public:
-	inline MetaRegistration(cstring name, const Version& version, int tag, ...)
-		{ VARARG_BEGIN(args, tag) init(name, version, tag, args); VARARG_END }
-	inline MetaRegistration(cstring name, const Version& version, int tag, VarArg& args)
-		{ init(name, version, tag, args); }
-	virtual Processor *make(void) const { return 0; }
-	virtual bool isFinal(void) const { return false; }
-};
-
-// Registration class
-template <class T> class Registration: public AbstractRegistration {
-public:
-	inline Registration(void) { }
-	inline Registration(cstring name, const Version& version, int tag, ...)
-		{ VARARG_BEGIN(args, tag) init(name, version, tag, args); VARARG_END }
-	inline Registration(cstring name, const Version& version, int tag, VarArg& args)
-		{ init(name, version, tag, args); }
-	virtual Processor *make(void) const { return new T; }
-	virtual bool isFinal(void) const { return true; }
 };
 
 
@@ -213,10 +169,9 @@ private:
 // declare class
 class declare: public AbstractRegistration {
 public:
-	declare(otawa::p::init& i);
+	declare(const p::init& i);
 	virtual ~declare(void);
 	virtual Processor *make(void) const;
-	virtual bool isFinal(void) const;
 private:
 	AbstractMaker *_maker;
 };

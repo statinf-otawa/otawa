@@ -34,7 +34,7 @@ public:
 	static Identifier<bool> NO_EXCEPTION;
 
 	CFGChecker(void);
-	static Registration<CFGChecker> reg;
+	static p::declare reg;
 
 	virtual void configure(const PropList& props);
 	virtual void setup(WorkSpace *ws);

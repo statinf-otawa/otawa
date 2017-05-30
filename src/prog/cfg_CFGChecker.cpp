@@ -54,13 +54,10 @@ Identifier<bool> CFGChecker::NO_EXCEPTION("otawa::CFGChecker::NO_EXCEPTION", fal
  * @ingroup cfg
  */
 
-Registration<CFGChecker> CFGChecker::reg(
-	"otawa::CFGChecker",
-	Version(1, 0, 0),
-	p::base, &CFGProcessor::reg,
-	p::provide, &CHECKED_CFG_FEATURE,
-	p::end
-);
+p::declare CFGChecker::reg = p::init("otawa::CFGChecker", Version(1, 0, 0))
+	.extend<CFGProcessor>()
+	.provide(CHECKED_CFG_FEATURE)
+	.make<CFGChecker>();
 
 
 /**
