@@ -1,10 +1,23 @@
 /*
- *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	Cache class implementation.
  *
- *	src/prog/Cache.cpp -- implementation of Cache class.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-17, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-
 #include <stdarg.h>
 #include <otawa/hard/Cache.h>
 
@@ -25,7 +38,7 @@ namespace otawa { namespace hard {
 
 /**
  */
-Cache::Cache(void) {
+Cache::Cache(void): _next(0) {
 }
 
 
@@ -356,7 +369,8 @@ ENUM_BEGIN(otawa::hard::Cache::replace_policy_t)
 	VALUE(otawa::hard::Cache::LRU),
 	VALUE(otawa::hard::Cache::RANDOM),
 	VALUE(otawa::hard::Cache::FIFO),
-	VALUE(otawa::hard::Cache::PLRU)
+	VALUE(otawa::hard::Cache::PLRU),
+	VALUE(otawa::hard::Cache::MRU)
 ENUM_END
 
 

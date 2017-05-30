@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	Cache class interface.
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005-11, IRIT UPS.
+ *	Copyright (c) 2005-17, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -39,7 +38,8 @@ public:
 		LRU = 2,
 		RANDOM = 3,
 		FIFO = 4,
-		PLRU = 5
+		PLRU = 5,
+		MRU = 6
 	} replace_policy_t;
 	
 	typedef enum write_policy_t {
