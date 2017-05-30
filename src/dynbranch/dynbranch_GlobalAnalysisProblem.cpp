@@ -43,6 +43,8 @@ using namespace elm::color;
 
 namespace otawa { namespace dynbranch {
 
+Identifier<bool> DEBUG_INFO("otawa::dynbranch::DEBUG_INFO", false) ;
+
 GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry, MyGC* m) : verbose(v), ws(workspace), myGC(m), _nb_bb_count(0) {
 	istate = dfa::INITIAL_STATE(workspace);
 
@@ -95,8 +97,10 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 		}
 	}
 
-	elm::cout << "bbCount = " << bbCount << io::endl;
-	elm::cout << "bbCountTotal vs coll->countBB() = " << bbCountTotal << " vs " << coll->countBB() << io::endl;
+	if(DEBUG_INFO(ws)) {
+		elm::cout << "bbCount = " << bbCount << io::endl;
+		elm::cout << "bbCountTotal vs coll->countBB() = " << bbCountTotal << " vs " << coll->countBB() << io::endl;
+	}
 }
 
 void GlobalAnalysisProblem::getStats(void) {

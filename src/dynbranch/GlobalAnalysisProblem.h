@@ -34,6 +34,7 @@ using namespace otawa;
 
 namespace otawa { namespace dynbranch {
 
+extern Identifier<bool> DEBUG_INFO;
 
 class GlobalAnalysisProblem {
 public:

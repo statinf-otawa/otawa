@@ -2189,8 +2189,6 @@ public:
 			genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(edge);
 			genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(edge);
 
-			String taken = edge->isTaken()?"":"NOT ";
-
 			// filter registers
 			Domain all = Domain::EMPTY, init;
 			init.copy(dom);

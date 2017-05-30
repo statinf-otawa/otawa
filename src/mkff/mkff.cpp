@@ -1016,6 +1016,10 @@ void Command::work(PropList &props) throw(elm::Exception) {
 				first = false;
 			else {
 				workspace()->invalidate(COLLECTED_CFG_FEATURE);
+				workspace()->invalidate(LOOP_HEADERS_FEATURE);
+
+
+
 				if(slicing) {
 #ifndef USE_PLUGINS
 					DynFeature f1("otawa::oslice::UNKNOWN_TARGET_COLLECTOR_FEATURE");

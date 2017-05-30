@@ -489,14 +489,16 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 
 			// log
 			if(logFor(LOG_BB)) {
-				log << "\t\t\tPossible branching addresses: " << targetAddr << endl;
+				log << "\t\t\tPossible branching addresses: " << targetAddr << " to " << last <<  " @ " << last->address() << endl;
 			}
 
 			// check the type: Branch or Call
-			if(last->isControl() && last->isConditional())
+			if(last->isControl() && last->isBranch())
 				BRANCH_TARGET(last).add(targetAddr);
-			else
+			else if(last->isControl() && last->isCall())
 				CALL_TARGET(last).add(targetAddr);
+			else
+				ASSERTP(0, "Unknown type of the target for " << last << " @ " << last->address());
 
 			// set NEW_BRANCH_TARGET_FOUND to true so notified there is a new target addresses detected
 			NEW_BRANCH_TARGET_FOUND(workspace()) = true;

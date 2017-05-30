@@ -546,8 +546,13 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 	// for now, just crash
 	else {
-		if(logFor(LOG_BLOCK))
+		if(logFor(LOG_BLOCK)) {
 			log << "\t\t\ttoo many dynamic events: " << countDynEvents(all_events) << ". Giving up. Sorry.\n";
+			// log used events
+			for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
+				if((*e).fst->occurrence() == SOMETIMES)
+					log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address() << " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") " << (*e).snd << io::endl;
+		}
 		ASSERTP(false, "too many events!")
 	}
 
