@@ -38,7 +38,7 @@ public:
 	CollectorCleaner(WorkSpace *ws, CFGCollection *coll): _ws(ws), _coll(coll) { }
 
 	virtual void clean(void) {
-		for(CFGCollection::Iterator g(_coll); g; g++)
+		for(CFGCollection::Iter g(_coll); g; g++)
 			delete g;
 		delete _coll;
 		INVOLVED_CFGS(_ws).remove();
@@ -83,21 +83,52 @@ private:
  */
 
 /**
- * @class CFGCollection::Iterator
+ * @class CFGCollection::Iter
  * Iterator on the CFG contained in a @ref CFGCollection.
  */
 
 /**
- * @fn CFGCollection::Iterator::Iterator(const CFGCollection *cfgs);
+ * @fn CFGCollection::Iterator::Iter(const CFGCollection *cfgs);
  * Build an iterator on the given CFG collection.
  * @param cfgs	CFG collection to iterate on.
  */
 
 /**
- * @fn CFGCollection::Iterator(const CFGCollection& cfgs);
+ * @fn CFGCollection::Iter(const CFGCollection& cfgs);
  * Build an iterator on the given CFG collection.
  * @param cfgs	CFG collection to iterate on.
  */
+
+/**
+ * @fn CFGCollection::Iter::Iter(WorkSpace *ws);
+ * CFG iterator builder on the CFG collection of a workspace.
+ * @warning The COLLECTED_CFG_FEATURE must be provided!
+ * @param ws	Workspace containing the CFG collection.
+ */
+
+/**
+ * @class CFGCollection::BlockIter
+ * Iterator on the total list of blocks composing CFGs of a CFG collection.
+ */
+
+/**
+ * @fn CFGCollection::BlockIter::BlockIter(WorkSpace *ws);
+ * Block iterator builder on the CFG collection of a workspace.
+ * @warning The COLLECTED_CFG_FEATURE must be provided!
+ * @param ws	Workspace containing the CFG collection.
+ */
+
+/**
+ * Get the CFG collection from a workspace.
+ * @param ws	Workspace to look in.
+ * @return		Found CFG collection.
+ * @warning The COLLECTED_CFG_FEATURE must be provided!
+ */
+const CFGCollection *CFGCollection::get(WorkSpace *ws) {
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	ASSERT(coll);
+	return coll;
+}
 
 /**
  * Add a CFG to the collection.
@@ -115,7 +146,7 @@ void CFGCollection::add(CFG *cfg) {
  * (sum of BB count of each CFG).
  * @return	Collection BB number.
  */
-int CFGCollection::countBB(void) const {
+int CFGCollection::countBlocks(void) const {
 	if(!cfgs)
 		return 0;
 	else

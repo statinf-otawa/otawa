@@ -245,7 +245,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, must_entry ? must_entry->get(line) : 0);
 
 
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
 
@@ -257,7 +257,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 
 
 			/* Store the resulting ACS into the properties */
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
 		}
@@ -274,7 +274,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
 					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
@@ -295,7 +295,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
 					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
@@ -327,7 +327,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 
 	FIRSTMISS_LEVEL(fw) = level;
 	// Build the vectors for receiving the ACS...
-	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			CACHE_ACS_MUST(bb) = new genstruct::Vector<MUSTProblem::Domain*>;
 			if (level != FML_NONE)

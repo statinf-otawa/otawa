@@ -1,6 +1,6 @@
 /*
  * OTAWA -- WCET computation framework
- * Copyright (C) 2009  IRIT - UPS <casse@irit.fr>
+ * Copyright (C) 2009-17  IRIT - UPS <casse@irit.fr>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,10 +19,10 @@
 #ifndef OTAWA_PROP_CONTEXTUALPROPERTY_H_
 #define OTAWA_PROP_CONTEXTUALPROPERTY_H_
 
-#include <elm/genstruct/Vector.h>
 #include <elm/inhstruct/Tree.h>
 #include <elm/io.h>
 #include <elm/ptr.h>
+
 #include <otawa/base.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/Identifier.h>
@@ -43,7 +43,8 @@ public:
 		FUNCTION,
 		CALL,
 		FIRST_ITER,
-		OTHER_ITER
+		OTHER_ITER,
+		AFTER,
 	} kind_t;
 
 	inline ContextualStep(void): _kind(NONE) { }

@@ -79,7 +79,7 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	bbCount = 0;
 	int bbCountTotal = 0;
-	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
 		if(cfgi->count() > bbCount)
 			bbCount = cfgi->count();
 		bbCountTotal = bbCountTotal + cfgi->count();
@@ -99,7 +99,7 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 
 	if(DEBUG_INFO(ws)) {
 		elm::cout << "bbCount = " << bbCount << io::endl;
-		elm::cout << "bbCountTotal vs coll->countBB() = " << bbCountTotal << " vs " << coll->countBB() << io::endl;
+		elm::cout << "bbCountTotal vs coll->countBB() = " << bbCountTotal << " vs " << coll->countBlocks() << io::endl;
 	}
 }
 
@@ -112,7 +112,7 @@ void GlobalAnalysisProblem::getStats(void) {
 	unsigned int totalProcessedInst = 0;
 	unsigned int totalProcessedSemInst = 0;
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
-	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
 		unsigned int numOfInstCFG = 0;
 		unsigned int numOfSemInstCFG = 0;
 		unsigned int numOfProcessedInstCFG = 0;
@@ -142,7 +142,7 @@ void GlobalAnalysisProblem::getStats(void) {
 		}
 		elm::cout << "STATS2," << cfgi->index() << "," << processCFGFreq[cfgi->index()] << "," << numOfInstCFG << "," << numOfSemInstCFG << "," << numOfProcessedInstCFG << "," << numOfProcessedSemInstCFG << "," << *cfgi << "," << cfgi->count() << io::endl;
 	}
-	elm::cout << "STATS1," << coll->count() << "," << coll->countBB() << "," << _nb_bb_count << "," << totalInst << "," << totalSemInst << "," << totalProcessedInst << "," << totalProcessedSemInst << io::endl;
+	elm::cout << "STATS1," << coll->count() << "," << coll->countBlocks() << "," << _nb_bb_count << "," << totalInst << "," << totalSemInst << "," << totalProcessedInst << "," << totalProcessedSemInst << io::endl;
 	elm::cout << "STATS2," << "," << "," << "," << "," << totalProcessedInst << "," << totalProcessedSemInst << io::endl;
 
 }

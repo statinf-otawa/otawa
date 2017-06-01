@@ -295,7 +295,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve(0, &entry_dom);
 
 
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
@@ -325,7 +325,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve(0, &entry_dom);
 
 			// Store the resulting ACS into the properties
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
@@ -351,7 +351,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
@@ -380,7 +380,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
 				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
@@ -432,7 +432,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// Build the vectors for receiving the ACS...
-	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			MUST_ACS(bb) = new acs_result_t(temp);
 			if(level != DFML_NONE) {

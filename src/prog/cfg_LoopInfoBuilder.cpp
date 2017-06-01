@@ -47,7 +47,7 @@ public:
 protected:
 	virtual void clean() {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 				for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
 					if (LOOP_EXIT_EDGE(*outedge)) {

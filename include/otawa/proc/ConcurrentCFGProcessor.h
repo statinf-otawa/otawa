@@ -37,7 +37,7 @@ protected:
 private:
 	void nextCFG(void);
 	sys::Mutex *mutex;
-	CFGCollection::Iterator it;
+	CFGCollection::Iter it;
 };
 
 }	// otawa

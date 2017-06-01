@@ -67,7 +67,7 @@ XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 	// Compute CFG offsets
 	int i = 0;
 	offs[0] = 0;
-	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++) {
 		INDEX(cfg) = i++;
 		offs[i] = offs[i - 1] + cfg->count();
 	}
@@ -75,7 +75,7 @@ XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 	
 	// Record nodes and CFG next nodes
 	int bbi = 0, cfgi = 0;
-	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++, cfgi++)
+	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++, cfgi++)
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++, bbi++) {
 			nodes[bbi].bb = bb;
 			nodes[bbi].cfg = cfgi;
@@ -94,7 +94,7 @@ template <class D>
 XCFGVisitor<D>::~XCFGVisitor(void) {
 	
 	// Release INDEX on CFGs
-	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++)
+	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++)
 		cfg->removeProp(&INDEX);
 	
 	// Free memory

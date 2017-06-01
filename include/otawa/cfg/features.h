@@ -42,33 +42,37 @@ namespace sgraph { class Edge; }
 // CFGCollection Class
 class CFGCollection {
 public:
+	static const CFGCollection *get(WorkSpace *ws);
 	inline int count(void) const { return cfgs.length(); }
 	inline CFG *get(int index) const { return cfgs[index]; }
 	inline CFG *operator[](int index) const { return cfgs[index]; }
 	inline CFG *entry(void) const { return get(0); }
-	int countBB(void) const;
+	int countBlocks(void) const;
 
-	class Iterator: public elm::genstruct::FragTable<CFG *>::Iterator {
+	class Iter: public elm::genstruct::FragTable<CFG *>::Iterator {
 	public:
-		inline Iterator(void) { }
-		inline Iterator(const CFGCollection *cfgs)
-			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
-		inline Iterator(const CFGCollection& cfgs)
-			: elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
+		inline Iter(void) { }
+		inline Iter(WorkSpace *ws): elm::genstruct::FragTable<CFG *>::Iterator(get(ws)->cfgs) { }
+		inline Iter(const CFGCollection *cfgs): elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
+		inline Iter(const CFGCollection& cfgs): elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
 	};
+	inline Iter items(void) const { return Iter(this); }
+	inline Iter operator*(void) const { return items(); }
 
-	class BBIterator: public PreIterator<BBIterator, Block *> {
+	class BlockIter: public PreIterator<BlockIter, Block *> {
 	public:
-		inline BBIterator(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
-		inline BBIterator(const BBIterator& i): cfg(i.cfg), bb(i.bb) { }
-		inline BBIterator& operator=(const BBIterator& i) { cfg = i.cfg; bb = i.bb; return *this; }
+		inline BlockIter(void) { }
+		inline BlockIter(WorkSpace *ws): cfg(get(ws)), bb(cfg->blocks()) { }
+		inline BlockIter(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
+		inline BlockIter(const CFGCollection& cfgs): cfg(&cfgs), bb(cfg->blocks()) { }
 		inline bool ended(void) const { return bb.ended(); }
 		inline Block *item(void) const { return *bb; }
 		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BlockIter(cfg->blocks()); } }
 	private:
-		Iterator cfg;
+		Iter cfg;
 		CFG::BlockIter bb;
 	};
+	inline BlockIter blocks(void) const { return BlockIter(this); }
 
 	void add(CFG *cfg);
 

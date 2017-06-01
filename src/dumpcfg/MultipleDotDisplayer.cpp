@@ -85,7 +85,7 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 		throw ProcessorException(*this, "no provider of dot output");
 
 	// generate the CFGs
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
 		display::DisplayedCFG dcfg(**cfg);
 		display::Displayer *disp = prov->make(dcfg, decor);
 		if(cfg->index() == 0)

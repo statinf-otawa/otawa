@@ -156,7 +156,7 @@ ConstraintLoader::ConstraintLoader(AbstractRegistration& r)
 Block *ConstraintLoader::getBB(address_t addr) {
 	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
-		for (CFGCollection::Iterator icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
+		for (CFGCollection::Iter icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
 			for (CFG::BlockIter b = icfg->blocks(); b; b++)
 				if(!b->isBasic()) {
 					BasicBlock *ibb = b->toBasic();

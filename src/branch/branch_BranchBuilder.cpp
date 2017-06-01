@@ -180,7 +180,7 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<BranchProblem> > > hai(fixp, *ws);
 		hai.solve();
 
-		for (CFGCollection::Iterator cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
+		for (CFGCollection::Iter cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
 			for(CFG::BlockIter b = cfg->blocks(); b; b++)
 				if(b->isBasic()) {
 					BasicBlock *bb = b->toBasic();

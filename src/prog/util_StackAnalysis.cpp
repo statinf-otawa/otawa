@@ -927,7 +927,7 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	// record the results
 	if(logFor(LOG_BLOCK))
 		log << "\tSTORING RESULTS\n";
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			if(logFor(LOG_BLOCK))
 				log << "\t\t" << *bb << "[" << cfg->index() << "][" << cfg->index() << "]: " << *list.results[cfg->index()][bb->index()] << io::endl;

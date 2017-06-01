@@ -32,10 +32,11 @@ namespace otawa {
  * @p
  *
  * Contextual paths are more general than simple call chains. They may includes:
- * @li @ref ContextualStep::FUNCTION -- function call
- * @li @ref ContextualStep::CALL -- function call site
- * @li @ref ContextualStep::FIRST_ITER -- first iteration of a loop
- * @li @ref ContextualStep::OTHER_ITER -- other iterations of a loop.
+ * @li @ref ContextualStep::FUNCTION -- function call (address of the function as parameter),
+ * @li @ref ContextualStep::CALL -- function call site (address of the call as parameter),
+ * @li @ref ContextualStep::FIRST_ITER -- first iteration of a loop,
+ * @li @ref ContextualStep::OTHER_ITER -- other iterations of a loop,
+ * @li @ref ContextualStep::AFTER -- after executing a BB (which address is passed as parameter).
  *
  *
  * @section context_get Getting a contextual property
@@ -100,6 +101,7 @@ void ContextualStep::print(io::Output& out) const {
 	case CALL: out << "CALL(" << addr << ")"; break;
 	case FIRST_ITER: out << "FIRST_ITER(" << addr << ")"; break;
 	case OTHER_ITER: out << "OTHER_ITER(" << addr << ")"; break;
+	case AFTER: out << "AFTER(" << addr << ")"; break;
 	}
 }
 

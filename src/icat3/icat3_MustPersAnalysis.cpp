@@ -360,7 +360,7 @@ protected:
 			return;
 
 		// prepare containers
-		for(CFGCollection::BBIterator b(cfgs); b; b++) {
+		for(CFGCollection::BlockIter b(cfgs); b; b++) {
 			(*MUST_IN(b)).configure(*coll);
 			(*PERS_IN(b)).configure(*coll);
 			track(MUST_PERS_ANALYSIS_FEATURE, MUST_IN(b));
@@ -389,7 +389,7 @@ protected:
 		ai.run();
 
 		// store the result
-		for(CFGCollection::BBIterator b(cfgs); b; b++) {
+		for(CFGCollection::BlockIter b(cfgs); b; b++) {
 			(*MUST_IN(b))[set] = d.must(s.get(b));
 			(*PERS_IN(b))[set] = d.pers(s.get(b));
 		}

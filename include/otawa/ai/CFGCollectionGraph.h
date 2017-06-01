@@ -48,9 +48,9 @@ public:
 	inline vertex_t exitOf(vertex_t v) const { return v->toSynth()->callee()->exit(); }
 	inline Callers callers(vertex_t v) const { return v->cfg()->callers(); }
 
-	class Iterator: public CFGCollection::BBIterator {
+	class Iterator: public CFGCollection::BlockIter {
 	public:
-		inline Iterator(const CFGCollectionGraph& g): CFGCollection::BBIterator(&g._coll) { }
+		inline Iterator(const CFGCollectionGraph& g): CFGCollection::BlockIter(&g._coll) { }
 	};
 
 	inline Successor succs(vertex_t v) const { return v->outs(); }
@@ -58,7 +58,7 @@ public:
 
 	// Indexed concept
 	inline int index(Block *v) const { return v->id(); }
-	inline int count(void) const { return _coll.countBB(); }
+	inline int count(void) const { return _coll.countBlocks(); }
 
 private:
 	const CFGCollection& _coll;

@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	StatInfo class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2011, IRIT UPS.
+ *	Copyright (c) 2011-17, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -26,19 +25,52 @@
 namespace otawa {
 
 /**
- */
-StatCollector::~StatCollector(void) {
-
-}
-
-
-/**
  * @class StatCollector
  * A statistics collector allows to access statistics produced by an analysis.
  * Any specialized statistics provider must implements this class and store an instance
  * in the @ref StatInfo workspace instance. This allows generic processing of statistics
  * by user interface applications.
+ *
+ * The statistics may be structured by group: a group is mainly an identifier that is shared
+ * by several statistics. A group may also be structured by separating each component with a "/"
+ * (like a file path). Additionally, statistics may have keywords to help the user to select
+ * the interesting statistics to display. This type of information is purely symbolic and
+ * is provided to automatic processing of statistics.
+ *
+ * @ingroup proc
  */
+
+/**
+ */
+StatCollector::~StatCollector(void) {
+
+}
+
+/**
+ * Return a symbolic identifier to design the statistic set.
+ * Return the name as a default implementation.
+ * @return	Symbolic identifier.
+ */
+cstring StatCollector::id(void) const {
+	return name();
+}
+
+/**
+ * Get the group of the statistics collector.
+ * Default implementation returns empty set.
+ * @return	Group owning this stats.
+ */
+cstring StatCollector::group(void) const {
+	return "";
+}
+
+/**
+ * Keywords representing this state.
+ * The default implementation does nothing.
+ * @param kws	Vector to store keywords in.
+ */
+void StatCollector::keywords(Vector<cstring>& kws) {
+}
 
 
 /**
@@ -116,8 +148,9 @@ StatCollector::~StatCollector(void) {
 
 /**
  * @class StatInfo
- * Aggregator of statistics put on the workspace. Accessible using @ref StatInfo::ID
+ * Agregator of statistics put on the workspace. Accessible using @ref StatInfo::ID
  * identifier.
+ * @ingroup proc
  */
 
 

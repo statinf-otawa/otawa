@@ -109,14 +109,14 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 	const CFGCollection *orig_coll = INVOLVED_CFGS(ws);
 
 	// make the makers
-	for(CFGCollection::Iterator cfg(*orig_coll); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(*orig_coll); cfg; cfg++) {
 		CFGMaker *vcfg = new CFGMaker(cfg->first(), true);
 		vcfgvec.add(vcfg);
 	}
 
 	// reduce loops
 	int i = 0;
-	for(CFGCollection::Iterator g(*orig_coll); g; g++, i++) {
+	for(CFGCollection::Iter g(*orig_coll); g; g++, i++) {
 		//displayCFG(ws, cfg, "old");
 		if(logFor(LOG_FUN))
 			log << "\treducing function " << *g << io::endl;

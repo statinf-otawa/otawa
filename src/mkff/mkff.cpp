@@ -729,7 +729,7 @@ private:
  */
 void Command::generateCFGs(String path, int type) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace()); // obtain the CFG Collection for outputing
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
 		display::AbstractGraph* ag;
 		display::Decorator* d;
 
@@ -1088,7 +1088,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 					int sumCFG = 0;
 					int sumB = 0;
 					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+					for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 						sumCFG++;
 						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
 							sumB++;
@@ -1221,7 +1221,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 
 		Vector<Address> displayedInstructions;
 		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
 				// only treats BB
 				if(!bi->isBasic())

@@ -123,7 +123,7 @@ void BBProcessor::destroy(WorkSpace *ws, CFG *cfg, Block *b) {
 void BBCleaner::clean(void) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			clean(ws, cfg, bb);
 }

@@ -2867,7 +2867,7 @@ public:
 
 	virtual void clean(void) {
 		const CFGCollection *cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 			for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
 				clp::STATE_IN(*bbi).remove();
 				clp::STATE_OUT(*bbi).remove();

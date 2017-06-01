@@ -22,6 +22,7 @@
 #ifndef OTAWA_STATS_STATCOLLECTOR_H_
 #define OTAWA_STATS_STATCOLLECTOR_H_
 
+#include <elm/data/Vector.h>
 #include <otawa/base.h>
 #include <otawa/prop/ContextualProperty.h>
 
@@ -31,6 +32,9 @@ class StatCollector {
 public:
 	virtual ~StatCollector(void);
 
+	virtual cstring id(void) const;
+	virtual cstring group(void) const;
+	virtual void keywords(Vector<cstring>& kws);
 	virtual cstring name(void) const = 0;
 	virtual cstring unit(void) const = 0;
 

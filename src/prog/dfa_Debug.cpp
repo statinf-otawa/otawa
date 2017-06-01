@@ -61,7 +61,7 @@ Debug::Debug(WorkSpace *ws, sys::Path path): saver(path), in_state(false), faile
 	saver.beginObject();
 	saver.addField("graph");
 	saver.beginArray();
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			saver.beginObject();
 			saver.addField("id");

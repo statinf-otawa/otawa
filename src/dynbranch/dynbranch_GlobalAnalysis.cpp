@@ -117,7 +117,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 
 	// Check the results
 	int i = 0 ;
-	for(CFGCollection::Iterator cfgi(*coll); cfgi; cfgi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
 		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi; bbi++) {
 			if(!bbi->isBasic())
 				continue;

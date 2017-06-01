@@ -162,7 +162,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 		if(may_entry)
 			entry_dom = *may_entry->get(line);
 		mayHai.solve(0, &entry_dom);
-		for(CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+		for(CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 
@@ -176,7 +176,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 			entry_dom = *may_entry->get(line);
 		mayHai.solve(0, &entry_dom);
 		/* Store the resulting ACS into the properties */
-		for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
+		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 				MAY_ACS(bb)->set(line, new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 	}
@@ -203,7 +203,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Build the vectors for receiving the ACS...
 	// Now each block is attributed with MAY_ACS, i.e. MAY_ACS(bb) will never be NULL/0 (the default value of MAY_ACS)
-	for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			MAY_ACS(bb) = new acs_result_t(temp);
 	}

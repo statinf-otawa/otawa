@@ -134,6 +134,7 @@ public:
 	class VertexIter: public PreIterator<VertexIter, V *> {
 		friend class GenDiGraph<V, E>;
 	public:
+		inline VertexIter(void) { }
 		inline VertexIter(const VertexIter& it): i(it.i) { }
 		inline bool ended(void) const { return i.ended(); }
 		inline V *item(void) const { return static_cast<V *>(*i); }

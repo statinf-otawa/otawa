@@ -59,7 +59,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	const CFGCollection *coll = otawa::INVOLVED_CFGS(ws);
 
 	// initialize the PCG
-	CFGCollection::Iterator cfg(coll);
+	CFGCollection::Iter cfg(coll);
 	PCGBlock *b = new PCGBlock(cfg);
 	map.put(cfg, b);
 	otawa::PCG *pcg = new otawa::PCG(b);
@@ -73,7 +73,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// build the links
-	for(CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for(CFG::CallerIter call = cfg->callers(); call; call++)
 			new PCGEdge(map.get(call->caller()), call, map.get(cfg));
 

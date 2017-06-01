@@ -47,7 +47,7 @@ public:
 protected:
 	virtual void clean() {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 			if(CONTEXT_TREE(cfg).exists()) {
 				delete CONTEXT_TREE(cfg);
 				CONTEXT_TREE(cfg).remove();

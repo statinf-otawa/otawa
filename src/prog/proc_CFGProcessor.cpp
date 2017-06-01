@@ -83,7 +83,7 @@ void CFGProcessor::processWorkSpace(WorkSpace *fw) {
 
 	// Visit CFG
 	int count = 0;
-	for(CFGCollection::Iterator cfg(cfgs); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++) {
 		if(logFor(LOG_CFG))
 			log << "\tprocess CFG " << cfg->label() << io::endl;
 		_cfg = cfg;

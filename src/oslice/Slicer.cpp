@@ -119,7 +119,7 @@ protected:
 		ASSERT(cfgc);
 		genstruct::SLList<CFG*> cfgsToDelete;
 		// collects the things to delete
-		for(CFGCollection::Iterator cfgi(cfgc); cfgi; cfgi++) {
+		for(CFGCollection::Iter cfgi(cfgc); cfgi; cfgi++) {
 			cfgsToDelete.add(*cfgi); // collect the CFGs
 		}
 		// the removed of Blocks and Edges are handled by ~CFG()
@@ -162,7 +162,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		int sumCFG = 0;
 		int sumB = 0;
 		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-		for(CFGCollection::Iterator cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
 			sumCFG++;
 			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
 				sumB++;
@@ -240,7 +240,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 
 	// now try to dump the CFG here
 	if(_outputCFG) {
-		for(CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
 			// full program will use different abstract graph
 			// DotDisplayer(workspace(), slicingCFGOutputPath, 1).display(coll);
 			display::DisplayedCFG ag(**cfg);
@@ -276,7 +276,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	elm::cerr << "CFG SLI takes " << clockWorkCFGReconstruction << " micro-seconds" << io::endl;
 
 	if(_outputCFG) {
-		for(CFGCollection::Iterator cfg(sliced_coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(sliced_coll); cfg; cfg++) {
 			display::DisplayedCFG ag(**cfg);
 			SlicingDecorator d(workspace(), 0);
 			display::Displayer *disp = display::Provider::display(ag, d, display::OUTPUT_RAW_DOT);
@@ -310,7 +310,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		int sum = 0;
 		int sumCFG = 0;
 		int sumB = 0;
-		for(CFGCollection::Iterator cfg(sliced_coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(sliced_coll); cfg; cfg++) {
 			sumCFG++;
 			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
 				sumB++;
@@ -754,7 +754,7 @@ void Slicer::slicing(void) {
 
 	// putting the block to remove in the working list
 	Vector<Block*> blocksToRemove;
-	for (CFGCollection::Iterator c(coll); c; c++) {
+	for (CFGCollection::Iter c(coll); c; c++) {
 		for (CFG::BlockIter v = c->blocks(); v; v++) {
 			if (v->isBasic()) {
 				BasicBlock *bb = v->toBasic();
@@ -973,7 +973,7 @@ void Slicer::slicing(void) {
 		} // finish linking the predecessors and successors of the removal BB
 	} // end of the working list
 
-	for(CFGCollection::Iterator c(coll); c; c++) {
+	for(CFGCollection::Iter c(coll); c; c++) {
 		makeCFG(c);
 	}
 

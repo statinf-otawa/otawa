@@ -342,7 +342,7 @@ void VirtualInstManager::finish(void) {
  */
 void VirtualInstManager::collect(const CFGCollection& coll) {
 	start();
-	for(CFGCollection::BBIterator b(&coll); b; b++)
+	for(CFGCollection::BlockIter b(&coll); b; b++)
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
 			for(BasicBlock::InstIter i = bb->insts(); i; i++)
