@@ -47,21 +47,14 @@ StatCollector::~StatCollector(void) {
 }
 
 /**
- * Return a symbolic identifier to design the statistic set.
+ * Return a symbolic identifier to design the statistic set. This identifier
+ * may be structured according to groups or subgroups containing the statistics.
+ * As for file path, the identifier components are separated by "/".
  * Return the name as a default implementation.
  * @return	Symbolic identifier.
  */
 cstring StatCollector::id(void) const {
 	return name();
-}
-
-/**
- * Get the group of the statistics collector.
- * Default implementation returns empty set.
- * @return	Group owning this stats.
- */
-cstring StatCollector::group(void) const {
-	return "";
 }
 
 /**
@@ -80,35 +73,44 @@ void StatCollector::keywords(Vector<cstring>& kws) {
 
 
 /**
- * @fn cstring StatCollector::unit(void) const;
  * Name of statistics unit (for human user, in english).
+ * @return	Unit name.
  */
+cstring StatCollector::unit(void) const {
+	return "";
+}
 
 
 /**
- * @fn bool StatCollector::isEnum(void) const;
  * Test if the statistics concerns enumerated value.
  * If this method returns true, method valueName() can be called to collect
  * names of enumerated values. The number of enumerated values is given by
  * the total method.
  * @return	True if the statistics are enumerated values.
  */
+bool StatCollector::isEnum(void) const {
+	return false;
+}
 
 
 /**
- * @fn const cstring StatCollector::valueName(int value);
  * Get the name of an enumerated value (for human user, in english).
  * May only be called if isEnum() returns true.
  * @param value		Enumerated value.
  * @return			Name of the enumerated value.
  */
+const cstring StatCollector::valueName(int value) {
+	return "";
+}
 
 
 /**
- * @fn int StatCollector::total(void) const;
  * Get the total value for the current statistics (to compute ratio for example).
  * @return		Total value.
  */
+int StatCollector::total(void) {
+	return 0;
+}
 
 
 /**
@@ -135,15 +137,21 @@ void StatCollector::keywords(Vector<cstring>& kws) {
 
 
 /**
- * @fn int StatCollector::mergeContext(int v1, int v2);
  * This function allows to merge statistics of a same block in different contexts.
+ * The default implementation performs the maximum of two values.
  */
+int StatCollector::mergeContext(int v1, int v2) {
+	return max(v1, v2);
+}
 
 
 /**
- * @fn int StatCollector::mergeAgreg(int v1, int v2);
  * This function allows to merge statistics when different blocks are aggregated.
+ * The default implementation compute the sum.
  */
+int StatCollector::mergeAgreg(int v1, int v2) {
+	return v1 + v2;
+}
 
 
 /**
@@ -201,8 +209,8 @@ void StatInfo::remove(WorkSpace *ws, StatCollector& stats) {
 }
 
 
-genstruct::Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
-	static genstruct::Vector<StatCollector *> empty;
+Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
+	static Vector<StatCollector *> empty;
 	StatInfo *info = StatInfo::ID(ws);
 	if(!info)
 		return empty;
@@ -215,7 +223,7 @@ genstruct::Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
  * Iterate on statistics collector of the workspace.
  * @param ws	Workspace to work on.
  */
-StatInfo::Iter::Iter(WorkSpace *ws): genstruct::Vector<StatCollector *>::Iterator(get(ws)) {
+StatInfo::Iter::Iter(WorkSpace *ws): Vector<StatCollector *>::Iter(get(ws)) {
 }
 
 }	// otawa

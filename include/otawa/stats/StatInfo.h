@@ -24,7 +24,7 @@
 #define OTAWA_STATS_STATINFO_H_
 
 #include <otawa/prop/Identifier.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include "StatCollector.h"
 
 namespace otawa {
@@ -38,14 +38,16 @@ public:
 	static void add(WorkSpace *ws, StatCollector& stats);
 	static void remove(WorkSpace *ws, StatCollector& stats);
 
-	class Iter: public genstruct::Vector<StatCollector *>::Iterator {
+	~StatInfo(void);
+
+	class Iter: public Vector<StatCollector *>::Iter {
 	public:
 		Iter(WorkSpace *ws);
 	};
 
 private:
-	static genstruct::Vector<StatCollector *>& get(WorkSpace *ws);
-	genstruct::Vector<StatCollector *> stats;
+	static Vector<StatCollector *>& get(WorkSpace *ws);
+	Vector<StatCollector *> stats;
 };
 
 }	// otawa

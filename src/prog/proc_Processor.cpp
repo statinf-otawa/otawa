@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Processor class implementation
  *
  *	This file is part of OTAWA
@@ -516,8 +515,8 @@ void Processor::collectStats(WorkSpace *ws) {
  * The default implementation activates the clean list.
  */
 void Processor::destroy(WorkSpace *ws) {
-	for(clean_list_t::Iterator clean(cleaners); clean; clean++)
-		delete (*clean).snd;
+	for(List<Cleaner *>::Iter clean = *cleaners; clean; clean++)
+		delete *clean;
 	cleaners.clear();
 }
 
@@ -719,11 +718,34 @@ private:
  * instance is purged of the statistics collector.
  * @param feature		Feature to link the collector to.
  * @param collector		Statistics collector to add.
+ * @deprecated
  */
 void Processor::recordStat(const AbstractFeature& feature, StatCollector *collector) {
 	ASSERTP(isCollectingStats(), "no statistics collection at this time");
 	StatInfo::add(workspace(), *collector);
 	addCleaner(feature, new StatCleaner(workspace(), collector));
+}
+
+/**
+ * Add a statistics collector to the current workspace collection.
+ * The statistics object is tracked by the processor and will
+ * be fried automatically when needed.
+ * @param collector		Statistics collector to add.
+ */
+void Processor::record(StatCollector *collector) {
+	ASSERTP(isCollectingStats(), "no statistics collection at this time");
+	StatInfo::add(workspace(), *collector);
+	track(new StatCleaner(workspace(), collector));
+}
+
+
+/**
+ * Track the given cleaner, that is, record the cleaner in the analysis
+ * and trigger when the analysis is deleted.
+ * @param cleaner	Cleaner to add.
+ */
+void Processor::track(Cleaner *cleaner) {
+	cleaners.add(cleaner);
 }
 
 

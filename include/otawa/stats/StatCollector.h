@@ -33,15 +33,14 @@ public:
 	virtual ~StatCollector(void);
 
 	virtual cstring id(void) const;
-	virtual cstring group(void) const;
 	virtual void keywords(Vector<cstring>& kws);
 	virtual cstring name(void) const = 0;
-	virtual cstring unit(void) const = 0;
+	virtual cstring unit(void) const;
 
 	// value processing
-	virtual bool isEnum(void) const = 0;
-	virtual const cstring valueName(int value) = 0;
-	virtual int total(void) = 0;
+	virtual bool isEnum(void) const;;
+	virtual const cstring valueName(int value);
+	virtual int total(void);
 
 	// collection
 	class Collector {
@@ -51,8 +50,8 @@ public:
 	virtual void collect(Collector& collector) = 0;
 
 	// statistics merge
-	virtual int mergeContext(int v1, int v2) = 0;
-	virtual int mergeAgreg(int v1, int v2) = 0;
+	virtual int mergeContext(int v1, int v2);
+	virtual int mergeAgreg(int v1, int v2);
 };
 
 }	// otawa

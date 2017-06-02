@@ -21,6 +21,7 @@
 #ifndef OTAWA_PROC_PROCESSOR_H
 #define OTAWA_PROC_PROCESSOR_H
 
+#include <elm/data/List.h>
 #include <elm/io.h>
 #include <elm/util/Cleaner.h>
 #include <elm/util/Version.h>
@@ -134,15 +135,14 @@ protected:
 	void warn(const String& message);
 	inline WorkSpace *workspace(void) const { return ws; }
 	inline Progress& progress(void) { return *_progress; }
-	void recordStat(const AbstractFeature& feature, StatCollector *collector);
-
-	// cleanup
-	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
-		{ cleaners.add(clean_t(&feature, cleaner)); }
-	template <class T> void addRemover(const AbstractFeature& feature, const Ref<T, Identifier<T> >& ref)
-		{ addCleaner(feature, new Remover<T>(ref)); }
-	template <class T> void addDeletor(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
-		{ addCleaner(feature, new Deletor<T>(ref)); }
+	void record(StatCollector *collector);
+	void track(Cleaner *cleaner);
+	template <class T> void track(const Ref<T, const Identifier<T> >& ref)
+		{ track(new Remover<T>(ref)); }
+	template <class T> void track(const Ref<T *, const Identifier<T *> >& ref)
+		{ track(new Deletor<T>(ref)); }
+	template <class T> T *track(T *object)
+		{ track(static_cast<Cleaner *>(new elm::Deletor<T>(object))); return object; }
 
 	// Methods for customizing
 	virtual void prepare(WorkSpace *ws);
@@ -151,6 +151,14 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 	virtual void collectStats(WorkSpace *ws);
 
+	// deprecated
+	void recordStat(const AbstractFeature& feature, StatCollector *collector);
+	inline void addCleaner(const AbstractFeature& feature, Cleaner *cleaner)
+		{ cleaners.add(cleaner); }
+	template <class T> void addRemover(const AbstractFeature& feature, const Ref<T, Identifier<T> >& ref)
+		{ addCleaner(feature, new Remover<T>(ref)); }
+	template <class T> void addDeletor(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
+		{ addCleaner(feature, new Deletor<T>(ref)); }
 	template <class T> T *track(const AbstractFeature& feature, T *object)
 		{ addCleaner(feature, new elm::Deletor<T>(object)); return object; }
 	template <class T> void track(const AbstractFeature& feature, const Ref<T *, Identifier<T *> >& ref)
@@ -171,9 +179,7 @@ private:
 
 	AbstractRegistration *_reg;
 	WorkSpace *ws;
-	typedef Pair<const AbstractFeature *, Cleaner *> clean_t;
-	typedef elm::genstruct::SLList<clean_t> clean_list_t;
-	clean_list_t cleaners;
+	List<Cleaner *> cleaners;
 	Progress *_progress;
 };
 

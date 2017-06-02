@@ -84,18 +84,46 @@ using namespace elm::option;
 
 class Summer: public StatCollector::Collector {
 public:
-	Summer(void): s(0) { }
+	Summer(void): _init(false), _sum(0), _max(0), _min(0), _cnt(0) { }
 	virtual ~Summer(void) { }
-	inline int sum(void) const { return s; }
+	inline int sum(void) const { return _sum; }
+	inline int max(void) const { return _max; }
+	inline int min(void) const { return _min; }
+	inline int count(void) const { return _cnt; }
 	virtual void enter(const ContextualStep &step) { }
 	virtual void leave(void) { }
 	virtual void collect(const Address &address, t::uint32 size, int value, const ContextualPath& ctx) {
-		s += value;
+		_cnt++;
+		_sum += value;
+		if(!_init) {
+			_init = true;
+			_max = value;
+			_min = value;
+		}
+		else {
+			if(value > _max)
+				_max = value;
+			if(value < _min)
+				_min = value;
+		}
+
 	}
 private:
-	int s;
+	bool _init;
+	int _sum, _max, _min, _cnt;
 };
 
+class StatOutput: public StatCollector::Collector {
+public:
+	StatOutput(Output& out): _out(out) { }
+	virtual ~StatOutput() { }
+	virtual void collect(const Address &address, t::uint32 size, int value, const ContextualPath& ctx) {
+		_out << value << "\t" << address << "\t" << size << "\t" <<  ctx << io::endl;
+	}
+
+private:
+	Output& _out;
+};
 
 class OWCET: public Application {
 public:
@@ -106,19 +134,20 @@ public:
 		"H. Cassé <casse@irit.fr>",
 		"Copyright (c) IRIT - UPS <casse@irit.fr>"
 	),
-	params(ListOption<string>::Make(*this).cmd("-p").cmd("--param").description("parameter passed to the script").argDescription("IDENTIFIER=VALUE")),
-	script(ValueOption<string>::Make(*this).cmd("-s").cmd("--script").description("script used to compute WCET").argDescription("PATH")),
-	ilp_dump(SwitchOption::Make(*this).cmd("-i").cmd("--dump-ilp").description("dump ILP system to standard output")),
-	list(SwitchOption::Make(*this).cmd("--list").cmd("-l").description("list configuration items")),
-	timed(SwitchOption::Make(*this).cmd("--timed").cmd("-t").description("display computation")),
-	display_stats(SwitchOption::Make(*this).cmd("-S").cmd("--stats").description("display statistics"))
+	params			(ListOption<string>		::Make(*this).cmd("-p")			.cmd("--param").description("parameter passed to the script").argDescription("IDENTIFIER=VALUE")),
+	script			(ValueOption<string>	::Make(*this).cmd("-s")			.cmd("--script").description("script used to compute WCET").argDescription("PATH")),
+	ilp_dump		(SwitchOption			::Make(*this).cmd("-i")			.cmd("--dump-ilp").description("dump ILP system to standard output")),
+	list			(SwitchOption			::Make(*this).cmd("--list")		.cmd("-l").description("list configuration items")),
+	timed			(SwitchOption			::Make(*this).cmd("--timed")	.cmd("-t").description("display computation")),
+	display_stats	(SwitchOption			::Make(*this).cmd("-S")			.cmd("--stats").description("display statistics")),
+	detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics"))
 	{ }
 
 protected:
 	virtual void work (const string &entry, PropList &props) throw(elm::Exception) {
 
 		// set statistics option
-		if(display_stats)
+		if(display_stats || detailed_stats)
 			Processor::COLLECT_STATS(props) = true;
 
 		// any script
@@ -211,19 +240,45 @@ protected:
 				Summer s;
 				stat->collect(s);
 				int t = stat->total();
-				cerr << stat->name() << ": " << s.sum()
-					 << " / " << t << ' ' << stat->unit()
-					 << " (" << (float(s.sum()) / t * 100) << "%)\n";
+
+				// non-summable stat
+				cerr << stat->name() << ": ";
+				if(t)
+					cerr << "total=" << t << ", ";
+				cerr << " avg=" << float(s.sum()) / s.count()
+					 << ", max=" << s.max()
+					 << ", min=" << s.min() << io::endl;
 			}
 
 			// no state message
 			if(!found)
 				cerr << "No statistics to display.\n";
+		}
 
-			//StatInfo *info = StatInfo::ID(workspace());
-			//if(!info)
-			//else {
-			//const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
+		// display detail of statistics
+		if(detailed_stats && StatInfo::Iter(workspace())) {
+			sys::Path spath = entry + "-stats";
+			if(!spath.exists())
+
+				// ensure the director is available
+				try
+					{ sys::System::makeDir(spath); }
+				catch(sys::SystemException& e)
+					{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
+				else if(!spath.isDir())
+					throw otawa::Exception(_ << spath << " exists and is not a directory!");
+				else if(!spath.isWritable())
+					throw otawa::Exception(_ << spath << " exists but is not writable!");
+
+				// generate the statistics
+				for(StatInfo::Iter stat(workspace()); stat; stat++) {
+					string id = string(stat->id()).replace("/", "-");
+					io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
+					Output out(*stream);
+					StatOutput sout(out);
+					stat->collect(sout);
+					delete stream;
+				}
 		}
 	}
 
@@ -234,6 +289,7 @@ private:
 	SwitchOption list;
 	SwitchOption timed;
 	SwitchOption display_stats;
+	SwitchOption detailed_stats;
 	string bin, task;
 };
 

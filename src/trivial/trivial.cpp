@@ -28,6 +28,7 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/stats/BBStatCollector.h>
 #include <otawa/trivial/features.h>
 
 namespace otawa { namespace trivial {
@@ -70,17 +71,25 @@ public:
 
 	BlockTime(p::declare& r = reg): BBProcessor(r), itime(5) { }
 
-	void configure(const PropList& props) {
+	virtual void configure(const PropList& props) {
 		BBProcessor::configure(props);
 		itime = INSTRUCTION_TIME(props);
 	}
 
 protected:
-	void processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
 		if(!bb->isBasic())
 			ipet::TIME(bb) = 0;
 		else
 			ipet::TIME(bb) = itime * bb->toBasic()->count();
+	}
+
+	virtual void collectStats(WorkSpace *ws) {
+		record(new ipet::TimeStat(ws));
+	}
+
+	virtual void destroy(WorkSpace *ws, CFG *cfg, Block *b) {
+		ipet::TIME(b).remove();
 	}
 
 private:

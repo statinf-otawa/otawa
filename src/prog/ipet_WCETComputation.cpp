@@ -54,21 +54,18 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
 p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation::DO_DISPLAY", false);
 
 
-/* BB time statistics collector */
-class BBTimeCollector: public BBStatCollector {
+// total time statistics
+class TotalTimeStat: public BBStatCollector {
 public:
-	BBTimeCollector(WorkSpace *ws): BBStatCollector(ws) {
+	TotalTimeStat(WorkSpace *ws): BBStatCollector(ws) {
 		system = SYSTEM(ws);
 		ASSERT(system);
 	}
 
-	virtual cstring name(void) const { return "Execution Time"; }
+	virtual cstring id(void) const { return "ipet/total_time"; }
+	virtual cstring name(void) const { return "Total Execution Time"; }
 	virtual cstring unit(void) const { return "cycle"; }
-	virtual bool isEnum(void) const { return false; }
-	virtual const cstring valueName(int value) { return ""; }
 	virtual int total(void) { return WCET(ws()); }
-	virtual int mergeContext(int v1, int v2) { return max(v1, v2); }
-	virtual int mergeAgreg(int v1, int v2) { return v1 + v2; }
 
 	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
 		if(bb->isEnd())
@@ -83,6 +80,34 @@ public:
 		if(cnt < 0)
 			return;
 		collector.collect(bb->address(), bb->size(), cnt * time, path);
+	}
+
+private:
+	ilp::System *system;
+};
+
+
+// total block execution count
+class TotalCountStat: public BBStatCollector {
+public:
+	TotalCountStat(WorkSpace *ws): BBStatCollector(ws) {
+		system = SYSTEM(ws);
+		ASSERT(system);
+	}
+
+	virtual cstring id(void) const { return "ipet/total_count"; }
+	virtual cstring name(void) const { return "Total Execution Count"; }
+
+	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
+		if(bb->isEnd())
+			return;
+		ilp::Var *var = VAR(bb);
+		if(!var)
+			return;
+		int cnt = int(system->valueOf(var));
+		if(cnt < 0)
+			return;
+		collector.collect(bb->address(), bb->size(), cnt, path);
 	}
 
 private:
@@ -158,8 +183,34 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
 /**
  */
 void WCETComputation::collectStats(WorkSpace *ws) {
-	recordStat(WCET_FEATURE, new BBTimeCollector(ws));
+	record(new TotalTimeStat(ws));
+	record(new TotalCountStat(ws));
 }
+
+
+/**
+ * @class TimeStat
+ * Statistics producing the execution of each basic block.
+ * @ingroup ipet
+ */
+
+/** */
+TimeStat::TimeStat(WorkSpace *ws): BBStatCollector(ws) { }
+
+/** */
+cstring TimeStat::id(void) const { return "ipet/time"; }
+
+/** */
+void TimeStat::keywords(Vector<cstring>& kws) { kws.add("time"); kws.add("block"); kws.add("cfg"); }
+
+/** */
+cstring TimeStat::name(void) const { return "Block Execution Time"; }
+
+/** */
+cstring TimeStat::unit(void) const { return "cycle"; }
+
+/** */
+int TimeStat::getStat(BasicBlock *bb) { return TIME(bb); }
 
 
 /**

@@ -50,11 +50,7 @@ BBStatCollector::BBStatCollector(WorkSpace *ws): _ws(ws), _cfg(0), _total(-1) {
 /**
  */
 void BBStatCollector::collect(Collector& collector) {
-	const CFGCollection *coll = INVOLVED_CFGS(ws());
-	for(int i = 0; i < coll->count(); i++) {
-		_cfg = coll->get(i);
-		process(collector);
-	}
+	process(collector);
 }
 
 
@@ -77,28 +73,32 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 
 	// initialization
 	todo.push(pair(cfg->entry(), *CONTEXT(cfg)));
-	marks.set(cfg->entry()->index());
 
 	// traverse until the end
 	while(todo) {
 		Pair<Block *, ContextualPath> cur = todo.pop();
-		for(Block::EdgeIter e = cur.fst->outs(); e; e++) {
 
-			// already processed sink?
-			if(marks[e->sink()->index()])
-				continue;
-			marks.set(e->sink()->index());
+		// already processed sink?
+		if(marks[cur.fst->index()])
+			continue;
+		marks.set(cur.fst->index());
+
+		// collect from the block
+		if(cur.fst->isBasic())
+			collect(collector, cur.fst->toBasic(), cur.snd);
+
+		// add successors
+		for(Block::EdgeIter e = cur.fst->outs(); e; e++) {
 
 			// update the context
 			ContextualPath p = cur.snd;
-			for(int i = 0; i < LEAVE(e); i++)
-				p.pop();
-			for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
-				p.push(*s);
+				for(int i = 0; i < LEAVE(e); i++)
+					p.pop();
+				for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
+					p.push(*s);
 
-			// collect from the block
-			if(e->sink()->isBasic())
-			this->collect(collector, e->sink()->toBasic(), p);
+			// push the new vertex
+			todo.push(pair(e->sink(), p));
 		}
 	}
 }
@@ -121,7 +121,7 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 /**
  * This method is automatically called on each basic block
  * to compute the @ref total() result as the sum of total of each
- * basic block. This methodmust be overriden to provide a customized behaviour.
+ * basic block. This method must be overriden to provide a customized behaviour.
  * As a default, it returns 0.
  * @param bb	Current basic block.
  * @return		Total of the basic block.
@@ -151,6 +151,28 @@ int BBStatCollector::total(void) {
 		}
 	}
 	return _total;
+}
+
+/**
+ * This method is called to perform statistics collection for a particular basic block.
+ * The default implementation obtains the statistic from get() function (considering only 1
+ * statistic for the BB) and collect the statistics for the whole block.
+ * @param collector		Collector to use.
+ * @param bb			Current basic block.
+ * @param path			Current context.
+ */
+void BBStatCollector::collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
+	collector.collect(bb->address(), bb->size(), getStat(bb), path);
+}
+
+/**
+ * Obtain a statistics for the given basic block.
+ * Default implementation only returns 0.
+ * @param bb	Basic block to get statistics for.
+ * @return		Statistics for the basic block.
+ */
+int BBStatCollector::getStat(BasicBlock *bb) {
+	return 0;
 }
 
 }	// otawa

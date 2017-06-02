@@ -38,7 +38,8 @@ protected:
 	inline WorkSpace *ws(void) const { return _ws; }
 	inline CFG *cfg(void) const { return _cfg; }
 	virtual int total(void);
-	virtual void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) = 0;
+	virtual void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path);
+	virtual int getStat(BasicBlock *bb);
 	virtual int total(BasicBlock *bb);
 
 private:

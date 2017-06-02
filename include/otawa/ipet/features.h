@@ -24,6 +24,7 @@
 #include <otawa/prop/Identifier.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/stats/BBStatCollector.h>
 
 namespace otawa {
 
@@ -76,6 +77,18 @@ extern p::feature INST_CACHE_SUPPORT_FEATURE;
 extern p::feature CACHE_SUPPORT_FEATURE;
 
 extern p::feature WCET_COUNT_RECORDED_FEATURE;
+
+// statistics
+class TimeStat: public BBStatCollector {
+public:
+	TimeStat(WorkSpace *ws);
+	virtual cstring id(void) const;
+	virtual void keywords(Vector<cstring>& kws);
+	virtual cstring name(void) const;
+	virtual cstring unit(void) const;
+protected:
+	virtual int getStat(BasicBlock *bb);
+};
 
 } }	// otawa::ipet
 
