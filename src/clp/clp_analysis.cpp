@@ -2850,12 +2850,14 @@ private:
 	// store to T management
 	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
 	void warnStoreToTop(void) {
+		if(!VERBOSE(_process))
+			return;
 		if(!currentInst || !bb)
 			return;
 		Pair<Inst *, Block *> p = pair(currentInst, bb);
 		if(!top_stores.contains(p)) {
 			top_stores.add(p);
-			cerr << "WARNING: (" << p.snd << "):" << p.fst->address() << ": " << p.fst << " store to T (unbounded address)\n";
+			cerr << "WARNING: clp: (" << p.snd << "):" << p.fst->address() << ": " << p.fst << " store to T (unbounded address)\n";
 		}
 	}
 };
@@ -2970,6 +2972,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	// set the cleaner
 	addCleaner(clp::CLP_ANALYSIS_FEATURE, new CLPStateCleaner(ws));
 
+	VERBOSE(ws->process()) = logFor(LOG_BB);
 	ClpProblem prob(ws->process());
 
 	// initialize state with initial register values
