@@ -692,7 +692,10 @@ Value& Value::widening(const Value& val) {
 	}
 
 	if(isInf() && val.isInf()) {
-		if((_base != val._base) || (_delta != val._delta)) {
+		if((_delta == val._delta) && (abs(val._base - _base) % _delta == 0)) {
+			return *this;
+		}
+		else {
 			*this = all;
 			return *this;
 		}
@@ -2318,7 +2321,7 @@ public:
 
 		switch(i.op) {
 		case sem::BRANCH: {
-			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
+			// pc = b.length(); // commented out because it only indicates that the PC of the processor to change, not the pc of the semanitc block
 			TRACESI(cerr << "\t\t\tbranch(" << get(*state, i.d()) << ")\n");
 			if(has_if)
 				has_branch = true;
@@ -3334,7 +3337,6 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
-	//mi = BasicBlock::InstIter(bb);
 	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
