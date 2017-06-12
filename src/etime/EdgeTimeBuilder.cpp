@@ -998,27 +998,27 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 	}
 
 	case MEM: {
-			bool found = false;
-			if(event->related().snd) {
-				for(ParExeInst::NodeIterator node(inst); node; node++)
-					if(node->stage()->unit() == event->related().snd) {
-						node->setLatency(node->latency() + event->cost() - 1);
-						found = true;
-						break;
-					}
-			}
-			else {
-				for(ParExeInst::NodeIterator node(inst); node; node++)
-					if(node->stage()->unit()->isMem()) {
-						node->setLatency(node->latency() + event->cost() - 1);
-						found = true;
-						break;
-					}
-			}
-			if(!found)
-				throw otawa::Exception("no memory stage / FU found in this pipeline");
-			break;
+		bool found = false;
+		if(event->related().snd) {
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit() == event->related().snd) {
+					node->setLatency(node->latency() + event->cost() - 1);
+					found = true;
+					break;
+				}
 		}
+		else {
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit()->isMem()) {
+					node->setLatency(node->latency() + event->cost() - 1);
+					found = true;
+					break;
+				}
+		}
+		if(!found)
+			throw otawa::Exception("no memory stage / FU found in this pipeline");
+		break;
+	}
 
 	case BRANCH:
 		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
@@ -1094,13 +1094,28 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 		break;
 	}
 
-	case MEM:
-		for(ParExeInst::NodeIterator node(inst); node; node++)
-			if(node->stage()->unit()->isMem()) {
-				node->setLatency(node->latency() - event->cost() + 1);
-				break;
-			}
+	case MEM: {
+		bool found = false;
+		if(event->related().snd) {
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit() == event->related().snd) {
+					node->setLatency(node->latency() - event->cost() + 1);
+					found = true;
+					break;
+				}
+		}
+		else {
+			for(ParExeInst::NodeIterator node(inst); node; node++)
+				if(node->stage()->unit()->isMem()) {
+					node->setLatency(node->latency() - event->cost() + 1);
+					found = true;
+					break;
+				}
+		}
+		if(!found)
+			throw otawa::Exception("no memory stage / FU found in this pipeline");
 		break;
+	}
 
 	case BRANCH:
 		ASSERT(bedge);
