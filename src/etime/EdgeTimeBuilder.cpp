@@ -999,12 +999,22 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 			bool found = false;
-			for(ParExeInst::NodeIterator node(inst); node; node++)
-				if(node->stage()->unit()->isMem()) {
-					node->setLatency(node->latency() + event->cost() - 1);
-					found = true;
-					break;
-				}
+			if(event->related().snd) {
+				for(ParExeInst::NodeIterator node(inst); node; node++)
+					if(node->stage()->unit() == event->related().snd) {
+						node->setLatency(node->latency() + event->cost() - 1);
+						found = true;
+						break;
+					}
+			}
+			else {
+				for(ParExeInst::NodeIterator node(inst); node; node++)
+					if(node->stage()->unit()->isMem()) {
+						node->setLatency(node->latency() + event->cost() - 1);
+						found = true;
+						break;
+					}
+			}
 			if(!found)
 				throw otawa::Exception("no memory stage / FU found in this pipeline");
 			break;
