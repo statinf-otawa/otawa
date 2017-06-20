@@ -999,22 +999,47 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 		bool found = false;
-		if(event->related().snd) {
-			for(ParExeInst::NodeIterator node(inst); node; node++)
-				if(node->stage()->unit() == event->related().snd) {
-					node->setLatency(node->latency() + event->cost() - 1);
+		for(ParExeInst::NodeIterator node(inst); node; node++)
+			if(node->stage()->unit()->isMem()) {
+				node->setLatency(node->latency() + event->cost() - 1);
+				found = true;
+				break;
+			}
+
+		if(!found && event->related().fst) {
+			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
+			ParExeInst *rel_inst = 0;
+			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it) {
+				if(inst_it->inst() == event->related().fst) {
+					rel_inst = *inst_it;
+					break;
+				}
+			}
+			// ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
+
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
+
+					// Add cost to the edge between the related node and the fetch code
+					bool edge_found = false;
+					for (ParExeGraph::Predecessor pred(*rel_node); pred; ++pred) {
+						if (*pred == inst->execNode() && pred.edge()->type() == edge_type) {
+							pred.edge()->setLatency(pred.edge()->latency() + event->cost());
+							edge_found = true;
+							break;
+						}
+					}
+					ASSERTP(edge_found, "edge from related stage " << event->related().snd->getName() << " not found");
 					break;
 				}
 		}
-		else {
-			for(ParExeInst::NodeIterator node(inst); node; node++)
-				if(node->stage()->unit()->isMem()) {
-					node->setLatency(node->latency() + event->cost() - 1);
-					found = true;
-					break;
-				}
+
+		if(!found && inst->execNode()) {
+			inst->execNode()->setLatency(inst->execNode()->latency() + event->cost() - 1);
+			found = true;
 		}
+
 		if(!found)
 			throw otawa::Exception("no memory stage / FU found in this pipeline");
 		break;
@@ -1096,24 +1121,46 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 		bool found = false;
-		if(event->related().snd) {
-			for(ParExeInst::NodeIterator node(inst); node; node++)
-				if(node->stage()->unit() == event->related().snd) {
-					node->setLatency(node->latency() - event->cost() + 1);
+		for(ParExeInst::NodeIterator node(inst); node; node++)
+			if(node->stage()->unit()->isMem()) {
+				node->setLatency(node->latency() - event->cost() + 1);
+				found = true;
+				break;
+			}
+
+		if(!found && event->related().fst) {
+			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
+			ParExeInst *rel_inst = 0;
+			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it) {
+				if(inst_it->inst() == event->related().fst) {
+					rel_inst = *inst_it;
+					break;
+				}
+			}
+			// ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
+
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
+
+					// Add cost to the edge between the related node and the fetch code
+					bool edge_found = false;
+					for (ParExeGraph::Predecessor pred(*rel_node); pred; ++pred) {
+						if (*pred == inst->execNode() && pred.edge()->type() == edge_type) {
+							pred.edge()->setLatency(pred.edge()->latency() - event->cost());
+							edge_found = true;
+							break;
+						}
+					}
+					ASSERTP(edge_found, "edge from related stage " << event->related().snd->getName() << " not found");
 					break;
 				}
 		}
-		else {
-			for(ParExeInst::NodeIterator node(inst); node; node++)
-				if(node->stage()->unit()->isMem()) {
-					node->setLatency(node->latency() - event->cost() + 1);
-					found = true;
-					break;
-				}
+
+		if(!found && inst->execNode()) {
+			inst->execNode()->setLatency(inst->execNode()->latency() - event->cost() + 1);
+			found = true;
 		}
-		if(!found)
-			throw otawa::Exception("no memory stage / FU found in this pipeline");
 		break;
 	}
 
