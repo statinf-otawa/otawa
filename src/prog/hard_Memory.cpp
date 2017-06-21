@@ -647,7 +647,15 @@ ENUM_BEGIN(otawa::hard::Bank::type_t)
 ENUM_END
 
 namespace elm { namespace serial2 {
-	static serial2::Class<otawa::Address> _class("otawa::Address");
+	class AddressType: public rtti::Type, public rtti::Serializable {
+	public:
+		AddressType(void): rtti::Type("otawa::Address") { }
+		virtual const Type& type(void) const { return *this; }
+		virtual void *instantiate(void) const { return new otawa::Address(); }
+		virtual void serialize(serial2::Serializer& ser, const void *data) const;
+		virtual void unserialize(serial2::Unserializer& uns, void *data) const;
+	};
+	static AddressType _class;
 
 	void __serialize(elm::serial2::Serializer &serializer, const otawa::Address& address) {
 		serializer.beginObject(_class, &address);
@@ -664,6 +672,14 @@ namespace elm { namespace serial2 {
 		serializer & field("page", page) & field("offset", offset);
 		serializer.endObject(_class, &address);
 		address = otawa::Address(page, offset);
+	}
+
+	void AddressType::serialize(serial2::Serializer& ser, const void *data) const {
+		__serialize(ser, data);
+	}
+
+	void AddressType::unserialize(serial2::Unserializer& uns, void *data) const {
+		__unserialize(uns, data);
 	}
 
 } }

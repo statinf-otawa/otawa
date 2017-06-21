@@ -70,6 +70,8 @@ namespace sim {
 // WorkSpace class
 class WorkSpace: public PropList {
 public:
+	static WorkSpace *load(sys::Path path, const PropList& props = PropList::EMPTY);
+	static inline WorkSpace *load(sys::Path path, const PropList *props) { return load(path, *props); }
 	WorkSpace(Process *_proc);
 	WorkSpace(const WorkSpace *ws);
 	virtual ~WorkSpace(void);

@@ -150,17 +150,17 @@ public:
 		inline void remove(void) const { ContextualProperty::make(p, cp).removeProp(i); }
 		inline T& ref(void) const { return i.ref(ContextualProperty::ref(p, cp, i)); }
 		inline T& 	operator&(void) const { return ref(); }
-		const Ref<T> &operator=(const T &value) const { ref() = value; return *this; }
-		inline Ref<T> &operator+= (const T &v) const { ref() += value; return *this; }
-		inline Ref<T> &operator-= (const T &v) const { ref() -= value; return *this; }
-		inline Ref<T> &operator *= (const T &v) const { ref() *= value; return *this; }
-		inline Ref<T> &operator/= (const T &v) const { ref() /= value; return *this; }
-		inline Ref<T> &operator%= (const T &v) const { ref() %= value; return *this; }
-		inline Ref<T> &operator &= (const T &v) const { ref() &= value; return *this; }
-		inline Ref<T> &operator|= (const T &v) const { ref() |= value; return *this; }
-		inline Ref<T> &operator^= (const T &v) const { ref() ^= value; return *this; }
-		inline Ref<T> &operator<<= (const T &v) const { ref() <<= value; return *this; }
-		inline Ref<T> &operator>>= (const T &v) const { ref() >>= value; return *this; }
+		const Ref<T> &operator=(const T &v) const { ref() = v; return *this; }
+		inline Ref<T> &operator+= (const T &v) const { ref() += v; return *this; }
+		inline Ref<T> &operator-= (const T &v) const { ref() -= v; return *this; }
+		inline Ref<T> &operator *= (const T &v) const { ref() *= v; return *this; }
+		inline Ref<T> &operator/= (const T &v) const { ref() /= v; return *this; }
+		inline Ref<T> &operator%= (const T &v) const { ref() %= v; return *this; }
+		inline Ref<T> &operator &= (const T &v) const { ref() &= v; return *this; }
+		inline Ref<T> &operator|= (const T &v) const { ref() |= v; return *this; }
+		inline Ref<T> &operator^= (const T &v) const { ref() ^= v; return *this; }
+		inline Ref<T> &operator<<= (const T &v) const { ref() <<= v; return *this; }
+		inline Ref<T> &operator>>= (const T &v) const { ref() >>= v; return *this; }
 		inline Ref<T> &operator++ (void) const { ref()++; return *this; }
 		inline Ref<T> &operator-- (void) const { ref()--; return *this; }
 		inline Ref<T> &operator++ (int) const { ref()++; return *this; }

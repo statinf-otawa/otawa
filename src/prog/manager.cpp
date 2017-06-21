@@ -108,7 +108,7 @@ Identifier<string> LOAD_PARAM("otawa::LOAD_PARAM", "");
  * @param message	Message.
  */
 LoadException::LoadException(const String& message)
-: MessageException(message) {
+: otawa::Exception(message) {
 }
 
 
