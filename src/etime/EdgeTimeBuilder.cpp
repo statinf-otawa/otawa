@@ -1023,9 +1023,9 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 					// Add cost to the edge between the related node and the fetch code
 					bool edge_found = false;
-					for (ParExeGraph::Predecessor pred(*rel_node); pred; ++pred) {
-						if (*pred == inst->execNode() && pred.edge()->type() == edge_type) {
-							pred.edge()->setLatency(pred.edge()->latency() + event->cost());
+					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+						if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
+							succ.edge()->setLatency(succ.edge()->latency() + event->cost());
 							edge_found = true;
 							break;
 						}
@@ -1137,7 +1137,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 					break;
 				}
 			}
-			// ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
+			ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
 
 			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
 				if(rel_node->stage()->unit() == event->related().snd) {
@@ -1145,9 +1145,9 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 					// Add cost to the edge between the related node and the fetch code
 					bool edge_found = false;
-					for (ParExeGraph::Predecessor pred(*rel_node); pred; ++pred) {
-						if (*pred == inst->execNode() && pred.edge()->type() == edge_type) {
-							pred.edge()->setLatency(pred.edge()->latency() - event->cost());
+					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+						if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
+							succ.edge()->setLatency(succ.edge()->latency() - event->cost());
 							edge_found = true;
 							break;
 						}
