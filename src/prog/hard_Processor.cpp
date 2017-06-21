@@ -20,6 +20,7 @@
  */
 
 #include <elm/genstruct/SortedBinMap.h>
+#include <elm/rtti/Enum.h>
 #include <elm/serial2/XOMUnserializer.h>
 
 #include <otawa/hard/CacheConfiguration.h>
@@ -880,7 +881,7 @@ namespace elm { namespace serial2 {
 void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 
 	// List  of identifiers
-	static elm::value_t values[] = {
+	static elm::rtti::Enum::Value values[] = {
 			VALUE(otawa::Inst::IS_COND),
 			VALUE(otawa::Inst::IS_CONTROL),
 			VALUE(otawa::Inst::IS_CALL),
@@ -896,7 +897,7 @@ void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 			VALUE(otawa::Inst::IS_SHIFT),
 			VALUE(otawa::Inst::IS_TRAP),
 			VALUE(otawa::Inst::IS_INTERN),
-			value("", 0)
+			elm::rtti::Enum::Value("", 0)
 	};
 
 	// Build the type

@@ -230,6 +230,18 @@ namespace otawa {
 
 
 /**
+ * Build a workspace for the given binary file using the default manager.
+ * @param path					Path to the file.
+ * @param props					Configuration properties (optional).
+ * @return						Built workspace.
+ * @throw otawa::Exception		In case of error.
+ */
+WorkSpace *WorkSpace::load(sys::Path path, const PropList& props) {
+	return MANAGER.load(path, props);
+}
+
+
+/**
  * Build a new wokspace with the given process.
  * @param _proc	Process to use.
  */
@@ -528,8 +540,10 @@ void WorkSpace::add(Processor *proc, bool del_proc) {
 			dep_map.put(&fu->feature(), d);
 		else if(fu->kind() == FeatureUsage::require) {
 				Dependency *ud = dep_map.get(&fu->feature(), 0);
-				if(!ud)
-					throw otawa::Exception(_ << proc->name() << " requires " << fu->feature().name() << " but it seems it has invalidated it!");
+				if(!ud) {
+					if(!proc->registration().invalidates(fu->feature()))
+						throw otawa::Exception(_ << proc->name() << " requires " << fu->feature().name() << " but it seems it has invalidated it!");
+				}
 				else if(!ud->_users.contains(d)) {
 					d->_used.add(ud);
 					ud->_users.add(d);

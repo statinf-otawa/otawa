@@ -41,7 +41,7 @@ public:
 	virtual ~NamedObject(void);
 	inline string getName(void) const { return name; }
 	template <class T> bool implements(void) const
-		{ return T::__class.baseOf(this->__getSerialClass()); }
+		{ return T::__type->asClass().baseOf(this->__actual_class()); }
 
 private:
 	static genstruct::AVLMap<string, NamedObject *> objects;

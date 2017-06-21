@@ -49,7 +49,7 @@ namespace ilp { class System; }
 namespace sim { class Simulator; }
 
 // LoadException class
-class LoadException: public MessageException {
+class LoadException: public otawa::Exception {
 public:
 	LoadException(const elm::String& message);
 };

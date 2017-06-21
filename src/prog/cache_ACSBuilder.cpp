@@ -48,27 +48,21 @@ using namespace otawa::ilp;
 using namespace otawa::ipet;
 using namespace elm;
 
-ENUM(otawa::fmlevel_t)
-ENUM_BEGIN(otawa::fmlevel_t)
-	VALUE(FML_INNER),
-	VALUE(FML_OUTER),
-	VALUE(FML_MULTI),
-	VALUE(FML_NONE)
-ENUM_END
+static rtti::Enum fmtlevel_type(rtti::Enum::make("otawa::fmtlevel_t")
+	.value("FML_INNER", FML_INNER)
+	.value("FML_OUTER", FML_OUTER)
+	.value("FML_MULTI", FML_MULTI)
+	.value("FML_NONE", FML_NONE));
 
 namespace otawa {
 
 template<>
 void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) const {
-	value_t *val = type_info<fmlevel_t>::values();
-	while(val->name()) {
-		if(val->name() == str) {
-			this->set(props, (fmlevel_t)val->value());
-			return;
-		}
-		val++;
-	}
-	throw io::IOException("value does not match any enumerated value");
+	int val = fmtlevel_type.valueFor(&str);
+	if(val >= 0)
+		set(props, fmlevel_t(val));
+	else
+		throw io::IOException("value does not match any enumerated value");
 }
 
 
