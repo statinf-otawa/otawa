@@ -21,7 +21,8 @@
 #ifndef OTAWA_CFG_ABSTRACT_CFG_BUILDER_H
 #define OTAWA_CFG_ABSTRACT_CFG_BUILDER_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/FragTable.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/proc/Processor.h>
 
@@ -29,7 +30,7 @@ namespace otawa {
 
 // AbstractCFGBuilder Class
 class AbstractCFGBuilder: public Processor {
-	typedef genstruct::FragTable<Pair<Inst *, CFGMaker *> > makers_t;
+	typedef FragTable<Pair<Inst *, CFGMaker *> > makers_t;
 public:
 	AbstractCFGBuilder(p::declare& r);
 	virtual void configure(const PropList& props);
@@ -47,15 +48,15 @@ protected:
 		inline CFGMaker *item(void) const { return (*i).snd; }
 		inline void next(void) { i.next(); }
 	private:
-		makers_t::Iterator i;
+		makers_t::Iter i;
 	};
 
 private:
 	void processCFG(Inst *i);
-	void scanCFG(Inst *i, genstruct::FragTable<Inst *>& bbs);
-	void buildBBs(CFGMaker& maker, const genstruct::FragTable<Inst *>& bbs);
+	void scanCFG(Inst *i, FragTable<Inst *>& bbs);
+	void buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs);
 	void buildEdges(CFGMaker& maker);
-	void cleanBBs(const genstruct::FragTable<Inst *>& bbs);
+	void cleanBBs(const FragTable<Inst *>& bbs);
 	void seq(CFGMaker& m, BasicBlock *b, Block *src);
 
 	makers_t makers;

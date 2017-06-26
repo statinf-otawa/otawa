@@ -69,7 +69,7 @@ p::feature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", new Maker<ACS
  * @par Hooks
  * @li @ref BasicBlock
  */
- Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY("otawa::CACHE_ACS_MAY", NULL);
+ Identifier<Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY("otawa::CACHE_ACS_MAY", NULL);
 
 /**
  * This property allows us to set an entry may ACS.
@@ -77,7 +77,7 @@ p::feature ICACHE_ACS_MAY_FEATURE("otawa::ICACHE_ACS_MAY_FEATURE", new Maker<ACS
  * @par Hooks
  * @li @ref PropList
  */
- Identifier<genstruct::Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::CACHE_ACS_MAY_ENTRY", NULL);
+ Identifier<Vector<MAYProblem::Domain*>* > CACHE_ACS_MAY_ENTRY("otawa::CACHE_ACS_MAY_ENTRY", NULL);
 
 
 /**
@@ -159,7 +159,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-			CACHE_ACS_MAY(bb) = new genstruct::Vector<MAYProblem::Domain*>;
+			CACHE_ACS_MAY(bb) = new Vector<MAYProblem::Domain*>;
 	}
 
 	LBlockSet **lbsets = LBLOCKS(fw);

@@ -40,7 +40,7 @@ Identifier<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS", 0);
+Identifier<AllocArray<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS", 0);
 
 
 /**

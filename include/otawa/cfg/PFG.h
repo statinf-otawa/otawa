@@ -23,7 +23,7 @@
 #ifndef OTAWA_CFG_PFG_H_
 #define OTAWA_CFG_PFG_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/graph/GenGraph.h>
@@ -113,7 +113,7 @@ public:
 	BB *get(Address addr);
 
 private:
-	genstruct::HashTable<Address, BB *> bbs;
+	HashMap<Address, BB *> bbs;
 };
 
 } } // otawa::pfg

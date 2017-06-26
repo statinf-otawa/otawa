@@ -23,7 +23,7 @@
 #ifndef OTAWA_CACHE_ACSBUILDER_H_
 #define OTAWA_CACHE_ACSBUILDER_H_
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/prop/Identifier.h>
@@ -46,8 +46,8 @@ private:
 	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);	
 	fmlevel_t level;
 	bool unrolling;
-	genstruct::Vector<MUSTProblem::Domain *> *must_entry;
-	genstruct::Vector<PERSProblem::Domain *> *pers_entry;
+	Vector<MUSTProblem::Domain *> *must_entry;
+	Vector<PERSProblem::Domain *> *pers_entry;
 	
 };
 

@@ -390,7 +390,7 @@ class PERSProblem {
 		private:
 		
 			Item whole;
-			genstruct::Vector<Item*> data;
+			Vector<Item*> data;
 
 	};
 

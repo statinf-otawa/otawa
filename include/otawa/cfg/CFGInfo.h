@@ -21,7 +21,7 @@
 #ifndef OTAWA_CFG_CFG_INFO_H
 #define OTAWA_CFG_CFG_INFO_H
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/features.h>
@@ -39,7 +39,7 @@ class Inst;
 
 // CFGInfo class
 class CFGInfo {
-	typedef genstruct::HashTable<Address, CFG *> map_t;
+	typedef HashMap<Address, CFG *> map_t;
 public:
 	static Identifier<const CFGInfo *>& ID;
 
@@ -54,9 +54,9 @@ public:
 	void clear(void);
 
 	// Iter class
-	class Iter: public map_t::Iterator {
+	class Iter: public map_t::Iter {
 	public:
-		inline Iter(CFGInfo *info): map_t::Iterator(info->_cfgs) { }
+		inline Iter(CFGInfo *info): map_t::Iter(info->_cfgs) { }
 	};
 
 private:

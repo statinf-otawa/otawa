@@ -23,7 +23,7 @@
 #ifndef BSETS_H_
 #define BSETS_H_
 #include <elm/string/String.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/otawa.h>
 
 namespace otawa { namespace bpred {
@@ -35,18 +35,18 @@ private:
 		int addr;
 		int id_set;
 	}s_idx;
-	elm::genstruct::Vector<s_idx> v_idsets;
-	elm::genstruct::Vector< elm::genstruct::Vector<int> > v_BBsets;
+	elm::Vector<s_idx> v_idsets;
+	elm::Vector< elm::Vector<int> > v_BBsets;
 
 public:
 	BSets();
 	virtual ~BSets();
 	void add(int addr, int idBB);
-	bool get_vector( int addr, elm::genstruct::Vector<int>& vset);
+	bool get_vector( int addr, elm::Vector<int>& vset);
 	elm::String toString();
 	int get_addr(int idBB);
 	int nb_addr();
-	void get_all_addr(elm::genstruct::Vector<int> &lst_addr);
+	void get_all_addr(elm::Vector<int> &lst_addr);
 };
 
 inline int BSets::nb_addr() {

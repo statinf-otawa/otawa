@@ -25,7 +25,7 @@
 
 #include <elm/assert.h>
 #include <elm/util/Pair.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/BiDiList.h>
 #include <elm/genstruct/Tree.h>
 
 #include <otawa/proc/CFGProcessor.h>
@@ -70,8 +70,8 @@ public:
 	
 	class BBIterator: public elm::genstruct::Vector<Block*>::Iterator {
 	public:
-		inline BBIterator(Vector<Block*> &_vec):  elm::genstruct::Vector<Block*>::Iterator(_vec) { }
-		inline BBIterator(SESERegion *region): elm::genstruct::Vector<Block*>::Iterator(region->bbs) { }
+		inline BBIterator(Vector<Block*> &_vec):  Vector<Block*>::Iter(_vec) { }
+		inline BBIterator(SESERegion *region): Vector<Block*>::Iter(region->bbs) { }
 	};
 	
 	inline SESERegion(CFG *_cfg, Edge *_entry, PSTree *_parent, bool _first, CEClass *_class)
@@ -117,7 +117,7 @@ private:
 
 class PSTBuilder : public otawa::CFGProcessor {
 	typedef elm::Pair<Edge *, int> BSCName;
-	typedef elm::genstruct::DLList<Edge *> BracketSet;
+	typedef elm::BiDiList<Edge *> BracketSet;
 
 public:
 	PSTBuilder(void);

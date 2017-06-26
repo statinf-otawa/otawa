@@ -23,16 +23,16 @@
 #ifndef CACHE_LINKEDBLOCKSDETECTOR_H_
 #define CACHE_LINKEDBLOCKSDETECTOR_H_
 
+#include <elm/data/Vector.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
-#include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlock.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/cache/features.h>
 
 namespace otawa {
 
-extern Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS;
+extern Identifier<Vector<LBlock*> *> LINKED_BLOCKS;
 
 // LinkedBlocksDetector class
 class LinkedBlocksDetector : public otawa::Processor {
@@ -44,7 +44,7 @@ public:
 private:
 	bool _explicit;
 	cache::CategoryStats *cstats;
-	void recordBlocks(genstruct::Vector<LBlock*> *equiv);
+	void recordBlocks(Vector<LBlock*> *equiv);
 };
 
 }

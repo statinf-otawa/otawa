@@ -122,7 +122,7 @@ public:
 
 		// collect vertices
 		wl_vertices.clear();
-		genstruct::Vector<vertex_t> todo;
+		Vector<vertex_t> todo;
 		todo.push(_graph.entry());
 		while(todo) {
 			vertex_t v = todo.pop();

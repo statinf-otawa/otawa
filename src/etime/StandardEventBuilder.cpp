@@ -262,7 +262,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	// process instruction stage L1
 	if(has_il1 && b->isBasic()) {
 		BasicBlock *bb = b->toBasic();
-		const genstruct::AllocatedTable<LBlock* >& blocks = **BB_LBLOCKS(bb);
+		const AllocArray<LBlock* >& blocks = **BB_LBLOCKS(bb);
 		BasicBlock::InstIter inst = bb->insts();
 		for(int i = 0; i < blocks.count(); i++) {
 

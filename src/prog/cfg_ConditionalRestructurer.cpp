@@ -227,11 +227,11 @@ public:
 		return nc;
 	}
 
-	inline genstruct::Table<Inst *> insts(void) { return _insts.detach(); }
+	inline Array<Inst *> insts(void) { return _insts.detach(); }
 
 private:
 	Vector<Condition> _conds;
-	genstruct::Vector<Inst *> _insts;
+	Vector<Inst *> _insts;
 	t::uint8 _bra;
 };
 

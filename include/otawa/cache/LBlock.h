@@ -23,8 +23,8 @@
 #define OTAWA_CACHE_LBLOCK_H
 
 #include <elm/string.h>
-#include <elm/genstruct/SLList.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/List.h>
+#include <elm/data/HashMap.h>
 #include <elm/inhstruct/DLList.h>
 #include <elm/PreIterator.h>
 #include <otawa/instruction.h>

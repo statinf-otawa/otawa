@@ -139,7 +139,7 @@ BasicBlock *DelayedBuilder::makeBB(Inst *inst, int n) {
 BasicBlock *DelayedBuilder::makeNOp(Inst *inst, int n) {
 
 	// build the list of instructions
-	genstruct::Vector<Inst *> insts;
+	Vector<Inst *> insts;
 	for(; n; n--) {
 
 		// make the new nop

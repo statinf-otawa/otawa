@@ -22,7 +22,7 @@
 #ifndef OTAWA_CFG_SUBCFGBUILDER_H_
 #define OTAWA_CFG_SUBCFGBUILDER_H_
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg/CFGTransformer.h>
 #include <otawa/proc/Registration.h>
 #include <otawa/proc/Processor.h>
@@ -40,9 +40,9 @@ protected:
 	virtual void transform(CFG *cfg, CFGMaker& maker);
 private:
 	Address start;
-	elm::genstruct::Vector<Address> stops;
+	elm::Vector<Address> stops;
 	Block *_start_bb;
-	elm::genstruct::Vector<Block *> _stop_bbs;
+	elm::Vector<Block *> _stop_bbs;
 	CFGMaker *maker;
 	CFG *cfg;
 	void floodForward(void);

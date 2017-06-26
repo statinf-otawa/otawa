@@ -21,7 +21,6 @@
 #ifndef OTAWA_DELAYEDBUILDER_H_
 #define OTAWA_DELAYEDBUILDER_H_
 
-#include <elm/genstruct/SLList.h>
 #include <otawa/cfg/CFGTransformer.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/cfg/features.h>

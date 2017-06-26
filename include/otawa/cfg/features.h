@@ -21,7 +21,7 @@
 #ifndef OTAWA_CFG_FEATURES_H_
 #define OTAWA_CFG_FEATURES_H_
 
-#include <elm/genstruct/FragTable.h>
+#include <elm/data/FragTable.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prop/ContextualProperty.h>
@@ -49,12 +49,12 @@ public:
 	inline CFG *entry(void) const { return get(0); }
 	int countBlocks(void) const;
 
-	class Iter: public elm::genstruct::FragTable<CFG *>::Iterator {
+	class Iter: public elm::FragTable<CFG *>::Iter {
 	public:
 		inline Iter(void) { }
-		inline Iter(WorkSpace *ws): elm::genstruct::FragTable<CFG *>::Iterator(get(ws)->cfgs) { }
-		inline Iter(const CFGCollection *cfgs): elm::genstruct::FragTable<CFG *>::Iterator(cfgs->cfgs) { }
-		inline Iter(const CFGCollection& cfgs): elm::genstruct::FragTable<CFG *>::Iterator(cfgs.cfgs) { }
+		inline Iter(WorkSpace *ws): elm::FragTable<CFG *>::Iter(get(ws)->cfgs) { }
+		inline Iter(const CFGCollection *cfgs): elm::FragTable<CFG *>::Iter(cfgs->cfgs) { }
+		inline Iter(const CFGCollection& cfgs): elm::FragTable<CFG *>::Iter(cfgs.cfgs) { }
 	};
 	inline Iter items(void) const { return Iter(this); }
 	inline Iter operator*(void) const { return items(); }
@@ -77,7 +77,7 @@ public:
 	void add(CFG *cfg);
 
 private:
-	elm::genstruct::FragTable<CFG *> cfgs;
+	elm::FragTable<CFG *> cfgs;
 };
 
 // context support
@@ -132,7 +132,7 @@ extern Identifier<bool> BACK_EDGE;
 // LOOP_INFO_FEATURE
 extern Identifier<Block*> ENCLOSING_LOOP_HEADER;
 extern Identifier<Block*> LOOP_EXIT_EDGE;
-extern Identifier<elm::genstruct::Vector<Edge*> *> EXIT_LIST;
+extern Identifier<elm::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
 class LoopIter: public PreIterator<LoopIter, Block *> {
 public:

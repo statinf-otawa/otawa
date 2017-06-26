@@ -235,7 +235,7 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 		// process basic block
 		else if(v->isBasic()) {
 			BasicBlock *bb = v->toBasic();
-			genstruct::Vector<Inst *> insts(bb->count());
+			Vector<Inst *> insts(bb->count());
 			for(BasicBlock::InstIter i = bb->insts(); i; i++)
 				insts.add(i);
 			BasicBlock *nv = new BasicBlock(insts.detach());
@@ -347,7 +347,7 @@ CFGMaker& Virtualizer::newMaker(Inst *first) {
  */
 void Virtualizer::cleanup(WorkSpace *ws) {
 	CFGCollection *coll = new CFGCollection();
-	for(genstruct::FragTable<CFGMaker *>::Iterator m(makers); m; m++) {
+	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
 		coll->add(m->build());
 		delete *m;
 	}

@@ -23,7 +23,7 @@
 #ifndef OTAWA_CFG_LOOPUNROLLER_H_
 #define OTAWA_CFG_LOOPUNROLLER_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/CFGTransformer.h>
 #include <otawa/cfg/features.h>
@@ -44,7 +44,7 @@ protected:
 private:
 	void unroll(CFG *cfg, Block *header, CFGMaker *vcfg);
 
-	elm::genstruct::HashTable<void *, Block *> map;
+	elm::HashMap<void *, Block *> map;
 	CFGCollection *coll;
 	int idx;
 };

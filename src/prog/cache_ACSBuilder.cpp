@@ -89,7 +89,7 @@ p::feature ICACHE_ACS_FEATURE("otawa::ICACHE_ACS_FEATURE", new Maker<ACSBuilder>
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CACHE_ACS_MUST", 0);
+Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CACHE_ACS_MUST", 0);
 
 /**
  * This property allows to set an entry MUST ACS. It must be set in the property list passed
@@ -98,7 +98,7 @@ Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST("otawa::CAC
  * @par Hooks
  * @li @ref PropList (code processor configuration)
  */
-Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", 0);
+Identifier<Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otawa::CACHE_ACS_MUST_ENTRY", 0);
 
 /**
  * This property allows to set an entry PERS ACS. It must be set in the property list passed
@@ -107,7 +107,7 @@ Identifier<genstruct::Vector<MUSTProblem::Domain*>* > CACHE_ACS_MUST_ENTRY("otaw
  * @par Hooks
  * @li @ref PropList (code processor configuration)
  */
-Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otawa::CACHE_ACS_PERS_ENTRY", 0);
+Identifier<Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otawa::CACHE_ACS_PERS_ENTRY", 0);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -116,7 +116,7 @@ Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS_ENTRY("otaw
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CACHE_ACS_PERS", 0);
+Identifier<Vector<PERSProblem::Domain*>* > CACHE_ACS_PERS("otawa::CACHE_ACS_PERS", 0);
 
 /**
  * This property represents the "persistence" Abstract Cache State of a basic block.
@@ -323,9 +323,9 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
 		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-			CACHE_ACS_MUST(bb) = new genstruct::Vector<MUSTProblem::Domain*>;
+			CACHE_ACS_MUST(bb) = new Vector<MUSTProblem::Domain*>;
 			if (level != FML_NONE)
-				CACHE_ACS_PERS(bb) = new genstruct::Vector<PERSProblem::Domain*>;
+				CACHE_ACS_PERS(bb) = new Vector<PERSProblem::Domain*>;
 		}
 	}
 

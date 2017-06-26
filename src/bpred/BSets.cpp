@@ -25,7 +25,7 @@ void BSets::add(int addr,int idBB) {
 		// dans ce cas il faut creer un nouveau set
 		id_set = this->v_BBsets.length();
 
-		elm::genstruct::Vector<int> v;
+		elm::Vector<int> v;
 		this->v_BBsets.add(v);
 		BSets::s_idx s;
 		s.addr = addr;
@@ -37,7 +37,7 @@ void BSets::add(int addr,int idBB) {
 
 }
 
-bool BSets::get_vector(int addr, elm::genstruct::Vector<int>& vset) {
+bool BSets::get_vector(int addr, elm::Vector<int>& vset) {
 	int id_set = -1;
 	for(int i = 0 ; i<this->v_idsets.length(); ++i ) {
 		if(this->v_idsets[i].addr == addr) {
@@ -93,7 +93,7 @@ int BSets::get_addr(int idBB) {
 	return -1;
 }
 
-void BSets::get_all_addr(elm::genstruct::Vector<int>& lst_addr) {
+void BSets::get_all_addr(elm::Vector<int>& lst_addr) {
 	lst_addr.clear();
 	for(int i = 0 ; i<this->v_idsets.length(); ++i ) {
 		lst_addr.add(this->v_idsets[i].addr);

@@ -23,6 +23,7 @@
 #ifndef OTAWA_CFG_LOOPREDUCTOR_H_
 #define OTAWA_CFG_LOOPREDUCTOR_H_
 
+#include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/Feature.h>
@@ -40,7 +41,7 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	typedef genstruct::Vector<dfa::BitSet *> loops_t;
+	typedef Vector<dfa::BitSet *> loops_t;
 	bool reduce(CFGMaker& G, loops_t& L);
 	Block *clone(CFGMaker& G, Block *b, bool duplicate = false);
 	void computeInLoops(CFGMaker& maker, loops_t& L);

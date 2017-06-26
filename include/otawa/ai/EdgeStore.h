@@ -22,7 +22,7 @@
 #ifndef OTAWA_AI_EDGESTORE_H_
 #define OTAWA_AI_EDGESTORE_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 
 namespace otawa { namespace ai {
 
@@ -69,7 +69,7 @@ public:
 private:
 	D& _dom;
 	G& _graph;
-	genstruct::HashTable<edge_t, t> map;
+	HashMap<edge_t, t> map;
 };
 
 } }		// otawa::ai

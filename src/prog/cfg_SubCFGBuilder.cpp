@@ -20,7 +20,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/FragTable.h>
+#include <elm/data/FragTable.h>
+#include <elm/data/VectorQueue.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/SubCFGBuilder.h>
@@ -106,8 +107,8 @@ void SubCFGBuilder::floodForward(void) {
  * Flood backward stop reachable markers.
  */
 void SubCFGBuilder::floodBackward() {
-	genstruct::VectorQueue<Block *> todo;
-	for(genstruct::Vector<Block *>::Iterator stop(_stop_bbs); stop; stop++)
+	VectorQueue<Block *> todo;
+	for(Vector<Block *>::Iter stop(_stop_bbs); stop; stop++)
 		todo.put(stop);
 	while (todo){
 		Block *bb = todo.get();
@@ -156,7 +157,7 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 			IS_START(bb) = true;
 			_start_bb = bb;
 		}
-		for(genstruct::Vector<Address>::Iterator stop(stops); stop; stop++)
+		for(Vector<Address>::Iter stop(stops); stop; stop++)
 			if(bb->address() <= *stop && *stop < bb->address() + bb->size()) {
 				IS_STOP(bb) = true;
 				_stop_bbs.add(bb);
@@ -169,7 +170,7 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 	floodBackward();
 
 	// make all virtual BB
-	genstruct::FragTable<Block *> orgs;
+	FragTable<Block *> orgs;
 	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 
 		// remove non-useful blocks
@@ -185,7 +186,7 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 	}
 
 	// build the virtual edges
-	for(genstruct::FragTable<Block *>::Iterator src(orgs); src; src++) {
+	for(FragTable<Block *>::Iter src(orgs); src; src++) {
 		Block *vsrc = get(src);
 
 		// manage start

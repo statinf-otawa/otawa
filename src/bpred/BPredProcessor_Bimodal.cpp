@@ -28,7 +28,6 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/ILPSystemGetter.h>
-#include <elm/genstruct/HashTable.h>
 #include <otawa/ilp/System.h>
 
 using namespace otawa::ilp;
@@ -110,13 +109,13 @@ BasicBlock* BPredProcessor::getBB(int id,CFG* cfg) {
  * @param bs		BSet structure.
  * @param graphs	Vector containg the BCGs (Branch Conflict Graphs) generated from the BSet structure and the CFG.
  */
-void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstruct::Vector<BCG*> &graphs ) {
+void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector<BCG*> &graphs ) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
-	genstruct::HashTable<String , Var*> ht_vars;
+	HashMap<String , Var*> ht_vars;
 
-	elm::genstruct::Vector<int> l_addr;
+	elm::Vector<int> l_addr;
 	bs.get_all_addr(l_addr);
 
 #if C_1 > 0
@@ -124,7 +123,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
 	//1: Boucle sur toutes les classes de branchement
 	/////////////////////////////////////////////////// 
 	for(int i=0 ; i<l_addr.length();++i) {
-		elm::genstruct::Vector<int> l_bb;
+		elm::Vector<int> l_bb;
 		bs.get_vector(l_addr[i],l_bb);
 		
 		// on recupere le BCG correspondant a la classe en cours
@@ -650,10 +649,10 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::genstr
  * @param addr		Address class.
  * @param graphs	vector to stroe the new BCG in.
  */
-void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::Vector<BCG*> &graphs) {
+void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::Vector<BCG*> &graphs) {
 	// create the bitSet
-	elm::genstruct::Vector<int> *bit_sets = new elm::genstruct::Vector<int>[cfg->count()+1];
-	elm::genstruct::Vector<int> in_outs;
+	elm::Vector<int> *bit_sets = new elm::Vector<int>[cfg->count()+1];
+	elm::Vector<int> in_outs;
 	for(int i = 0 ; i < cfg->count()+1 ; ++i){
 		for(int j = 0 ; j<cfg->count() ; ++j ) {
 			bit_sets[i].add(0);
@@ -748,7 +747,7 @@ void BPredProcessor::simplifyCFG(CFG* cfg, BSets& bs, int addr, elm::genstruct::
  * @param addr		Address class of the BasicBlock.
  * @param visited	Array that remembers which basic block has been visited.
  */
-void BPredProcessor::computePredecessors(CFG* cfg, Block* bb, elm::genstruct::Vector<int> *bit_sets, elm::genstruct::Vector<int> &in_outs, BSets& bs, int addr,int visited[]) {
+void BPredProcessor::computePredecessors(CFG* cfg, Block* bb, elm::Vector<int> *bit_sets, elm::Vector<int> &in_outs, BSets& bs, int addr,int visited[]) {
 	visited[bb->index()]++;
 	if(bb != cfg->exit()) {
 		
@@ -868,8 +867,8 @@ void BPredProcessor::processCFG__Bimodal(WorkSpace *fw, CFG *cfg) {
 	generateClasses(cfg,bs);
 
  
-	elm::genstruct::Vector<int> l_addr;
-	elm::genstruct::Vector<BCG*> bcgs;
+	elm::Vector<int> l_addr;
+	elm::Vector<BCG*> bcgs;
 	bs.get_all_addr(l_addr);
 
 	PropList props;
@@ -889,7 +888,7 @@ void BPredProcessor::processCFG__Bimodal(WorkSpace *fw, CFG *cfg) {
 
 		if(this->withStats) {
 			this->stat_addr.add(l_addr[a]);
-			elm::genstruct::Vector<int> v;
+			elm::Vector<int> v;
 			bs.get_vector(l_addr[a],v);
 			this->stat_nbbr.add(v.length());
 		}

@@ -59,7 +59,7 @@ public:
 	virtual const cstring valueName(int value) { return ""; }
 
 	virtual int total(BasicBlock *bb) {
-		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
+		AllocArray<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
 		ilp::Var *var = ipet::VAR(bb);
 		ASSERT(var);
@@ -92,7 +92,7 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
+		AllocArray<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
 		for(int i = 0; i < lbs->count(); i++) {
 			ilp::Var *bb_var = VAR(bb);
@@ -113,7 +113,7 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
+		AllocArray<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
 		for(int i = 0; i < lbs->count(); i++) {
 			ilp::Var *bb_var = VAR(bb);
@@ -133,7 +133,7 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		genstruct::AllocatedTable<LBlock *>* lbs = BB_LBLOCKS(bb);
+		AllocArray<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
 		ilp::Var *xi = VAR(bb);
 		ASSERT(xi);
@@ -334,13 +334,13 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 
 				if (LINKED_BLOCKS(lblock) != NULL) {
 					/* linked l-blocks first-miss */
-					genstruct::Vector<LBlock *> &linked = **LINKED_BLOCKS(lblock);
+					Vector<LBlock *> &linked = **LINKED_BLOCKS(lblock);
 					/* We add constraints only once per group */
 					if (linked[linked.length() - 1] == *lblock) {
 
 						/* Add constraint: (sum of lblock l in list) xmiss_l <= sum of entry-edges of the loop */
 						Constraint *cons6 = system->newConstraint(fm_msg, Constraint::LE);
-						for (genstruct::Vector<LBlock *>::Iterator iter(linked); iter; iter++) {
+						for (Vector<LBlock *>::Iter iter(linked); iter; iter++) {
 							cons6->addLeft(1, MISS_VAR(iter));
 						}
 						for (Block::EdgeIter inedge = header->ins(); inedge; inedge++) {

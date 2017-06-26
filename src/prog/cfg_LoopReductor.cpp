@@ -19,8 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/SortedSLList.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/SortedList.h>
 #include <elm/util/misc.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/BitSet.h>
@@ -131,7 +131,7 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 				maker.add(map.get(v), map.get(e->sink()), new Edge(e->flags()));
 
 		// iterate until irreducible loops are processed
-		genstruct::Vector<dfa::BitSet *> L;
+		Vector<dfa::BitSet *> L;
 		bool reduced;
 		int it = 0;
 		do {
@@ -149,7 +149,7 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 				delete IN_LOOPS(v);
 				v->removeProp(IN_LOOPS);
 			}
-			for(loops_t::Iterator l(L); l; l++)
+			for(loops_t::Iter l(L); l; l++)
 				delete l;
 
 			it++;
@@ -198,7 +198,7 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 
 	if(b->isBasic()) {
 		BasicBlock *bb = b->toBasic();
-		genstruct::Table<Inst *> insts(new Inst *[bb->count()], bb->count());
+		Array<Inst *> insts(bb->count(), new Inst *[bb->count()]);
 		int j = 0;
 		for(BasicBlock::InstIter i = bb->insts(); i; i++, j++)
 			insts[j] = i;
@@ -242,7 +242,7 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 	// for l ∈ L do
-	for(loops_t::Iterator l(L); l; l++)
+	for(loops_t::Iter l(L); l; l++)
 
 		// if |l| > 1 then
 		if(l->count() > 1) {
@@ -269,7 +269,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 				C.empty();
 
 				// W ← l \ h; C ← l \ h
-				genstruct::Vector<Block *> W;
+				Vector<Block *> W;
 				for(dfa::BitSet::Iterator ch(**l); ch; ch++)
 					if(*hi != *ch) {
 						W.add(G.at(ch));
@@ -348,7 +348,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			}
 
 			// for v ∈ l \ { bh } do
-			genstruct::Vector<Edge *> D;
+			Vector<Edge *> D;
 			for(dfa::BitSet::Iterator vi(**l); vi; vi++) {
 				Block *v = G.at(vi);
 				if(v != bh)
@@ -367,7 +367,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			}
 
 			// E' ← E' \ D
-			for(genstruct::Vector<Edge *>::Iterator e(D); e; e++) {
+			for(Vector<Edge *>::Iter e(D); e; e++) {
 				if(logFor(LOG_BLOCK))
 					log << "\t\t\tremove edge " << *e << io::endl;
 				delete e;
@@ -379,7 +379,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 	return false;
 }
 
-typedef genstruct::Vector<Pair<Block *, Block::EdgeIter> > stack_t;
+typedef elm::Vector<Pair<Block *, Block::EdgeIter> > stack_t;
 
 #ifdef DO_DEBUG
 static void displayStack(stack_t& S) {
@@ -543,7 +543,7 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 	}
 
 	// closure of headers
-	for(loops_t::Iterator l(L); l; l++) {
+	for(loops_t::Iter l(L); l; l++) {
 		for(dfa::BitSet::Iterator h(**l); h; h++)
 			IN_LOOPS(G.at(h))->add(**l);
 		if(logFor(LOG_BLOCK))

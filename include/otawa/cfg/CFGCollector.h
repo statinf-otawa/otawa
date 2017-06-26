@@ -22,7 +22,7 @@
 #ifndef OTAWA_CFG_CFG_COLLECTOR_H
 #define OTAWA_CFG_CFG_COLLECTOR_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/AbstractCFGBuilder.h>
 
@@ -41,8 +41,8 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 private:
-	genstruct::Vector<string> added_funs;
-	genstruct::Vector<Address> added_cfgs;
+	Vector<string> added_funs;
+	Vector<Address> added_cfgs;
 };
 
 } // otawa

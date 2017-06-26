@@ -325,7 +325,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			HAI_INFINITE_LOOP(current) = true;
 		}
 		else
-	        for (elm::genstruct::Vector<Edge*>::Iterator iter(**EXIT_LIST(current)); iter; iter++) {
+	        for (Vector<Edge*>::Iter iter(**EXIT_LIST(current)); iter; iter++) {
 	           	HAI_TRACE("\t\tpushing edge " << iter->source() << " -> " << iter->target());
 				if(!alreadyAdded.contains(iter->target()) && tryAddToWorkList(iter->target()))
 	           		alreadyAdded.add(iter->target());

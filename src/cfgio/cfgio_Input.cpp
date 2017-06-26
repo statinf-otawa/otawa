@@ -632,7 +632,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 			// build the basic block
 			// first we collect the instructions
 			UniquePtr<xom::Elements> inst_elts(bb_elt->getChildElements("inst"));
-			genstruct::Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
+			Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
 			for(int k = 0; k < inst_elts->size(); k++) {
 				// <inst address="0x0020099c" file="cover.c" line="232"/>
 				xom::Element *inst_elt = inst_elts->get(k); // current instruction

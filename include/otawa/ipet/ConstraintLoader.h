@@ -23,7 +23,7 @@
 
 #include <elm/string.h>
 #include <elm/sys/Path.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/string.h>
 #include <otawa/base.h>
 #include <otawa/cfg/CFG.h>
@@ -61,8 +61,8 @@ protected:
 private:
 	WorkSpace *fw;
 	ilp::System *system;
-	elm::genstruct::HashTable<Address, BasicBlock *> bbs;
-	elm::genstruct::HashTable<String, ilp::Var *> vars;
+	elm::HashMap<Address, BasicBlock *> bbs;
+	elm::HashMap<String, ilp::Var *> vars;
 	elm::String path;
 
 	Block *getBB(address_t addr);

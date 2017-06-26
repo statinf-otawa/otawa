@@ -73,7 +73,7 @@ CFGTransformer::CFGTransformer(p::declare& r): Processor(r), _entry(0), cur(0), 
  * @return		Built basic block.
  */
 BasicBlock *CFGTransformer::build(Inst *i, int n) {
-	genstruct::Vector<Inst *> is(n);
+	Vector<Inst *> is(n);
 	while(n) {
 		is.add(i);
 		n--;
@@ -90,7 +90,7 @@ BasicBlock *CFGTransformer::build(Inst *i, int n) {
  * @param is	Instruction table.
  * @return		Built basic block.
  */
-BasicBlock *CFGTransformer::build(genstruct::Table<Inst *> is) {
+BasicBlock *CFGTransformer::build(Array<Inst *> is) {
 	BasicBlock *bb = new BasicBlock(is);
 	cur->add(bb);
 	return bb;
@@ -169,7 +169,7 @@ Block *CFGTransformer::clone(Block *b) {
 	// basic block
 	else {
 		BasicBlock *bb = b->toBasic();
-		genstruct::Vector<Inst *> insts(bb->count());
+		Vector<Inst *> insts(bb->count());
 		for(BasicBlock::InstIter i = bb; i; i++)
 			insts.add(*i);
 		return build(insts.detach());
@@ -312,7 +312,7 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 void CFGTransformer::cleanup(WorkSpace *ws) {
 	CFGCollection *coll = new CFGCollection();
 	CFG *nentry = 0;
-	for(genstruct::FragTable<CFGMaker *>::Iterator m(makers); m; m++) {
+	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
 		CFG *cfg = m->build();
 		if(!nentry)
 			nentry = cfg;
