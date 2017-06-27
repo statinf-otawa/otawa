@@ -146,7 +146,8 @@ typedef struct inst {
 	// load/store instruction
 	inline reg_t reg(void) const { return d(); }
 	inline reg_t addr(void) const { return a(); }
-	inline type_t type(void) const { return type_t(b()); }
+	inline type_t type(void) const { return type_t(b() & 0xFF); }
+	inline int memIndex(void) const { return (b() & 0xFF00) >> 8; }
 
 	// "if" instruction
 	inline cond_t cond(void) const { return cond_t(d()); }
@@ -161,10 +162,10 @@ inline inst nop		(void) 							{ return inst(NOP); }
 inline inst branch	(uint_t to) 					{ return inst(BRANCH, to); }
 inline inst trap	(void) 							{ return inst(TRAP); }
 inline inst cont	(void) 							{ return inst(CONT); }
-inline inst load	(reg_t d, reg_t a, int t) 		{ return inst(LOAD, d, a, t); }
-inline inst load	(reg_t d, reg_t a, type_t t)	{ return inst(LOAD, d, a, t); }
-inline inst store	(reg_t d, reg_t a, int t) 		{ return inst(STORE, d, a, t); }
-inline inst store	(reg_t d, reg_t a, type_t t)	{ return inst(STORE, d, a, t); }
+inline inst load	(reg_t d, reg_t a, int t, int id = 1) 		{ return inst(LOAD, d, a, t | (id << 8)); }
+inline inst load	(reg_t d, reg_t a, type_t t, int id = 1)	{ return inst(LOAD, d, a, t | (id << 8)); }
+inline inst store	(reg_t d, reg_t a, int t, int id = 1) 		{ return inst(STORE, d, a, t | (id << 8)); }
+inline inst store	(reg_t d, reg_t a, type_t t, int id = 1)	{ return inst(STORE, d, a, t | (id << 8)); }
 inline inst scratch	(reg_t d) 						{ return inst(SCRATCH, d); }
 inline inst set		(reg_t d, reg_t a) 				{ return inst(SET, d, a); }
 inline inst seti	(reg_t d, uint_t cst) 			{ inst i(SETI, d); i.args.cst = cst; return i; }

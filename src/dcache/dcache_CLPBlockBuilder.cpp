@@ -120,7 +120,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 		}
 
 		// add the access
-		if(action) {
+		if(action && (i.memIndex() != 0)) {
 			// clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr())); // if LOAD T1, T1, uint32, then T1 is already over-written
 			clp::Value addr = man->getCurrentAccessAddress();
 			while(addrs.length() <= man->ipc())
