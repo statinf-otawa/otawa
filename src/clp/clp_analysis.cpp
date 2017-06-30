@@ -1973,7 +1973,7 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 */
 const Value& State::get(const Value& addr) const {
 	Node * cur;
-	ASSERT(addr.isConst()); // we assume that addr is a constant...
+	ASSERTP(addr.isConst(), "addr = " << addr << " is not a constant of the kind " << addr.kind()); // we assume that addr is a constant...
 	if(addr.kind() == REG){
 		// Tmp Registers
 		if (addr.lower() < 0)

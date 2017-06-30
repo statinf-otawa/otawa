@@ -118,6 +118,7 @@ namespace se{
 	genstruct::Vector<V> SymbExpr::used_addr(void){
 		// recursively get addr for sub-expr
 		genstruct::Vector<V> a_addr, b_addr;
+
 		if (_a)
 			a_addr = _a->used_addr();
 		if (_b)
@@ -126,6 +127,7 @@ namespace se{
 		for(int i=0; i < b_addr.length(); i++)
 			if (! a_addr.contains(b_addr[i]))
 				a_addr.add(b_addr[i]);
+
 		return a_addr;
 	}
 
@@ -178,7 +180,11 @@ namespace se{
 		if (_a)
 			_a->canonize();
 
-		if(_val == -1 && _a && _a->op() == CONST && _a->val() == V::top) { // not a solid address
+		// when _val == -1, this tells that before _a is canonized, this SEAddr does not contain a solid address value
+		// hence _a will be checked to see if the solid address, i.e. _a is a CONST, is obtained, in this case
+		// _val will be assigned to _a's value and _a will be deleted.
+		// otherwise, if _a is not canonized as a constant, this SEAddr will remain as a symbolic address
+		if(_val == -1 && _a && _a->op() == CONST && _a->val() == V::top) {
 			if (_parent->a() == this){
 				// WILL DELETE this !
 				SEConst* temp = new SEConst(V::top);
@@ -199,6 +205,7 @@ namespace se{
 			_a = NULL;
 		}
 	}
+
 	genstruct::Vector<V> SEAddr::used_addr(void){
 		genstruct::Vector<V> vect;
 		vect.add(_val);
@@ -753,11 +760,15 @@ namespace se{
 		// canonize
 		se->canonize();
 		// check if we have a filter
-		if (se->op() > CMPU && se->a() && se->a()->op() == ADDR && se->b() &&
-			se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/) {
-
-
-			return se;
+		if (se->op() > CMPU && se->a() && se->a()->op() == ADDR && se->b() && se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/) {
+			if (se->b()->val() == V::top) {
+				return NULL;
+			}
+			if (!se->a()->val().isConst()) {
+				return NULL;
+			}
+			else
+				return se;
 		}
 		else{
 			TRACEGF(cerr << "Bad filter: " << se->asString() << "\n";)

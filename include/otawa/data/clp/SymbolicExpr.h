@@ -300,6 +300,8 @@ namespace se{
 	};
 
 	/** Memory reference */
+	// when _val is -1, this indicates that the SEAddr does not contain the constant address but a symbolic expression (_a != NULL).
+	// otherwise _val is the constant address
 	class SEAddr: public SymbExpr{
 	public:
 		/** Constructors */
