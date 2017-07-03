@@ -58,6 +58,7 @@ public:
 protected:
 	virtual void configure(const PropList &props);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	virtual string getMisc(void) { return ""; }
 
 private:
 	display::kind_t kind;

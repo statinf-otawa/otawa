@@ -165,9 +165,9 @@ void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
 
 	// Compute the name
 	string label = prefix;
-	label = _ << prefix << cfg->index() << "_" << cfg->label();
+	label = _ << prefix << getMisc() << cfg->label();
 	if(label == "")
-		label = _ << prefix << cfg->index() << "_" << cfg->label();
+		label = _ << prefix << getMisc() << cfg->label();
 	Path out_path = path;
 	out_path = out_path / label;
 	out_path = out_path.setExtension(exts[kind]);
