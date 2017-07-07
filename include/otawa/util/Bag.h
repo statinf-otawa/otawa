@@ -23,6 +23,7 @@
 
 #include <elm/array.h>
 #include <elm/assert.h>
+#include <elm/data/Vector.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/util/Pair.h>
 
@@ -68,23 +69,25 @@ public:
 	inline T& operator[](int i) { return get(i); }
 
 	// mutators
-	inline void set(const Bag& bag)							{ clear(); copy(bag.cnt, bag.arr); }
-	inline void set(const genstruct::Vector<T>& v)			{ clear(); copy(v); }
+	inline void set(const Bag& bag)						{ clear(); copy(bag.cnt, bag.arr); }
+	inline void set(const genstruct::Vector<T>& v)		{ clear(); copy(v); }
 	inline void set(Pair<int, T *> p)						{ clear(); copy(p.fst, p.snd); }
 	inline void set(const Give<T>& g)						{ clear(); cnt = g.count(); arr = g.array(); }
 
-	inline void give(Bag& bag)								{ clear(); cnt = bag.cnt, arr =  bag.arr; bag.cnt = 0; bag.arr = 0; }
+	inline void give(Bag& bag)							{ clear(); cnt = bag.cnt, arr =  bag.arr; bag.cnt = 0; bag.arr = 0; }
 	inline void give(genstruct::Vector<T>& g)				{ clear(); cnt = g.count(); arr = *g.detach(); }
-	inline void give(Pair<int, T *> p)						{ clear(); cnt = p.fst; arr = p.snd; }
-	inline void clear(void)									{ if(arr) delete [] arr; }
+	inline void give(Vector<T>& g)						{ clear(); cnt = g.count(); arr = g.detach().buffer(); }
+	inline void give(Pair<int, T *> p)					{ clear(); cnt = p.fst; arr = p.snd; }
+	inline void clear(void)								{ if(arr) delete [] arr; }
 
 	inline Bag& operator=(const Bag& bag)					{ set(bag); return *this; }
 	inline Bag& operator=(const genstruct::Vector<T>& v)	{ set(v); return *this; }
-	inline Bag& operator=(Pair<int, T *> p)					{ set(p); return *this; }
-	inline Bag& operator=(const Give<T>& g)					{ set(g); return *this; }
+	inline Bag& operator=(Pair<int, T *> p)				{ set(p); return *this; }
+	inline Bag& operator=(const Give<T>& g)				{ set(g); return *this; }
 
 	inline Bag& operator<<(Bag& bag)						{ give(bag); return *this; }
-	inline Bag& operator<<(genstruct::Vector<T>& v)			{ give(v); return *this; }
+	inline Bag& operator<<(genstruct::Vector<T>& v)		{ give(v); return *this; }
+	inline Bag& operator<<(Vector<T>& v)					{ give(v); return *this; }
 	inline Bag& operator<<(Pair<int, T *> p)				{ give(p); return *this; }
 	inline Bag& operator<<(const Give<T>& g)				{ give(g); return *this; }
 
