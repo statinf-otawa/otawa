@@ -25,11 +25,11 @@
 #include <elm/assert.h>
 #include <elm/data/Array.h>
 #include <elm/PreIterator.h>
-#include <elm/genstruct/FragTable.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
+#include <elm/data/FragTable.h>
+#include <elm/data/VectorQueue.h>
 #include <elm/util/Option.h>
 #include <elm/util/BitVector.h>
-#include <elm/genstruct/VectorQueue.h>
 
 namespace otawa { namespace graph {
 
@@ -144,10 +144,9 @@ public:
  	inline Node *at(int i) const { return nodes[i]; }
 	
 	// Iterator class
-	class Iter: public elm::genstruct::FragTable<Node *>::Iterator {
+	class Iter: public elm::FragTable<Node *>::Iter {
 	public:
-		inline Iter(const Graph *graph)
-			: elm::genstruct::FragTable<Node *>::Iterator(graph->nodes) { }
+		inline Iter(const Graph *graph): elm::FragTable<Node *>::Iter(graph->nodes) { }
 	};
 
 	// MutableCollection concept
@@ -234,7 +233,7 @@ public:
 	};
 
 private:
-	elm::genstruct::FragTable<Node *> nodes;
+	elm::FragTable<Node *> nodes;
 };
 
 

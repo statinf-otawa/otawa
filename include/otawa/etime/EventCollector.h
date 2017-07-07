@@ -50,7 +50,7 @@ private:
 
 	t::uint32 imprec;
 	Event *evt;
-	genstruct::SLList<ilp::Var *> vars[SIZE];
+	List<ilp::Var *> vars[SIZE];
 };
 
 } }		// otawa::etime

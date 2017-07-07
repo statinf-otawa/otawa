@@ -27,7 +27,7 @@
 #include <otawa/prop/ContextualProperty.h>
 #include <otawa/util/Bag.h>
 
-namespace elm { namespace genstruct { template <class T> class Tree; } }
+namespace elm { template <class T> class Tree; }
 
 namespace otawa {
 
@@ -36,7 +36,7 @@ class CFGCollector;
 class CFGInfo;
 class LoopUnroller;
 class SESERegion;
-typedef elm::genstruct::Tree<SESERegion*> PSTree;
+typedef elm::Tree<SESERegion*> PSTree;
 namespace sgraph { class Edge; }
 
 // CFGCollection Class

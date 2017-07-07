@@ -26,7 +26,7 @@
 #include <elm/assert.h>
 #include <elm/util/Pair.h>
 #include <elm/data/BiDiList.h>
-#include <elm/genstruct/Tree.h>
+#include <elm/data/Tree.h>
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/WorkSpace.h>
@@ -68,7 +68,7 @@ private:
 class SESERegion: public PropList {
 public:
 	
-	class BBIterator: public elm::genstruct::Vector<Block*>::Iterator {
+	class BBIterator: public elm::Vector<Block*>::Iter {
 	public:
 		inline BBIterator(Vector<Block*> &_vec):  Vector<Block*>::Iter(_vec) { }
 		inline BBIterator(SESERegion *region): Vector<Block*>::Iter(region->bbs) { }
