@@ -131,15 +131,15 @@ int main(void) {
 	{
 		// T and _
 		CHECK(test_le(all, 10, clp::Value(clp::VAL, 0x80000000, 1, 0x8000000a)));
-		CHECK(test_le(none, 10, none));
+		CHECK(test_le(::none, 10, ::none));
 
 		// constant
 		CHECK(test_le(val(5, 0, 0), 10, val(5, 0, 0)));
-		CHECK(test_le(val(5, 0, 0), 0, none));
+		CHECK(test_le(val(5, 0, 0), 0, ::none));
 
 		// without wrap
-		CHECK(test_le(val(16, 4, 4), 10, none));				// case a (positive)
-		CHECK(test_le(val(32, -4, 4), 10, none));				// case a (negative)
+		CHECK(test_le(val(16, 4, 4), 10, ::none));				// case a (positive)
+		CHECK(test_le(val(32, -4, 4), 10, ::none));				// case a (negative)
 		CHECK(test_le(val(16, 4, 4), 100, val(16, 4, 4)));		// case c (positive)
 		CHECK(test_le(val(32, -4, 4), 100, val(32, -4, 4)));	// case c (negative)
 		CHECK(test_le(val(16, 4, 4), 32, val(16, 4, 4)));		// case b (positive)
@@ -148,7 +148,7 @@ int main(void) {
 		CHECK(test_le(val(32, -4, 4), 31, val(28, -4, 3)));		// case b (negative)
 		
 		// with wrap
-		CHECK(test_le(val(16, 4, inf), 10, none));				// case a (only positive)
+		CHECK(test_le(val(16, 4, inf), 10, ::none));				// case a (only positive)
 		CHECK(test_le(val(-32, -4, inf), 0, val(-32, -4, (ninf + 32) / -4)));	// case c (only negative)
 		CHECK(test_le(val(-32, 4, inf * 2), 0, val(-32, 4, 8)));		// case b (positive)
 		CHECK(test_le(val(32, -4, inf * 2), 0, val(0, -4, clp::uintn_t(ninf) / 4)));	// case b (negative)
