@@ -21,8 +21,9 @@
 #ifndef OTAWA_CFG_TRANSFORMER_H
 #define OTAWA_CFG_TRANSFORMER_H
 
+#include <elm/data/FragTable.h>
 #include <elm/data/ListQueue.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/cfg/features.h>
 #include <otawa/proc/Processor.h>
 
@@ -41,7 +42,7 @@ protected:
 	virtual void cleanup(WorkSpace *ws);
 
 	BasicBlock *build(Inst *inst, int n);
-	BasicBlock *build(genstruct::Table<Inst *> insts);
+	BasicBlock *build(Array<Inst *> insts);
 	SynthBlock *build(CFGMaker *callee);
 	SynthBlock *build(CFG *callee);
 	Edge *build(Block *src, Block *snk, t::uint32 flags);
@@ -68,9 +69,9 @@ private:
 	CFG *_entry;
 	ListQueue<Pair<CFG *, CFGMaker *> > wl;
 	CFGMaker *cur;
-	genstruct::FragTable<CFGMaker *> makers;
-	genstruct::HashTable<CFG *, CFGMaker *> cmap;
-	genstruct::HashTable<Block *, Block *> bmap;
+	FragTable<CFGMaker *> makers;
+	HashMap<CFG *, CFGMaker *> cmap;
+	HashMap<Block *, Block *> bmap;
 	bool no_unknown;
 };
 

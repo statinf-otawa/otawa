@@ -22,6 +22,7 @@
 #ifndef OTAWA_APP_APPLICATION_H_
 #define OTAWA_APP_APPLICATION_H_
 
+#include <elm/data/Vector.h>
 #include <elm/options.h>
 #include <elm/option/ListOption.h>
 #include <otawa/proc/Processor.h>
@@ -70,7 +71,7 @@ protected:
 	virtual void process(string arg);
 	inline bool isVerbose(void) const { return verbose; }
 
-	const genstruct::Vector<string>& arguments(void) const { return _args; }
+	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s) throw(otawa::Exception);
 
 private:
@@ -80,7 +81,7 @@ private:
 	option::ListOption<string> ff;
 	LogOption log_level;
 	elm::sys::Path path;
-	genstruct::Vector<string> _args;
+	Vector<string> _args;
 	PropList props;
 	PropList *props2;
 	int result;

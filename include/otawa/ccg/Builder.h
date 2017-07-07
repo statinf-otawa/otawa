@@ -22,7 +22,7 @@
 #define OTAWA_CCG_BUILDER_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/ccg/features.h>
 
@@ -38,7 +38,7 @@ namespace ccg {
 // Collection class
 class Collection {
 	friend class Builder;
-	genstruct::AllocatedTable<Graph *> ccgs;
+	AllocArray<Graph *> ccgs;
 	inline Collection(int cnt): ccgs(cnt)
 		{ for(int i = 0; i < cnt; i++) ccgs[i] = 0; }
 public:

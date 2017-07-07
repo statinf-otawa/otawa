@@ -52,7 +52,7 @@ protected:
 	}
 
 	virtual void work(PropList& props) throw(elm::Exception) {
-		const genstruct::Vector<string> &args = arguments();
+		const Vector<string> &args = arguments();
 
 		for(int i = 0; i < args.count(); i++) {
 			string a = args[i];

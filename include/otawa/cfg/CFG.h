@@ -23,6 +23,7 @@
 #define OTAWA_CFG_CFG_H
 
 #include <elm/assert.h>
+#include <elm/data/List.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/prop/PropList.h>
 #include <otawa/sgraph/DiGraph.h>
@@ -118,7 +119,7 @@ private:
 
 class BasicBlock: public Block {
 public:
-	BasicBlock(const genstruct::Table<Inst *>& insts);
+	BasicBlock(const Array<Inst *>& insts);
 	~BasicBlock(void);
 
 	inline Address address(void) const { return first()->address(); }
@@ -132,10 +133,10 @@ public:
 	inline bool contains(Inst *i) const
 		{ return address() <= i->address() && i->address() < topAddress(); }
 
-	class InstIter: public genstruct::AllocatedTable<Inst *>::Iterator {
+	class InstIter: public AllocArray<Inst *>::Iter {
 	public:
 		inline InstIter(void) { }
-		inline InstIter(const BasicBlock *bb): genstruct::AllocatedTable<Inst *>::Iterator(bb->_insts) { }
+		inline InstIter(const BasicBlock *bb): AllocArray<Inst *>::Iter(bb->_insts) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
 
@@ -172,12 +173,12 @@ public:
 		void next(void);
 	private:
 		BasicEdge e;
-		genstruct::Vector<Pair<Edge *, Edge *> > wl;
+		Vector<Pair<Edge *, Edge *> > wl;
 	};
 	inline BasicIns basicIns(void) { return BasicIns(this); }
 
 private:
-	genstruct::DeletableTable<Inst *> _insts;
+	AllocArray<Inst *> _insts;
 };
 
 class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {
@@ -194,7 +195,7 @@ public:
 	~CFG(void);
 
 	typedef VertexIter BlockIter;
-	typedef genstruct::SLList<SynthBlock *>::Iterator CallerIter;
+	typedef List<SynthBlock *>::Iter CallerIter;
 
 	string label(void);
 	string name(void);
@@ -216,7 +217,7 @@ private:
 	type_t _type;
 	Inst *fst;
 	Block *_exit, *_unknown;
-	genstruct::SLList<SynthBlock *> _callers;
+	List<SynthBlock *> _callers;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);
 inline io::Output& operator<<(io::Output& out, const CFG::BlockIter& i) { return out << *i; }

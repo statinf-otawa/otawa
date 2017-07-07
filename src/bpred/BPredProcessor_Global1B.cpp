@@ -93,15 +93,15 @@ using namespace elm;
  * @param bcgs		Vector containg the BCGs (Branch Conflict Graphs) generated from the BHG.
  * @param ht_vars	Hash Table used to ensure unicity of the variables.
  */
-void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, elm::genstruct::Vector<BCG*> &bcgs,elm::genstruct::HashTable<String ,ilp::Var*>& ht_vars ) {
+void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, elm::Vector<BCG*> &bcgs,elm::HashMap<String ,ilp::Var*>& ht_vars ) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
-	genstruct::HashTable<Block*,elm::genstruct::Vector<BCGNode*> > BB_classes;
+	HashMap<Block*,elm::Vector<BCGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		elm::genstruct::Vector<BCGNode*> list_nodes;
+		elm::Vector<BCGNode*> list_nodes;
 		
 		for(unsigned int i = 0 ; i< bcgs.length();++i) {
 			BCG* g=bcgs[i];
@@ -112,9 +112,9 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		if(list_nodes.length()>0) BB_classes.add(bb,list_nodes);
 	}
 
-	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes_BBHG;
+	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes_BBHG;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		elm::genstruct::Vector<BBHGNode*> v;
+		elm::Vector<BBHGNode*> v;
 		for(BBHG::Iter node(bbhg);node;node++) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
@@ -129,7 +129,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		ASSERT(Xb);
 
 		if(BB_classes.exists(bb)) {
-			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
+			elm::Vector<BCGNode*> v = BB_classes.get(bb);
 			
 			
 			for(int i = 0 ;  i < v.length() ; i++) {
@@ -141,7 +141,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 			////////
 #if C11_1b>0
 				{
-					genstruct::HashTable<Var*, Var*> added_vars;
+					HashMap<Var*, Var*> added_vars;
 					NEW_SPECIAL_CONSTRAINT(C11,EQ,0);
 					C11->addLeft(1,XbApi);
 					
@@ -166,7 +166,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 			////////
 #if C12_1b>0
 				{
-					genstruct::HashTable<Var*, Var*> added_vars;
+					HashMap<Var*, Var*> added_vars;
 					NEW_SPECIAL_CONSTRAINT(C12,EQ,0);
 					C12->addLeft(1,XbApi);
 					
@@ -249,7 +249,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		Var *Xb=ipet::VAR(bb);
 		ASSERT(Xb);
 		if(BB_classes.exists(bb)) {
-			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
+			elm::Vector<BCGNode*> v = BB_classes.get(bb);
 			
 			for(Block::EdgeIter edge = bb->outs();edge;edge++) {
 				bool d = edge->isTaken();
@@ -318,7 +318,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		if(!BB_classes.exists(bb)) {
 			Var *Xb=ipet::VAR(bb);
 			ASSERT(Xb);
-			elm::genstruct::Vector<BBHGNode*> v = BB_classes_BBHG.get(bb);
+			elm::Vector<BBHGNode*> v = BB_classes_BBHG.get(bb);
 			for(int i=0;i<v.length();i++) {
 				for(Block::EdgeIter edge = bb->outs();edge;edge++) {
 					Var* Mb_dApi;
@@ -344,7 +344,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 #if P21_24_1b>0
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		if(BB_classes.exists(bb)) {
-			elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
+			elm::Vector<BCGNode*> v = BB_classes.get(bb);
 			Var *Xb=ipet::VAR(bb);
 			ASSERT(Xb);
 			for(int i = 0 ; i < v.length() ; i++ ) {
@@ -440,7 +440,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					NEW_VAR_FROM_BUFF(Mb_s,"m" << bb->index() << "_" << edge->target()->index() );
 					P3->addLeft(1,Mb_s);
 					if(BB_classes.exists(bb)) {
-						elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
+						elm::Vector<BCGNode*> v = BB_classes.get(bb);
 						for(int i = 0 ; i<v.length();++i) {
 							Var *Mb_sApi;
 							NEW_VAR_FROM_BUFF(Mb_sApi,Mb_s->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -455,7 +455,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					NEW_VAR_FROM_BUFF(Mb_s,"m" << bb->index() << "_" << edge->target()->index() );
 					P3->addLeft(1,Mb_s);
 					if(BB_classes.exists(bb)) {
-						elm::genstruct::Vector<BCGNode*> v = BB_classes.get(bb);
+						elm::Vector<BCGNode*> v = BB_classes.get(bb);
 						for(int i = 0 ; i<v.length();++i) {
 							Var *Mb_sApi;
 							NEW_VAR_FROM_BUFF(Mb_sApi,Mb_s->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -480,7 +480,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 			ASSERT(Xb);
 			
 		
-			elm::genstruct::Vector<BBHGNode*> v=BB_classes_BBHG.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes_BBHG.get(bb);
 	
 			for(unsigned int i=0;i<v.length();++i) {
 				for(Block::EdgeIter edge = v[i]->getCorrespondingBB()->outs();edge;edge++) {
@@ -508,15 +508,15 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
  * @param bcgs		Vector containg the BCGs (Branch Conflict Graphs) generated from the BHG.
  * @param ht_vars	Hash Table used to ensure unicity of the variables.
  */
-void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, genstruct::HashTable<String ,Var*>& ht_vars) {
+void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, HashMap<String ,Var*>& ht_vars) {
 	// Recuperation de l'ensemble des contraintes
 	System *system = ipet::SYSTEM(fw);
 	ASSERT(system);
 
 	
-	genstruct::HashTable<Block*, elm::genstruct::Vector<BBHGNode*> > BB_classes;
+	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		elm::genstruct::Vector<BBHGNode*> v;
+		elm::Vector<BBHGNode*> v;
 		for(BBHG::Iter node(bbhg);node;node++) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
@@ -538,7 +538,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, gen
 		H1->addLeft(1,Xb);
 		
 		if(BB_classes.exists(bb)) {
-			elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
 			for(unsigned int i=0;i<v.length();++i) {
 				Var *XbApi;
@@ -564,7 +564,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, gen
 			Var *Xb=ipet::VAR(bb);
 			ASSERT(Xb);
 
-			elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
 			for(unsigned int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H41,EQ,0);
@@ -605,7 +605,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, gen
 			Var *Xb=ipet::VAR(bb);
 			ASSERT(Xb);
 
-			elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
 			for(unsigned int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H42,EQ,0);
@@ -659,8 +659,8 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, gen
 			
 			
 			if(BB_classes.exists(bb)) {
-				elm::genstruct::Vector<BBHGNode*> v=BB_classes.get(bb);			
-				genstruct::HashTable<Var* ,Var*> hist_done;
+				elm::Vector<BBHGNode*> v=BB_classes.get(bb);
+				HashMap<Var* ,Var*> hist_done;
 				for(unsigned int i = 0 ; i<v.length();++i) {
 					for(BBHG::OutIterator s(v[i]);s;s++) {
 						if(s->target()->getCorrespondingBB()->index() == edge->target()->index()) {
@@ -707,7 +707,7 @@ bool BPredProcessor::isBranch(Block* bb) {
  * 
  * @return returns a boolean value set to True if a similar BBHG Node has been found.
  */
-bool BPredProcessor::contains(const elm::genstruct::Vector< BBHGNode* >& v, BBHGNode& n, BBHGNode * &contained) {
+bool BPredProcessor::contains(const elm::Vector< BBHGNode* >& v, BBHGNode& n, BBHGNode * &contained) {
 	for(unsigned int i=0;i<v.length();++i) {
 		if(n.equals(*(v[i])) ) {
 			contained = v[i];
@@ -725,9 +725,9 @@ bool BPredProcessor::contains(const elm::genstruct::Vector< BBHGNode* >& v, BBHG
  * @param bbhg	Reference to the BBHG to fill.
  */
 void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
-	elm::genstruct::Vector< BBHGNode* > final_nodes; 	// => S dans l'algo
-	elm::genstruct::Vector< BBHGNode* > todo_nodes; 	// => F dans l'algo
-	elm::genstruct::Vector< BBHGEdge* > final_edges;	// => E dans l'algo
+	elm::Vector< BBHGNode* > final_nodes; 	// => S dans l'algo
+	elm::Vector< BBHGNode* > todo_nodes; 	// => F dans l'algo
+	elm::Vector< BBHGEdge* > final_edges;	// => E dans l'algo
 
 	// creation du BitSet unité
 	dfa::BitSet unite(this->BHG_history_size);
@@ -748,7 +748,7 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 	
 			while(!todo_nodes.isEmpty()) {
 				BBHGNode *courant=todo_nodes.pop();
-				elm::genstruct::Vector<BBHGNode *> suivants;
+				elm::Vector<BBHGNode *> suivants;
 	
 ////////////////////
 				bool isBr=isBranch(courant->getCorrespondingBB());
@@ -832,7 +832,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		BBHGDrawer drawer(&bbhg, props);
 		drawer.display();
 	}
-	genstruct::HashTable<String ,Var*> ht_vars;
+	HashMap<String ,Var*> ht_vars;
 
 	BHG bhg(this->BHG_history_size);
 
@@ -846,7 +846,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		drawer.display();
 	}
 	
-	elm::genstruct::Vector<BCG*> bcgs;
+	elm::Vector<BCG*> bcgs;
 	generateBCGs(bcgs,bhg);
 
 	if(this->withMitra)

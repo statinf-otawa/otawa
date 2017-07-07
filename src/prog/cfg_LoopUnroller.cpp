@@ -23,9 +23,9 @@
 
 #include <elm/io.h>
 #include <elm/data/List.h>
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/VectorQueue.h>
+#include <elm/data/Vector.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/VectorQueue.h>
 #include <elm/util/Pair.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFG.h>
@@ -127,13 +127,13 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		log << "\tunrolling " << cfg << " for " << (header ? header : cfg->entry()) << io::endl;
 
 	// workList := { }
-	genstruct::VectorQueue<Block*> workList;
+	VectorQueue<Block*> workList;
 	// loopList := { }
-	genstruct::VectorQueue<Block*> loopList;
+	VectorQueue<Block*> loopList;
 	// doneList := { }
-	genstruct::Vector<Block*> doneList;
+	Vector<Block*> doneList;
 	// backEdges := { }
-	typedef genstruct::Vector<Pair<Block *, Edge *> > BackEdgePairVector;
+	typedef Vector<Pair<Block *, Edge *> > BackEdgePairVector;
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
 	Block *unrolled_from;
@@ -153,7 +153,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		ASSERT(loopList.isEmpty());
 
 		// bbs := {}
-		genstruct::Vector<Block*> bbs;
+		Vector<Block*> bbs;
 		// workList := { header if any, entry else }
 		workList.put(header ? header : cfg->entry());
 		// doneList := { header if any, entry else }
@@ -177,7 +177,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 				// add exit edges destinations to the worklist
 				// workList U= EXIT_LIST(current)
-				for (genstruct::Vector<Edge*>::Iterator exitedge(**EXIT_LIST(current)); exitedge; exitedge++)
+				for (Vector<Edge*>::Iter exitedge(**EXIT_LIST(current)); exitedge; exitedge++)
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
 						doneList.add(exitedge->target());
@@ -252,7 +252,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 		// connect the internal edges for the current loop
 		// for bb in bbs do
-		for(genstruct::Vector<Block*>::Iterator bb(bbs); bb; bb++)
+		for(Vector<Block*>::Iter bb(bbs); bb; bb++)
 			// for (bb, sink) in E
 			for(Block::EdgeIter outedge = bb->outs(); outedge; outedge++) {
 
@@ -301,7 +301,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 		// other unroll iterations: connect virtual backedge from the first to other iterations
 		else
 			// for (src', e) in backEdges do
-			for(BackEdgePairVector::Iterator b(backEdges); b; b++) {
+			for(BackEdgePairVector::Iter b(backEdges); b; b++) {
 				Block *vdst = map.get(header);
 				// E' U= {(src', map[header])}
 				clone((*b).fst, (*b).snd, vdst);

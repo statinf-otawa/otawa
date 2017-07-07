@@ -22,11 +22,11 @@
 #ifndef OTAWA_CACHE_ACSMAYBUILDER_H_
 #define OTAWA_CACHE_ACSMAYBUILDER_H_
 
+#include <elm/data/Vector.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cache/LBlockSet.h>
-#include <elm/genstruct/Vector.h>
 #include "features.h"
 
 namespace otawa {
@@ -43,7 +43,7 @@ public:
 private:
 	void processLBlockSet(otawa::WorkSpace*, LBlockSet *, const hard::Cache *);
 	bool unrolling;
-	genstruct::Vector<MAYProblem::Domain *> *may_entry;
+	Vector<MAYProblem::Domain *> *may_entry;
 };
 
 }	// otawa

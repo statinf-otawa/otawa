@@ -22,7 +22,7 @@
 #include <otawa/etime/EdgeTimeBuilder.h>
 #include <elm/avl/Set.h>
 #include <otawa/etime/features.h>
-#include <elm/genstruct/quicksort.h>
+#include <elm/data/quicksort.h>
 #include <otawa/etime/Config.h>
 #include <otawa/etime/EventCollector.h>
 
@@ -153,7 +153,7 @@ t::uint32 ConfigSet::unused(t::uint32 neg, t::uint32 pos, int n) const {
 	t::uint32 r = 0;
 	for(int i = 0; i < n; i++)
 		if(!(mask & (1 << i))) {
-			genstruct::Vector<t::uint32> nconf, pconf;
+			Vector<t::uint32> nconf, pconf;
 			for(int j = 0; j < confs.length(); j++) {
 				t::uint32 c = confs[j].bits();
 				if(c & (1 << i)) {
@@ -279,7 +279,7 @@ void EventCollector::make(ilp::System *sys) {
 				/*"event constraint"*/evt->name() ,
 				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
-			for(genstruct::SLList<ilp::Var *>::Iterator v(vars[c]); v; v++)
+			for(List<ilp::Var *>::Iter v(vars[c]); v; v++)
 				cons->addRight(1, *v);
 		}
 	}
@@ -382,7 +382,7 @@ void EdgeTimeBuilder::setup(WorkSpace *ws) {
 /**
  */
 void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
-	for(genstruct::HashTable<Event *, EventCollector *>::Iterator coll(colls); coll; coll++) {
+	for(HashMap<Event *, EventCollector *>::Iter coll(colls); coll; coll++) {
 		coll->make(sys);
 		delete *coll;
 	}
@@ -549,7 +549,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		if(logFor(LOG_BLOCK)) {
 			log << "\t\t\ttoo many dynamic events: " << countDynEvents(all_events) << ". Giving up. Sorry.\n";
 			// log used events
-			for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
+			for(Vector<event_t>::Iter e(all_events); e; e++)
 				if((*e).fst->occurrence() == SOMETIMES)
 					log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address() << " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") " << (*e).snd << io::endl;
 		}
@@ -642,7 +642,7 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// log used events
 	if(logFor(LOG_BB))
-		for(genstruct::Vector<event_t>::Iterator e(all_events); e; e++)
+		for(Vector<event_t>::Iter e(all_events); e; e++)
 			log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address()
 				<< " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
 				<< (*e).snd << io::endl;
@@ -655,10 +655,10 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// applying static events (always, never)
 	events.clear();
-	genstruct::Vector<ParExeInst *> insts;
+	Vector<ParExeInst *> insts;
 	event_list_t always_events;
 	ParExeSequence::InstIterator inst(seq);
-	for(event_list_t::Iterator event(all_events); event; event++) {
+	for(event_list_t::Iter event(all_events); event; event++) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
@@ -710,7 +710,7 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// compute all cases
 	t::uint32 prev = 0;
-	genstruct::Vector<ConfigSet> confs;
+	Vector<ConfigSet> confs;
 	for(event_mask = 0; event_mask < t::uint32(1 << events.count()); event_mask++) {
 
 		// adjust the graph
@@ -793,7 +793,7 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 	contributeConst();
 
 	// generate variable contribution
-	for(event_list_t::Iterator event(events); event; event++)
+	for(event_list_t::Iter event(events); event; event++)
 		if((*event).fst->occurrence() == SOMETIMES) {
 			get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), 0);
 			get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), 0);
@@ -897,7 +897,7 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
  * Display the list of configuration sorted by cost.
  * @param confs		List of configuration to display.
  */
-void EdgeTimeBuilder::displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events) {
+void EdgeTimeBuilder::displayConfs(const Vector<ConfigSet>& confs, const event_list_t& events) {
 	if(confs) {
 		for(int i = 0; i < confs.length(); i++) {
 			log << "\t\t\t\t[" << i << "] cost = " << confs[i].time() << " -> ";
@@ -1520,7 +1520,7 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 void EdgeTimeBuilder::contributeConst(void) {
 
 	// foreach e in always(e) do C^e_p += x_edge
-	for(event_list_t::Iterator event(all_events); event; event++)
+	for(event_list_t::Iter event(all_events); event; event++)
 		switch((*event).fst->occurrence()) {
 		case ALWAYS:	get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), ipet::VAR(edge)); break;
 		case NEVER:		get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), ipet::VAR(edge)); break;

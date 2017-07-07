@@ -68,7 +68,7 @@ namespace otawa {
 
     private:
     	BasicBlock *bb;
-    	genstruct::AllocatedTable<LBlock*> *lbs;
+    	AllocArray<LBlock*> *lbs;
     	Block *hd;
     	int i;
     };

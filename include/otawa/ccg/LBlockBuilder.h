@@ -21,7 +21,7 @@
 #ifndef OTAWA_CCG_LBLOCKBUILDER_H
 #define OTAWA_CCG_LBLOCKBUILDER_H
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/ccg/features.h>
 #include <otawa/proc/BBProcessor.h>
 
@@ -49,8 +49,8 @@ private:
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	genstruct::HashTable<ot::mask, int> block_map;
-	void addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
+	HashMap<ot::mask, int> block_map;
+	void addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock *> *lblocks);
 };
 
 } } // otawa:ccg

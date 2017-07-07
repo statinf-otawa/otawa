@@ -19,8 +19,9 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
+
 #include "../../include/otawa/icat3/features.h"
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/ptr.h>
 #include <otawa/cfg/features.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -72,8 +73,8 @@ public:
 
 protected:
 
-	typedef genstruct::HashTable<Address, LBlock *> map_t;
-	typedef genstruct::Vector<genstruct::Vector<LBlock *> > lblocks_t;
+	typedef HashMap<Address, LBlock *> map_t;
+	typedef Vector<Vector<LBlock *> > lblocks_t;
 
 	virtual void processWorkSpace(WorkSpace *ws) {
 

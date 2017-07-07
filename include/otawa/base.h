@@ -174,8 +174,8 @@ namespace elm {
 	template <>
 	class HashKey<otawa::Address> {
 	public:
-		static inline unsigned long hash (const otawa::Address &key) { return key.page() + key.offset(); }
-		static inline bool equals (const otawa::Address &key1, const otawa::Address &key2) { return key1 == key2; }
+		inline unsigned long computeHash (const otawa::Address &key) const { return key.page() + key.offset(); }
+		inline bool isEqual(const otawa::Address &key1, const otawa::Address &key2) const { return key1 == key2; }
 	};
 
 } // elm

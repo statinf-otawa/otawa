@@ -32,7 +32,7 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <elm/util/Pair.h>
-#include <elm/genstruct/SortedSLList.h>
+#include <elm/data/SortedList.h>
 
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/CAT2Builder.h>
@@ -52,11 +52,11 @@ using namespace cache;
 // Ordered list
 class NumberOrder {
 public:
-	static inline int compare(LBlock *lb1, LBlock *lb2) {
+	inline int doCompare(LBlock *lb1, LBlock *lb2) const {
 		return cache::CATEGORY_HEADER(lb1)->index() - cache::CATEGORY_HEADER(lb2)->index();
 	}
 };
-typedef genstruct::SortedSLList<LBlock*, NumberOrder> LinkedBlockList;
+typedef SortedList<LBlock*, CompareManager<LBlock *, NumberOrder> > LinkedBlockList;
 
 
 /**
@@ -117,7 +117,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 
 
 	for (int i = 0 ; i < cache->rowCount(); i++) {
-		genstruct::Vector<LinkedBlockList*> blockList;
+		Vector<LinkedBlockList*> blockList;
 		int count = lbsets[i]->cacheBlockCount();
 		for (int j = 0; j < count; j++)
 			blockList.add(NULL);
@@ -137,10 +137,10 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 		for (int j = 0; j < count; j++) {
 			if (blockList[j] != NULL) {
 
-				genstruct::Vector<LBlock*> equiv;
+				Vector<LBlock*> equiv;
 				Block *old_header = NULL;
 				equiv.clear();
-				for (LinkedBlockList::Iterator iter(*blockList[j]); iter; iter++) {
+				for (LinkedBlockList::Iter iter(*blockList[j]); iter; iter++) {
 					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */
 					Block *header = cache::CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
@@ -166,11 +166,11 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 /**
  * !!TODO!!
  */
-void LinkedBlocksDetector::recordBlocks(genstruct::Vector<LBlock*> *equiv) {
+void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
 		return;
-	genstruct::Vector<LBlock*> *copy = new genstruct::Vector<LBlock*>(*equiv);
-	for (genstruct::Vector<LBlock*>::Iterator lblock(*equiv); lblock; lblock++) {
+	Vector<LBlock*> *copy = new Vector<LBlock*>(*equiv);
+	for (Vector<LBlock*>::Iter lblock(*equiv); lblock; lblock++) {
 		ASSERT(cache::CATEGORY(lblock) == cache::FIRST_MISS);
 		LINKED_BLOCKS(lblock) = copy;
 	}
@@ -182,6 +182,6 @@ void LinkedBlocksDetector::recordBlocks(genstruct::Vector<LBlock*> *equiv) {
 /**
  * !!TODO!!
  */
-Identifier<genstruct::Vector<LBlock*> *> LINKED_BLOCKS("otawa::LINKED_BLOCKS", NULL);
+Identifier<Vector<LBlock*> *> LINKED_BLOCKS("otawa::LINKED_BLOCKS", NULL);
 
 }

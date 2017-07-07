@@ -23,7 +23,6 @@
 #ifndef OTAWA_CFG_CFG_BUILDER_H
 #define OTAWA_CFG_CFG_BUILDER_H
 
-#include <elm/genstruct/Vector.h>
 #include <otawa/cfg/AbstractCFGBuilder.h>
 #include <otawa/cfg/CFGInfo.h>
 

@@ -356,7 +356,7 @@ public:
 		int A, size;
 		bool isBottom;
 		Item whole;
-		genstruct::Vector<Item *> data;
+		Vector<Item *> data;
 	};
 	
 	PERSBranch(int _size, int _A, int _row);

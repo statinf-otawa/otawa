@@ -267,7 +267,7 @@ public:
 
 		// display the statistics
 		bool fst = true;
-		for(genstruct::HashTable<Address, Statistics *>::Iterator it(stats); it; it++) {
+		for(HashMap<Address, Statistics *>::Iter it(stats); it; it++) {
 
 			// accumulate if needed
 			if(*overall_option)
@@ -308,7 +308,7 @@ private:
 	}
 
 	option::SwitchOption tree_option, short_option, overall_option;
-	genstruct::HashTable<Address, Statistics *> stats;
+	HashMap<Address, Statistics *> stats;
 };
 
 OTAWA_RUN(Command)

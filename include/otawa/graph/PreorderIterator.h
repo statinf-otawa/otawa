@@ -22,6 +22,7 @@
 #ifndef OTAWA_GRAPH_PREORDERITERATOR_H_
 #define OTAWA_GRAPH_PREORDERITERATOR_H_
 
+#include <elm/data/VectorQueue.h>
 #include <otawa/graph/GenGraph.h>
 
 namespace otawa { namespace graph {
@@ -67,7 +68,7 @@ public:
 private:
 	const G& _graph;
 	elm::BitVector visited, queued;
-	elm::genstruct::VectorQueue<typename G::Vertex> queue;
+	elm::VectorQueue<typename G::Vertex> queue;
 };
 
 } } // otawa::namespace

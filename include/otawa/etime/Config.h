@@ -64,14 +64,14 @@ public:
 	bool isFeasible(int n);
 	void dump(io::Output& out, int n);
 
-	class Iter: public genstruct::Vector<Config>::Iterator {
+	class Iter: public Vector<Config>::Iter {
 	public:
-		inline Iter(const ConfigSet& set): genstruct::Vector<Config>::Iterator(set.confs) { }
+		inline Iter(const ConfigSet& set): Vector<Config>::Iter(set.confs) { }
 	};
 
 private:
 	ot::time t;
-	genstruct::Vector<Config> confs;
+	Vector<Config> confs;
 };
 
 

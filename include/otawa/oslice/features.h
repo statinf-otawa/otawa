@@ -1,8 +1,9 @@
 #ifndef __OTAWA_OSLICE_FEATURES_H__
 #define __OTAWA_OSLICE_FEATURES_H__
 
-#include <otawa/proc/AbstractFeature.h>
+#include <elm/avl/Set.h>
 #include <elm/util/BitVector.h>
+#include <otawa/proc/AbstractFeature.h>
 #include <otawa/dfa/MemorySet.h>
 
 namespace otawa { namespace oslice {

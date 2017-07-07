@@ -114,7 +114,7 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
  * @param index		Index in the BB lblock table.
  * @paramlblocks	BB lblock table.
  */
-void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
+void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock*> *lblocks) {
 
 	// test if the l-block is cacheable
 	Address addr = inst->address();
@@ -168,7 +168,7 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
 	int num_lblocks =
 		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
 		- (bb->address() >> cache->blockBits());
-	genstruct::AllocatedTable<LBlock*> *lblocks = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+	AllocArray<LBlock*> *lblocks = new AllocArray<LBlock*>(num_lblocks);
 	BB_LBLOCKS(bb) = lblocks;
 
 	// Traverse instruction

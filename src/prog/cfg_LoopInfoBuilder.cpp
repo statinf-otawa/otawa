@@ -151,7 +151,7 @@ Identifier<Block*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<elm::genstruct::Vector<Edge *> *> EXIT_LIST("otawa::EXIT_LIST", 0);
+Identifier<elm::Vector<Edge *> *> EXIT_LIST("otawa::EXIT_LIST", 0);
 
 
 // LoopInfoProblem class
@@ -198,7 +198,7 @@ private:
 	DominanceOrder dorder;
 	CompareManager<Block *, DominanceOrder> dman;
 	SortedList<Block *, CompareManager<Block *, DominanceOrder> > headersLList;
-	genstruct::Vector<Block *> hdrs;
+	Vector<Block *> hdrs;
 
 };
 
@@ -309,7 +309,7 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  		for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
  			if (LOOP_EXIT_EDGE(*outedge)) {
  				if (!EXIT_LIST(LOOP_EXIT_EDGE(*outedge))) {
- 					EXIT_LIST(LOOP_EXIT_EDGE(*outedge)) = new elm::genstruct::Vector<Edge*>();
+ 					EXIT_LIST(LOOP_EXIT_EDGE(*outedge)) = new elm::Vector<Edge*>();
  				}
 				EXIT_LIST(LOOP_EXIT_EDGE(*outedge))->add(outedge);
  			}

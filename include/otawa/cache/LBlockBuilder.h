@@ -24,8 +24,8 @@
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/proc/Feature.h>
-#include <elm/genstruct/Vector.h> 
-#include <elm/genstruct/Table.h>
+#include <elm/data/Vector.h>
+#include <elm/data/Array.h>
 
 namespace otawa {
 
@@ -51,8 +51,8 @@ private:
 	LBlockSet **lbsets;
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	genstruct::HashTable<ot::mask, int> block_map;
-	void addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock *> *lblocks);
+	HashMap<ot::mask, int> block_map;
+	void addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock *> *lblocks);
 };
 
 } }	// otawa::cachze

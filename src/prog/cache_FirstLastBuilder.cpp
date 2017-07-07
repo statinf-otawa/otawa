@@ -110,7 +110,7 @@ void FirstLastBuilder::processCFG(WorkSpace *fw, CFG *cfg) {
 			min_lblock[line] = NULL;
 		}
 		if (BB_LBLOCKS(bb) != NULL) {
-			const genstruct::AllocatedTable<LBlock*> &lblocks = **BB_LBLOCKS(bb);
+			const AllocArray<LBlock*> &lblocks = **BB_LBLOCKS(bb);
 			for (i = 0; i < lblocks.count(); i++) {
 				ASSERT(lblocks[i] != NULL);
 				int line = cache->line(lblocks[i]->address());

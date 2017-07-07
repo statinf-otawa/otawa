@@ -24,7 +24,7 @@
 #ifndef OTAWA_CFG_VIRTUALIZER_H_
 #define OTAWA_CFG_VIRTUALIZER_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/util/Option.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/cfg/features.h>
@@ -59,9 +59,9 @@ private:
 	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
 	bool virtualize;
 	CFG *entry;
-	genstruct::SLList<CFG *> todo;
-	genstruct::HashTable<CFG *, CFGMaker *> map;
-	genstruct::FragTable<CFGMaker *> makers;
+	List<CFG *> todo;
+	HashMap<CFG *, CFGMaker *> map;
+	FragTable<CFGMaker *> makers;
 };
 
 }	// otawa

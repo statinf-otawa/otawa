@@ -21,7 +21,7 @@
 #ifndef OTAWA_ETIME_EDGETIMEBUILDER_H_
 #define OTAWA_ETIME_EDGETIMEBUILDER_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/parexegraph/GraphBBTime.h>
 #include <otawa/etime/EventCollector.h>
 #include <otawa/etime/Config.h>
@@ -63,8 +63,8 @@ protected:
 
 	// to customize
 	typedef Pair<Event *, place_t> event_t;
-	typedef genstruct::Vector<event_t> event_list_t;
-	typedef genstruct::Vector<ConfigSet> config_list_t;
+	typedef Vector<event_t> event_list_t;
+	typedef Vector<ConfigSet> config_list_t;
 	virtual EdgeTimeGraph *make(ParExeSequence *seq);
 	virtual void processEdge(WorkSpace *ws, CFG *cfg);
 	virtual void processSequence(void);
@@ -100,7 +100,7 @@ private:
 	ParExeNode *getBranchNode(void);
 	int splitConfs(const config_list_t& confs, const event_list_t& events, bool& lower);
 	void sortEvents(event_list_t& events, BasicBlock *bb, place_t place, Edge *edge = 0);
-	void displayConfs(const genstruct::Vector<ConfigSet>& confs, const event_list_t& events);
+	void displayConfs(const Vector<ConfigSet>& confs, const event_list_t& events);
 	int countDynEvents(const event_list_t& events);
 
 	// ILP state
@@ -111,7 +111,7 @@ private:
 
 	// graph
 	Edge *edge;
-	genstruct::Vector<event_t> all_events;
+	Vector<event_t> all_events;
 	event_list_t events;
 	ParExeSequence *seq;
 	EdgeTimeGraph *graph;
@@ -120,7 +120,7 @@ private:
 	BasicBlock *source, *target;
 
 	// collector of events
-	genstruct::HashTable<Event *, EventCollector *> colls;
+	HashMap<Event *, EventCollector *> colls;
 
 	// configuration
 	bool record;

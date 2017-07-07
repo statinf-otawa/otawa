@@ -632,7 +632,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 			// build the basic block
 			// first we collect the instructions
 			UniquePtr<xom::Elements> inst_elts(bb_elt->getChildElements("inst"));
-			genstruct::Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
+			Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
 			for(int k = 0; k < inst_elts->size(); k++) {
 				// <inst address="0x0020099c" file="cover.c" line="232"/>
 				xom::Element *inst_elt = inst_elts->get(k); // current instruction
@@ -709,7 +709,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 	// now we have all the CFGs, we can fill the info of CFGs to the Synth Blocks
 	int cfgIndex = 0;
-	for(bb_map_table_t::Iterator bbmtti(bb_map_table); bbmtti; bbmtti++, cfgIndex++) { // for each CFG
+	for(bb_map_table_t::Iter bbmtti(bb_map_table); bbmtti; bbmtti++, cfgIndex++) { // for each CFG
 		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
 		for(bb_map_t::Iterator bbmti(**bbmtti); bbmti; bbmti++) { // for each entry in the bb_map
 			if(bbmti->isSynth()) { // now process the synth block. basic block were processed previously
@@ -726,10 +726,10 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 	// build the edges
 	cfgIndex = 0;
-	for(edge_list_table_t::Iterator eltti(edge_list_table); eltti; eltti++, cfgIndex++) { // for each CFG
+	for(edge_list_table_t::Iter eltti(edge_list_table); eltti; eltti++, cfgIndex++) { // for each CFG
 		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
 		bb_map_t* bb_map = bb_map_table[cfgIndex];
-		for(edge_list_t::Iterator elti(**eltti); elti; elti++) {
+		for(edge_list_t::Iter elti(**eltti); elti; elti++) {
 			Block* sourceBlock = 0;
 			if(bb_map->hasKey((*elti).fst))
 				sourceBlock = bb_map->get((*elti).fst);
@@ -761,9 +761,9 @@ void Input::processWorkSpace(WorkSpace *ws) {
 	} // For each CFG
 
 	// cleanup
-	for(bb_map_table_t::Iterator i(bb_map_table); i; i++)
+	for(bb_map_table_t::Iter i(bb_map_table); i; i++)
 		delete *i;
-	for(edge_list_table_t::Iterator i(edge_list_table); i; i++)
+	for(edge_list_table_t::Iter i(edge_list_table); i; i++)
 		delete *i;
 }
 

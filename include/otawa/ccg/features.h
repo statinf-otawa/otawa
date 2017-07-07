@@ -77,10 +77,10 @@ class LBlockSet {
 public:
 
 	// Iterator class
-	class Iterator:  public elm::genstruct::Vector<LBlock *>::Iterator {
+	class Iterator:  public elm::Vector<LBlock *>::Iter {
 	public:
 		inline Iterator(LBlockSet& lbset):
-			elm::genstruct::Vector<LBlock *>::Iterator(lbset.listelbc) { }
+			elm::Vector<LBlock *>::Iter(lbset.listelbc) { }
 	};
 
 	// Methods
@@ -97,7 +97,7 @@ public:
 
 private:
 	int linenumber;
-	elm::genstruct::Vector<LBlock *> listelbc;
+	elm::Vector<LBlock *> listelbc;
 	int cblock_count;
 	const hard::Cache *_cache;
 };
@@ -115,7 +115,7 @@ public:
 // Features
 extern p::feature COLLECTED_LBLOCKS_FEATURE;
 extern Identifier<LBlockSet **> LBLOCKS;
-extern Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS;
+extern Identifier<AllocArray<LBlock* >* > BB_LBLOCKS;
 
 // CCG feature
 extern p::feature FEATURE;
