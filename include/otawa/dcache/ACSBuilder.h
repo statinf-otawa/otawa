@@ -71,9 +71,15 @@ public:
 		// 0     , if x == b
 		// a[x]++, if a[x] < a[b] // increment the age of other blocks which is younger than b, because b is put at the first place (age = 0)
 		// a[x]  , otherwise
-		inline void injectWriteThroughToCache(const int id) {
-			return;
-			if (contains(id)) { // if the block is already in the cache,
+		inline void injectWriteThrough(const int id) {
+			if(id == -1) {
+				for (int i = 0; i < size; i++) {
+					if (age[i] != -1 && age[i] < (A-1)) // only increment the age for the one whose age is younger
+						age[i]++;
+				}
+				ASSERT(0);
+			}
+			else if (contains(id)) { // if the block is already in the cache,
 				for (int i = 0; i < size; i++) {
 					if ((age[i] < age[id]) && (age[i] != -1)) // only increment the age for the one whose age is younger
 						age[i]++;
@@ -90,6 +96,21 @@ public:
 				if (age[i] == A)
 					age[i] = -1;
 			}
+		}
+
+		inline void join(Domain& b) {
+			ASSERT(size == b.size);
+			for (int i = 0; i < size; i++)
+			if (((age[i] < b[i]) && (age[i] != -1))|| (b.age[i] == -1))
+				age[i] = b[i];
+		}
+
+		inline bool operator==(const Domain& b) {
+			ASSERT(size == b.size);
+			for (int i = 0; i < size; i++)
+				if (age[i] != b[i])
+					return false;
+			return true;
 		}
 
 	};

@@ -41,7 +41,7 @@ public:
 
 	class Domain: public ACS {
 	public:
-		inline Domain(const int _size, const int _A): ACS(_size, _A) { }
+		inline Domain(const int _size, const int _A, int init = -1): ACS(_size, _A, init) { }
 		inline Domain(const Domain &source) : ACS(source) { }
 
 		inline Domain& operator=(const Domain &src) { ACS::operator=(src); return *this; }
@@ -49,7 +49,7 @@ public:
 
 		inline void glb(const Domain &dom) { ASSERT(false); }
 
-		inline void lub(const Domain &dom) {
+		inline void lub(const Domain &dom) { // MAY: tries to explore the possibility of the data still stays in the cache, hence take the minimal age of the two ACS.
 			ASSERT((A == dom.A) && (size == dom.size));
 			for (int i = 0; i < size; i++)
 				if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
@@ -81,12 +81,32 @@ public:
 			age[id] = 0;
 		}
 
+		inline void injectWriteThrough(const int id) {
+			if (contains(id)) { // if the block is already in the cache,
+				for (int i = 0; i < size; i++) {
+					if ((age[i] < age[id]) && (age[i] != -1)) // only increment the age for the one whose age is younger
+						age[i]++;
+				}
+				age[id] = 0;
+			}
+		}
+
 		inline void ageAll(void) {
 			for (int i = 0; i < size; i++) {
 				if (age[i] != -1)
 					age[i]++;
 				if (age[i] == A)
 					age[i] = -1;
+			}
+		}
+
+		inline void refreshAll(const int id) {
+			if(id == -1) {
+				for (int i = 0; i < size; i++)
+					age[i] = 0;
+			}
+			else {
+				age[id] = 0;
 			}
 		}
 
@@ -100,7 +120,11 @@ public:
 
 	inline const Domain& top(void) const { return _top; }
 	inline const Domain& bottom(void) const { return bot; }
+#ifdef OLD_WRITE_THROUGH
 	inline const Domain& entry(void) const { return top(); }
+#else
+	inline const Domain& entry(void) const { return _entry; }
+#endif
 	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
@@ -116,6 +140,7 @@ private:
 	const hard::Cache *cache;
 	Domain _top;
 	Domain bot;
+	Domain _entry;
 };
 
 elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom);

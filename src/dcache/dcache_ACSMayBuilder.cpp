@@ -28,7 +28,8 @@ MAYProblem::MAYProblem(
 	line(collection.cacheSet()),
 	cache(_cache),
 	_top(collection.count(), _cache->wayCount()),
-	bot(collection.count(), _cache->wayCount())
+	bot(collection.count(), _cache->wayCount()),
+	_entry(collection.count(), _cache->wayCount(), 0)
 {
 		_top.empty();
 }
@@ -44,6 +45,7 @@ MAYProblem::~MAYProblem(void) {
  * @param access	Cache access.
  */
 void MAYProblem::update(Domain& s, const BlockAccess& access) {
+#ifdef OLD_IMPLEMENTATION
 	switch(access.kind()) {
 	case BlockAccess::RANGE:
 	case BlockAccess::ANY:
@@ -53,6 +55,26 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
 			s.inject(access.block().index());
 		break;
 	}
+#else
+	if(access.kind() == BlockAccess::ANY) {
+		s.refreshAll(-1);
+	}
+	else if(access.kind() == BlockAccess::RANGE) {
+		for(genstruct::Vector<const Block*>::Iterator vbi(access.getBlocks()); vbi; vbi++)
+			if(vbi->set() == line)
+				s.refreshAll(vbi->index());
+	}
+	else if(access.kind() == BlockAccess::BLOCK) {
+		if(access.block().set() == line) {
+			if(access.action () == BlockAccess::LOAD) {
+				s.inject(access.block().index());
+			}
+			else if(access.action () == BlockAccess::STORE) {
+				s.injectWriteThrough(access.block().index());
+			}
+		}
+	}
+#endif
 }
 
 
@@ -174,6 +196,11 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 		MAYProblem::Domain entry_dom(coll.count(), cache->wayCount());
 		if(may_entry)
 			entry_dom = *may_entry->get(line);
+#ifdef OLD_IMPLEMENTATION
+#else
+		else
+			entry_dom = mayProb.entry();
+#endif
 		mayHai.solve(0, &entry_dom);
 		/* Store the resulting ACS into the properties */
 		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)

@@ -33,6 +33,8 @@ class Inst;
 
 namespace dcache {
 
+//#define OLD_IMPLEMENTATION
+
 // type of unrolling
 typedef enum data_fmlevel_t {
 		DFML_INNER = 0,
@@ -141,10 +143,10 @@ public:
 		{ ASSERT(instruction); data.blk = &block; }
 	inline BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last): inst(instruction), _kind(RANGE), _action(action)
 		{ ASSERT(instruction); data.range.first = first; data.range.last = last; }
-	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action)
+	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action), blocks(acc.blocks)
 		{ data = acc.data; }
 	inline BlockAccess& operator=(const BlockAccess& acc)
-		{ inst = acc.inst; _kind = acc._kind; _action = acc._action; data = acc.data; return *this; }
+		{ inst = acc.inst; _kind = acc._kind; _action = acc._action; data = acc.data; blocks = acc.blocks; return *this; }
 
 	inline Inst *instruction(void) const { return inst; }
 	inline kind_t kind(void) const { return kind_t(_kind); }
@@ -159,6 +161,9 @@ public:
 
 	void print(io::Output& out) const;
 
+	inline void addBlock(const Block* block) { blocks.addLast(block); }
+	const genstruct::Vector<const Block*>& getBlocks(void) const { return blocks; }
+
 private:
 	Inst *inst;
 	t::uint8 _kind, _action;
@@ -166,6 +171,7 @@ private:
 		const Block *blk;
 		struct { hard::Cache::block_t first, last; } range;
 	} data;
+	genstruct::Vector<const Block*> blocks;
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }

@@ -159,6 +159,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					if(dom.getMust().contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_HIT;
 						alwaysHit = true;
+						// done is not set to true because we want to check if it matches with the may analysis
 					}
 
 					// persistent ?

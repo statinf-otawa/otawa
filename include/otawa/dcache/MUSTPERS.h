@@ -44,6 +44,10 @@ public:
 		inline Domain(const Domain &source) : pers(source.pers), must(source.must) { }
 		inline MUSTProblem::Domain& getMust(void) { return must; }
 		inline PERSProblem::Domain& getPers(void) { return pers; }
+
+		inline void join(Domain& d) { must.join(d.must); pers.lub(d.pers); }
+		inline bool operator==(const Domain& d) { return must == d.must; }
+
 	private:
 		PERSProblem::Domain pers;
 		MUSTProblem::Domain must;
@@ -71,7 +75,7 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
-	inline void injectWriteThroughToCache(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.injectWriteThroughToCache(id); }
+	inline void injectWriteThrough(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.injectWriteThrough(id); }
 
 
 	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {

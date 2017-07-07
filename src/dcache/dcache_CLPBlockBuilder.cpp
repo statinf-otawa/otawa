@@ -166,11 +166,25 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 							else if(!bank->isCached())
 								continue;
 							else if(cache->block(l) == cache->block(h)) { // if all the access addresses are in the same cached block
-								const Block& block = colls[cache->set(l)].obtain(l);
+								const Block& block = colls[cache->set(l)].obtain(cache->round(l));
 								accs.add(BlockAccess(inst, p.snd, block));
 							}
 							else {
-								accs.add(BlockAccess(inst, p.snd, cache->set(l), cache->set(h)));
+								BlockAccess ba = BlockAccess(inst, p.snd, cache->set(l), cache->set(h));
+								Address begin = 0, end = 0;
+								if(h > l) {
+									begin = cache->round(l);
+									end = cache->round(h);
+								}
+								else {
+									begin = cache->round(h);
+									end = cache->round(l);
+								}
+								for(Address curr = begin; curr <= end; curr = curr + cache->blockSize()) {
+									const Block& block = colls[cache->set(curr)].obtain(cache->round(curr));
+									ba.addBlock(&block);
+								}
+								accs.add(ba);
 							}
 						}
 					}

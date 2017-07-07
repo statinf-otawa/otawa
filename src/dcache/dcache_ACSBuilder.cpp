@@ -115,6 +115,7 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 		break;
 
 	case BlockAccess::LOAD:
+	case BlockAccess::STORE:
 		switch(access.kind()) {
 		case BlockAccess::RANGE:
 			if(access.first() < access.last()) {
@@ -134,15 +135,6 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
 		}
 		break;
 
-	case BlockAccess::STORE:
-		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
-			ASSERT(0);
-		}
-		else if(cache->writePolicy() == hard::Cache::WRITE_BACK) {
-			ASSERT(0);
-		}
-		else ASSERT(0);
-		break;
 	case BlockAccess::PURGE:
 		purge(s, access);
 		break;
@@ -248,7 +240,7 @@ Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::DATA_FIRSTMISS_L
  * @ingroup dcache
  */
 
-p::declare ACSBuilder::reg = p::init("otawa::DataACSBuilder", Version(1, 0, 0))
+p::declare ACSBuilder::reg = p::init("otawa::dcache::ACSMustPersBuilder", Version(1, 0, 0))
 	.base(Processor::reg)
 	.maker<ACSBuilder>()
 	.require(DOMINANCE_FEATURE)
@@ -742,17 +734,18 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 	MUST_DEBUG("\t\t\tupdating with " << acc);
 	switch(access.action()) {
 
-//	case BlockAccess::STORE:
 	case BlockAccess::LOAD:
 		switch(access.kind()) {
-		case BlockAccess::RANGE:
-			if(access.first() < access.last()) {
-				if(set < access.first() || set > access.last())
-					break;
-			}
-			else if(access.first() < set || set < access.last())
+		case BlockAccess::RANGE: {
+			// set ------- first ------- last -------- set, if the current set is outside the block access range
+			if((access.first() < access.last()) && (set < access.first() || set > access.last()))
 				break;
-				/* no break */
+			// set ------- last ---------first --------- set, the 2nd outside case
+			else if((access.first() > access.last()) && (access.first() < set || set < access.last()))
+				break;
+			ageAll(s);
+			break;
+		}
 		case BlockAccess::ANY:
 			ageAll(s);
 			break;
@@ -765,23 +758,64 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 
 	case BlockAccess::STORE:
 		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
+#ifdef OLD_IMPLEMENTATION
 			switch(access.kind()) {
-			case BlockAccess::RANGE:
-				if(access.first() < access.last()) {
-					if(set < access.first() || set > access.last()) // set ------- first ------- last -------- set, if the current set is outside the block access range
-						break;
-				}
-				else if(access.first() < set || set < access.last()) // set ------- last ---------first --------- set, the 2nd outside case
-					break;
-				/* no break, if the set lies inside */
-			case BlockAccess::ANY:
+			case BlockAccess::RANGE: {
+				if((access.first() < access.last()) && (set < access.first() || set > access.last())) { break; }
+				else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { break; }
 				ageAll(s);
 				break;
-			case BlockAccess::BLOCK:
-				if(access.block().set() == set)
-					inject(s, access.block().index());
+			}
+			case BlockAccess::ANY: {
+				ageAll(s);
 				break;
 			}
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					injectWriteThrough(s, access.block().index()); // only set the age to 0 when it is already in the cache
+				break;
+			}
+#else
+			switch(access.kind()) {
+			case BlockAccess::RANGE: {
+				// set ------- first ------- last -------- set, if the current set is outside the block access range
+				if((access.first() < access.last()) && (set < access.first() || set > access.last())) {
+					break;
+				}
+				// set ------- last ---------first --------- set, the 2nd outside case
+				else if((access.first() > access.last()) && (access.first() < set || set < access.last())) {
+					break;
+				}
+				// first -------------- set ------------ last, if the set lies inside the range
+				bool processed = false;
+				for(genstruct::Vector<const Block*>::Iterator vbi(access.getBlocks()); vbi; vbi++) {
+					processed = true;
+					if(vbi->set() == set) {
+						Domain t = s;
+						injectWriteThrough(t, vbi->index());
+						s.join(t);
+						if(s == t) {} else {
+							elm::cout << "s = " << s << ", t = " << t << endl;
+							ASSERT(0); // to see
+						}
+					}
+				}
+				if(!processed)
+					ageAll(s);
+				break;
+			}
+			case BlockAccess::ANY: {
+				Domain t = s;
+				injectWriteThrough(t, -1);
+				s.join(t);
+				break;
+			}
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					injectWriteThrough(s, access.block().index()); // only set the age to 0 when it is already in the cache
+				break;
+			}
+#endif
 		}
 		else if(cache->writePolicy() == hard::Cache::WRITE_BACK) {
 			// FIXME: follow the LOAD, needs to check
@@ -799,11 +833,12 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 				break;
 			case BlockAccess::BLOCK:
 				if(access.block().set() == set)
-					injectWriteThroughToCache(s, access.block().index());
+					inject(s, access.block().index());
 				break;
 			}
 		}
-		else ASSERT(0);
+		else
+			ASSERTP(0, "Unsupported writing policy");
 		break;
 	case BlockAccess::PURGE:
 		mustProb.purge(s.must, access);
