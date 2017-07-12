@@ -87,6 +87,7 @@ SYM [?;,+-/:@=\[\]()]
 "preserve"		return KW_PRESERVE;
 "no"			return KW_NO;
 "noreturn"		return NORETURN;
+"register"		return KW_REG;
 "return"		return RETURN;
 "seq"			return KW_SEQ;
 "to"			return KW_TO;
