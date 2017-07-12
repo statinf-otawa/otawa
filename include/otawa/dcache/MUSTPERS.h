@@ -75,7 +75,7 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
-	inline void injectWriteThrough(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.injectWriteThrough(id); }
+	inline void injectWriteThrough(Domain& d, const int id) const { d.pers.injectWriteThrough(&d.must, id); d.must.injectWriteThrough(id); }
 
 
 	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {

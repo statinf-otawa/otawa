@@ -913,6 +913,16 @@ void PERSProblem::Item::inject(MUSTProblem::Domain *must, const int id) {
 }
 
 
+void PERSProblem::Item::injectWriteThrough(MUSTProblem::Domain *must, const int id) {
+	if (must->contains(id)) {
+		for (int i = 0; i < size; i++)
+			if ((age[i] < age[id]) && (age[i] != -1) && (age[i] != A))
+				age[i]++;
+		age[id] = 0;
+	}
+}
+
+
 /**
  * Change the age of the designed block considering the given damage to the ACS.
  * @param id		Block identifier.
@@ -1050,6 +1060,14 @@ void PERSProblem::Domain::inject(MUSTProblem::Domain *must, const int id) {
 	for (int i = 0; i < data.length(); i++)
 		data[i]->inject(must, id);
 	whole.inject(must, id);
+}
+
+
+void PERSProblem::Domain::injectWriteThrough(MUSTProblem::Domain *must, const int id) {
+	ASSERT(!isBottom);
+	for (int i = 0; i < data.length(); i++)
+		data[i]->injectWriteThrough(must, id);
+	whole.injectWriteThrough(must, id);
 }
 
 

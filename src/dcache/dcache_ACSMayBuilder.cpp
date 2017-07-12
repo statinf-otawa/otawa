@@ -52,7 +52,7 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
 	case BlockAccess::ANY:
 		break;
 	case BlockAccess::BLOCK:
-		if(access.block().set() == line)
+		if(access.block().set() == set)
 			s.inject(access.block().index());
 		break;
 	}

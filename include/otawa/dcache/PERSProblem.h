@@ -49,6 +49,7 @@ public:
 		void lub(const Item &dom);
 		bool equals(const Item &dom) const;
 		void inject(MUSTProblem::Domain *must, const int id);
+		void injectWriteThrough(MUSTProblem::Domain *must, const int id);
 		inline bool isWiped(const int id) { return(age[id] == A); }
 		inline bool isPersistent(const int id) { return(contains(id) && !isWiped(id));			 }
 		void addDamage(const int id, int damage);
@@ -71,6 +72,7 @@ public:
 		inline Item &getWhole(void) { return whole; }
 		inline bool contains(const int id, const int index) { ASSERT(!isBottom); return(data[index]->contains(id)); }
 		void inject(MUSTProblem::Domain *must, const int id);
+		void injectWriteThrough(MUSTProblem::Domain *must, const int id);
 		inline bool isWiped(const int id, const int index) { ASSERT(!isBottom); return(data[index]->isWiped(id));	 }
 		inline int getAge(const int id, const int index) const { ASSERT(!isBottom); return(data[index]->getAge(id)); }
 		inline bool isPersistent(const int id, const int index) { ASSERT(!isBottom); return(data[index]->isPersistent(id)); }

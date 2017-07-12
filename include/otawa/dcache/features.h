@@ -33,8 +33,6 @@ class Inst;
 
 namespace dcache {
 
-// #define OLD_IMPLEMENTATION
-
 //#define OLD_IMPLEMENTATION
 
 // type of unrolling
