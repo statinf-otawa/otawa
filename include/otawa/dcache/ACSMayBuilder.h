@@ -43,13 +43,14 @@ public:
 	public:
 		inline Domain(const int _size, const int _A, int init = -1): ACS(_size, _A, init) { }
 		inline Domain(const Domain &source) : ACS(source) { }
+		inline Domain(const ACS& source): ACS(source) { }
 
 		inline Domain& operator=(const Domain &src) { ACS::operator=(src); return *this; }
 		inline Domain& operator=(const ACS& src)  { ACS::operator=(src); return *this; }
 
 		inline void glb(const Domain &dom) { ASSERT(false); }
 
-		inline void lub(const Domain &dom) { // MAY: tries to explore the possibility of the data still stays in the cache, hence take the minimal age of the two ACS.
+		inline void join(const Domain &dom) { // MAY: tries to explore the possibility of the data still stays in the cache, hence take the minimal age of the two ACS.
 			ASSERT((A == dom.A) && (size == dom.size));
 			for (int i = 0; i < size; i++)
 				if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
@@ -100,16 +101,16 @@ public:
 			}
 		}
 
-		inline void refreshAll(const int id) {
-			if(id == -1) {
-				for (int i = 0; i < size; i++)
-					age[i] = 0;
-			}
-			else {
-				age[id] = 0;
-			}
+		inline void refreshAll() {
+			for (int i = 0; i < size; i++)
+				age[i] = 0;
 		}
 
+		inline void refreshAllWriteThrough(const int id) {
+			for (int i = 0; i < size; i++)
+				if(age[i] != -1)
+					age[i] = 0;
+		}
 	};
 
 public:
@@ -125,7 +126,7 @@ public:
 #else
 	inline const Domain& entry(void) const { return _entry; }
 #endif
-	inline void lub(Domain &a, const Domain &b) const { a.lub(b); }
+	inline void lub(Domain &a, const Domain &b) const { a.join(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, otawa::Block* bb);
@@ -136,7 +137,7 @@ public:
 private:
 	const BlockCollection& coll;
 	WorkSpace *fw;
-	int line;
+	int set;
 	const hard::Cache *cache;
 	Domain _top;
 	Domain bot;

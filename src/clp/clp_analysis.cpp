@@ -423,7 +423,10 @@ void Value::print(io::Output& out) const {
 			intn_t _deltaToPrint =  0-_delta;
 			out << ", -0x" << io::hex(_deltaToPrint);
 		}
-		out << ", 0x" << io::hex(_mtimes) << ')';
+		if(_mtimes == -1)
+			out << ", inf)";
+		else
+			out << ", 0x" << io::hex(_mtimes) << ')';
 	}
 }
 

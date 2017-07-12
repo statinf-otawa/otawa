@@ -242,6 +242,8 @@ namespace se{
 		*/
 		void set_parent(SymbExpr *parent) { _parent = parent ; }
 
+		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
+
 	protected:
 		/** Attributes **/
 		op_t _op;
@@ -297,6 +299,8 @@ namespace se{
 		 * form.
 		*/
 		virtual void canonize(void);
+
+		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
 
 	/** Memory reference */
@@ -353,6 +357,8 @@ namespace se{
 		 * @return a vector of memory addresses.
 		*/
 		virtual genstruct::Vector<V> used_addr(void);
+
+		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
 
 	/** Register */
@@ -407,6 +413,8 @@ namespace se{
 		 * @return a vector of int
 		*/
 		virtual genstruct::Vector<V> used_reg(void);
+
+		SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
 
 	/** Negation */
@@ -510,6 +518,8 @@ namespace se{
 		 * form.
 		*/
 		virtual void canonize(void);
+
+		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
 
 	/** Compare symbolic expression

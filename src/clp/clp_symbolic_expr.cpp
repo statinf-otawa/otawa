@@ -131,6 +131,27 @@ namespace se{
 		return a_addr;
 	}
 
+	SymbExpr* SymbExpr::solidifyAddress(clp::State& clpState, bool dig) {
+		if(_a) {
+			_a = _a->solidifyAddress(clpState, dig);
+			if(_a)
+				_a->canonize();
+		}
+		if(_b) {
+			_b = _b->solidifyAddress(clpState, dig);
+			if(_b)
+				_b->canonize();
+		}
+		if(!_a && !_b)
+			return NULL;
+		if(!_a)
+			return _b;
+		if(!_b)
+			return _a;
+		return this;
+
+	}
+
 	/************ SEConst methods ************/
 	SEConst* SEConst::copy(void){ return new SEConst(_val); }
 	SymbExpr& SEConst::operator=(const SEConst& expr){
@@ -146,12 +167,21 @@ namespace se{
 			return (_ << "0x" << hex(_val.lower()));
 		else if (_val.kind() == clp::ALL)
 			return (_ << 'T');
-		else
-			return (_ << "(0x" << hex(_val.lower()) \
-					  << ", 0x" << hex(_val.delta()) \
-					  << ", 0x" << hex(_val.mtimes()) << ')');
+		else {
+			string temp;
+			temp = temp << "(0x" << hex(_val.lower()) << ", 0x" << hex(_val.delta());
+			if(_val.mtimes()!=-1)
+				temp = temp << ", 0x" << hex(_val.mtimes()) << ")";
+			else
+				temp = temp << ", inf)";
+			return temp;
+		}
 	}
 	void SEConst::canonize(void){}
+
+	SymbExpr* SEConst::solidifyAddress(clp::State& clpState, bool dig) {
+		return new SEConst(_val, _parent);
+	}
 
 	/************ SEAddr methods ************/
 	SEAddr* SEAddr::copy(void){ return new SEAddr(_val, _a?_a->copy():NULL); }
@@ -164,7 +194,7 @@ namespace se{
 		return (_op == expr.op() && _val == expr.val());
 	}
 	String SEAddr::asString(const hard::Platform *pf) {
-		if (_val == -1) {
+		if (_a) { // the address is an expression
 			return (_ << "@" << _a->asString(pf));
 		}
 		else if(_val.isConst()) {
@@ -184,7 +214,7 @@ namespace se{
 		// hence _a will be checked to see if the solid address, i.e. _a is a CONST, is obtained, in this case
 		// _val will be assigned to _a's value and _a will be deleted.
 		// otherwise, if _a is not canonized as a constant, this SEAddr will remain as a symbolic address
-		if(_val == -1 && _a && _a->op() == CONST && _a->val() == V::top) {
+		if(_a && _a->op() == CONST && _a->val() == V::top) {
 			if (_parent->a() == this){
 				// WILL DELETE this !
 				SEConst* temp = new SEConst(V::top);
@@ -199,7 +229,7 @@ namespace se{
 				return;
 			}
 		}
-		else if(_val == -1 && _a && _a->op() == CONST) {
+		else if(_a && _a->op() == CONST) {
 			_val = _a->val();
 			delete _a;
 			_a = NULL;
@@ -208,8 +238,21 @@ namespace se{
 
 	genstruct::Vector<V> SEAddr::used_addr(void){
 		genstruct::Vector<V> vect;
-		vect.add(_val);
+		if(!_a)
+			vect.add(_val);
 		return vect;
+	}
+
+	SymbExpr* SEAddr::solidifyAddress(clp::State& clpState, bool dig) {
+		if(_a) {
+			_a = _a->solidifyAddress(clpState, true);
+			if(_a)
+				_a->canonize();
+			if(!_a)
+				return NULL;
+
+			return this;
+		}
 	}
 
 	/************ SEReg methods ************/
@@ -240,6 +283,22 @@ namespace se{
 		genstruct::Vector<V> vect;
 		vect.add(_val);
 		return vect;
+	}
+
+	SymbExpr* SEReg::solidifyAddress(clp::State& clpState, bool dig) {
+		ASSERT(_val.isConst());
+		if(dig == false)
+			return NULL;
+		if(_val.lower() < 0)
+			return NULL;
+
+		clp::Value clpval = clpState.get(clp::Value(clp::REG, _val.lower()));
+		if(clpval.isConst()) {
+			return new SEConst(clpval, _parent);
+		}
+		else {
+			return NULL;
+		}
 	}
 
 	/************ SENeg methods ************/
@@ -362,6 +421,29 @@ namespace se{
 			_b = newb;
 			set_a(_a->a());
 		}
+	}
+
+	SymbExpr* SEAdd::solidifyAddress(clp::State& clpState, bool dig) {
+		if(_a) {
+			SymbExpr* newA = _a->solidifyAddress(clpState, dig);
+			delete _a;
+			_a = newA;
+			if(_a)
+				_a->canonize();
+			else
+				return NULL;
+		}
+
+		if(_b) {
+			SymbExpr* newB = _b->solidifyAddress(clpState, dig);
+			delete _b;
+			_b = newB;
+			if(_b)
+				_b->canonize();
+			else
+				return NULL;
+		}
+		return this;
 	}
 
 	/************ SECmp utility ************/
@@ -721,54 +803,63 @@ namespace se{
 		}
 	}
 
-	// Inst* i is used to get the address as the index in the CLP state pack
-	//SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, Inst *i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
 	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, const Bundle &i, int sem, genstruct::Vector<V> &used_reg, genstruct::Vector<V> &used_addr){
 		/* FIXME: this could be otptimized: we do a CLP analysis from the
 			beginning of the BB each time we replace an address by its value */
-		//clp::State state = pack.state_before(i->address(), sem);
 		clp::State state = pack.state_before(i.address(), sem);
-
 		ASSERT(addr.isConst());
+		while(1) {
+			genstruct::Vector<V> used_reg = se->used_reg();
+			genstruct::Vector<V> used_addr = se->used_addr();
 
-		// replace other registers
-		for (int i=0; i < used_reg.length(); i++){
-			ASSERT(used_reg[i].isConst());
-			// get the actual value of used_reg[i]
-			clp::Value clpval = state.get(clp::Value(clp::REG, used_reg[i].lower()));
-			SEConst *val = new SEConst(clpval);
-			SEReg *r = new SEReg(used_reg[i]);
-			se->replace(r, val);
-			delete r;
-			delete val;
-		}
-
-		// replace other memory refs
-		for (int i=0; i < used_addr.length(); i++){
-			ASSERT(used_addr[i].isConst());
-			if (used_addr[i] != addr){
-				// get the actual value of used_addr[i]
-				clp::Value clpval = state.get(used_addr[i]);
+			// replace other registers
+			for (int i=0; i < used_reg.length(); i++){
+				ASSERT(used_reg[i].isConst());
+				// get the actual value of used_reg[i]
+				clp::Value clpval = state.get(clp::Value(clp::REG, used_reg[i].lower()));
 				SEConst *val = new SEConst(clpval);
-				SEAddr *a = new SEAddr(used_addr[i]);
-				se->replace(a, val);
-				delete a;
+				SEReg *r = new SEReg(used_reg[i]);
+				se->replace(r, val);
+				delete r;
 				delete val;
 			}
+
+			// replace other memory refs
+			for (int i=0; i < used_addr.length(); i++){
+				ASSERT(used_addr[i].isConst());
+				if (used_addr[i] != addr){
+					// get the actual value of used_addr[i]
+					clp::Value clpval = state.get(used_addr[i]);
+					SEConst *val = new SEConst(clpval);
+					SEAddr *a = new SEAddr(used_addr[i]);
+					se->replace(a, val);
+					delete a;
+					delete val;
+				}
+			}
+
+			SECmp* temp = se->copy();
+			// canonize
+			se->canonize();
+			// check if we have a filter
+			if(*temp == *se) {
+				delete temp;
+				break;
+			}
+			else {
+				delete temp;
+			}
 		}
 
-		// canonize
-		se->canonize();
-		// check if we have a filter
 		if (se->op() > CMPU && se->a() && se->a()->op() == ADDR && se->b() && se->b()->op() == CONST /*&& (se->b()->val() != V::all)*/) {
-			if (se->b()->val() == V::top) {
+			if (se->b()->val() == V::top)
 				return NULL;
-			}
-			if (!se->a()->val().isConst()) {
+			if (!se->a()->val().isConst())
 				return NULL;
-			}
-			else
-				return se;
+			if (se->b()->val().isInf())
+				return NULL;
+
+			return se;
 		}
 		else{
 			TRACEGF(cerr << "Bad filter: " << se->asString() << "\n";)
@@ -1255,14 +1346,20 @@ namespace se{
 					// This is carried out by looking at the expression. If the expression does not contain any temporary registers
 					// then that means the expression is fully resolved.
 					if (se->op() > CMPU && se->a() && se->b()){
+
+						SymbExpr* se2 = se->copy();
+						clp::State state = pack.state_before(currentBundle.address(), pc);
+						se2 = se2->solidifyAddress(state, false);
+
 						genstruct::Vector<V> used_reg = se->used_reg();
-						genstruct::Vector<V> used_addr = se->used_addr();
+						genstruct::Vector<V> used_addr;
+						if(se2)
+							used_addr = se2->used_addr();
 						bool has_tmp = false;
 						for(int i = 0; i < used_reg.length(); i++)
 							if (! (used_reg[i] >= 0))
 								has_tmp = true;
 						if (!has_tmp){
-
 							// check if there is a violation on the expression
 							if (se->op() > CMPU && se->a() && se->b()) {
 								if(!se->isValid()) {
@@ -1274,7 +1371,6 @@ namespace se{
 							// for each new register
 							for(int i = 0; i < used_reg.length(); i++) {
 								if(!curr_known_reg.contains(used_reg[i]) && !temp_known_reg[bi].contains(used_reg[i])) { // one register can only be added once
-								//if(!temp_known_reg[bi].contains(used_reg[i])) { // one register can only be added once
 									// get the filter
 									SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, currentBundle, pc, used_reg, used_addr);
 									if (newfilter){
@@ -1288,7 +1384,6 @@ namespace se{
 							// for each new addr
 							for(int i = 0; i < used_addr.length(); i++) {
 								if(!curr_known_addr.contains(used_addr[i]) && !temp_known_addr[bi].contains(used_addr[i])) { // one memory address can be only added once
-								//if(!temp_known_addr[bi].contains(used_addr[i])) { // one memory address can be only added once
 									// get the filter
 									SECmp *newfilter = getFilterForAddr(se->copy(), used_addr[i], pack, currentBundle, pc, used_reg, used_addr);
 									if (newfilter){

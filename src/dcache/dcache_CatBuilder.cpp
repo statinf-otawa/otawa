@@ -102,7 +102,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 	MUSTPERS::Domain dom = prob.bottom();
 
 	MAYProblem probMay(coll, ws, cache);
-	dcache::ACS* domMay = new dcache::ACS(probMay.bottom());
+	MAYProblem::Domain domMay = probMay.entry();
 
 	acs_stack_t empty_stack;
 	if(logFor(LOG_FUN))
@@ -120,10 +120,8 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 			if(logFor(LOG_BB))
 				log << "\t\t\t" << *bb << io::endl;
 
-			// get the input domain
-			// get the MUST domain
-			acs_table_t *ins = MUST_ACS(bb);
-			prob.setMust(dom, *ins->get(line));
+			acs_table_t *ins = MUST_ACS(bb); // get the entry ACS
+			prob.setMust(dom, *ins->get(line)); // set the MUST domain
 			// get the PERS domain
 			acs_table_t *pers = PERS_ACS(bb);
 			bool has_pers = pers;
@@ -138,10 +136,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					stack = &empty_stack;
 				prob.setPers(dom, *pers->get(line), *stack);
 			}
-			// get the MAY domain
-			if(MAY_ACS(bb))
-				domMay = MAY_ACS(bb)->get(line);
-			// explore the adresses
+
+			if(MAY_ACS(bb)) // get the MAY domain
+				domMay = *(MAY_ACS(bb)->get(line));
+
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
@@ -155,15 +153,12 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					bool alwaysHit = false;
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
 
-					// in MUST ?
 					if(dom.getMust().contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_HIT;
 						alwaysHit = true;
-						// done is not set to true because we want to check if it matches with the may analysis
 					}
 
-					// persistent ?
-					else if(has_pers) {
+					else if(has_pers) { // persistent
 
 						// find the initial header
 						otawa::Block *header;
@@ -185,14 +180,16 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					} // end of else if(has_pers)
 
 					// out of MAY ?
-					if(!done && domMay && !domMay->contains(b.block().index())) {
+					if(!done && !domMay.contains(b.block().index())) {
 						CATEGORY(b) = cache::ALWAYS_MISS;
 						ASSERTP(alwaysHit == false, "AH has been set, this creates a conflict.")
 					}
 
 					// update state
-					prob.inject(dom, b.block().index());
-					((MAYProblem::Domain*)(domMay))->inject(b.block().index());
+					//prob.inject(dom, b.block().index());
+					//((MAYProblem::Domain*)(domMay))->inject(b.block().index());
+					prob.update(dom, b);
+					probMay.update(domMay, b);
 				}
 			}
 		}

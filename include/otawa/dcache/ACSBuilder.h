@@ -50,6 +50,11 @@ public:
 				age[id] = -1;
 		}
 
+		// To obtain the age of a block a[x], given block b is associated with the writing address
+		// if a[b] < A, then a[x] =
+		// 0     , if x == b
+		// a[x]++, if a[x] < a[b] // increment the age of other blocks which is younger than b, because b is put at the first place (age = 0)
+		// a[x]  , otherwise
 		inline void inject(const int id) {
 			if (contains(id)) // if the block is already in the cache
 				for (int i = 0; i < size; i++) {
@@ -66,11 +71,6 @@ public:
 			age[id] = 0;
 		}
 
-		// To obtain the age of a block a[x], given block b is associated with the writing address
-		// if a[b] < A, then a[x] =
-		// 0     , if x == b
-		// a[x]++, if a[x] < a[b] // increment the age of other blocks which is younger than b, because b is put at the first place (age = 0)
-		// a[x]  , otherwise
 		inline void injectWriteThrough(const int id) {
 			if(id == -1) {
 				for (int i = 0; i < size; i++) {
@@ -86,10 +86,9 @@ public:
 				}
 				age[id] = 0;
 			}
-			// otherwise
 		}
 
-		inline void ageAll(void) {
+		inline void ageAll() {
 			for (int i = 0; i < size; i++) {
 				if (age[i] != -1)
 					age[i]++;

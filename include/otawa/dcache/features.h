@@ -33,6 +33,8 @@ class Inst;
 
 namespace dcache {
 
+// #define OLD_IMPLEMENTATION
+
 //#define OLD_IMPLEMENTATION
 
 // type of unrolling
@@ -162,7 +164,7 @@ public:
 	void print(io::Output& out) const;
 
 	inline void addBlock(const Block* block) { blocks.addLast(block); }
-	const genstruct::Vector<const Block*>& getBlocks(void) const { return blocks; }
+	const Vector<const Block*>& getBlocks(void) const { return blocks; }
 
 private:
 	Inst *inst;
@@ -171,7 +173,7 @@ private:
 		const Block *blk;
 		struct { hard::Cache::block_t first, last; } range;
 	} data;
-	genstruct::Vector<const Block*> blocks;
+	Vector<const Block*> blocks;
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }

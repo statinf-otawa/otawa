@@ -5,6 +5,7 @@
  *      Author: casse
  */
 
+#include <elm/data/Vector.h>
 #include <otawa/dcache/ACSMayBuilder.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -25,7 +26,7 @@ MAYProblem::MAYProblem(
 :	callstate(collection.count(), _cache->wayCount()),
 	coll(collection),
 	fw(_fw),
-	line(collection.cacheSet()),
+	set(collection.cacheSet()),
 	cache(_cache),
 	_top(collection.count(), _cache->wayCount()),
 	bot(collection.count(), _cache->wayCount()),
@@ -56,24 +57,57 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
 		break;
 	}
 #else
-	if(access.kind() == BlockAccess::ANY) {
-		s.refreshAll(-1);
-	}
-	else if(access.kind() == BlockAccess::RANGE) {
-		for(genstruct::Vector<const Block*>::Iterator vbi(access.getBlocks()); vbi; vbi++)
-			if(vbi->set() == line)
-				s.refreshAll(vbi->index());
-	}
-	else if(access.kind() == BlockAccess::BLOCK) {
-		if(access.block().set() == line) {
-			if(access.action () == BlockAccess::LOAD) {
+	if(access.action () == BlockAccess::LOAD) {
+		if(access.kind() == BlockAccess::ANY) {
+			s.refreshAll();
+		} // end ANY
+		else if(access.kind() == BlockAccess::RANGE) {
+			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				if(vbi->set() == set) {
+					Domain t = s;
+					t.inject(vbi->index());
+					s.join(t); // find the min
+				}
+		} // end RANGE
+		else if(access.kind() == BlockAccess::BLOCK) {
+			if(access.block().set() == set)
 				s.inject(access.block().index());
-			}
-			else if(access.action () == BlockAccess::STORE) {
+		} // end BLOCK
+	} // end LOAD
+	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
+		if(access.kind() == BlockAccess::ANY) {
+			s.refreshAllWriteThrough(-1);
+		} // end ANY
+		else if(access.kind() == BlockAccess::RANGE) {
+			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				if(vbi->set() == set) {
+					Domain t = s;
+					t.injectWriteThrough(vbi->index());
+					s.join(t); // find the min
+				}
+		} // end RANGE
+		else if(access.kind() == BlockAccess::BLOCK) {
+			if(access.block().set() == set)
 				s.injectWriteThrough(access.block().index());
-			}
-		}
-	}
+		} // end BLOCK
+	} // end WRITE_THROUGH
+	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_BACK) {
+		if(access.kind() == BlockAccess::ANY) {
+			s.refreshAll();
+		} // end ANY
+		else if(access.kind() == BlockAccess::RANGE) {
+			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				if(vbi->set() == set) {
+					Domain t = s;
+					t.inject(vbi->index());
+					s.join(t); // find the min
+				}
+		} // end RANGE
+		else if(access.kind() == BlockAccess::BLOCK) {
+			if(access.block().set() == set)
+				s.inject(access.block().index());
+		} // end BLOCK
+	} // end WRITE_BACK
 #endif
 }
 
@@ -172,9 +206,6 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 	if(coll.count() == 0)
 		return;
 	int line = coll.cacheSet();
-#ifdef DEBUG
-	cout << "[TRACE] Doing line " << line << "\n";
-#endif
 	MAYProblem mayProb(coll, fw, cache);
 	if (unrolling) {
 		UnrollingListener<MAYProblem> mayList(fw, mayProb);
