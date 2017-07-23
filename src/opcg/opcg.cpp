@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	octree command
+ *	opcg command
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2010, IRIT UPS.
@@ -20,17 +19,17 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/options.h>
-#include <elm/genstruct/Vector.h>
-#include <otawa/otawa.h>
 #include <elm/assert.h>
-//#include <otawa/cfg/CFGBuilder.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Vector.h>
+#include <elm/data/VectorQueue.h>
+#include <elm/options.h>
+
+#include <otawa/otawa.h>
 #include <otawa/pcg/PCG.h>
-#include <elm/genstruct/HashTable.h>
 #include <otawa/display/display.h>
 #include <otawa/display/GenDrawer.h>
 #include <otawa/pcg/PCGBuilder.h>
-#include <elm/genstruct/VectorQueue.h>
 #include <otawa/app/Application.h>
 
 using namespace elm;
@@ -123,7 +122,7 @@ public:
 	class Vertex {
 	public:
 		inline Vertex(void): blk(0) { }
-		inline Vertex(PCGBlock *block): blk(block) { cerr << "DEBUG: " << block << io::endl; }
+		inline Vertex(PCGBlock *block): blk(block) { }
 		inline bool operator==(const Vertex& vertex) const { return blk == vertex.blk; }
 		PCGBlock *blk;
 	};
@@ -140,18 +139,18 @@ public:
 
 	class Successor: public PreIterator<Successor, Edge> {
 	public:
-	 	inline Successor(const PCGAdapter& pcg, const Vertex &source): blk(source.blk), iter(source.blk) { }
+	 	inline Successor(const PCGAdapter& pcg, const Vertex &source): blk(source.blk), iter(source.blk->outs()) { }
 	 	inline bool ended(void) const { return iter.ended(); }
-	 	inline Edge item (void) const { return Edge(blk, iter->target()); }
+	 	inline Edge item (void) const { return Edge(blk, iter->sink()); }
 	 	void next(void) { iter.next(); }
 	private:
 		PCGBlock *blk;
-		PCG::OutIterator iter;
+		PCGBlock::EdgeIter iter;
 	};
 	
 	// DiGraphWithVertexMap concept
 	template <class T>
-	class VertexMap: public genstruct::HashTable<Vertex, T> {
+	class VertexMap: public HashMap<Vertex, T> {
 	public:
 		VertexMap(const PCGAdapter& pcg) { }
 	};
@@ -164,7 +163,7 @@ public:
 
 	class Iter: public PreIterator<Iter, Vertex> {
 	public:
-		inline Iter(const PCGAdapter& ad): iter(ad._pcg->blocks()) { look(); cerr << "DEBUG: ok!\n"; }
+		inline Iter(const PCGAdapter& ad): iter(ad._pcg->blocks()) { look(); }
 	 	inline bool ended(void) const { return iter.ended(); }
 	 	inline Vertex item(void) const { return *iter; }
 	 	void next(void) { iter.next(); look(); }
@@ -175,8 +174,6 @@ public:
 					break;
 				iter.next();
 			}
-			if(iter)
-				cerr << "DEBUG: ==> " << *iter << io::endl;
 		}
 		typename PCG::Iter iter;
 	};
@@ -242,25 +239,22 @@ EnumOption<int>::value_t out_values[] = {
 /**
  * Manager for the application.
  */
-class OctreeManager: public Application {
-	BoolOption no_int;
-	StringOption chain;
-	EnumOption<int> out;
+class OPCG: public Application {
+	SwitchOption no_int;
+	ValueOption<string> chain;
+	ValueOption<display::output_mode_t> out;
 	SwitchOption bb_cnt;
 	
 public:
 
-	OctreeManager(void)
-	:	Application("opcg", Version(1, 1, 0),
-			"Draw the program call tree of the given executable.",
-			"F. Nemer",
-			"Copyrigh (c) 2010 IRIT - UPS"),
-		no_int(*this, 'I', "no-internal",
-			"do not include internal functions (starting with '_')", false),
-		chain(*this, 'c', "chain", "generate calling chain to a function",
-			"function", ""),
-		out(*this, 'o', "out", "select the output", out_values),
-		bb_cnt(*this, option::cmd, "--count-bb", option::help, "display BB counts/total for each function", option::end)
+	OPCG(void):	Application(Application::Make("opcg", Version(1, 1, 0))
+		.author("F. Nemer")
+		.description("Draw the program call tree of the given executable.")
+		.copyright("Copyright (c) 2010 IRIT - UPS")),
+		no_int(SwitchOption::Make(*this).cmd("-I").cmd("--no-internal").description("do not include internal functions (starting with '_')")),
+		chain(ValueOption<string>::Make(*this).cmd("-c").cmd("--chain").description("generate calling chain to a function").argDescription("function")),
+		out(ValueOption<display::output_mode_t>::Make(*this).cmd("-o").cmd("--out").description("select the output")),
+		bb_cnt(SwitchOption::Make(*this).cmd("--count-bb").description("display BB counts/total for each function"))
 	{ }
 	
 protected:
@@ -320,7 +314,7 @@ protected:
 		/*if(chain)
 			selectChain(pcg, chain);
 		else*/
-			for(PCG::Iter block(pcg); block; block++)
+			for(PCG::Iter block = pcg->blocks(); block; block++)
 				SELECTED(block) = accept(block);
 		
 		// count BB if required
@@ -343,4 +337,4 @@ private:
 	string entry;
 };
 
-OTAWA_RUN(OctreeManager);
+OTAWA_RUN(OPCG);

@@ -32,14 +32,6 @@ namespace otawa {
  */
 
 /**
- * Build a new PCG.
- * @param entry		Entry function.
- */
-PCG::PCG(PCGBlock *entry): _entry(entry) {
-}
-
-
-/**
  * @class PCGBlock
  * Represents a function in the CFG.
  *
@@ -66,8 +58,7 @@ PCGBlock::~PCGBlock(void) {
 
 /**
  */
-PCGEdge::PCGEdge(PCGBlock *caller, SynthBlock *block, PCGBlock *callee)
-: graph::GenGraph<PCGBlock, PCGEdge>::GenEdge(caller, callee), _block(block) {
+PCGEdge::PCGEdge(SynthBlock *block): _block(block) {
 }
 
 }	// otawa

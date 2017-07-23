@@ -22,6 +22,7 @@
 #define OTAWA_DISPLAY_DISPLAY_H
 
 #include <elm/io.h>
+#include <elm/rtti.h>
 #include <elm/string.h>
 
 namespace otawa { namespace display {
@@ -222,5 +223,7 @@ typedef enum output_mode_t {
 typedef output_mode_t kind_t;		// deprecated
 
 } } // otawa::display
+
+DECLARE_ENUM(otawa::display::output_mode_t);
 
 #endif /* OTAWA_DISPLAY_DISPLAY_H */

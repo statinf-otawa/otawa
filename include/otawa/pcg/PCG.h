@@ -22,10 +22,9 @@
 #ifndef OTAWA_PCG_PCG_H
 #define OTAWA_PCG_PCG_H
 
-#include <elm/genstruct/Vector.h>
 #include <elm/PreIterator.h>
 #include <otawa/cfg/CFG.h>
-#include <otawa/graph/GenGraph.h>
+#include <otawa/sgraph/DiGraph.h>
 
 #include "PCGBlock.h"
 
@@ -35,17 +34,17 @@ using namespace elm::io;
 
 class PCGBlock;
 
-class PCGEdge: public PropList, public graph::GenGraph<PCGBlock, PCGEdge>::GenEdge {
+class PCGEdge: public PropList, public sgraph::GenEdge<PCGBlock, PCGEdge>::GenEdge {
 public:
-	PCGEdge(PCGBlock *caller, SynthBlock *block, PCGBlock *callee);
+	PCGEdge(SynthBlock *block);
 	inline SynthBlock *block(void) const { return _block; }
 	inline PCGBlock *caller(void) const { return source(); }
-	inline PCGBlock *callee(void) const { return target(); }
+	inline PCGBlock *callee(void) const { return sink(); }
 private:
 	SynthBlock *_block;
 };
 
-class PCGBlock: public PropList, public graph::GenGraph<PCGBlock, PCGEdge>::GenNode {
+class PCGBlock: public PropList, public sgraph::GenVertex<PCGBlock, PCGEdge> {
 public:
 	PCGBlock(CFG *cfg);
 	virtual ~PCGBlock(void);
@@ -58,22 +57,11 @@ private:
 	CFG *_cfg;
 };
 
-class PCG: public PropList, public graph::GenGraph<PCGBlock, PCGEdge> {
+class PCG: public PropList, public sgraph::GenDiGraph<PCGBlock, PCGEdge> {
 	friend class PCGBuilder;
 public:
-
-	PCG(PCGBlock *entry);
-	inline PCGBlock *entry(void) const { return _entry; }
-
-	class Iter: public graph::GenGraph<PCGBlock, PCGEdge>::Iter {
-		friend class PCG;
-	public:
-		inline Iter(const PCG *pcg): graph::GenGraph<PCGBlock, PCGEdge>::Iter(pcg) { }
-	};
-	inline Iter blocks(void) const { return Iter(this); }
-
-private:
-	PCGBlock *_entry;
+	typedef sgraph::GenDiGraph<PCGBlock, PCGEdge>::VertexIter Iter;
+	inline Iter blocks(void) const { return vertices(); }
 };
 
 }	// otawa

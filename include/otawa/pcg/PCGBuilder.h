@@ -1,7 +1,7 @@
 #ifndef OTAWA_PCG_PCGBUILDER_H
 #define OTAWA_PCG_PCGBUILDER_H
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/cfg.h>
 #include <otawa/proc/CFGProcessor.h>
 #include "features.h"
@@ -15,9 +15,11 @@ public:
 
 protected:
 	virtual void processWorkSpace(WorkSpace *fw);
+	virtual void destroy(WorkSpace *ws);
 
 private:
-	elm::genstruct::HashTable <CFG *, PCGBlock *> map;
+	elm::HashMap<CFG *, PCGBlock *> map;
+	PCG *_pcg;
 };
 
 // Features

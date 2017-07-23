@@ -49,7 +49,7 @@ p::declare PCGBuilder::reg = p::init("otawa::PCGBuilder", Version(2, 0, 0))
 
 /**
  */
-PCGBuilder::PCGBuilder(p::declare& r): Processor(r) {
+PCGBuilder::PCGBuilder(p::declare& r): Processor(r), _pcg(0) {
 }
 
 
@@ -62,24 +62,33 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	CFGCollection::Iter cfg(coll);
 	PCGBlock *b = new PCGBlock(cfg);
 	map.put(cfg, b);
-	otawa::PCG *pcg = new otawa::PCG(b);
-	pcg->add(b);
+	_pcg = new PCG();
+	sgraph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg, b);
 
 	// build a block for each CFG
 	for(cfg++; cfg; cfg++) {
 		PCGBlock *b = new PCGBlock(cfg);
 		map.put(cfg, b);
-		pcg->add(b);
+		builder.add(b);
 	}
 
 	// build the links
 	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for(CFG::CallerIter call = cfg->callers(); call; call++)
-			new PCGEdge(map.get(call->caller()), call, map.get(cfg));
+			builder.add(map.get(call->caller()), map.get(cfg), new PCGEdge(call));
 
 	// install all
-	track(otawa::PCG_FEATURE, PROGRAM_CALL_GRAPH(ws) = pcg);
+	builder.build();
+	PROGRAM_CALL_GRAPH(ws) = _pcg;
 	map.clear();
+}
+
+
+/**
+ */
+void PCGBuilder::destroy(WorkSpace *ws) {
+	if(_pcg)
+		delete _pcg;
 }
 
 

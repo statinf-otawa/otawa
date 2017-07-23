@@ -216,5 +216,19 @@ const Tag br(BR), left(BR_LEFT), center(BR_CENTER), right(BR_RIGHT), hr(HR);
 
 } } // otawa::display
 
+BEGIN_ENUM(otawa::display::output_mode_t)
+	.value("ANY",		otawa::display::OUTPUT_ANY)
+	.value("PS", 		otawa::display::OUTPUT_PS)
+	.value("PDF", 		otawa::display::OUTPUT_PDF)
+	.value("PNG", 		otawa::display::OUTPUT_PNG)
+	.value("GIF", 		otawa::display::OUTPUT_GIF)
+	.value("JPG", 		otawa::display::OUTPUT_JPG)
+	.value("SVG", 		otawa::display::OUTPUT_SVG)
+	.value("DOT", 		otawa::display::OUTPUT_DOT)
+	.value("RAW_DOT",	otawa::display::OUTPUT_RAW_DOT)
+	.value("VIEW", 		otawa::display::OUTPUT_VIEW)
+END_ENUM;
+
+
 otawa::display::Plugin otawa_display;
 ELM_PLUGIN(otawa_display, OTAWA_PROC_HOOK);

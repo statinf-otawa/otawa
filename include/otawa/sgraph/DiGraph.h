@@ -87,12 +87,11 @@ private:
 class DiGraphBuilder {
 public:
 	DiGraphBuilder(Vertex *e);
+	DiGraphBuilder(DiGraph *g, Vertex *e);
 	inline Vertex *entry(void) const { return _g->entry(); }
 	void add(Vertex *vertex);
 	void add(Vertex *source, Vertex *sink, Edge *edge);
 	DiGraph *build(void);
-protected:
-	DiGraphBuilder(DiGraph *g, Vertex *e);
 private:
 	DiGraph *_g;
 	int c;
@@ -154,12 +153,11 @@ template <class V, class E>
 class GenDiGraphBuilder: private DiGraphBuilder {
 public:
 	inline GenDiGraphBuilder(V *entry): DiGraphBuilder(entry) { }
+	inline GenDiGraphBuilder(GenDiGraph<V, E> *g, V *entry): DiGraphBuilder(g, entry) { }
 	inline V *entry(void) const { return static_cast<V *>(DiGraphBuilder::entry()); }
 	inline void add(V *v) { DiGraphBuilder::add(v); }
 	inline void add(V *v, V *w, E *e) { DiGraphBuilder::add(v, w, e); }
 	inline GenDiGraph<V, E> *build(void) { return static_cast<GenDiGraph<V, E> *>(DiGraphBuilder::build()); }
-protected:
-	inline GenDiGraphBuilder(GenDiGraph<V, E> *g, V *entry): DiGraphBuilder(g, entry) { }
 };
 
 } }		// otawa::sgraph
