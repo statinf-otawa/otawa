@@ -74,6 +74,8 @@ bool BlockAccess::in(const Block& block) const {
 	}
 }
 
+unsigned int BlockAccess::count = 0;
+
 
 /**
  * @defgroup dcache Data Cache

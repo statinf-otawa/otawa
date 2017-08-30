@@ -241,7 +241,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        buf << "xm_data_" << "cfg" << bb->cfg()->index() << "bb" << bb->index() << "_i" << b.instruction()->address() << "_" << j;
+                        buf << "xm_data_" << "c" << bb->cfg()->index() << "_b" << bb->index() << "_i" << b.instruction()->address();
 
                 // Add the constraint depending on the block access category
                 switch(dcache::CATEGORY(b)) {
