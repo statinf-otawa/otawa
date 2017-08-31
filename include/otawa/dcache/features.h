@@ -137,12 +137,12 @@ public:
 		RANGE = 2
 	} kind_t;
 
-	inline BlockAccess(void): inst(0), _kind(ANY), _action(NONE), id(-1) { }
-	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { ASSERT(instruction); id = count; count++;}
+	inline BlockAccess(void): inst(0), _kind(ANY), _action(NONE), id(0) { }
+	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { ASSERT(instruction); count++; id = count;}
 	inline BlockAccess(Inst *instruction, action_t action, const Block& block): inst(instruction), _kind(BLOCK), _action(action)
-		{ ASSERT(instruction); data.blk = &block; id = count; count++;}
+		{ ASSERT(instruction); data.blk = &block; count++; id = count;}
 	inline BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last): inst(instruction), _kind(RANGE), _action(action)
-		{ ASSERT(instruction); data.range.first = first; data.range.last = last; id = count; count++; }
+		{ ASSERT(instruction); data.range.first = first; data.range.last = last; count++; id = count; }
 	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action), blocks(acc.blocks), id(acc.id)
 		{ data = acc.data; }
 	inline BlockAccess& operator=(const BlockAccess& acc)
