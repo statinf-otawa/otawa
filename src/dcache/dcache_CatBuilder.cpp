@@ -161,11 +161,19 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					else if(has_pers) { // persistent
 
 						// find the initial header
-						otawa::Block *header;
+						otawa::Block *header = 0;
 						if (LOOP_HEADER(bb))
 							header = bb;
 					  	else
 					  		header = ENCLOSING_LOOP_HEADER(bb);
+						if (!header && bb->cfg()->callCount() == 1) { // temp solution
+							CFG::CallerIter a = bb->cfg()->callers();
+							otawa::Block *cb = *a;
+							if (LOOP_HEADER(cb))
+								header = cb;
+							else
+								header = ENCLOSING_LOOP_HEADER(cb);
+						}
 
 						// look in the different levels
 						for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
@@ -175,7 +183,18 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 								done = true;
 								break;
 							}
-							header = ENCLOSING_LOOP_HEADER(header);
+							otawa::Block *nh = ENCLOSING_LOOP_HEADER(header);
+
+							if (nh)
+								header = nh;
+							else if (header->cfg()->callCount() == 1) { // temp solution
+								CFG::CallerIter a = header->cfg()->callers();
+								otawa::Block *cb = *a;
+								if (LOOP_HEADER(cb))
+									header = cb;
+								else
+									header = ENCLOSING_LOOP_HEADER(cb);
+							}
 						}
 					} // end of else if(has_pers)
 

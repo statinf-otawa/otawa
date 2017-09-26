@@ -245,13 +245,15 @@ namespace se{
 
 	SymbExpr* SEAddr::solidifyAddress(clp::State& clpState, bool dig) {
 		if(_a) {
-			_a = _a->solidifyAddress(clpState, true);
-			if(_a)
-				_a->canonize();
+			SymbExpr* newA = _a->solidifyAddress(clpState, true);
+			delete _a;
+			_a = newA;
 			if(!_a)
 				return NULL;
+			else
+				_a->canonize();
 
-			return this;
+			return copy();
 		}
 	}
 
@@ -416,7 +418,7 @@ namespace se{
 		// with V either a SEReg or a SEAddr
 		if (_a && _a->op() == ADD && _a->a() &&
 				(_a->a()->op() == REG || _a->a()->op() == ADDR)){
-			SEAdd *newb = new SEAdd(_a->b()->copy(), _b);
+			SEAdd *newb = new SEAdd(_a->b()->copy(), _b, _parent);
 			newb->canonize();
 			_b = newb;
 			set_a(_a->a());
@@ -443,7 +445,10 @@ namespace se{
 			else
 				return NULL;
 		}
-		return this;
+
+		SymbExpr* newThis = this->copy();
+		newThis->set_parent(_parent);
+		return newThis;
 	}
 
 	/************ SECmp utility ************/
