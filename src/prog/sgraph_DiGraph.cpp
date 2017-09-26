@@ -24,7 +24,7 @@
 namespace otawa { namespace sgraph {
 
 /**
- * @group sgraph Simple Graph
+ * @defgroup sgraph Simple Graph
  *
  * This group provides classes to represent simple directed-graph that may be
  * traversed in a bidirectionnal ways and algorithms to work on these graphs.

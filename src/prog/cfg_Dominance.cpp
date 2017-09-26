@@ -295,6 +295,15 @@ void Dominance::markLoopHeaders(CFG *cfg) {
 	for(CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
 		for(BasicBlock::EdgeIter edge(bb->outs()); edge; edge++)
 			if(dominates(edge->target(), bb)) {
+
+				// verbose output
+				if(logFor(LOG_BLOCK)) {
+					if(!LOOP_HEADER(edge->sink()))
+						log << "\t\t\t" << edge->sink() << " is loop header\n";
+					log << "\t\t\t" << *edge << " is back edge\n";
+				}
+
+				// record information
 				LOOP_HEADER(edge->target()) = true;
 				BACK_EDGE(edge) = true;
 			}

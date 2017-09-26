@@ -36,7 +36,8 @@ public:
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),
 		out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--out").description("select output file").argDescription("PATH")),
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
-		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output"))
+		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output")),
+		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output"))
 	{
 		info.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.");
 		info.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*");
@@ -88,21 +89,25 @@ protected:
 		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
 
-		// XML output
-		if(!dot) {
-			if(out)
-				cfgio::OUTPUT(props) = *out;
-			cfgio::Output output;
-			output.process(workspace(), props);
-		}
+		// if enabled, perform output
+		if(!phony) {
 
-		// DOT output
-		else {
-			if(out)
-				display::CFGOutput::PATH(props) = *out;
-			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-			display::CFGOutput output;
-			output.process(workspace(), props);
+			// XML output
+			if(!dot) {
+				if(out)
+					cfgio::OUTPUT(props) = *out;
+				cfgio::Output output;
+				output.process(workspace(), props);
+			}
+
+			// DOT output
+			else {
+				if(out)
+					display::CFGOutput::PATH(props) = *out;
+				display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+				display::CFGOutput output;
+				output.process(workspace(), props);
+			}
 		}
 	}
 
@@ -121,7 +126,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot;
+	option::Switch dot, phony;
 };
 
 OTAWA_RUN(OPerform);

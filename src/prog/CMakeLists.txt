@@ -37,6 +37,7 @@ set(libotawa_SOURCES
 	"cfg_ConditionalRestructurer.cpp"
 	"cfg_DelayedBuilder.cpp"
 	"cfg_Dominance.cpp"
+	"cfg_LoopIdentifier.cpp"
 	"cfg_LoopInfoBuilder.cpp"
 	"cfg_LoopReductor.cpp"
 	"cfg_LoopUnroller.cpp"
@@ -194,6 +195,7 @@ set(libotawa_SOURCES
 
 #    sgraph module
     "sgraph_DiGraph.cpp"
+    "sgraph_LoopIdentifier.cpp"
 
 	"loader_arm.cpp"
 )
