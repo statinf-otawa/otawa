@@ -169,7 +169,7 @@ DiGraphBuilder::DiGraphBuilder(Vertex *v): _g(new DiGraph()), c(0) {
  * @param v	Vertex to add.
  */
 void DiGraphBuilder::add(Vertex *v) {
-	ASSERTP(_g, "graph already built!");
+	ASSERTP(_g, "graph is not yet built!");
 	v->idx = c++;
 	_g->v.add(v);
 }
@@ -182,7 +182,7 @@ void DiGraphBuilder::add(Vertex *v) {
  * @param e		Edge.
  */
 void DiGraphBuilder::add(Vertex *v, Vertex *w, Edge *e) {
-	ASSERTP(_g, "graph already built!");
+	ASSERTP(_g, "graph is not yet built!");
 	e->src = v;
 	e->snk = w;
 	v->_outs.add(e);
@@ -196,7 +196,7 @@ void DiGraphBuilder::add(Vertex *v, Vertex *w, Edge *e) {
  * @return	Built graph.
  */
 DiGraph *DiGraphBuilder::build(void) {
-	ASSERTP(_g, "graph already built!");
+	ASSERTP(_g, "graph is not yet built!");
 	DiGraph *r = _g;
 	_g = 0;
 	return r;

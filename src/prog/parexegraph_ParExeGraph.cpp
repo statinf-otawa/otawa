@@ -1159,6 +1159,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 			for (it = inst; it->inst()->isBundle(); ++it)
 				escape(dotFile, elm::_ << it->inst() << "\\l");
 			escape(dotFile, elm::_ << it->inst() << "\\l");
+			node->customDump(dotFile);
             dotFile << "| { ";
 			int i=0;
 			int num = _resources.length();
@@ -1280,6 +1281,13 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
 							if(next.edge()->name())
 								dotFile << ')';
 						}
+						next.edge()->customDump(dotFile);
+						dotFile << "\"";
+					}
+					else {
+						dumpAttr(dotFile, first);
+						dotFile << "label=\"";
+						next.edge()->customDump(dotFile);
 						dotFile << "\"";
 					}
 

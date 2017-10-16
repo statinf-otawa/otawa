@@ -395,6 +395,7 @@ namespace otawa {
 		inline elm::BitVector * possibleContenders(void) { return _possible_contenders; }									// ==== STILL USEFUL?
 		inline void setContender(int index) { _possible_contenders->set(index); }											// ==== STILL USEFUL?
 		void buildContendersMasks();																						// ==== STILL USEFUL?
+		inline virtual void customDump(io::Output& out) { }
 	};
 
 	/*
@@ -416,6 +417,7 @@ namespace otawa {
 		inline void setLatency(int latency) {_latency = latency;}
 		inline edge_type_t type(void) const {return _type;}
 		inline const elm::string& name(void) const {return _name;}
+		inline virtual void customDump(io::Output& out) { }
 	};
 
 	inline bool ParExeGraph::Predecessor::ended(void) const {return iter.ended();}
