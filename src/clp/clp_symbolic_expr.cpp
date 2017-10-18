@@ -61,6 +61,22 @@ namespace otawa{
 
 namespace se{
 
+	inline Output& operator<<(Output& out, const op_t& op) {
+		if(op == CONST)
+			out << "CONST";
+		else if(op == ADDR)
+			out << "ADDR";
+		else if(op == REG)
+			out << "REG";
+		else if(op == NEG)
+			out << "NEG";
+		else if(op == ADD)
+			out << "ADD";
+		else if(op == CMP)
+			out << "CMP";
+		return out;
+	}
+
 	/************ SymbExpr methods ************/
 	SymbExpr* SymbExpr::copy(void){
 		SymbExpr *newa = NULL;
@@ -290,16 +306,16 @@ namespace se{
 	SymbExpr* SEReg::solidifyAddress(clp::State& clpState, bool dig) {
 		ASSERT(_val.isConst());
 		if(dig == false)
-			return NULL;
+			return new SEReg(this->val(), this->parent());
 		if(_val.lower() < 0)
-			return NULL;
+			return new SEReg(this->val(), this->parent());
 
 		clp::Value clpval = clpState.get(clp::Value(clp::REG, _val.lower()));
 		if(clpval.isConst()) {
 			return new SEConst(clpval, _parent);
 		}
 		else {
-			return NULL;
+			return new SEReg(this->val(), this->parent());
 		}
 	}
 
@@ -358,6 +374,25 @@ namespace se{
 				return;
 			}
 		}
+	}
+
+	SymbExpr* SENeg::solidifyAddress(clp::State& clpState, bool dig) {
+		if(_a) {
+			SymbExpr* newA = _a->solidifyAddress(clpState, dig);
+			if(newA != _a)
+				delete _a;
+			_a = newA;
+			if(_a)
+				_a->canonize();
+			else
+				return NULL;
+		}
+
+
+
+		SymbExpr* newThis = this->copy();
+		newThis->set_parent(_parent);
+		return newThis;
 	}
 
 	/************ SEAdd methods ************/
@@ -428,7 +463,8 @@ namespace se{
 	SymbExpr* SEAdd::solidifyAddress(clp::State& clpState, bool dig) {
 		if(_a) {
 			SymbExpr* newA = _a->solidifyAddress(clpState, dig);
-			delete _a;
+			if(newA != _a)
+				delete _a;
 			_a = newA;
 			if(_a)
 				_a->canonize();
@@ -438,7 +474,8 @@ namespace se{
 
 		if(_b) {
 			SymbExpr* newB = _b->solidifyAddress(clpState, dig);
-			delete _b;
+			if(newB != _b)
+				delete _b;
 			_b = newB;
 			if(_b)
 				_b->canonize();

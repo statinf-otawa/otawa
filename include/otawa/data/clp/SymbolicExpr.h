@@ -465,6 +465,8 @@ namespace se{
 		 * form.
 		*/
 		virtual void canonize(void);
+
+		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
 
 	/** Addition */
