@@ -695,7 +695,7 @@ Value& Value::widening(const Value& val) {
 	}
 
 	if(isInf() && val.isInf()) {
-		if((_delta == val._delta) && (abs(val._base - _base) % _delta == 0)) {
+		if((_delta == val._delta) && (elm::abs(val._base - _base) % _delta == 0)) {
 			return *this;
 		}
 		else {
