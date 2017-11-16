@@ -281,6 +281,10 @@ namespace otawa { namespace ai {
 
 /**
  */
+TransparentCFGCollectionGraph::ToDo TransparentCFGCollectionGraph::ToDo::null;
+
+/**
+ */
 TransparentCFGCollectionGraph::Successor::Successor(Block *b, const TransparentCFGCollectionGraph& g)
 : i(b->outs()), _g(g) {
 	setup();
