@@ -836,7 +836,6 @@ RECURSIVE              = YES
 
 EXCLUDE                = src/arm/* \
                          src/ppc/* \
-                         src/s12x/*.h \
                          src/prog/util_fft_parser.cc \
                          src/prog/ipet_parser.cc
 

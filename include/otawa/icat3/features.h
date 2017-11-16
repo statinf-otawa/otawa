@@ -25,6 +25,7 @@
 #include <elm/data/Array.h>
 
 #include <otawa/hard/Cache.h>
+#include <otawa/icache/features.h>
 #include <otawa/proc/Feature.h>
 
 namespace otawa {
@@ -129,14 +130,37 @@ public:
 	inline void configure(const LBlockCollection& c) { AllocArray<T>::set(c.sets(), new T[c.sets()]); }
 };
 
+class CacheState;
+class ACSManager {
+public:
+	ACSManager(WorkSpace *ws);
+	~ACSManager(void);
+	void start(Block *b);
+	void update(const icache::Access& acc);
+	int mustAge(const LBlock *lb);
+	int mayAge(const LBlock *lb);
+	int depth(const LBlock *lb);
+	int persAge(const LBlock *lb, int depth);
+	void print(const LBlock *lb, Output& out = cout);
+
+private:
+	CacheState& use(int set);
+	const LBlockCollection& coll;
+	Vector<int> used;
+	Block *_b;
+	CacheState **_states;
+	bool _has_may;
+};
+
+
 extern p::id<Container<ACS> > MUST_INIT;
 extern p::id<Container<ACS> > PERS_INIT;
 extern p::id<Container<ACS> > MAY_INIT;
 extern p::feature MUST_PERS_ANALYSIS_FEATURE;
-extern p::feature MAY_ANALISYS_FEATURE;
+extern p::feature MAY_ANALYSIS_FEATURE;
 extern p::id<Container<ACS> > MUST_IN;
 extern p::id<Container<ACSStack> > PERS_IN;
-extern p::id<Container<ACS> > MAY_OUT;
+extern p::id<Container<ACS> > MAY_IN;
 
 typedef enum category_t {
 	UC = 0,

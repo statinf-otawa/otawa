@@ -23,8 +23,7 @@
 #define OTAWA_ICAT3_MUSTPERSDOMAIN_H_
 
 #include <otawa/cfg.h>
-#include <otawa/icache/features.h>
-#include "../../include/otawa/icat3/features.h"
+#include <otawa/icat3/features.h>
 
 namespace otawa { namespace icat3 {
 

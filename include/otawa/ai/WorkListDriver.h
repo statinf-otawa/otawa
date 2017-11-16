@@ -39,6 +39,7 @@ template <class D, class G, class S>
 class WorkListDriver: public PreIterator<WorkListDriver<D, G, S>, typename G::vertex_t > {
 public:
 	typedef typename G::vertex_t vertex_t;
+	typedef typename D::t t;
 
 	/**
 	 * Initialize the driver.
@@ -49,7 +50,7 @@ public:
 	WorkListDriver(D& dom, const G& graph, S& store)
 	: _dom(dom), _graph(graph), _store(store), wl_set(graph.count()), end(false) {
 		store.set(_graph.entry(), dom.init());
-		for(typename G::Successor succ(graph, _graph.entry()); succ; succ++)
+		for(auto succ = graph.succs(graph.entry()); succ; succ++)
 			push(graph.sinkOf(*succ));
 		next();
 	}
@@ -87,8 +88,8 @@ public:
 	 * (and successors must be updated).
 	 */
 	inline void change(void) {
-		for(typename G::Successor succ(_graph, cur); succ; succ++)
-			push(*succ);
+		for(auto succ = _graph.succs(cur); succ; succ++)
+			push(_graph.sinkOf(succ));
 	}
 
 	/**
@@ -151,6 +152,17 @@ public:
 		typename D::t ps = _store.get(edge);
 		if(!_dom.equals(s, ps))
 			change(edge, s);
+	}
+
+	/**
+	 * Check if there is some change in the state of the current vertex.
+	 * If any, store the new state and record successors for re-calculation.
+	 * @param s		New state of the current vertex.
+	 */
+	inline void check(t s) {
+		t ps = _store.get(cur);
+		if(!_dom.equals(s, ps))
+			change(s);
 	}
 
 	/**

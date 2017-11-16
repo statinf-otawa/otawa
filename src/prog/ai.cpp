@@ -1,5 +1,5 @@
 /*
- *	ai module interface
+ *	ai module implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2014, IRIT UPS.
@@ -20,7 +20,9 @@
  *	02110-1301  USA
  */
 
+#include "ai.h"
 #include <otawa/dfa/ai.h>
+#include <otawa/ai/TransparentCFGCollectionGraph.h>
 
 using namespace elm;
 
@@ -30,32 +32,36 @@ namespace otawa { namespace ai {
  * @defgroup ai		New Abstract Interpretation Engine
  *
  * This module defines a set of classes to perform abstract interpretation.
- * It is most versatile as the previous module, HalfAbsInt, and should be used
- * to perform now in OTAWA to perform analyzes.
+ * It is most versatile as the previous module, @ref HalfAbsInt, and should be used instead
+ * in OTAWA to perform analyzes.
  *
  * @section ai-principles Principles
  *
  * The support for abstract interpretation is made of different classes that
- * are able to interact together according the needs of the developer.
- * Basically, there are three types of classes:
- * @li drivers -- implement the Iterator model, they implement the policy of calculation order (@ref WorkListDriver),
+ * are able to interact together according to the needs of the developer.
+ * Basically, there are 3 types of classes:
+ * @li drivers -- implement the Iterator model, they implement the policy to manage analysis order (@ref WorkListDriver),
  * @li stores -- store and retrieve efficiently results of abstract interpretation (@ref ArrayStore, @ref EdgeStore),
- * @li adapters -- provide interface between program representation (as graphs) and other classes (@ref CFGGraph).
+ * @li graphs -- provide interface with program representation (as graphs) and other classes (@ref CFGGraph).
  *
  * Finally, the domains are given by the user and details the abstract interpretation to perform.
  *
  * @section ai-method Method
  *
- * First, according to the program representation, developer has to choose a graph adapter. There is only one now
- * (@ref CFGGraph) for a lonely CFG but more will be proposed in the near future.
+ * First, according to the program representation, developer has to choose a graph adapter. Currently, there is only two
+ * but more will be proposed in the near future:
+ * * @ref CFGGraph -- to analyze a single CFG,
+ * * @ref CFGCollectionGraph -- to analyze a set of CFGs representing a task (CFGs are calling each other).
  *
- * Second, the abstract interpretation domain has to be designed. It is class providing the following resources:
+ * Second, the abstract interpretation domain has to be designed. This is class providing the following resources:
  * @li empty constructor (for extend freedom in implementation of stage),
  * @li t -- type of values in the abstract domain,
  * @li init() -- return the initial state (at entry node of the graph),
- * @li join() -- join of two values of the abstract domain.
+ * @li bot() -- bottom value,
+ * @li join() -- join of two values of the abstract domain,
+ * @li update() -- update operation for the state (domain dependent).
  *
- * Update functions are not included in this list because they depend only on the way driver is used.
+ * The domain must match the @ref otawa::ai::DomainConcept.
  *
  * Then the storage and the driver must be chosen and tied together as below. This approach allows to customize
  * the way the computation is performed. In the example below, we just apply the same method whatever the node
@@ -65,10 +71,50 @@ namespace otawa { namespace ai {
  *  MyDomain dom;
  * 	CFGGraph graph(cfg);
  * 	ArrayStore<MyDomain, CFGraph> store;
- *  WorkListDriver<MyDomain, CFGGraph, ArrayStore<MyDomain, CFGraph> > driver(dom, graph store);
- *  while(driver)
- *  	driver.check(dom.update(*driver, driver.input()));
+ *  WorkListDriver<MyDomain, CFGGraph, ArrayStore<MyDomain, CFGraph> > driver(dom, graph, store);
+ *  while(driver) {
+ *  	MyDomain::t x;
+ *  	dom.copy(x, driver.input());
+ *  	update(*driver, x);
+ *  	driver.check(x);
+ *  }
  * @endcode
+ * Where update() is a dedicated function to update the input state according to the domain.
+ *
+ * @section ai-adapter Using adapters
+ * To make things a bit simpler to implement, you can use an adapter. An adapter merges
+ * together all what is needed to perform the analysis and provides a simple way to
+ * provide the `update()` function. An adapter must match the @ref otawa::ai::Adapter concept
+ * and can be used with some analyzes like @ref otawa::ai::SimpleAI.
+ *
+ * Let your adapter class named `MyAdapter`, the analysis is simply launched with:
+ * @code
+ * MyAdapter adapter;
+ * SimpleAI<MyAdapter> ana(adapter);
+ * ana.run();
+ * @endcode
+ * And then, you can collect the result of the analysis in your store object.
+ *
+ * The adapter must all required information. For the example of the previous section,
+ * the adapter will be:
+ * @code
+ * class MyAdapter {
+ * public:
+ *
+ * 	void update(Block *b, typename MyDomain::t& d) {
+ * 		// perform the update here on d
+ * 	}
+ *
+ *	inline MyDomain& domain(void) { return _domain; }
+ *	inline CFGGraph& graph(void) { return _graph; }
+ *	inline ArrayStore<MyDomain, CFGGraph>& store(void) { return _store; }
+ * private:
+ * 	MyDomain _domain;
+ * 	CFGGraph _graph;
+ * 	ArrayStore<MyDomain, CFGGraph> _store;
+ * };
+ * @endcode
+ *
  */
 
 
@@ -169,7 +215,7 @@ namespace otawa { namespace ai {
 
 /**
  * @class EdgeStore
- * State storage on the edges.
+ * State storage on the edges using properties.
  * @ingroup ai
  */
 
@@ -188,5 +234,196 @@ namespace otawa { namespace ai {
  *
  * @ingroup ai
  */
+
+
+/**
+ * @class SimpleAI
+ *
+ * Class implementing a simple abstract interpretation. It uses the given
+ * @ref otawa::ai::AdapaterConcept class and uses for interpreting the graph
+ * until reaching a fixpoint.
+ *
+ * @param A		Actual type of the adapter.
+ *
+ * @ingroup ai
+ */
+
+/**
+ * @fn void SimpleAI::run(void);
+ * Performed the analysis using the given adapter, that is, basically produces for each vertex
+ * of the graph a domain value. The values are computed and propagated along the edges
+ * until a fixpoint is found.
+ */
+
+
+/**
+ * @class TransparentCFGCollectionGraph
+ *
+ * This instance of @ref ai graph process the CFG collection of a task as single graph.
+ * This means that the @ref SynthBlock, excepted those marked with the exclude identifier passed
+ * at construction time, will be invisible for the analysis.
+ *
+ * Actually, iterating on the successor
+ * edges of a call bloc will give the edges between the entry and the first block of the called
+ * subprogram. In the same way, iterating on the successor edges of a return block of a function
+ * will iterate on the successor of the caller @ref SynthBlock.
+ *
+ * This works in the same looking to the predecessor: the predecessor of the first blocks of
+ * a subprogram will match the predecessor of the call @ref SynthBlock and the predecessors
+ * of a block following a call will be the return blocks of a called function.
+ *
+ * This allow to consider the collection of CFG as one unique graph but an practical outcome
+ * is that (a) for successors, the sink vertex is not always the currently processed vertex and
+ * (b) for predecessors, the source vertex is not always the currently processed vertex.
+ *
+ * @ingroup ai
+ */
+
+/**
+ */
+TransparentCFGCollectionGraph::Successor::Successor(Block *b, const TransparentCFGCollectionGraph& g)
+: i(b->outs()), _g(g) {
+	setup();
+}
+
+/**
+ */
+void TransparentCFGCollectionGraph::Successor::next(void) {
+	i++;
+	setup();
+}
+
+/**
+ */
+void TransparentCFGCollectionGraph::Successor::setup(void) {
+
+	// primary iterator ended
+	while(!i) {
+
+		// no more todo
+		if(todo.type() == ToDo::NONE)
+			return;
+
+		// another call to process
+		else if(todo.type() == ToDo::ITER)  {
+			i = todo.asEdge();
+			todo.pop();
+		}
+
+		// another sub-iteration to process
+		else{
+			CFG::CallerIter& c = todo.asCall();
+			i = c->outs();
+			c++;
+			if(!c)
+				todo.pop();
+		}
+	}
+
+	// explore to find a basic block
+	while(!i->sink()->isBasic()) {
+
+		// edge to a synthetic block
+		if(i->sink()->isSynth()) {
+			if(i->sink()->toSynth()->callee() == nullptr or _g.isExcluded(i->sink()))
+				break;
+			else {
+				i++;
+				todo.push(i);
+				i = i->sink()->toSynth()->callee()->entry()->outs();
+			}
+		}
+
+		// edge to an exit
+		else if(i->sink()->isExit()) {
+			if(!i->sink()->cfg()->callers())
+				break;
+			i++;
+			todo.push(i);
+			CFG::CallerIter c(i->sink()->cfg()->callers());
+			i = c->outs();
+			c++;
+			todo.push(c);
+		}
+
+		// unknown
+		else
+			break;
+	}
+
+}
+
+/**
+ */
+TransparentCFGCollectionGraph::Predecessor::Predecessor(Block *b, const TransparentCFGCollectionGraph& g)
+: i(b->ins()), _g(g) {
+	setup();
+}
+
+/**
+ */
+void TransparentCFGCollectionGraph::Predecessor::next(void) {
+	i++;
+	setup();
+}
+
+/**
+ */
+void TransparentCFGCollectionGraph::Predecessor::setup(void) {
+
+	// primary iterator ended
+	while(!i) {
+
+		// no more todo
+		if(todo.type() == ToDo::NONE)
+			return;
+
+		// another call to process
+		else if(todo.type() == ToDo::ITER)  {
+			i = todo.asEdge();
+			todo.pop();
+		}
+
+		// another sub-iteration to process
+		else{
+			CFG::CallerIter& c = todo.asCall();
+			i = c->ins();
+			c++;
+			if(!c)
+				todo.pop();
+		}
+	}
+
+	// explore to find a basic block
+	while(!i->source()->isBasic()) {
+
+		// edge from a synthetic block
+		if(i->source()->isSynth()) {
+			if(i->source()->toSynth()->callee() == nullptr or _g.isExcluded(i->source()))
+				break;
+			else {
+				i++;
+				todo.push(i);
+				i = i->source()->toSynth()->callee()->entry()->ins();
+			}
+		}
+
+		// edge to an entry
+		else if(i->source()->isExit()) {
+			if(!i->source()->cfg()->callers())
+				break;
+			i++;
+			todo.push(i);
+			CFG::CallerIter c(i->source()->cfg()->callers());
+			i = c->ins();
+			c++;
+			todo.push(c);
+		}
+
+		// unknown
+		else
+			break;
+	}
+}
 
 } } 	// otawa::ai

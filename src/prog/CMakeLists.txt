@@ -121,8 +121,8 @@ set(libotawa_SOURCES
 	"dfa_State.cpp"
 
 #    abstract interpretation module
+	"ai.cpp"
 	"dfa_AbsIntLite.cpp"
-
 
 #    utility module
 	"util_FlowFactLoader.cpp"
