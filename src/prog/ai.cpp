@@ -332,9 +332,10 @@ void TransparentCFGCollectionGraph::Successor::setup(void) {
 			if(i->sink()->toSynth()->callee() == nullptr or _g.isExcluded(i->sink()))
 				break;
 			else {
+				CFG *cfg = i->sink()->toSynth()->callee();
 				i++;
 				todo.push(i);
-				i = i->sink()->toSynth()->callee()->entry()->outs();
+				i = cfg->entry()->outs();
 			}
 		}
 
@@ -406,14 +407,15 @@ void TransparentCFGCollectionGraph::Predecessor::setup(void) {
 			if(i->source()->toSynth()->callee() == nullptr or _g.isExcluded(i->source()))
 				break;
 			else {
+				CFG *cfg = i->source()->toSynth()->callee();
 				i++;
 				todo.push(i);
-				i = i->source()->toSynth()->callee()->entry()->ins();
+				i = cfg->exit()->ins();
 			}
 		}
 
 		// edge to an entry
-		else if(i->source()->isExit()) {
+		else if(i->source()->isEntry()) {
 			if(!i->source()->cfg()->callers())
 				break;
 			i++;

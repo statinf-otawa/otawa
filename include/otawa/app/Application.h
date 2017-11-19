@@ -75,7 +75,7 @@ protected:
 	Address parseAddress(const string& s) throw(otawa::Exception);
 
 private:
-	option::BoolOption help, verbose;
+	option::SwitchOption help, verbose;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;

@@ -153,10 +153,12 @@ if do_loader:
     if not elf:
         print "ERROR: no ELF number given (-e XX)"
         exit(1)
-    eld = open("%d.eld" % elf, "w")
+    eld = open("elf_%d.eld" % elf, "w")
     eld.write("[elm-plugin]\n")
-    eld.write("path=../%s/%s\n" % (namespace, name))
-
+    if namespace:
+        eld.write("path=$ORIGIN/../%s/%s\n" % (namespace, name))
+    else:
+        eld.write("path=$ORIGIN/../%s\n" % name)
 
 # for script, generates initial OSX
 if do_script:

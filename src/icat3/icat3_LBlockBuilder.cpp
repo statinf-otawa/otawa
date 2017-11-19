@@ -82,10 +82,8 @@ protected:
 		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
 		ASSERT(conf);
 		const hard::Cache *cache = conf->instCache();
-		if(!cache) {
-			warn("no instruction cache!");
-			return;
-		}
+		if(!cache)
+			throw ProcessorException(*this, "no instruction cache!");
 		if(cache == conf->dataCache())
 			throw ProcessorException(*this, "unified cache not supported!");
 		UniquePtr<hard::Cache> to_free;

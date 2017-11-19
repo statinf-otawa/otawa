@@ -124,12 +124,10 @@ namespace otawa {
  * @param man	Used option manager.
  */
 LogOption::LogOption(option::Manager& man)
-: option::AbstractValueOption(man,
-	option::cmd, "--log",
-	option::description, "select level of log",
-	option::arg_desc, "one of proc, deps, cfg, bb or inst",
-	option::require,
-	option::end),
+: option::AbstractValueOption(Make(man)
+	.cmd("--log")
+	.description("select level of log")
+	.argDescription("one of proc, deps, cfg, bb or inst")),
 log_level(Processor::LOG_NONE)
 { }
 
@@ -252,11 +250,11 @@ void LogOption::process(String arg) {
  */
 Application::Application(const Make& make):
 	Manager(make),
-	help(*this, 'h', "help", "display this help", false),
-	verbose(*this, 'v', "verbose", "verbose display of the process (same as --log bb)", false),
-	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
-	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
-	ff(*this, option::cmd, "--flowfacts", option::cmd, "-f", option::description, "select the flowfacts to load", option::arg_desc, "PATH", option::end),
+	help(option::SwitchOption::Make(*this).cmd("-h").cmd("--help").description("display this help")),
+	verbose(option::SwitchOption::Make(*this).cmd("-v").cmd("--verbose").description("verbose display of the process (same as --log bb)")),
+	sets(option::ListOption<string>::Make(*this).cmd("--add-prop").description("set a configuration property").argDescription("ID=VALUE")),
+	params(option::ListOption<string>::Make(*this).cmd("--load-param").description("add a load parameter").argDescription("ID=VALUE")),
+	ff(option::ListOption<string>::Make(*this).cmd("--flowfacts").cmd("-f").description("select the flowfacts to load").argDescription("PATH")),
 	log_level(*this),
 	props2(0),
 	result(0),
@@ -279,24 +277,10 @@ Application::Application(
 	cstring _description,
 	cstring _author,
 	cstring _copyright
-):
-	Manager(
-		option::program, &_program,
-		option::version, new Version(_version),
-		option::description, &_description,
-		option::author, &_author,
-		option::copyright, &_copyright,
-		option::free_arg, "PROGRAM [FUNCTION ...]",
-		option::end),
-	help(*this, 'h', "help", "display this help", false),
-	verbose(*this, 'v', "verbose", "verbose display of the process (same as --log bb)", false),
-	sets(*this, option::cmd, "--add-prop", option::description, "set a configuration property", option::arg_desc, "ID=VALUE", option::end),
-	params(*this, option::cmd, "--load-param", option::description, "add a load parameter", option::arg_desc, "ID=VALUE", option::end),
-	ff(*this, option::cmd, "--flowfacts", option::cmd, "-f", option::description, "select the flowfacts to load", option::arg_desc, "PATH", option::end),
-	log_level(*this),
-	props2(0),
-	result(0),
-	ws(0)
+): Application(Make(_program, _version)
+	.description(_description)
+	.author(_author)
+	.copyright(_copyright))
 { }
 
 

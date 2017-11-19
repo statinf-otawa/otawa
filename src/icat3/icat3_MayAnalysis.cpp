@@ -42,7 +42,7 @@ namespace otawa { namespace icat3 {
 MayDomain::MayDomain(const LBlockCollection& coll, int set, const t *init)
 :	n(coll[set].count()),
 	_bot(n, BOT_AGE),
-	_top(n, coll.A()),
+	_top(n, 0),
 	_set(set),
 	_coll(coll),
 	A(coll.A()),
@@ -57,7 +57,10 @@ void MayDomain::join(t& d, const t& s) {
 
 	// ∀ b ∈ B_s, a"[b] = min(a[b], a'[b])
 	for(int i = 0; i < n; i++)
-		d[i] = min(d[i], s[i]);
+		if(d[i] == BOT_AGE)
+			d[i] = s[i];
+		else if(s[i] != BOT_AGE)
+			d[i] = min(d[i], s[i]);
 }
 
 /**
@@ -132,10 +135,14 @@ public:
 		_domain.copy(d, _domain.bot());
 		t s;
 
+		cerr << "DEBUG: updating at " << v  << " (" << v->cfg() << ")" << io::endl;
+
 		// update and join along edges
 		for(auto e = _graph.preds(v); e; e++) {
 			Block *w = e->source();
 			_domain.copy(s, _store.get(w));
+			cerr << "DEBUG: updating along " << *e << " (" << e->source()->cfg() << ")" << io::endl;
+			cerr << "DEBUG: s = "; domain().print(s, cerr); cerr << io::endl;
 
 			// apply block
 			{
@@ -150,11 +157,12 @@ public:
 				if(accs.count() > 0)
 					update(accs, s);
 			}
-
+			cerr << "DEBUG: s' = "; domain().print(s, cerr); cerr << io::endl;
 
 			// merge result
 			_domain.join(d, s);
 		}
+		cerr << "DEBUG: d = "; domain().print(d, cerr); cerr << io::endl;
 	}
 
 private:
