@@ -4,7 +4,11 @@ set(PACKAGE "otawa")
 
 # debugging activated
 #set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
+
+# TODO
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 file(READ "VERSION" VERSION)
 if(NOT APPLE)
 	set(ORIGIN $ORIGIN)
