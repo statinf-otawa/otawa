@@ -2,13 +2,20 @@ cmake_minimum_required(VERSION 2.6)
 project("otawa")
 set(PACKAGE "otawa")
 
-# debugging activated
-#set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -g3")
+# C++ flags
+if(CMAKE_BUILD_TYPE MATCHES Release)
+	add_definitions(-DNDEBUG)
+endif()
+add_compile_options(-Wall)
+if(CMAKE_VERSION LESS "3.1")
+	add_compile_options(--std=c++11)
+	message(STATUS "C++11 set using cflags")
+else()
+	set(CMAKE_CXX_STANDARD 11)
+	message(STATUS "C++ set using CMAKE_CXX_STANDARD")
+endif()
 
-# TODO
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
+# get version
 file(READ "VERSION" VERSION)
 if(NOT APPLE)
 	set(ORIGIN $ORIGIN)
