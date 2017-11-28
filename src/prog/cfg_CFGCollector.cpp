@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CFGCollector class implementation
  *
  *	This file is part of OTAWA
@@ -88,13 +87,13 @@ private:
  */
 
 /**
- * @fn CFGCollection::Iterator::Iter(const CFGCollection *cfgs);
+ * @fn CFGCollection::Iter::Iter(const CFGCollection *cfgs);
  * Build an iterator on the given CFG collection.
  * @param cfgs	CFG collection to iterate on.
  */
 
 /**
- * @fn CFGCollection::Iter(const CFGCollection& cfgs);
+ * @fn CFGCollection::Iter::Iter(const CFGCollection& cfgs);
  * Build an iterator on the given CFG collection.
  * @param cfgs	CFG collection to iterate on.
  */

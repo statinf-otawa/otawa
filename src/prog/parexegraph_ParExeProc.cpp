@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	ParExeProc methods
  *
  *	This file is part of OTAWA
@@ -322,7 +321,7 @@ namespace otawa {
  */
 
 /**
- * @class ParExeStage::StageIterator
+ * @class ParExePipeline::StageIterator
  * Iterator for the stages in the pipeline.
  */
 

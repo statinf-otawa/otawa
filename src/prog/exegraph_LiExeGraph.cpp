@@ -488,7 +488,7 @@ bool LiExeGraph::separated(LiExeNode *u, LiExeNode *v) {
 }
 
 /**
- * @class LiExeNode : public ExeGraph<LiExeNode>::ExeNode
+ * @class LiExeNode
  * @brief An execution graph node with special features to be handled
  * by the algorithm proposed by Li et al. ("X. Li, A. Roychoudhury, T. Mitra, 
  * Modeling out-of-order processors for WCET analysis, Real-Time Systems, 34(3), 2006").

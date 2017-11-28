@@ -77,7 +77,7 @@ namespace otawa {
  */
 
 /**
- * @class class FeatureNotFound
+ * @class FeatureNotFound
  * This exception is thrown when a feature can not be resolved.
  * @ingroup dyn
  */

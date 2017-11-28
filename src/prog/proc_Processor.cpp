@@ -836,7 +836,7 @@ NullProcessor::NullProcessor(void):
 
 
 /**
- * @class NoProcessor class
+ * @class NoProcessor
  * A processor which execution causes an exception throw. Useful for features
  * without default definition.
  * @ingroup proc

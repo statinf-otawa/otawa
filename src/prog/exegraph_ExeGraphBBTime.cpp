@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	exegraph module implementation
+ *	ExeGraphBBTime class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2007, IRIT UPS.
@@ -37,21 +36,21 @@ using namespace otawa::graph;
 namespace otawa { 
 
 /**
- * @class ExecutionGraphBBTime
+ * @class ExeGraphBBTime
  * @brief This basic block processor computes the basic block execution time using
  * an execution graph (ExeGraph)
  */
 
 
 /**
- * @fn ExecutionGraphBBTime::ExeGraphBBTime
+ * @fn ExeGraphBBTime::ExeGraphBBTime
  * Builds the ExecutionGraphBBTime processor.
  * @param props	Configuration properties possibly including @ref PROC and
  * @ref LOG.
  */ 
 
 /**
- * @fn ExecutionGraphBBTime::processWorkSpace(FrameWork *fw)
+ * @fn ExeGraphBBTime::processWorkSpace(FrameWork *fw)
  * Builds the processor model if it does not exist yet.
  * @param	fw	The framework.
  */
@@ -59,7 +58,7 @@ namespace otawa {
 } 
 
 /**
- * @fn ExecutionGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb)
+ * @fn ExeGraphBBTime::processBB(FrameWork *fw, CFG *cfg, BasicBlock *bb)
  * Computes the execution time of a basic block. This function is empty
  * and should be overloaded in derived execution graph classes.
  * @param	fw	The framework.

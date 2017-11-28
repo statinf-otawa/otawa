@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Listener associated with FirstUnrollingFixPoint
  *
  *	This file is part of OTAWA

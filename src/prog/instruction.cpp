@@ -382,7 +382,8 @@ void Inst::writeRegSet(RegSet& set) {
  * @deprecated	Use readRegSet() instead.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
-	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
+	// TODO (remove the null reference)
+	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
 
 
@@ -394,7 +395,7 @@ const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
  * @deprecated	Use writeRegSet() instead.
  */
 const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
-	throw UnsupportedFeatureException(0, REGISTER_USAGE_FEATURE);
+	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
 
 

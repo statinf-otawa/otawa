@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	sem module implementation
  *
  *	This file is part of OTAWA
@@ -135,7 +134,7 @@ using namespace elm;
  * @endcode
  *
  *
- * @section sem-set Set Instructions
+ * @section sem-set-inst Set Instructions
  *
  * There are four set instructions:
  * @li to transfer content of a register to another one, @p set,

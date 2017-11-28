@@ -173,7 +173,7 @@ void Monitor::configure(const PropList& props) {
 
 
 /**
- * @enum log_level_t;
+ * @enum Monitor::log_level_t;
  * Defines the current level for logging. Possible values includes:
  * @li LOG_NONE -- no logging
  * @li LOG_PROC -- log only processor operations

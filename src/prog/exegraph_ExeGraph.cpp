@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	exegraph module implementation
  *
  *	This file is part of OTAWA
@@ -41,11 +40,29 @@ using namespace elm;
 
 namespace otawa {
 
+/**
+ * @defgroup exegraph Execution Graph
+ *
+ * This module provides a very basic implementation of execution graphs.
+ * An execution graph that expresses precedence constraints on the execution
+ * of a sequence of instructions in a pipelined processor.
+ *
+ * See "X. Li, A. Roychoudhury, T. Mitra, Modeling out-of-order processors for WCET
+ * analysis, Real-Time Systems, 34(3), 2006" and "J. Barre, C. Landet, C. Rochange, P. Sainrat,
+ * Modeling Instruction-Level Parallelism for WCET Evaluation, 12th IEEE Int'l Conf. on Embedded
+ * and Real-Time Systems and Applications, August 2006" for an introduction to execution graphs.
+ *
+ * ExeGraph does not come with a timing computation method. It is instead meant to be derived
+ * into classes that include particular solving methods (e.g. LiExeGraph).
+
+ * @deprecated	Use @ref parexegraph instead.
+ */
 
 /**
- * @class ExeInst <ExeGraph.h>
+ * @class ExeInst
  * An instruction represented in an ExeGraph. 
  * @param	Type of execution graph nodes.
+ * @ingroup exegraph
  */
 
 /**
@@ -106,7 +123,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeInst::NodeIterator <ExeGraph.h>
+ * @class ExeInst::NodeIterator
  * Iterator on the list of nodes related to the instruction.
  */
 
@@ -118,9 +135,10 @@ namespace otawa {
  */
 
 /**
- * @class ExeSequence <ExeGraph.h>
+ * @class ExeSequence
  * A sequence of instructions (@ref ExeInst)
  * @param	Type of execution graph nodes.
+ * @ingroup exegraph
  */
 
 /**
@@ -140,7 +158,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::ExeEdge <ExeGraph.h>
+ * @class ExeGraph::ExeEdge
  * An edge between two execution nodes (@ref ExeNode)
  */
 
@@ -166,7 +184,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::ExeNode <ExeGraph.h>
+ * @class ExeGraph::ExeNode
  * An execution node.
  */
 
@@ -245,7 +263,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::ExeNode::ContenderIterator <ExeGraph.h>
+ * @class ExeGraph::ExeNode::ContenderIterator
  * Iterator on the list of contenders of the node.
  */
 
@@ -256,16 +274,10 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph <ExeGraph.h>
- * @brief An execution graph that expresses precedence constraints on the execution 
- * of a sequence of instructions in a pipelined processor.
- * See "X. Li, A. Roychoudhury, T. Mitra, Modeling out-of-order processors for WCET 
- * analysis, Real-Time Systems, 34(3), 2006" and "J. Barre, C. Landet, C. Rochange, P. Sainrat, 
- * Modeling Instruction-Level Parallelism for WCET Evaluation, 12th IEEE Int'l Conf. on Embedded 
- * and Real-Time Systems and Applications, August 2006" for an introduction to execution graphs.
- * ExeGraph does not come with a timing computation method. It is instead meant to be derived
- * into classes that include particular solving methods (e.g. LiExeGraph).
+ * @class ExeGraph
+ * Main class representing an execution graph.
  * @param N Type of nodes.
+ * @ingroup exegraph
  */
 
 
@@ -329,7 +341,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::PipelineIterator <ExeGraph.h>
+ * @class ExeGraph::PipelineIterator
  * Iterator on the pipeline stage of a microprocessor.
  */
 
@@ -340,7 +352,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::FunctionalUnitIterator <ExeGraph.h>
+ * @class ExeGraph::FunctionalUnitIterator
  * Iterator on the functional units of a pipeline stage.
  */
 
@@ -351,7 +363,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::FunctionalUnitPipelineIterator <ExeGraph.h>
+ * @class ExeGraph::FunctionalUnitPipelineIterator
  * Iterator on the pipeline stages of a functional unit.
  */
 
@@ -362,7 +374,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::InstIterator <ExeGraph.h>
+ * @class ExeGraph::InstIterator
  * Iterator on the instructions of a sequence.
  */
 
@@ -373,18 +385,18 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::InstNodeIterator <ExeGraph.h>
+ * @class ExeGraph::InstNodeIterator
  * Iterator on the execution nodes related to an instruction.
  */
 
 /**
- * @fn ExeGraph<N>::InstNodeIterator::InstNodetIerator(ExeInst<N> * inst)
+ * @fn ExeGraph::InstNodeIterator::InstNodetIterator(ExeInst<N> * inst)
  * Constructor.
  * @param	inst	The instruction.
  */
 
 /**
- * @class ExeGraph<N>::Predecessor <ExeGraph.h>
+ * @class ExeGraph::Predecessor
  * An iterator on the predecessors of an execution node.
  */
 
@@ -395,7 +407,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::Successor <ExeGraph.h>
+ * @class ExeGraph::Successor
  * An iterator on the successors of an execution node.
  */
 
@@ -406,7 +418,7 @@ namespace otawa {
  */
 
 /**
- * @class ExeGraph<N>::PreorderIterator <ExeGraph.h>
+ * @class ExeGraph::PreorderIterator
  * An iterator on the nodes of an execution graph that follows a topological order (i.e. a node
  * is handled after all its predecessors.
  */

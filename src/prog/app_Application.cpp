@@ -469,7 +469,7 @@ void Application::work(const string& entry, PropList &props) throw(elm::Exceptio
 
 
 /**
- * @fn const genstruct::Vector<string> arguments(void) const;
+ * @fn const genstruct::Vector<string> Application::arguments(void) const;
  * Get the free argument of the application except the first one identified as the binary path.
  * If there is no free argument, "main" is automatically added.
  * @return	Free argument array.

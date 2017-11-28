@@ -21,6 +21,7 @@
 
 import argparse
 import os.path
+import sys
 
 VERSION="1.1.0"
 
@@ -36,6 +37,7 @@ parser.add_argument('-d', '--description', type=str, help="provide description o
 parser.add_argument('-l', '--license', type=str, help="provide the license of the module")
 parser.add_argument('-a', '--author', type=str, help="provide author")
 parser.add_argument('-s', '--site', type=str, help="provide website")
+parser.add_argument('-F', '--force', action="store_true", default=False, help="force the creation of files even if they are already existing")
 parser.add_argument('-r', '--require', type=str, help="require the given plugin", nargs='*')
 
 args = parser.parse_args()
@@ -49,6 +51,7 @@ description = args.description
 license = args.license
 author = args.author
 site = args.site
+force = args.force
 reqs = args.require
 
 # process version
@@ -58,7 +61,7 @@ if do_version:
 
 # scan free arguments
 if not free:
-    print "ERROR: at least, module name must be given."
+    print "ERROR: at least, the module name must be given."
     parser.print_help()
     exit(1)
 full_name = free[0]
@@ -74,14 +77,27 @@ try:
 except ValueError, e:
     namespace = ""
 
+# compute paths of generated files
+cmake_path = "CMakeLists.txt" 
+eld_path = "%s.eld" % name
+cpp_path = "%s.cpp" % name
+gens = [ cmake_path, eld_path, cpp_path ]
+if do_loader:
+    elf_path = "elf_%d.eld" % elf
+    gens = gens + [elf_path]
+if do_script:
+    script_path = "%s.osx" % name
+    gens = gens + [script_path]
 
-# check for existing files
-for f in ["CMakeLists.txt", eld_path]:
-    if os.path.exists(f):
-        print "ERROR: a %s already exists." % f
+# check if the files does not exist
+if not force:
+    for path in gens:
+        if os.path.exists(path):
+            print "ERROR: a %s already exists." % path
+            sys.exit(1)
 
 # generate CMakeLists
-out = open("CMakeLists.txt", "w")
+out = open(cmake_path, "w")
 out.write("""
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
@@ -101,25 +117,33 @@ if(NOT OTAWA_CONFIG)
     endif()
 endif()
 message(STATUS "otawa-config found at ${OTAWA_CONFIG}")
-execute_process(COMMAND "${OTAWA_CONFIG}" --cflags OUTPUT_VARIABLE OTAWA_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${OTAWA_CONFIG}" --libs --make-plug ${PLUGIN} -r OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND "${OTAWA_CONFIG}" --prefix            OUTPUT_VARIABLE OTAWA_PREFIX  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --cflags                  OUTPUT_VARIABLE OTAWA_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --libs -p ${PLUGIN} -r    OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --prefix                  OUTPUT_VARIABLE OTAWA_PREFIX  OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(CMAKE_CXX_STANDARD 11)
 
+# C++ flags
+add_compile_options("-Wall")
+if(CMAKE_VERSION LESS "3.1")
+    add_compile_options(--std=c++11)
+    message(STATUS "C++11 set using cflags")
+else()
+    set(CMAKE_CXX_STANDARD 11)
+    message(STATUS "C++ set using CMAKE_CXX_STANDARD")
+endif()
+
 # plugin definition
-set(ORIGIN $ORIGIN)
 include_directories("${CMAKE_SOURCE_DIR}" ".")
-add_library(${PLUGIN} SHARED ${SOURCES})
-set_property(TARGET ${PLUGIN} PROPERTY PREFIX "")
-set_property(TARGET ${PLUGIN} PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
+add_library("${PLUGIN}" SHARED ${SOURCES})
+set_property(TARGET "${PLUGIN}" PROPERTY PREFIX "")
+set_property(TARGET "${PLUGIN}" PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
 target_link_libraries(${PLUGIN} "${OTAWA_LDFLAGS}")
 
 # installation
 set(PLUGIN_PATH "${OTAWA_PREFIX}/lib/otawa/${NAMESPACE}")
 install(TARGETS ${PLUGIN} LIBRARY DESTINATION ${PLUGIN_PATH})
+install(FILES ${PLUGIN}.eld DESTINATION ${PLUGIN_PATH})
 """ % (name, namespace, name))
-
-out.write("install(FILES ${PLUGIN}.eld DESTINATION ${PLUGIN_PATH})\n")
 
 if do_loader:
     out.write("install(FILES elf_%s.eld DESTINATION ${OTAWA_PREFIX}/lib/otawa/loader)\n" % elf)
@@ -135,7 +159,7 @@ for f in files:
         out.write("install(FILES %s DESTINATION ${OTAWA_PREFIX}/%s)\n" % (f[:p], f[p+1:]))
 
 # generate ELD file
-eld = open("%s.eld" % name, "w")
+eld = open(eld_path, "w")
 eld.write("[elm-plugin]\n")
 eld.write("name=%s\n" % full_name)
 if description:
@@ -153,7 +177,7 @@ if do_loader:
     if not elf:
         print "ERROR: no ELF number given (-e XX)"
         exit(1)
-    eld = open("elf_%d.eld" % elf, "w")
+    eld = open(elf_path, "w")
     eld.write("[elm-plugin]\n")
     if namespace:
         eld.write("path=$ORIGIN/../%s/%s\n" % (namespace, name))
@@ -162,7 +186,7 @@ if do_loader:
 
 # for script, generates initial OSX
 if do_script:
-    eld = open("%s.osx" % name, "w")
+    eld = open(script_path, "w")
     eld.write(
 """<?xml version="1.0" encoding="UTF-8"?>
 <otawa-script
@@ -207,7 +231,7 @@ ns_begin = "".join([("namespace %s {" % name) for name in names])
 ns_end = "} " * len(names)
 ns_ref = "::".join(names)
 ns_id = "_".join(names)
-src = open("%s.cpp" % name, "w")
+src = open(cpp_path, "w")
 
 if do_loader:
     src.write(
@@ -257,7 +281,7 @@ ELM_PLUGIN(%s_plugin, OTAWA_PROC_HOOK);
 """ % (ns_begin, ns_ref, ns_end, ns_ref, ns_id, ns_id));
 
 
-print """Generaton done. Now type:
-cmake .
-make install
+print """Generation done. To build it, type:
+    cmake .
+    make install
 """

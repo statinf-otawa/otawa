@@ -48,7 +48,7 @@ void CategoryStats::reset(void) {
 }
 
 /**
- * @fn  void Categorystats::add(category_t cat);
+ * @fn  void CategoryStats::add(category_t cat) const;
  * Increment the counter for the given category.
  * @param cat	Category to increment the counter.
  */

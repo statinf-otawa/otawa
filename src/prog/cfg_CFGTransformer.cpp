@@ -362,14 +362,14 @@ void CFGTransformer::add(CFG *cfg, CFGMaker& maker) {
 }
 
 /**
- * @fn CFGtransformer::setNoUnknown(bool v);
+ * @fn void CFGTransformer::setNoUnknown(bool v);
  * Configure no-unknown option: this option avoid to automatically
  * generate a new unknown block during CFG transormation.
  * @param v	True for activating, false else.
  */
 
 /**
- * @fn bool CFGtransformer::getNoUnknown(void) const;
+ * @fn bool CFGTransformer::getNoUnknown(void) const;
  * Get the configuration of no-unknown option.
  * @return	No-unknown configuration.
  */

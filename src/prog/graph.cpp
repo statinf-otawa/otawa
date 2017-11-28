@@ -267,7 +267,7 @@ bool Graph::isPredecessorOf(Node *pred, Node *ref) const {
 
 
 /**
- * @class Graph::Iterator
+ * @class Graph::Iter
  * A simple iterator on the nodes contained in a graph.
  */
 

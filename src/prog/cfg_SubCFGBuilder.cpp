@@ -25,9 +25,9 @@
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/SubCFGBuilder.h>
-#include <otawa/dfa/AbsIntLite.h>
 #include <otawa/prog/WorkSpace.h>
 #include <elm/util/BitVector.h>
+#include "../../include/otawa/dfa/AbsIntLite.old.h"
 
 using namespace elm;
 using namespace otawa::dfa;

@@ -59,6 +59,7 @@ class TextDecoder;
 // ProcessException class
 class ProcessException: public Exception {
 public:
+	inline ProcessException(void): proc(nullptr) { }
 	inline ProcessException(Process *process): proc(process)
 		{ ASSERTP(process, "null process passed"); }
 	inline ProcessException(Process *process, const string& message): Exception(message), proc(process)
@@ -74,16 +75,9 @@ private:
 // UnsupportedFeatureException class
 class UnsupportedFeatureException: public ProcessException {
 public:
-
- 	inline UnsupportedFeatureException(
- 		Process *proc,
- 		const AbstractFeature& feature
- 	): ProcessException(proc), f(feature) { }
-
- 	 inline UnsupportedFeatureException(const AbstractFeature& feature)
- 	 : ProcessException(0), f(feature) { }
-
- 	 inline const AbstractFeature& feature(void) const { return f; }
+	inline UnsupportedFeatureException(const AbstractFeature& feature): f(feature) { }
+	inline UnsupportedFeatureException(Process *p, const AbstractFeature& feature): ProcessException(p), f(feature) { }
+	inline const AbstractFeature& feature(void) const { return f; }
  	virtual String message(void);
 private:
 	const AbstractFeature& f;

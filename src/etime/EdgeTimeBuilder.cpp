@@ -245,12 +245,6 @@ string maskToString(t::uint32 mask, int len) {
 
 
 /**
- * @enum case_t;
- * Case for the variable between place (prefix/block) and activation of the event (on/off).
- */
-
-
-/**
  * Add a variable contribution.
  * @param c		Case of contribution.
  * @param var	Variable of contribution (null for blurred contribution driving to estimation).

@@ -68,7 +68,7 @@ namespace otawa { namespace dfa {
  */
 
 /**
- * @fn FastState::t FastState::store(t s, address_t a, value_t v);
+ * @fn FastState::t FastState::::store(t s, address_t a, const value_t&  v);
  * Perform a store to memory.
  * @param s		State to change.
  * @param a		Address to store to.

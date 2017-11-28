@@ -97,21 +97,13 @@ int LBlock::countInsts(void) {
 
 
 /**
- * @fn int LBlock::id(void) const;
+ * @fn int LBlock::id(void);
  * @deprecated	Replaced by number().
  */
 
 
 /**
- * @fn bool LBlock::sameCacheBlock(const LBlock *block) const;
- * Test if both l-blocks belong to the same cache block.
- * @param block		Block to test with.
- * @return			True if they belongs to the same cache block, false else.
- */
-
-
-/**
- * @fn int LBlock::cacheblock(void);
+ * @fn int LBlock::cacheblock(void) const;
  * Get a unique number identifying which cache block the l-block belongs to.
  * @param	Cache block number.
  * @deprecated	Currently, there is no way to get back relation with the cache address.
@@ -120,14 +112,14 @@ int LBlock::countInsts(void) {
 
 
 /**
- * @fn address_t LBlock::address(void)
+ * @fn address_t LBlock::address(void) const;
  * Get address of the l-block.
  * @return	L-block address.
  */
 
 
 /**
- * @fn BasicBlock *LBlock::bb(void);
+ * @fn BasicBlock *LBlock::bb(void) const;
  * Get the BB containing the l-block.
  * @return	Container BB.
  */

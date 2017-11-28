@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Process class implementation
  *
  *	This file is part of OTAWA
@@ -54,7 +53,7 @@ p::feature DELAYED_FEATURE("otawa::DELAYED_FEATURE", new Maker<NoProcessor>());
 
 
 /**
- * @class class SimState
+ * @class SimState
  * This abstract must be used to encapsulate the state of processor functional
  * simulator.
  */
@@ -738,7 +737,7 @@ throw (UnsupportedFeatureException) {
 
 
 /**
- * @class ProcessException::ProcessException(Process *process);
+ * @fn ProcessException::ProcessException(Process *process);
  * Build a a simple exception for the given process.
  * @param process	Current process.
  */
@@ -762,12 +761,16 @@ throw (UnsupportedFeatureException) {
 /**
  */
 String ProcessException::message(void) {
-	string name;
-	if(process()->program())
-		name = process()->program()->name();
-	else
-		name = "unknown";
-	return _ << name << ": "<< otawa::Exception::message();
+	if(process() == nullptr)
+		return "";
+	else {
+		string name;
+		if(process()->program())
+			name = process()->program()->name();
+		else
+			name = "unknown";
+		return _ << name << ": ";
+	}
 }
 
 
@@ -781,8 +784,8 @@ String ProcessException::message(void) {
 /**
  */
 String UnsupportedFeatureException::message(void) {
-	return _ << "process " << process()
-			<< " does not support \"" << f.name() << "\"";
+	return _ << ProcessException::message()
+			<< f.name() << " is not supported";
 }
 
 

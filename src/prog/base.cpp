@@ -64,13 +64,6 @@ Exception::Exception(string message, elm::Exception& exn)
 
 
 /**
- * @fn const String& Exception::getMessage(void) const
- * Get the exception message.
- * @return	Exception message.
- */
-
-
-/**
  * @class Address
  * The representation of an address in OTAWA. To match most architectures,
  * the address is split in two component:

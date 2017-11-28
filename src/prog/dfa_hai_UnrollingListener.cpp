@@ -34,7 +34,8 @@ namespace otawa { namespace dfa { namespace hai {
  */
 
 /**
- * @fn blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const
+ * @fn void UnrollingListener::blockInterpreted(const FirstUnrollingFixPoint< UnrollingListener >  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+ *
  * This is called whenever a block is processed. In the UnrollingListener, we do the LUB of all the in-states
  * of each block.
  * @param fp The FixPoint object

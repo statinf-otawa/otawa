@@ -719,13 +719,6 @@ int CFG::callCount(void) const {
  */
 
 /**
- * @fn BasicBlock *CFG::entry(void);
- * Get the entry basic block of the CFG.
- * @return Entry basic block.
- */
-
-
-/**
  * @fn BasicBlock *CFG::exit(void);
  * Get the exit basic block of the CFG.
  * @return Exit basic block.
