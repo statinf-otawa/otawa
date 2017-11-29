@@ -2,7 +2,7 @@
  *	Inst class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-08, IRIT UPS.
+ *	Copyright (c) 2003-17, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -32,6 +32,8 @@
 #include <otawa/sem/inst.h>
 
 namespace otawa {
+
+using namespace elm;
 
 // Declaration
 class Inst;
@@ -84,6 +86,39 @@ public:
 	static const kind_t IS_ATOMIC	= 0x40000;
 	static const kind_t IS_BUNDLE	= 0x80000;
 
+	// Kind class
+	class Kind {
+	public:
+		inline Kind(kind_t _kind = 0): kind(_kind) { }
+		inline operator kind_t(void) const { return kind; }
+
+		inline bool meets(kind_t mask) { return (kind & mask) == mask; }
+		inline bool oneOf(kind_t mask) { return kind & mask; }
+		inline bool noneOf(kind_t mask) { return !oneOf(mask); }
+
+		inline bool isIntern(void)		{ return oneOf(IS_INTERN); }
+		inline bool isMem(void)			{ return oneOf(IS_MEM); }
+		inline bool isControl(void)		{ return oneOf(IS_CONTROL); }
+		inline bool isLoad(void)		{ return oneOf(IS_LOAD); }
+		inline bool isStore(void)		{ return oneOf(IS_STORE); }
+		inline bool isBranch(void)
+			{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
+		inline bool isCall(void)		{ return oneOf(IS_CALL); }
+		inline bool isReturn(void)		{ return oneOf(IS_RETURN); }
+		inline bool isConditional(void)	{ return oneOf(IS_COND); }
+		inline bool isMulti(void)		{ return meets(IS_MEM | IS_MULTI); }
+		inline bool isSpecial(void)		{ return oneOf(IS_SPECIAL); }
+		inline bool isMul(void)			{ return oneOf(IS_MUL); }
+		inline bool isDiv(void)			{ return oneOf(IS_DIV); }
+		inline bool isIndirect(void)	{ return oneOf(IS_INDIRECT); }
+		inline bool isUnknown(void)		{ return oneOf(IS_UNKNOWN); }
+		inline bool isAtomic(void)		{ return oneOf(IS_ATOMIC); }
+		inline bool isBundle(void)		{ return oneOf(IS_BUNDLE); }
+		inline bool isBundleEnd(void)	{ return !oneOf(IS_BUNDLE); }
+
+		kind_t kind;
+	};
+
 	// null instruction
 	static Inst& null;
 
@@ -96,29 +131,26 @@ public:
 
 	// Kind access
 	virtual kind_t kind(void) = 0;
-	inline bool meets(kind_t mask) { return (kind() & mask) == mask; }
-	inline bool oneOf(kind_t mask) { return kind() & mask; }
-	inline bool noneOf(kind_t mask) { return !oneOf(mask); }
+	inline Kind getKind(void) { return kind(); }
 
-	inline bool isIntern(void) { return oneOf(IS_INTERN); }
-	inline bool isMem(void) { return oneOf(IS_MEM); }
-	inline bool isControl(void) { return oneOf(IS_CONTROL); }
-	inline bool isLoad(void) { return oneOf(IS_LOAD); }
-	inline bool isStore(void) { return oneOf(IS_STORE); }
-	inline bool isBranch(void)
-		{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
-	inline bool isCall(void) { return oneOf(IS_CALL); }
-	inline bool isReturn(void) { return oneOf(IS_RETURN); }
-	inline bool isConditional(void) { return oneOf(IS_COND); }
-	inline bool isMulti(void) { return meets(IS_MEM | IS_MULTI); }
-	inline bool isSpecial(void) { return oneOf(IS_SPECIAL); }
-	inline bool isMul(void) { return oneOf(IS_MUL); }
-	inline bool isDiv(void) { return oneOf(IS_DIV); }
-	inline bool isIndirect(void) { return oneOf(IS_INDIRECT); }
-	inline bool isUnknown(void) { return oneOf(IS_UNKNOWN); }
-	inline bool isAtomic(void) { return oneOf(IS_ATOMIC); }
-	inline bool isBundle(void) { return oneOf(IS_BUNDLE); }
-	inline bool isBundleEnd(void) { return !oneOf(IS_BUNDLE); }
+	inline bool isIntern(void)		{ return getKind().isIntern(); }
+	inline bool isMem(void) 		{ return getKind().isMem(); }
+	inline bool isControl(void) 	{ return getKind().isControl(); }
+	inline bool isLoad(void)		{ return getKind().isLoad(); }
+	inline bool isStore(void)		{ return getKind().isStore(); }
+	inline bool isBranch(void)		{ return getKind().isBranch(); }
+	inline bool isCall(void)		{ return getKind().isCall(); }
+	inline bool isReturn(void)		{ return getKind().isReturn(); }
+	inline bool isConditional(void)	{ return getKind().isConditional(); }
+	inline bool isMulti(void) 		{ return getKind().isMulti(); }
+	inline bool isSpecial(void)		{ return getKind().isSpecial(); }
+	inline bool isMul(void)			{ return getKind().isMul(); }
+	inline bool isDiv(void)			{ return getKind().isDiv(); }
+	inline bool isIndirect(void)	{ return getKind().isIndirect(); }
+	inline bool isUnknown(void)		{ return getKind().isUnknown(); }
+	inline bool isAtomic(void)		{ return getKind().isAtomic(); }
+	inline bool isBundle(void)		{ return getKind().isBundle(); }
+	inline bool isBundleEnd(void)	{ return getKind().isBundleEnd(); }
 
 	// other accessors
 	virtual Inst *target(void);
@@ -151,10 +183,8 @@ protected:
 
 
 // output
-inline elm::io::Output& operator<<(elm::io::Output& out, Inst *inst) {
-	inst->dump(out);
-	return out;
-}
+io::Output& operator<<(elm::io::Output& out, Inst *inst);
+io::Output& operator<<(io::Output& out, Inst::Kind kind);
 
 } // namespace otawa
 

@@ -30,55 +30,65 @@ namespace otawa { namespace hard {
 
 // RegisterFormatter
 class RegisterFormatter: private Formatter {
-	io::BlockInStream templ;
-	io::Output output;
-	int index;
+public:
+	RegisterFormatter(string _template, int base = 0)
+	: _s(_template), _templ(_template), _index(-1), _base(base) {
+	}
+
+	String make(int index) {
+		StringBuffer buf;
+		_index = index;
+		_templ.reset();
+		format(_templ, buf.stream());
+		return buf.toString();
+	}
+
 protected:
 	virtual int process(io::OutStream& out, char chr) {
-		output.setStream(out);
+		_out.setStream(out);
 		switch(chr) {
 		case 'd':
-			output << index;
+			_out << _index;
 			return DONE;
 		case 'a':
 		case 'A':
-			output << (char)(chr + index);
+			_out << (char)(chr + _index);
+			return DONE;
+		case 'D':
+			_out << (_index + _base);
 			return DONE;
 		default:
 			return REJECT;
 		}
 	}
-public:
-	RegisterFormatter(CString _template)
-	: templ(_template) {
-	}
-	
-	String make(int _index) {
-		StringBuffer buf;
-		index = _index;
-		templ.reset();
-		format(templ, buf.stream());
-		return buf.toString();
-	}
+
+private:
+	string _s;
+	io::BlockInStream _templ;
+	io::Output _out;
+	int _index, _base;
 };
 
 /**
  * @class Register
- * @ingroup hard
  * Objects of this class are simple machine register, more accurately
- * unbreakable atomic registers. If you architecture provides register spanning
- * on multiple atomic register, use the SpanReg class for representing them.
- * @par
- * The spanning registers are rarely used : most instruction register accessors
- * use the atomic Register class splitting the logical spanning register into
- * its component atomic registers.
- * @par
- * There is three ways to declare a register bank :
+ * unbreakable atomic registers.
+ *
+ * The preferred way to declare a register is a the user of maker class
+ * the provides the most flexiblity:
+ * @code
+ * #include <otawa/hard/Register.h
+ * using namespace otawa;
+ *
+ * hard::Register PC(hard::Register::Make("PC").alias("R15").kind(hard::Register::ADDR));
+ * @endcode
+ *
+ * There is two ways to declare a register bank :
  * @li the register are automatically generated from the bank description,
- * @li the bank is first defined and the register are defined by hand with
- * a reference on the bank,
- * @li the register are defined in a table and the table is passed to the 
+ * @li the register are defined separately and passed to the
  * bank constructor.
+ *
+ * @ingroup hard
  */
 
 
@@ -126,19 +136,42 @@ public:
  * @param number	Register number.
  * @param bank		Owner bank.
  */
-Register::Register(const elm::String& name, Register::kind_t kind,
+Register::Register(string name, Register::kind_t kind,
 int size):
 	_number(-1),
 	_kind(kind),
 	_size(size),
 	_name(name),
 	_bank(0),
-	pfnum(-1)
+	_id(-1)
 {
 	ASSERT(kind != NONE);
 	ASSERT(size > 0);
 }
 
+/**
+ * Build a register based on a maker class. This allows to
+ * define more shorly a register or to provide more detail
+ * as alias names.
+ */
+Register::Register(const Make& make):
+	_number(-1),
+	_kind(make._kind),
+	_size(make._size),
+	_name(make._name),
+	_bank(0),
+	_id(-1)
+{
+	ASSERT(_kind != NONE);
+	ASSERT(_size > 0);
+	_aliases = make._aliases;
+}
+
+/**
+ * @fn const List<string>& aliases(void);
+ * Get the list of alias names for the current register.
+ * @return	List of alias names.
+ */
 
 /**
  * @fn int Register::number(void) const;
@@ -168,9 +201,89 @@ int size):
 
 
 /**
- * @class RegBank
+ * @fn int Register::id(void) const;
+ * Gives a number which is unique for this
+ * platform. Each register, in a platform, is associated with a unique
+ * number ranging from 0 to Platform::regCount()-1. This number may be used as
+ * index to table or to bit vectors matching the overall registers.
+ * @return	Platform number of the register.
+ */
+
+
+/**
+ * @fn int Register::platformNumber(void) const;
+ * @deprecated	Use id() instead.
+ */
+
+
+/**
+ * @class RegBank::Make
+ * A maker class used to initialize a register bank (@ref RegBank).
+ *
+ * This object must be used as below:
+ * @code
+ * #include <otawa/hard/Register.h>
+ * using namespace otawa;
+ *
+ * hard::Register PC(hard::Register::Make("PC").init1(val1).init2(val2)...);
+ * @endcode
+ *
+ * After the Make construction, as many calls to Make functions can be
+ * performed to build the maker passed to the hard::Register constructor.
+ *
  * @ingroup hard
- * This class represents a bank of registers.
+ */
+
+/**
+ * Generates several registers in one short. To produce logical unique names,
+ * the name and aliases of the passed register maker can contain escape sequences:
+ * * %d for decimal numbering,
+ * * %a for lower-case alphabetic numbering,
+ * * %A for upper-case alphabetic numbering,
+ * * %D for absolute numbering (relative to the full register bank).
+ *
+ * @param count		Number of register to generate.
+ * @param pattern	Pattern for naming registers in the bank :
+ * @param make		Description of the register.
+ */
+RegBank::Make& RegBank::Make::gen(int count, const Register::Make& make) {
+	int base = _regs.count();
+	RegisterFormatter fname(make.getName(), base);
+	for(int i = 0; i < count; i++) {
+		Register::Make m(fname.make(i));
+		m.kind(make.getKind()).size(make.getSize());
+		for(auto a = *make.getAliases(); a; a++) {
+			RegisterFormatter f(a, base);
+			m.alias(f.make(i));
+		}
+		Register *r = new Register(m);
+		_regs.add(r);
+		_alloc.add(r);
+	}
+	return *this;
+}
+
+
+/**
+ * @class RegBank
+ * This class represents a bank of registers. The preferred way
+ * to build a register bank is to either use a derived class,
+ * or to use a maker class.
+ *
+ * @code
+ * #include <otawa/hard/Register.h>
+ * using namespace otawa;
+ *
+ * hard::Register SP(hard::Register::Make("SP"));
+ * hard::Register PC(hard::Register::Make("PC").kind(hard::Register::ADDR));
+ * hard::Register SR(hard::Register::Make("SR").kind(hard::Register::BITS));
+ * hard::RegBank MISC(hard::RegBank::Make("MISC")
+ * 		.add(SP)
+ * 		.add(PC)
+ * 		.add(SR));
+ * @endcode
+ *
+ * @ingroup hard
  */
 
 
@@ -198,7 +311,58 @@ RegBank::RegBank(CString name, Register::kind_t kind, int size, int count)
 
 
 /**
- * @fn elm::CString RegBank::name(void) const;
+ * Build a register using a maker class. The registers are number
+ * in the order they have been passed to the maker instance
+ * (function Make::add()).
+ *
+ * @param make	Maker object to initialize the register bank.
+ */
+RegBank::RegBank(const Make& make) {
+	init(make);
+}
+
+
+/**
+ * Default empty constructor.
+ */
+RegBank::RegBank(void):
+	_kind(Register::INT),
+	_size(32)
+{
+}
+
+
+/**
+ */
+RegBank::~RegBank(void) {
+	for(auto r = *_alloc; r; r++)
+		delete *r;
+}
+
+
+/**
+ * Initialize the register bank.
+ */
+void RegBank::init(const Make& make) {
+
+	// init basic attributes
+	_name = make._name;
+	_kind = make._kind;
+	_size = make._size;
+	_alloc = make._alloc;
+
+	// init register list
+	_regs = AllocArray<Register *>(make._regs.count());
+	int i = _regs.count() - 1;
+	for(auto r = *make._regs; r; r++, i--) {
+		_regs[i] = *r;
+		r->_bank = this;
+	}
+}
+
+
+/**
+ * @fn cstring RegBank::name(void) const;
  * Get the name of the bank.
  * @return	Bank name.
  */
@@ -240,6 +404,13 @@ RegBank::RegBank(CString name, Register::kind_t kind, int size, int count)
 
 
 /**
+ * @fn const AllocArray<Register *>& RegBank::registers(void) const;
+ * Get the list of registers in the bank.
+ * @return	List of registers.
+ */
+
+
+/**
  * @class PlainBank
  * @ingroup hard
  * A plain bank is a register bank whose registers have the same size and the
@@ -257,12 +428,13 @@ RegBank::RegBank(CString name, Register::kind_t kind, int size, int count)
  * 					%A for upper-case alphabetic numbering.
  * @param count		Count of registers.
  */
-PlainBank::PlainBank(elm::CString name, Register::kind_t kind, int size,
-elm::CString pattern, int count)
-: RegBank(name, kind, size, count) {
+PlainBank::PlainBank(cstring name, Register::kind_t kind, int size, cstring pattern, int count) {
+	Make m(name);
+	m.kind(kind).size(size);
 	RegisterFormatter format(pattern);
 	for(int i = 0; i < count; i++)
-		set(i, new Register(format.make(i), kind, size));
+		m.add(new Register(format.make(i), kind, size));
+	init(m);
 }
 
 
@@ -276,9 +448,11 @@ PlainBank::~PlainBank(void) {
 
 /**
  * @class MeltedBank
- * @ingroup hard
  * A melted bank may contains registers with different sizes and kinds.
  * It is useful for grouping state registers.
+ *
+ * @ingroup hard
+ * @deprecated	Redundant with new RegBank construction with maker.
  */
 
 
@@ -295,27 +469,12 @@ MeltedBank::MeltedBank(elm::CString name, ...)
 		while(args.next<Register *>())
 			cnt++;
 	VARARG_END
-	_regs.allocate(cnt);
+	_regs = AllocArray<Register *>(cnt);
 	VARARG_BEGIN(args, name);
 		for(int i = 0; i < cnt; i++)
 			set(i, args.next<Register *>());
 	VARARG_END	
 }
 
-
-/*
- */
-MeltedBank::~MeltedBank(void) {
-	//delete [] (Register **)_regs.table();
-}
-
-/**
- * @fn int Register::platformNumber(void) const;
- * Gives a number which is unique for this
- * platform. Each register, in a platform, is associated with a unique
- * number ranging from 0 to Platform::regCount()-1. This number may be used as
- * index to table or to bit vectors matching the overall registers.
- * @return	Platform number of the register.
- */ 
 
 } } // otawa::hard

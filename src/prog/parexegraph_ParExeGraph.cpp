@@ -617,7 +617,7 @@ void ParExeGraph::createNodes() {
 			else {		// EXECUTE stage => expand functional unit's pipeline
 				ParExePipeline *fu = pipeline(stage, inst);
 				ParExeNode *first=NULL, *last=NULL;
-				ASSERT(fu);
+				ASSERTP(fu, "cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
 					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
 					if (!first)

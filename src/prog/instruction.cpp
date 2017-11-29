@@ -1,9 +1,8 @@
 /*
- *	$Id $
  *	Inst class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-08, IRIT UPS.
+ *	Copyright (c) 2003-17, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -33,12 +32,32 @@ const elm::genstruct::Table<hard::Register *> Inst::no_regs;
 
 /**
  * @class Inst
- * This class represents assembly instruction of a piece of code.
+ * This class represents assembly instructions of a piece of code.
  * As they must represents a large set of machine language that may contain
- * unusual instruction, it provides a very generic way to access information
- * about the instruction. When the instruction is usual or simple enough, it may
- * be derived in more accurate and specialized representation like MemInst or
- * ControlInst.
+ * unusual instruction, they provide a very generic way to access information
+ * about the instruction.
+ *
+ * @ref Inst is basically an abstract class that does not provide any facilities (except
+ * linkage with other instruction). To be actually used, it has to be subclassed by the
+ * loader to an actual instruction of the loader instruction set.
+ *
+ * Depending on the features provided by the loader, only several or all of its functions
+ * are implemented. If an unimplemented function is called, an exception
+ * @ref UnsupportedFeatureException is raised. The supported feature of the loader
+ * are set on the @ref Process and automatically transfered to the @ref Workspace using
+ * the @ref Process. Therefore, they can be tested using the function @ref WorkSpace::isProvided().
+ *
+ * The loader features and the corresponding @ref Inst functions are listed below:
+ * * @ref CONTROL_DECODING_FEATURE -- @ref Inst::target()
+ * * @ref REGISTER_USAGE_FEATURE -- @ref Inst::readRegSet(), @ref Inst::writeRegSet().
+ * * @ref SEMANTICS_INFO -- @ref Inst::semInsts().
+ * * @ref DELAYED_FEATURE -- @ref Inst::delayType(), @ref Inst::delaySlots.
+ * * @ref CONDITIONAL_INSTRUCTIONS_FEATURE -- @ref Inst::condition(), @ref Inst::updateCondition().
+ *
+ * Notice that the availability of a feature does not always mean that the corresponding
+ * loader is incomplete. If @ref DELAYED_FEATURE and @ref CONDITIONAL_INSTRUCTIONS_FEATURE
+ * are not provide, the instruction does not provide these facilties.
+ *
  * @ingroup prog
  */
 
@@ -535,6 +554,147 @@ int Inst::multiCount(void) {
 }
 
 
+/**
+ * @fn Inst::Kind Inst::getKind(void);
+ * Get the kind of an instruction as an object. The Inst::Kind class is now the preferred way.
+ * @return	Kind of the instruction.
+ */
+
+/**
+ * @class Inst::Kind
+ * This class is now the preferred way to manage and display kinds. It provides exactly
+ * the same facilites as @ref Inst::kind_t and contains functions to test the different
+ * aspects of the kind. As most of its functions are inlined, it is not heavier
+ * than the @ref Inst function counterparts.
+ *
+ * @ingroup prog
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isIntern(void);
+ * Test if the instruction neither access memory, nor modify control flow.
+ * @return True if the instruction is internal.
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isMem(void) ;
+ * Test if the instruction access memory.
+ * @return True if it perform memory access.
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isControl(void);
+ * Test if the instruction changes the control flow.
+ * @return True if control may be modified.
+ */
+
+
+/**
+ * @fn  bool Inst::Kind::isLoad(void);
+ * Test if the instruction is a load, that is, it performs only one simple memory read.
+ * @return True if it is a load.
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isStore(void);
+ * Test if the instruction is a store, that is, it performs only one simple memory write.
+ * @return True if it is a store.
+ */
+
+
+/**
+ * @fn  bool Inst::Kind::isBranch(void);
+ * Test if the instruction is a branch, that is, it changes the control flow but
+ * performs neither a memory access, nor a context storage.
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isCall(void);
+ * Test if the instruction is a sub-program call, that is, it changes the control flow
+ * but stores the current state for allowing performing a return.
+ * @return True if it is a sub-program call.
+ */
+
+
+/**
+ * @fn  bool Inst::Kind::isReturn(void);
+ * Test if the instruction is a sub-program return, that is, it modifies the control flow
+ * retrieving its context from a preceding call instruction.
+ * @return True if it is a sub-program return.
+ */
+
+
+/**
+ * @fn  bool Inst::Kind::isAtomic(void);
+ * Test if the instruction is an atomic synchronization instruction, that is, performing
+ * an atomic read-write memory.
+ * @return True if it is an synchronization function.
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isMulti(void);
+ * Test if the instruction is multi-memory accesss load / store.
+ * @return	True if it is multi-memory accesses, false else.
+ * @see IS_MULTI
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isSpecial(void);
+ * Test if the instruction is a complex special instruction.
+ * @return	True if it is a complex special instruction, false else.
+ * @see IS_SPECIAL
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isMul(void);
+ * Test if the instruction is a multiplication.
+ * @return	True if it is a multiplication, false else.
+ * @see Inst::IS_MUL
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isDiv(void);
+ * Test if the instruction is a division.
+ * @return	True if it is a division, false else.
+ * @see Inst::IS_DIV
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isUnknown(void);
+ * Test if an instruction is unknown.
+ * @return	True if it is unknown, false else.
+ * @see Inst::IS_UNKNOWN
+ */
+
+
+/**
+ * @fn bool Inst::Kind::isBundle(void);
+ * On VLIW architecture, mark an instruction that is part of a bundle but not last instruction.
+ * @return	True if it is a not bundle-ending instruction, false else.
+ * @see Inst::IS_BUNDLE, Inst::isBundleEnd()
+ */
+
+
+/**
+ * @fn bool Inst::isKind::BundleEnd(void);
+ * On VLIW architecture, mark an instruction that is the last instruction of a bundle.
+ * @return	True if it is a bundle-ending instruction, false else.
+ * @see Inst::IS_BUNDLE, Inst::isBundle.
+ */
+
+
+
+
 // NullInst class
 class NullInst: public Inst {
 public:
@@ -549,4 +709,54 @@ public:
  */
 Inst& Inst::null = static_null;
 
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Inst *inst) {
+	inst->dump(out);
+	return out;
+}
+
+/**
+ */
+io::Output& operator<<(io::Output& out, Inst::Kind kind) {
+	static cstring is[] = {
+		"IS_COND",
+		"IS_CONTROL",
+		"IS_CALL",
+		"IS_RETURN",
+		"IS_MEM",
+		"IS_LOAD",
+		"IS_STORE",
+		"IS_INT",
+		"IS_FLOAT",
+		"IS_ALU",
+		"IS_MUL",
+		"IS_DIV",
+		"IS_SHIFT",
+		"IS_TRAP",
+		"IS_INTERN",
+		"IS_MULTI",
+		"IS_SPECIAL",
+		"IS_INDIRECT",
+		"IS_UNKNOWN",
+		"IS_ATOMIC",
+		"IS_BUNDLE",
+		""
+	};
+	bool fst = true;
+	for(int i = 0; is[i]; i++)
+		if(kind & (1 << i)) {
+			if(fst)
+				fst = false;
+			else
+				out << '|';
+			out << is[i];
+		}
+	if(fst)
+		out << "none";
+	return out;
+}
+
 }	// otawa
+

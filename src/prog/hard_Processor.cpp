@@ -660,16 +660,20 @@ protected:
 		// processor provided in configuration
 		if(config) {
 			hard::PROCESSOR(ws) = config;
-			if(logFor(LOG_DEPS))
+			if(logFor(LOG_DEPS)) {
 				log << "\tcustom processor configuration\n";
+				dump(config);
+			}
 		}
 
 		// processor from XML node
 		else if(xml) {
 			hard::Processor *proc = hard::Processor::load(xml);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
-			if(logFor(LOG_DEPS))
+			if(logFor(LOG_DEPS)) {
 				log << "\tprocessor configuration from XML element\n";
+				dump(proc);
+			}
 			proc->_process = ws->process();
 			config = proc;
 		}
@@ -679,6 +683,8 @@ protected:
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << path << "\"\n";
 			hard::Processor *proc = hard::Processor::load(path);
+			if(logFor(LOG_DEPS))
+				dump(proc);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			proc->_process = ws->process();
 			config = proc;
@@ -692,6 +698,8 @@ protected:
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << id << "\"\n";
 			hard::Processor *proc = orig->instantiate(ws->process());
+			if(logFor(LOG_DEPS))
+				dump(proc);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			config = proc;
 		}
@@ -702,6 +710,40 @@ protected:
 	}
 
 private:
+
+	void dumpProperties(hard::PipelineUnit *unit) {
+		bool fst = true;
+		if(unit->isMem()) {
+			log << " (memory";
+			fst = false;
+		}
+		if(unit->isBranch()) {
+			if(!fst)
+				log << ", ";
+			else
+				log << " (";
+			log << "branch";
+			fst = false;
+		}
+		if(!fst)
+			log << ")";
+	}
+
+	void dump(hard::Processor *proc) {
+		log << "\t" << proc->getStages().count() << "-stages pipeline\n";
+		for(int i = 0; i < proc->getStages().count(); i++) {
+			log << "\tstage " << proc->getStages()[i]->getName();
+			dumpProperties(proc->getStages()[i]);
+			log << io::endl;
+			if(proc->getStages()[i]->getType() == hard::Stage::EXEC)
+				for(int j = 0; j < proc->getStages()[i]->getFUs().count(); j++) {
+					log << "\t\tFU " << proc->getStages()[i]->getFUs()[j]->getName();
+					dumpProperties(proc->getStages()[i]->getFUs()[j]);
+					log << io::endl;
+				}
+		}
+	}
+
 	hard::Processor *config;
 	xom::Element *xml;
 	Path path;

@@ -440,7 +440,7 @@ void Platform::setBanks(const banks_t& banks) {
 	rcnt = 0;
 	for(int i = 0; i < banks.count(); i++)
 		for(int j = 0; j < banks[i]->count(); j++)
-			banks[i]->get(j)->pfnum = rcnt++;
+			banks[i]->get(j)->_id = rcnt++;
 }
 
 
@@ -459,7 +459,7 @@ void Platform::setBanks(const banks_t& banks) {
 Register *Platform::findReg(int uniq) const {
 	for(int i = 0; i < _banks->count(); i++)
 		for(int j = 0; j < _banks->get(i)->count(); j++)
-			if(_banks->get(i)->get(j)->pfnum == uniq)
+			if(_banks->get(i)->get(j)->_id == uniq)
 				return _banks->get(i)->get(j);
 	return 0;
 }
