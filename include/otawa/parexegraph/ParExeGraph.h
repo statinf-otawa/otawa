@@ -107,6 +107,7 @@ namespace otawa {
 		public:
 			inline NodeIterator(const ParExeInst *inst) : elm::genstruct::Vector<ParExeNode *>::Iterator(inst->_nodes) {}
 		};
+		inline NodeIterator nodes(void) const { return NodeIterator(this); }
 
 		// iterator on nodes related to the instruction
 		class ProducingInstIterator: public elm::genstruct::Vector<ParExeInst *>::Iterator {
@@ -231,12 +232,17 @@ namespace otawa {
 	private:
 		ParExeSequence * _sequence;									// sequence of instructions related to the graph
 		int _capacity;																										// ====== REALLY USEFUL? (used in analyze())
-		int _branch_penalty;																								// ====== REALLY USEFUL?
+		int _branch_penalty;																							// ====== REALLY USEFUL?
+		bool _explicit;
 
+		inline string comment(string com)
+			{ if(_explicit) return com; else return ""; }
 
 	public:
 		ParExeGraph(WorkSpace * ws, ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
 		virtual ~ParExeGraph(void);
+		inline void setExplicit(bool ex) { _explicit = ex; }
+		inline bool getExplicit(void) const { return _explicit; }
 
 		// set/get information related to the graph
 		inline ParExeSequence *getSequence(void) const { return _sequence; }

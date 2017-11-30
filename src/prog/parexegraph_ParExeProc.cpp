@@ -24,90 +24,6 @@
 
 namespace otawa {
 
- ParExeProc::ParExeProc(const hard::Processor *proc) {
-	 ASSERT(proc);
-
-    // Create queues
-    const genstruct::Table<hard::Queue *>& oqueues = proc->getQueues();
-    for(int i = 0; i < oqueues.count(); i++)
-      addQueue(oqueues[i]->getName(),1 << oqueues[i]->getSize());
-    
-    // Create stages
-    const genstruct::Table<hard::Stage *>& ostages = proc->getStages();
-    for(int i = 0; i < ostages.count(); i++) {
-      hard::Stage * hstage = ostages[i];
- 
-      ParExeStage::pipeline_stage_category_t category;
-      ParExeStage::order_t policy = ParExeStage::IN_ORDER;
-      int latency = hstage->getLatency();
-      switch(hstage->getType()) {
-      case hard::Stage::FETCH:
-    	  category = ParExeStage::FETCH;
-    	  break;
-      case hard::Stage::LAZY:
-    	  category = ParExeStage::DECODE;
-    	  break;
-      case hard::Stage::EXEC:
-    	  policy = ostages[i]->isOrdered() ? ParExeStage::IN_ORDER : ParExeStage::OUT_OF_ORDER;
-    	  category = ParExeStage::EXECUTE;
-    	  latency = 0;
-    	  break;
-      case hard::Stage::COMMIT:
-    	  category = ParExeStage::COMMIT;
-    	  break;
-      default:
-    	  ASSERT(0);
-    	  break;
-      }
-      // Link the stages
-      ParExeQueue *source_queue = NULL;
-      ParExeQueue *destination_queue = NULL;
-      for(int j = 0; j < oqueues.count(); j++) {
-    	  if(oqueues[j]->getInput() == hstage)
-    		  destination_queue = queue(j);
-    	  if(oqueues[j]->getOutput() == hstage)
-    		  source_queue = queue(j);
-      }
-      
-      // Create the stage
-      ParExeStage *stage = new ParExeStage(category, latency, hstage->getWidth(), policy, source_queue, destination_queue, hstage->getName(), _pipeline.numStages(), hstage);
-      _pipeline.addStage(stage);
-
-      if (category == ParExeStage::FETCH)
-    	  setFetchStage(stage);
-      else {	// other than FETCH
-    	  if (category == ParExeStage::EXECUTE) {
-    		  setExecStage(stage);
-    		  const genstruct::Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
-    		  for(int j = 0; j < fus.count(); j++) {
-    			  hard::FunctionalUnit *fu = fus[j];
-    			  stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
-    		  }
-    		  const genstruct::Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
-    		  for(int j = 0; j < dispatch.count(); j++) {
-    			  bool found = false;
-    			  for(int k = 0; k < fus.count(); k++)
-    				  if(fus[k] == dispatch[j]->getFU()) {
-    					  stage->addBinding(dispatch[j]->getType(), stage->fu(k));
-    					  found = true;
-    				  }
-    			  ASSERT(found);
-    		  }
-    	  }
-    	  if (policy == ParExeStage::IN_ORDER){
-    		  _inorder_stages.add(stage);
-    		  if (category == ParExeStage::EXECUTE){
-    			  for (int i=0 ; i<stage->numFus() ; i++){
-    				  ParExeStage *fu_stage = stage->fu(i)->firstStage();
-    				  if (fu_stage->hasNodes()){
-    					  _inorder_stages.add(fu_stage);
-    				  }
-    			  }
-    		  }
-    	  }
-      }
-    }
-  } // end of ParExeProc()
 /**
  * @class ParExeQueue
  * Representation of a hardware instruction queue to be used to build a ParExeGraph.
@@ -225,6 +141,75 @@ namespace otawa {
  */
 
 /**
+ * Build a new stage.
+ */
+ParExeStage::ParExeStage(
+	pipeline_stage_category_t category,
+	int latency,
+	int width,
+	order_t policy,
+	ParExeQueue *sq,
+	ParExeQueue *dq,
+	string name,
+	int index,
+	const hard::PipelineUnit *unit
+):
+	_unit(unit),
+	_category(category),
+	_latency(latency),
+	_width(width),
+	_order_policy(policy),
+	_source_queue(sq),
+	_destination_queue(dq),
+	_name(name),
+	_index(index)
+{ }
+
+
+/**
+ * Add a FU to the stage.
+ * @param pipelined		Is the stage pipelined?
+ * @param latency		Latency of the stage (in cycle).
+ * @param width			Width of the stage (in instructions).
+ * @param name			FU name.
+ * @param unit			Model of the FU.
+ * @return				Created FU as a pipeline.
+ */
+ParExePipeline *ParExeStage::addFunctionalUnit(
+	bool pipelined,
+	int latency,
+	int width,
+	string name,
+	const hard::PipelineUnit *unit
+) {
+	ParExePipeline *fu = new ParExePipeline();
+	if(!pipelined) {
+		ParExeStage * stage = new ParExeStage(FU, latency, width, _order_policy, _source_queue, _destination_queue, name, 0, unit);
+		fu->addStage(stage);
+	}
+	else {
+		ParExeStage * stage;
+
+		// first_stage
+		stage = new ParExeStage(FU, 1, width, _order_policy, _source_queue, NULL, name + "1", 0, unit);
+		fu->addStage(stage);
+
+		// intermediate stages
+		for (int i=2 ; i<latency ; i++) {
+			stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, NULL, _ << name << i, 0, unit);
+			fu->addStage(stage);
+		}
+
+		// last stage
+		stage = new ParExeStage(FU, 1, width, IN_ORDER, NULL, _destination_queue, _ << name << latency, 0, unit);
+		fu->addStage(stage);
+	}
+	_fus.add(fu);
+	return fu;
+}
+
+
+/**
  * @fn int ParExeStage::numFus(void);
  * @return	Number of functional units attached to the stage (relevant for EXECUTE stages only).
  */
@@ -325,12 +310,129 @@ namespace otawa {
  * Iterator for the stages in the pipeline.
  */
 
+
 /**
  * @class ParExeProc
  * Représentation of a processor (to be used to build a ParExeGraph). A processor is a pipeline, with a number of stages, among which a fetch stage and an execution stage, and a set of instruction queues.
  * @ingroup peg
  * @see peg
  */
+
+/**
+ * Build a parametric execution processor from processor description.
+ * @param proc	Processor description.
+ */
+ParExeProc::ParExeProc(const hard::Processor *proc) {
+	ASSERT(proc);
+
+	// Create queues
+	const genstruct::Table<hard::Queue *>& oqueues = proc->getQueues();
+	for(int i = 0; i < oqueues.count(); i++)
+		addQueue(oqueues[i]->getName(),1 << oqueues[i]->getSize());
+
+	// Create stages
+	const genstruct::Table<hard::Stage *>& ostages = proc->getStages();
+	for(int i = 0; i < ostages.count(); i++) {
+		hard::Stage * hstage = ostages[i];
+
+		// determine category and policy
+		ParExeStage::pipeline_stage_category_t category;
+		ParExeStage::order_t policy = ParExeStage::IN_ORDER;
+		int latency = hstage->getLatency();
+		switch(hstage->getType()) {
+		case hard::Stage::FETCH:
+			category = ParExeStage::FETCH;
+			break;
+		case hard::Stage::LAZY:
+			category = ParExeStage::DECODE;
+			break;
+		case hard::Stage::EXEC:
+			policy = ostages[i]->isOrdered() ? ParExeStage::IN_ORDER : ParExeStage::OUT_OF_ORDER;
+			category = ParExeStage::EXECUTE;
+			latency = 0;
+			break;
+		case hard::Stage::COMMIT:
+			category = ParExeStage::COMMIT;
+			break;
+		default:
+			ASSERT(0);
+			break;
+		}
+
+		// Link the stages
+		ParExeQueue *source_queue = NULL;
+		ParExeQueue *destination_queue = NULL;
+		for(int j = 0; j < oqueues.count(); j++) {
+			if(oqueues[j]->getInput() == hstage)
+				destination_queue = queue(j);
+			if(oqueues[j]->getOutput() == hstage)
+				source_queue = queue(j);
+		}
+
+		// Create the stage
+		ParExeStage *stage = new ParExeStage(category, latency, hstage->getWidth(), policy, source_queue, destination_queue, hstage->getName(), _pipeline.numStages(), hstage);
+		_pipeline.addStage(stage);
+		if(hstage->isMem())
+			setMemStage(stage);
+		if(hstage->isBranch())
+			setBranchStage(stage);
+
+		// record important information
+		if (category == ParExeStage::FETCH)
+			setFetchStage(stage);
+		else {	// other than FETCH
+
+			// build FU for pipeline
+			if(category == ParExeStage::EXECUTE) {
+				setExecStage(stage);
+				const genstruct::Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
+
+				// create the FU
+				for(int j = 0; j < fus.count(); j++) {
+					hard::FunctionalUnit *fu = fus[j];
+					ParExePipeline *pfu = stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
+					if(fu->isMem())
+						setMemStage(pfu->lastStage());
+					if(fu->isBranch())
+						setBranchStage(pfu->lastStage());
+				}
+
+				// create the dispatches
+				const genstruct::Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
+				for(int j = 0; j < dispatch.count(); j++) {
+					bool found = false;
+					for(int k = 0; k < fus.count(); k++)
+						if(fus[k] == dispatch[j]->getFU()) {
+							stage->addBinding(dispatch[j]->getType(), stage->fu(k));
+							found = true;
+						}
+					ASSERT(found);
+				}
+			}
+
+			// set policy
+			if(policy == ParExeStage::IN_ORDER){
+				_inorder_stages.add(stage);
+				// !!HUX!!: not needed: as all FU has to execute in order
+				/*if (category == ParExeStage::EXECUTE){
+					for (int i=0 ; i<stage->numFus() ; i++){
+						ParExeStage *fu_stage = stage->fu(i)->firstStage();
+						if (fu_stage->hasNodes()){
+							_inorder_stages.add(fu_stage);
+						}
+					}
+				}*/
+			}
+		}
+
+	}
+
+	// not set branch and mem stages?
+	if(memStage() == nullptr)
+		setMemStage(execStage());
+	if(branchStage() == nullptr)
+		setBranchStage(fetchStage());
+} // end of ParExeProc()
 
 /**
  * @fn ParExeProc::ParExeProc(const hard::Processor *proc);
@@ -389,5 +491,6 @@ namespace otawa {
  * @class ParExeProc::QueueIterator
  * Iterator for the instruction queues.
  */
+
 
 }	// otawa

@@ -467,6 +467,8 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 EdgeTimeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
 	PropList props;
 	EdgeTimeGraph *graph = new EdgeTimeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
+	if(_do_output_graphs)
+		graph->setExplicit(true);
 	graph->build();
 	return graph;
 }
