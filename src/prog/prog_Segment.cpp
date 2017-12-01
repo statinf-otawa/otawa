@@ -170,24 +170,20 @@ Inst *Segment::findInstAt(const Address& addr) {
  * @return		Found item or null.
  */
 ProgItem *Segment::findItemAt(const Address& addr) {
-	//cerr << "findItemAt(" << addr << ")\n";
 	if(address().page() != addr.page()
 	|| addr < address()
 	|| addr >= topAddress())
-		return 0;
+		return nullptr;
 	int index = MAP_INDEX(addr);
 	ProgItem *item = map[index];
 	if(item) {
-		/*cerr << "index = " << index  << "(" << MAP_BASE(index) << ")->"
-			 << (item ? item->address() : address_t(0)) << io::endl;*/
 		while(item && item->address() <= addr) {
-			//cerr << "> " << item->address() << "\n";
 			if(item->address() == addr)
 				return item;
 			item = item->next();
 		}
 	}
-	return 0;
+	return nullptr;
 }
 
 

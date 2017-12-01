@@ -1732,6 +1732,7 @@ int FlowFactLoader::findCall(cstring file, int line, Address& r) {
 	// look in areas
 	for(int i = 0; i < areas.count(); i++) {
 		Inst *inst = workspace()->findInstAt(areas[i].fst);
+		ASSERT(inst != nullptr);
 		do {
 			if(inst->isCall()) {
 				c++;

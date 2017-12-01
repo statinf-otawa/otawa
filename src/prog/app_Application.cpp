@@ -446,7 +446,7 @@ Address Application::parseAddress(const string& s) throw(otawa::Exception) {
 		throw Exception(_ << "cannot parse entry address '" << s << "'");
 	}
 	Address addr = saddr->toAddress(ws);
-	if(!addr)
+	if(addr.isNull())
 		throw Exception(_ << "address " << saddr << " cannot be resolved.");
 	delete saddr;
 	return addr;

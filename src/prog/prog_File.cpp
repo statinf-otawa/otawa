@@ -140,13 +140,14 @@ Symbol *File::findSymbol(String name) {
  * @return			Found instruction or null.
  */
 Inst *File::findInstAt(address_t address) {
-	for(SegIter seg(this); seg; seg++)
+	for(SegIter seg(this); seg; seg++) {
 		if(seg->address() <= address && address < seg->topAddress()) {
 			Inst *inst = seg->findInstAt(address);
 			if(inst)
 				return inst;
 		}
-	return 0;
+	}
+	return nullptr;
 }
 
 

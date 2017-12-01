@@ -85,6 +85,8 @@ public:
 	inline Address operator-(t::uint32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off - offset); }
 	inline offset_t operator-(const Address& address) const
 		{ ASSERT(!isNull() && !address.isNull()); ASSERT(pg == address.pg); return off - address.off; }
+	inline Address operator&(t::int32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off & offset); }
+	inline Address operator&(t::uint32 offset) const { ASSERT(!offset || !isNull()); return Address(pg, off & offset); }
 
 	// Comparisons
 	inline bool equals(const Address& address) const { return pg == address.pg && off == address.off; }

@@ -359,10 +359,10 @@ Process::~Process(void) {
 Inst *Process::findInstAt(address_t addr) {
 	for(FileIter file(this); file; file++) {
 		Inst *result = file->findByAddress(addr);
-		if(result)
+		if(result != nullptr)
 			return result;
 	}
-	return 0;
+	return nullptr;
 }
 
 

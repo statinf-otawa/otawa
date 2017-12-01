@@ -166,8 +166,8 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
 
 	// Allocate the BB lblock table
 	int num_lblocks =
-		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
-		- (bb->address() >> cache->blockBits());
+		((bb->address().offset() + bb->size() + cache->blockMask()) >> cache->blockBits())
+		- (bb->address().offset() >> cache->blockBits());
 	AllocArray<LBlock*> *lblocks = new AllocArray<LBlock*>(num_lblocks);
 	BB_LBLOCKS(bb) = lblocks;
 
