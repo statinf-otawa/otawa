@@ -244,7 +244,7 @@ void CFGCollector::configure(const PropList& props) {
 
 	// Misc configuration
 	Address addr = TASK_ADDRESS(props);
-	if(addr)
+	if(!addr.isNull())
 		added_cfgs.add(addr);
 	else {
 		string name = TASK_ENTRY(props);

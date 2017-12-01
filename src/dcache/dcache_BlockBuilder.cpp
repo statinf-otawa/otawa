@@ -87,9 +87,9 @@ void BlockBuilder::setup(WorkSpace *ws) {
 			log << "INFO: no workspace memory. Using default memory.\n";
 		mem = &Single<hard::Memory>::_;
 	}
-	if(!sp)
+	if(sp.isNull())
 		sp = ws->process()->defaultStack();
-	if(!sp)
+	if(sp.isNull())
 		throw otawa::Exception("no valid SP address");
 	if(logFor(LOG_PROC))
 		log << "\tinitial SP = " << sp << io::endl;

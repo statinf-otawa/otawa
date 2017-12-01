@@ -294,7 +294,7 @@ class Inst: public otawa::Inst {
 public:
 
 	inline Inst(Process& process, kind_t kind, Address addr, int size)
-		: proc(process), _kind(kind), _size(size), _addr(addr), isRegsDone(false) {
+		: proc(process), _kind(kind), _size(size), _addr(addr.offset()), isRegsDone(false) {
 		}
 
 	// Inst overload
@@ -902,7 +902,7 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 
 	// get the target
 	arm_inst_t *inst= proc.decode_raw(address());
-	Address target_addr = arm_target(inst);
+	arm_address_t target_addr = arm_target(inst);
 
 	// thumb-1 case
 
@@ -913,7 +913,7 @@ arm_address_t BranchInst::decodeTargetAddress(void) {
 			arm_inst_t *pinst = proc.decode_raw(address() - 2);
 			Inst::kind_t pkind = arm_kind(pinst);
 			if(pkind & Process::IS_BL_0) {
-				target_addr = arm_target(pinst) + target_addr.offset();
+				target_addr = arm_target(pinst) + target_addr;
 			}
 			proc.free_inst(pinst);
 		}

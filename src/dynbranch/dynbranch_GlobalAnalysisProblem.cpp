@@ -65,7 +65,7 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 	PotentialValue pvEntry;
 	// for the entry state, set the value of the SP
 	// note: this will create a new state from the bot state
-	pvEntry.insert(ws->process()->defaultStack());
+	pvEntry.insert(ws->process()->defaultStack().offset());
 	ent.setReg(ws->process()->platform()->getSP()->platformNumber(), pvEntry);
 
 

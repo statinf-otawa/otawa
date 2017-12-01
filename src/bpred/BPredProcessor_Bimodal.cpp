@@ -851,7 +851,7 @@ void BPredProcessor::generateClasses(CFG *cfg, BSets& bs) {
 			for(BasicBlock::InstIter i(bb->toBasic()); i; i++) {
 				inst=i;
 			}
-			bs.add((inst->address() & (this->BHT)), bb->index());
+			bs.add((inst->address().offset() & (this->BHT)), bb->index());
 		}
 	}
 }

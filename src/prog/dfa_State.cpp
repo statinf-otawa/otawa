@@ -219,7 +219,7 @@ State::State(Process& process): proc(process) {
 	for(Process::FileIter file(&proc); file; file++)
 		for(File::SegIter seg(file); seg; seg++)
 			if(seg->isExecutable() || (seg->isInitialized() && !seg->isWritable()))
-				builder.add(seg->address().offset(), seg->topAddress() - 1, true);
+				builder.add(seg->address().offset(), seg->topAddress().offset() - 1, true);
 	builder.make(mem);
 }
 

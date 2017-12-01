@@ -423,7 +423,7 @@ void Value::print(io::Output& out) const {
 			intn_t _deltaToPrint =  0-_delta;
 			out << ", -0x" << io::hex(_deltaToPrint);
 		}
-		if(_mtimes == -1)
+		if(_mtimes == uintn_t(-1))
 			out << ", inf)";
 		else
 			out << ", 0x" << io::hex(_mtimes) << ')';
@@ -3015,13 +3015,13 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 				Address addr;
 				const genstruct::Table< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
-					if(banks[i]->isWritable() && (!addr || banks[i]->address() > addr))
+					if(banks[i]->isWritable() && (addr.isNull() || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();
-				if(!addr) {
+				if(addr.isNull()) {
 					warn("no writable memory: reverting to loader stack address.");
 					addr = ws->process()->defaultStack();
 				}
-				if(addr) {
+				if(!addr.isNull()) {
 					warn(_ << "setting stack at " << addr);
 					prob.initialize(sp, addr);
 					found = true;

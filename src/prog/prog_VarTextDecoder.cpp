@@ -167,7 +167,7 @@ Inst *VarTextDecoder::getInst(WorkSpace *ws, otawa::address_t address, Inst *sou
  */
 void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	ASSERT(ws);
-	ASSERT(address);
+	ASSERT(!address.isNull());
 	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
 
 	// Initialize the queue

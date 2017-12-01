@@ -274,7 +274,7 @@ MemorySet::t MemorySet::remove(t mem, MemArea area) {
  */
 bool MemorySet::contains(t mem, Address addr) {
 	PRECOND(ordered(mem));
-	ASSERT(addr);
+	ASSERT(!addr.isNull());
 	node_t *p = mem;
 
 	while(p && p->topAddress() <= addr)

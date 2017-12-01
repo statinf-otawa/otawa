@@ -63,7 +63,7 @@ public:
 	inline Value(void): _page(spec_page), _val(bot_id) { }
 	Value(kind_t k, int_t v = 0);
 	static inline Value reg(int n) { return Value(spec_page, n); }
-	static inline Value addr(Address a) { return Value(a); }
+	static inline Value addr(Address a) { return Value(a.offset()); }
 	static inline Value cst(int_t k) { return Value(0, k); }
 	static inline Value sp(int_t off) { return Value(sp_page, off); }
 	inline Value& operator=(const Value& val) { _page = val._page; _val = val._val; return *this; }

@@ -472,7 +472,7 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 		bool isExecutable = false;
 		for(Process::FileIter pfi(workspace()->process()); pfi; pfi++) {
 			for(File::SegIter fsi(*pfi); fsi && !isExecutable; fsi++) {
-				if(fsi->isExecutable() && (*pvi) >= fsi->address() && (*pvi) <= fsi->topAddress()) {
+				if(fsi->isExecutable() && (*pvi) >= fsi->address().offset() && (*pvi) <= fsi->topAddress().offset()) {
 					isExecutable = true;
 					break;
 				}

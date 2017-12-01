@@ -68,7 +68,7 @@ public:
 	inline offset_t offset(void) const { return off; }
 	inline offset_t operator*(void) const { return offset(); }
 	inline bool isNull(void) const { return pg == null_page; }
-	inline operator offset_t(void) const { return offset(); }
+	//inline operator offset_t(void) const { return offset(); }
 
 	// Assignment
 	inline Address& operator=(const Address& address) { pg = address.pg; off = address.off; return *this; }

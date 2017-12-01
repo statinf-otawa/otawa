@@ -242,9 +242,8 @@ Process::Process(Manager *manager, const PropList& props, File *program)
 address_t Process::findLabel(const string& label) {
 	address_t result = Address::null;
 	for(FileIter file(this); file; file++) {
-		//cerr << "Looking at " << file->name() << io::endl;
 		result = file->findLabel(label);
-		if(result)
+		if(!result.isNull())
 			break;
 	}
 	return result;
@@ -259,8 +258,8 @@ address_t Process::findLabel(const string& label) {
  */
 Inst *Process::findInstAt(const string& label) {
 	address_t addr = findLabel(label);
-	if(!addr)
-		return 0;
+	if(addr.isNull())
+		return nullptr;
 	else
 		return findInstAt(addr);
 }

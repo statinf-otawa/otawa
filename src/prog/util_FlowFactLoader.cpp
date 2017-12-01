@@ -740,7 +740,7 @@ void FlowFactLoader::onIgnoreEntry(string name) {
  * @param count	Bound on the loop iterations.
  */
 void FlowFactLoader::onLoop(address_t addr, int count, int total, const ContextualPath& path) {
-	if(!addr)
+	if(addr.isNull())
 		return;
 
 	// find the instruction
@@ -776,7 +776,7 @@ void FlowFactLoader::onLoop(address_t addr, int count, int total, const Contextu
  * @param path		Current context.
  */
 void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path) {
-	if(!iaddr)
+	if(iaddr.isNull())
 		return;
 
 	// find the instruction
@@ -815,7 +815,7 @@ void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
  * @param value		Value to set.
  */
 void FlowFactLoader::onMemSet(Address addr, const Type *type, const dfa::Value& value) {
-	if(!addr)
+	if(addr.isNull())
 		return;
 	state->record(dfa::MemCell(addr, type, value));
 }
@@ -867,7 +867,7 @@ void FlowFactLoader::onLibrary(void) {
  * @param addr	Address of the statement to mark as return.
  */
 void FlowFactLoader::onReturn(address_t addr) {
-	if(!addr)
+	if(addr.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
@@ -883,7 +883,7 @@ void FlowFactLoader::onReturn(address_t addr) {
  * @param addr	Address of the entry of the function.
  */
 void FlowFactLoader::onNoReturn(address_t addr) {
-	if(!addr)
+	if(addr.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
 	if(!inst)
@@ -930,7 +930,7 @@ Address FlowFactLoader::addressOf(const string& label) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onNoCall(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -946,7 +946,7 @@ void FlowFactLoader::onNoCall(Address address) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onForceBranch(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -967,7 +967,7 @@ void FlowFactLoader::onForceBranch(Address address) {
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onForceCall(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -1028,7 +1028,7 @@ void FlowFactLoader::onSetInlining(Address address, bool policy, const Contextua
  * @throw ProcessorException	If the instruction cannot be found.
  */
 void FlowFactLoader::onPreserve(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -1043,7 +1043,7 @@ void FlowFactLoader::onPreserve(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreControl(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -1058,7 +1058,7 @@ void FlowFactLoader::onIgnoreControl(Address address) {
  * @param address	Address of the ignored instruction.
  */
 void FlowFactLoader::onIgnoreSeq(Address address) {
-	if(!address)
+	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
@@ -1077,7 +1077,7 @@ void FlowFactLoader::onMultiBranch(
 	Address control,
 	const genstruct::Vector<Address>& targets
 ) {
-	if(!control)
+	if(control.isNull())
 		return;
 
 	// Find the instruction
@@ -1087,7 +1087,7 @@ void FlowFactLoader::onMultiBranch(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		if(targets[i]) {
+		if(!targets[i].isNull()) {
 			bool found = false;
 			for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++)
 				if (target.item() == targets[i]) {
@@ -1109,7 +1109,7 @@ void FlowFactLoader::onMultiCall(
 	Address control,
 	const genstruct::Vector<Address>& targets
 ) {
-	if(!control)
+	if(control.isNull())
 		return;
 
 	// Find the instruction
@@ -1119,7 +1119,7 @@ void FlowFactLoader::onMultiCall(
 
 	// List of targets
 	for(int i = 0; i < targets.length(); i++)
-		if(targets[i]) {
+		if(!targets[i].isNull()) {
 			bool found = false;
 			for(Identifier<Address>::Getter target(inst, CALL_TARGET); target; target++)
 				if (target.item() == targets[i]) {
@@ -1590,7 +1590,7 @@ throw(ProcessorException) {
 	Option<xom::String> val = element->getAttributeValue("name");
 	if(val) {
 		addr = addressOf(*val);
-		if(!addr)
+		if(addr.isNull())
 			throw ProcessorException(*this,
 				_ << " no function named \"" << *val << "\" from " << xline(element));
 	}

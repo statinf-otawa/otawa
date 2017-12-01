@@ -205,7 +205,7 @@ private:
 
 	void processEntry(WorkSpace *ws, address_t address) {
 		ASSERT(ws);
-		ASSERT(address);
+		ASSERT(!address.isNull());
 
 		// Initialize the queue
 		genstruct::VectorQueue<Inst *> todo(1024);

@@ -223,7 +223,7 @@ public:
 		inst = ppc_decode(_ppcDecoder, _ppcState->NIA);
 		ppc_execute(_ppcState, inst);
 		ppc_free_inst(inst);
-		if (_ppcState->NIA == oinst->topAddress()) {
+		if (_ppcState->NIA == oinst->topAddress().offset()) {
 			Inst *next = oinst->nextInst();
 			while (next /*&& next->isPseudo()*/)
 				next = next->nextInst();
@@ -365,7 +365,7 @@ class Inst: public otawa::Inst {
 public:
 
 	inline Inst(Process& process, kind_t kind, Address addr)
-		: _kind(kind), proc(process), _addr(addr), isRegsDone(false) { }
+		: _kind(kind), proc(process), _addr(addr.offset()), isRegsDone(false) { }
 
 	/**
 	 */
@@ -868,7 +868,7 @@ ppc_address_t BranchInst::decodeTargetAddress(void) {
 	inst = proc.decode_ppc(address());
 
 	// retrieve the target addr from the nmp otawa_target attribute
-	Address target_addr = ppc_target(inst);
+	ppc_address_t target_addr = ppc_target(inst);
 
 	// cleanup
 	ppc_free_inst(inst);

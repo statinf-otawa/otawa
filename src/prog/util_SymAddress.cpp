@@ -196,8 +196,8 @@ CFG *LabelAddress::cfg(WorkSpace *ws) {
 
 	// get address
 	Address addr = toAddress(ws);
-	if(!addr)
-		return 0;
+	if(addr.isNull())
+		return nullptr;
 
 	// find CFG
 	/*	TODO
