@@ -541,6 +541,10 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
 		unser.flush();
 		return _processor;
 	}
+	catch(elm::io::IOException& e) {
+		delete _processor;
+		throw LoadException(&e.message());
+	}
 	catch(elm::Exception& e) {
 		delete _processor;
 		throw LoadException(&e.message());
@@ -939,6 +943,7 @@ void __unserialize(Unserializer& s, otawa::hard::Dispatch::type_t& v) {
 			VALUE(otawa::Inst::IS_SHIFT),
 			VALUE(otawa::Inst::IS_TRAP),
 			VALUE(otawa::Inst::IS_INTERN),
+			VALUE(otawa::Inst::IS_SPECIAL),
 			elm::rtti::Enum::Value("", 0)
 	};
 
