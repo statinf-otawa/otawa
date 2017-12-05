@@ -60,8 +60,8 @@ class TransparentCFGCollectionGraph {
 		inline ~ToDoList(void) { while(_hd != &ToDo::null) pop(); }
 		inline ToDo::type_t type(void) const { return _hd->type; }
 		inline void pop(void) { _hd = _hd->next; }
-		inline void push(Block::EdgeIter i) {_hd = new EdgeToDo(i, _hd); }
-		inline void push(CFG::CallerIter i) {_hd = new CallToDo(i, _hd); }
+		inline void push(Block::EdgeIter i) { ASSERT(i); _hd = new EdgeToDo(i, _hd); }
+		inline void push(CFG::CallerIter i) { ASSERT(i); _hd = new CallToDo(i, _hd); }
 		inline Block::EdgeIter& asEdge(void) const { return static_cast<EdgeToDo *>(_hd)->iter; }
 		inline CFG::CallerIter& asCall(void) const { return static_cast<CallToDo *>(_hd)->iter; }
 	private:

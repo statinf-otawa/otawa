@@ -334,7 +334,8 @@ void TransparentCFGCollectionGraph::Successor::setup(void) {
 			else {
 				CFG *cfg = i->sink()->toSynth()->callee();
 				i++;
-				todo.push(i);
+				if(i)
+					todo.push(i);
 				i = cfg->entry()->outs();
 			}
 		}
@@ -343,12 +344,14 @@ void TransparentCFGCollectionGraph::Successor::setup(void) {
 		else if(i->sink()->isExit()) {
 			if(!i->sink()->cfg()->callers())
 				break;
-			i++;
-			todo.push(i);
 			CFG::CallerIter c(i->sink()->cfg()->callers());
+			i++;
+			if(i)
+				todo.push(i);
 			i = c->outs();
 			c++;
-			todo.push(c);
+			if(c)
+				todo.push(c);
 		}
 
 		// unknown
@@ -362,6 +365,7 @@ void TransparentCFGCollectionGraph::Successor::setup(void) {
  */
 TransparentCFGCollectionGraph::Predecessor::Predecessor(Block *b, const TransparentCFGCollectionGraph& g)
 : i(b->ins()), _g(g) {
+	ASSERT(b);
 	setup();
 }
 
@@ -409,21 +413,24 @@ void TransparentCFGCollectionGraph::Predecessor::setup(void) {
 			else {
 				CFG *cfg = i->source()->toSynth()->callee();
 				i++;
-				todo.push(i);
+				if(i)
+					todo.push(i);
 				i = cfg->exit()->ins();
 			}
 		}
 
-		// edge to an entry
+		// edge from an entry
 		else if(i->source()->isEntry()) {
 			if(!i->source()->cfg()->callers())
 				break;
-			i++;
-			todo.push(i);
 			CFG::CallerIter c(i->source()->cfg()->callers());
+			i++;
+			if(i)
+				todo.push(i);
 			i = c->ins();
 			c++;
-			todo.push(c);
+			if(c)
+				todo.push(c);
 		}
 
 		// unknown

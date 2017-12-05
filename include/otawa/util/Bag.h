@@ -68,6 +68,26 @@ public:
 	inline const T& operator[](int i) const { return get(i); }
 	inline T& operator[](int i) { return get(i); }
 
+	// Iter class
+	class Iter: public PreIterator<Iter, T> {
+	public:
+		inline Iter(void): b(nullptr), i(0) { }
+		inline Iter(const Bag<T>& bag): b(&bag), i(0) { }
+		inline Iter(const Bag<T>& bag, int index): b(bag), i(index) { }
+		inline bool ended(void) const { return i >= b->count(); }
+		inline const T& item(void) const { return (*b)[i]; }
+		inline void next(void) { i++; }
+		inline bool operator==(const Iter& it) { return b == it.b && i == it.i; }
+		inline bool operator!=(const Iter& it) { return !operator==(it); }
+	private:
+		const Bag<T> *b;
+		int i;
+	};
+	inline Iter items(void) const { return Iter(*this); }
+	inline Iter operator*(void) const { return items(); }
+	inline Iter begin(void) const { return Iter(*this); }
+	inline Iter end(void) const { return Iter(*this, count()); }
+
 	// mutators
 	inline void set(const Bag& bag)						{ clear(); copy(bag.cnt, bag.arr); }
 	inline void set(const genstruct::Vector<T>& v)		{ clear(); copy(v); }

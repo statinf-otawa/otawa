@@ -71,7 +71,7 @@ void MayDomain::fetch(t& a, const LBlock *lb) {
 	// U(a, b) = a' s.t. ∀ b' ∈ B_s
 	for(int i = 0; i < n; i++)
 		// a'[b'] = a[b'] + 1	if a[b'] < a[b] ∧ a[b'] ≠ ⊥
-		if(a[i] < a[b] && a[i] != BOT_AGE)
+		if(a[i] <= a[b] && a[i] != A)
 			a[i]++;
 		// a'[b'] = a[b']		else
 
@@ -82,11 +82,15 @@ void MayDomain::fetch(t& a, const LBlock *lb) {
 /**
  */
 void MayDomain::update(const icache::Access& access, t& a) {
+	if(a[0] == BOT_AGE)
+		return;
 	switch(access.kind()) {
 
 	case icache::FETCH:
-		if(_coll.cache()->set(access.address()) == _set)
+		if(_coll.cache()->set(access.address()) == _set) {
+			cerr << "DEBUG: update block " << LBLOCK(access)->address() << io::endl;
 			fetch(a, LBLOCK(access));
+		}
 		break;
 
 	case icache::PREFETCH:
@@ -126,8 +130,8 @@ public:
 	inline store_t& store(void) { return _store; }
 
 	void update(const Bag<icache::Access>& accs, t& d) {
-		for(int i = 0; i < accs.count(); i++)
-			_domain.update(accs[i], d);
+		for(auto acc = *accs; acc; acc++)
+			_domain.update(acc, d);
 	}
 
 	void update(Block *v, t& d) {
@@ -232,7 +236,7 @@ private:
 			if(b->isBasic()) {
 				ada.domain().copy((*MAY_IN(b))[i], ada.store().get(b));
 				if(logFor(LOG_BLOCK))
-					log << "\t\t\t" << *b << ": " << ada.store().get(b) << io::endl;
+					log << "\t\t\t" << *b << ": "; ada.domain().print(ada.store().get(b), cerr); cerr << io::endl;
 			}
 	}
 
