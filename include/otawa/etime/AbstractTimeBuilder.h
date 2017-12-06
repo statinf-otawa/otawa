@@ -30,17 +30,19 @@
 namespace otawa { namespace etime {
 
 typedef elm::genstruct::Vector<Resource *> resources_t;
+typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } part_t;
 
 class EventCase {
 public:
-	inline EventCase(Event *e, code_part_t p): _e(e), _p(p), _i(-1) { }
+	inline EventCase(void): _e(nullptr), _p(IN_SIZE), _i(-1) { }
+	inline EventCase(Event *e, part_t p): _e(e), _p(p), _i(-1) { }
 	inline Event *event(void) const { return _e; }
-	inline code_part_t part(void) const { return _p; }
+	inline part_t part(void) const { return _p; }
 	inline int index(void) const { return _i; }
 	inline void setIndex(int i) { _i = i; }
 private:
 	Event *_e;
-	code_part_t _p;
+	part_t _p;
 	int _i;
 };
 
@@ -65,7 +67,7 @@ public:
 	inline void setResources(resources_t *resources) { _resources = resources; }
 	inline void setFactory(Factory *factory) { _factory = factory; }
 
-	static Builder& builder;
+	static Builder& DEFAULT;
 
 private:
 	ParExeProc *_processor;
@@ -84,8 +86,16 @@ public:
 class Generator {
 public:
 	virtual ~Generator(void);
-	virtual void generate(ilp::System *sys, ParExeGraph *g);
+	virtual void add(ParExeGraph *g, List<ConfigSet *> times) = 0;
+	virtual void complete(void) = 0;
+	inline WorkSpace *workspace(void) const { return _ws; }
+	inline ilp::System *system(void) const { return _sys; }
+	inline void setWorkspace(WorkSpace *ws) { _ws = ws; }
+	inline void setSystem(ilp::System *sys) { _sys = sys; }
 	static Generator& DEFAULT;
+private:
+	WorkSpace *_ws;
+	ilp::System *_sys;
 };
 
 class AbstractTimeBuilder: public BBProcessor {
@@ -95,7 +105,12 @@ public:
 
 	inline Engine *engine(void) const { return _engine; }
 	inline Generator *generator(void) const { return _generator; }
+	inline Builder *builder(void) const { return _builder; }
+	inline void setBuilder(Builder *builder) { _builder = builder; }
 	inline void setEngine(Engine *engine) { _engine = engine; }
+	inline void setGenerator(Generator *generator) { _generator = generator; }
+
+	void configure(const PropList& props) override;
 
 protected:
 	void setup(WorkSpace *ws) override;
@@ -103,8 +118,24 @@ protected:
 	void cleanup(WorkSpace *ws) override;
 
 private:
+	void processEdge(BasicBlock *src, Edge *e, BasicBlock *snk);
+	void buildResources(void);
+	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id);
+	int countDynEvents(const Vector<EventCase>& events);
+	void processSequence(ParExeSequence *seq, Vector<EventCase>& events);
+	void displayTimes(const List<ConfigSet *>& confs, const Vector<EventCase>& events);
+
+
+	Builder *_builder;
 	Engine *_engine;
 	Generator *_generator;
+	ParExeProc *_proc;
+	resources_t _resources;
+
+	bool _explicit;
+	bool _predump;
+	int _event_th;
+	bool _record;
 };
 
 } }	// otawa::etime

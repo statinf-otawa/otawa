@@ -144,8 +144,8 @@ extern p::id<Unit *> TIME_UNIT;
 // event feature
 extern p::feature STANDARD_EVENTS_FEATURE;
 extern p::feature EVENTS_FEATURE;
-extern Identifier<Event *> EVENT;
-extern Identifier<Event *> PREFIX_EVENT;
+extern p::id<Event *> EVENT;
+extern p::id<Event *> PREFIX_EVENT;
 
 // configuration feature
 extern p::id<bool> PREDUMP;

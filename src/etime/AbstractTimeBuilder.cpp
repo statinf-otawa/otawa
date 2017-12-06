@@ -20,4 +20,383 @@
  */
 
 #include <otawa/etime/AbstractTimeBuilder.h>
+#include <otawa/ipet/features.h>
+
+namespace otawa { namespace etime {
+
+/**
+ * @class AbstractTimeBuilder
+ * This is the base class of @ref etime classes producing time for block.
+ * It is made of:
+ * * @ref Builder object in charge of building the execution graph,
+ * * @ref Engine object in charge of computing the execution considering all event configurations,
+ * * @ref Generator object in charge of generating objective function and ILP constraints to
+ * taken into account the different configurations and times.
+ */
+
+
+/** */
+p::declare reg = p::init("otawa::etime::AbstractTimeBuilder", Version(1, 0, 0))
+	.extend<BBProcessor>()
+	.maker<AbstractTimeBuilder>()
+	.require(ipet::ASSIGNED_VARS_FEATURE)
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.require(EVENTS_FEATURE)
+	.provide(ipet::OBJECT_FUNCTION_FEATURE)
+	.provide(EDGE_TIME_FEATURE);
+
+
+/**
+ */
+AbstractTimeBuilder::AbstractTimeBuilder(p::declare& r)
+:	BBProcessor(r),
+	_builder(&Builder::DEFAULT),
+	_engine(&Engine::DEFAULT),
+	_generator(&Generator::DEFAULT),
+	_proc(nullptr),
+	_explicit(false),
+	_predump(false),
+	_event_th(0),
+	_record(false)
+{
+}
+
+/**
+ */
+void AbstractTimeBuilder::configure(const PropList& props) {
+	BBProcessor::configure(props);
+	_explicit = ipet::EXPLICIT(props);
+	_predump = PREDUMP(props);
+	_event_th = EVENT_THRESHOLD(props);
+	_record = RECORD_TIME(props);
+}
+
+
+/**
+ * @fn Engine *AbstractTimeBuilder::engine(void) const;
+ * TODO
+ */
+
+/**
+ * @fn Generator *AbstractTimeBuilder::generator(void) const;
+ * TODO
+ */
+
+/**
+ * @fn void AbstractTimeBuilder::setEngine(Engine *engine);
+ * TODO
+ */
+
+/**
+ * @fn Builder *AbstractTimeBuilder::builder(void) const;
+ * TODO
+ */
+
+/**
+ * @fn void AbstractTimeBuilder::setBuilder(Builder *builder);
+ * TODO
+ */
+
+/**
+ *
+ */
+void AbstractTimeBuilder::setup(WorkSpace *ws) {
+
+	// build the microprocessor
+	const hard::Processor *proc = hard::PROCESSOR(ws);
+	if(proc == &hard::Processor::null)
+		throw ProcessorException(*this, "no processor to work with");
+	_proc = new ParExeProc(proc);
+	buildResources();
+
+	// initialize the workers
+	_builder->setFactory(_engine->getFactory());
+	_builder->setProcessor(_proc);
+	_builder->setResources(&_resources);
+	_generator->setSystem(ipet::SYSTEM(ws));
+	_generator->setWorkspace(ws);
+}
+
+
+/**
+ *
+ */
+void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
+
+	// finalize generator
+	_generator->complete();
+
+	// cleanup
+	delete _proc;
+	for(auto res = resources_t::Iterator(_resources); res; res++)
+		delete *res;
+	_resources.clear();
+}
+
+
+
+/**
+ * Build the resources required by processor model.
+ */
+void AbstractTimeBuilder::buildResources(void) {
+    int resource_index = 0;
+    //bool is_ooo_proc = false;
+
+    // build the start resource
+    StartResource * new_resource = new StartResource("start", resource_index++);
+    _resources.add(new_resource);
+
+    // build resource for stages and FUs
+    for(ParExePipeline::StageIterator stage(_proc->pipeline()); stage; stage++) {
+
+    	// all except execute stage
+    	if(stage->category() != ParExeStage::EXECUTE) {
+			for (int i=0; i<stage->width(); i++) {
+				StringBuffer buffer;
+				buffer << stage->name() << "[" << i << "]";
+				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
+				_resources.add(new_resource);
+			}
+		}
+
+    	// execute stage
+		else {
+			if(stage->orderPolicy() == ParExeStage::IN_ORDER) {
+				for (int i=0 ; i<stage->numFus() ; i++) {
+					ParExePipeline * fu = stage->fu(i);
+					ParExeStage *fu_stage = fu->firstStage();
+					for (int j=0 ; j<fu_stage->width() ; j++) {
+						StringBuffer buffer;
+						buffer << fu_stage->name() << "[" << j << "]";
+						StageResource * new_resource = new StageResource(buffer.toString(), fu_stage, j, resource_index++);
+						_resources.add(new_resource);
+					}
+				}
+			}
+			/*else
+				is_ooo_proc = true;*/
+		}
+    }
+
+    // build resources for queues
+    for (ParExeProc::QueueIterator queue(_proc) ; queue ; queue++) {
+		int num = queue->size();
+		for (int i=0 ; i<num ; i++) {
+			StringBuffer buffer;
+			buffer << queue->name() << "[" << i << "]";
+			StageResource * upper_bound;
+			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+				if (resource->type() == Resource::STAGE) {
+					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
+						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
+							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
+								upper_bound = (StageResource *) (*resource);
+							}
+						}
+						else {
+							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
+								upper_bound = (StageResource *) (*resource);
+							}
+						}
+					}
+				}
+			}
+			ASSERT(upper_bound);
+			// build the queue resource
+			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _proc->pipeline()->numStages());
+			_resources.add(new_resource);
+		}
+    }
+}
+
+
+/**
+ *
+ */
+void AbstractTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+
+	// get basic block
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+
+	// use each basic edge
+	bool one = false;
+	for(BasicBlock::BasicIns e(bb); e; e++) {
+		processEdge((*e).source(), (*e).edge(), (*e).sink());
+		one = true;
+	}
+
+	// first block: no predecessor
+	if(!one)
+		processEdge(0, 0, bb);
+
+}
+
+
+/**
+ * TODO
+ * Compute and record time for the given edge.
+ * @param e		Edge to compute for.
+ */
+void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk) {
+	if(logFor(Processor::LOG_BLOCK)) {
+		log << "\t\t\t";
+		if(src)
+			log << src << ", ";
+		if(e)
+			log << e << ", ";
+		log << snk << io::endl;
+	}
+
+	// initialize the sequence
+	//bnode = 0;
+	Vector<EventCase> all_events;
+	if(src)
+		collectEvents(all_events, src, IN_PREFIX, EVENT);
+	if(e) {
+		collectEvents(all_events, src, IN_PREFIX, PREFIX_EVENT);
+		collectEvents(all_events, src, IN_BLOCK, EVENT);
+	}
+	collectEvents(all_events, snk, IN_BLOCK, EVENT);
+
+	// usual simple case: few events
+	if(countDynEvents(all_events) <= _event_th) {
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+
+		// fill the prefix
+		if(snk)
+			for(BasicBlock::InstIter inst = snk->insts(); inst; inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(inst, snk, PROLOGUE, index++);
+				seq->addLast(par_exe_inst);
+			}
+
+		// fill the current block
+		for(BasicBlock::InstIter inst = snk->insts(); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, snk, otawa::BLOCK, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence(seq, all_events);
+		return;
+	}
+
+	// remove prefix case
+	if(logFor(LOG_BLOCK))
+		log << "\t\t\ttoo many dynamic events (" << countDynEvents(all_events) << "). Discarding prefix: overestimation increase\n";
+	all_events.clear();
+	collectEvents(all_events, snk, IN_BLOCK, EVENT);
+	if(countDynEvents(all_events) <= _event_th) {
+		ParExeSequence *seq = new ParExeSequence();
+
+		// fill the current block
+		int index = 0;
+		for(BasicBlock::InstIter inst(snk); inst; inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(inst, snk, otawa::BLOCK, index++);
+			seq->addLast(par_exe_inst);
+		}
+
+		// perform the computation
+		processSequence(seq, all_events);
+		delete seq;
+		return;
+	}
+
+	// for now, just crash
+	else {
+		if(logFor(LOG_BLOCK)) {
+			log << "\t\t\ttoo many dynamic events: " << countDynEvents(all_events) << ". Giving up. Sorry.\n";
+			// log used events
+			for(auto e = *all_events; e; e++)
+				if((*e).event()->occurrence() == SOMETIMES)
+					log << "\t\t\t\t" << (*e).part() << ": " << (*e).event()->inst()->address() << " -> " << (*e).event()->name() << " (" << (*e).event()->detail() << ") " << io::endl;
+		}
+		ASSERTP(false, "too many events!")
+	}
+}
+
+
+/**
+ * TODO
+ */
+void AbstractTimeBuilder::collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id) {
+	for(Identifier<Event *>::Getter event(props, id); event; event++)
+		events.add(EventCase(event, part));
+}
+
+
+/**
+ * Count the number of variable events in the event list.
+ * @param events	Event list to process.
+ * @return			Number of variable events.
+ */
+int AbstractTimeBuilder::countDynEvents(const Vector<EventCase>& events) {
+	int cnt = 0;
+	for(int i = 0; i < events.length(); i++)
+		if(events[i].event()->occurrence() == SOMETIMES)
+			cnt++;
+	return cnt;
+}
+
+
+/**
+ * TODO
+ */
+void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>& events) {
+
+	// log used events
+	if(logFor(LOG_BB))
+		for(auto e = *events; e; e++)
+			log << "\t\t\t\t" << (*e).part() << ": " << (*e).event()->inst()->address()
+				<< " -> " << (*e).event()->name() << " (" << (*e).event()->detail() << ") "
+				<< io::endl;
+
+	// numbers the dynamic events
+	int cnt = 0;
+	for(int i = 0; i < events.count(); i++)
+		if(events[i].event()->occurrence() == SOMETIMES)
+			events[i].setIndex(cnt++);
+
+	// build the graph
+	ParExeGraph *g = _builder->build(seq);
+	ASSERTP(g->firstNode(), "no first node found: empty execution graph");
+
+	// compute the times
+	List<ConfigSet *> times;
+	_engine->compute(g, times, events);
+	if(logFor(LOG_BB))
+		displayTimes(times, events);
+
+	// cleanup
+	delete g;
+
+	// apply the times to the ILP
+	_generator->add(g, times);
+
+	// clean the times
+	for(auto t = *times; t; t++)
+		delete t;
+}
+
+
+/**
+ * Display the list of configuration sorted by cost.
+ * @param times		List of times to display.
+ * @param events	Events producing the times.
+ */
+void AbstractTimeBuilder::displayTimes(const List<ConfigSet *>& times, const Vector<EventCase>& events) {
+	if(times) {
+		int i = 0;
+		for(auto t = *times; t; t++, i++) {
+			log << "\t\t\t\t[" << i << "] cost = " << t->time() << " -> ";
+			for(ConfigSet::Iter conf(**t); conf; conf++)
+				log << " " << (*conf).toString(events.length());
+			log << io::endl;
+		}
+	}
+}
+
+} }	// otawa::etime
 

@@ -219,7 +219,7 @@ p::feature EVENTS_FEATURE("otawa::etime::EVENTS_FEATURE", new Maker<StandardEven
  *
  * @ingroup etime
  */
-Identifier<Event *> EVENT("otawa::etime::EVENT", 0);
+p::id<Event *> EVENT("otawa::etime::EVENT", 0);
 
 
 /**
@@ -234,7 +234,7 @@ Identifier<Event *> EVENT("otawa::etime::EVENT", 0);
  *
  * @ingroup etime
  */
-Identifier<Event *> PREFIX_EVENT("otawa::etime::PREFIX_EVENT", 0);
+p::id<Event *> PREFIX_EVENT("otawa::etime::PREFIX_EVENT", 0);
 
 
 /**
