@@ -1,5 +1,5 @@
 /*
- *	AbstractTimeBuilder class interface
+ *	AbstractTimeBuilder class implementation
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2017, IRIT UPS.
@@ -22,7 +22,50 @@
 #include <otawa/etime/AbstractTimeBuilder.h>
 #include <otawa/ipet/features.h>
 
-namespace otawa { namespace etime {
+namespace otawa {
+
+extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
+
+
+namespace etime {
+
+/**
+ * @class EventCase
+ * TODO
+ *
+ * @ingroup etime
+ */
+
+/**
+ * EventCase::EventCase(void);
+ * TODO
+ */
+
+/**
+ * EventCase::EventCase(Event *e, part_t p);
+ * TODO
+ */
+
+/**
+ * Event *EventCase::event(void) const;
+ * TODO
+ */
+
+/**
+ * @fn part_t EventCase::part(void) const;
+ * TODO
+ */
+
+/**
+ * @fn int EventCase::index(void) const;
+ * TODO
+ */
+
+/**
+ * @fn void EventCase::setIndex(int i);
+ * TODO
+ */
+
 
 /**
  * @class AbstractTimeBuilder
@@ -69,6 +112,9 @@ void AbstractTimeBuilder::configure(const PropList& props) {
 	_predump = PREDUMP(props);
 	_event_th = EVENT_THRESHOLD(props);
 	_record = RECORD_TIME(props);
+	_dir = GRAPHS_OUTPUT_DIRECTORY(props);
+	if(_dir != sys::Path(""))
+		_explicit = true;
 }
 
 
@@ -151,7 +197,7 @@ void AbstractTimeBuilder::buildResources(void) {
 
     	// all except execute stage
     	if(stage->category() != ParExeStage::EXECUTE) {
-			for (int i=0; i<stage->width(); i++) {
+			for(int i = 0; i<stage->width(); i++) {
 				StringBuffer buffer;
 				buffer << stage->name() << "[" << i << "]";
 				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
@@ -179,7 +225,7 @@ void AbstractTimeBuilder::buildResources(void) {
     }
 
     // build resources for queues
-    for (ParExeProc::QueueIterator queue(_proc) ; queue ; queue++) {
+    for(ParExeProc::QueueIterator queue(_proc) ; queue ; queue++) {
 		int num = queue->size();
 		for (int i=0 ; i<num ; i++) {
 			StringBuffer buffer;
@@ -356,12 +402,19 @@ void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>
 	// numbers the dynamic events
 	int cnt = 0;
 	for(int i = 0; i < events.count(); i++)
-		if(events[i].event()->occurrence() == SOMETIMES)
+		if(events[i].event()->occurrence() == SOMETIMES) {
 			events[i].setIndex(cnt++);
+			if(logFor(LOG_BB))
+				log << "\t\t\t\t(" << char(cnt + 'a') << ") " << events[i].event()->inst()->address() << "\t" << events[i].event()->name()
+					<< " " << events[i].part() << io::endl;
+		}
+	if(logFor(LOG_BB))
+		log << "\t\t\t\tdynamic events = " << cnt << io::endl;
 
 	// build the graph
 	ParExeGraph *g = _builder->build(seq);
 	ASSERTP(g->firstNode(), "no first node found: empty execution graph");
+	g->setExplicit(_explicit);
 
 	// compute the times
 	List<ConfigSet *> times;

@@ -57,12 +57,15 @@ public:
 
 class Builder {
 public:
+	Builder(void);
 	virtual ~Builder(void);
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
+	inline WorkSpace *workspace(void)  const { return _ws; }
 	inline ParExeProc *processor(void) const { return _processor; }
 	inline resources_t *resources(void) const { return _resources; }
 	inline Factory *factory(void) const { return _factory; }
+	inline void setWorkSpace(WorkSpace *ws) { _ws = ws; }
 	inline void setProcessor(ParExeProc *processor) { _processor = processor; }
 	inline void setResources(resources_t *resources) { _resources = resources; }
 	inline void setFactory(Factory *factory) { _factory = factory; }
@@ -70,6 +73,7 @@ public:
 	static Builder& DEFAULT;
 
 private:
+	WorkSpace *_ws;
 	ParExeProc *_processor;
 	resources_t *_resources;
 	Factory *_factory;
@@ -136,6 +140,7 @@ private:
 	bool _predump;
 	int _event_th;
 	bool _record;
+	sys::Path _dir;
 };
 
 } }	// otawa::etime
