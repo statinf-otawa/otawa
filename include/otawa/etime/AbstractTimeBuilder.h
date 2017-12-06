@@ -29,6 +29,8 @@
 
 namespace otawa { namespace etime {
 
+typedef elm::genstruct::Vector<Resource *> resources_t;
+
 class EventCase {
 public:
 	inline EventCase(Event *e, code_part_t p): _e(e), _p(p), _i(-1) { }
@@ -49,6 +51,26 @@ public:
 	virtual ParExeNode *makeNode(ParExeInst *i, ParExeStage *stage) = 0;
 	virtual ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "") = 0;
 	static Factory& DEFAULT;
+};
+
+class Builder {
+public:
+	virtual ~Builder(void);
+	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
+
+	inline ParExeProc *processor(void) const { return _processor; }
+	inline resources_t *resources(void) const { return _resources; }
+	inline Factory *factory(void) const { return _factory; }
+	inline void setProcessor(ParExeProc *processor) { _processor = processor; }
+	inline void setResources(resources_t *resources) { _resources = resources; }
+	inline void setFactory(Factory *factory) { _factory = factory; }
+
+	static Builder& builder;
+
+private:
+	ParExeProc *_processor;
+	resources_t *_resources;
+	Factory *_factory;
 };
 
 class Engine {
