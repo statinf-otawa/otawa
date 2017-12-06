@@ -4,6 +4,7 @@ set(CMAKE_CXX_FLAGS "-Wall" )
 
 set(PLUGIN etime)
 set(SOURCES
+	"AbstractTimeBuilder.cpp"
     "StandardEventBuilder.cpp"
     "EdgeTimeBuilder.cpp"
 	"hook.cpp"
