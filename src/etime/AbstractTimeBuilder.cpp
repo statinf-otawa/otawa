@@ -68,6 +68,60 @@ namespace etime {
 
 
 /**
+ * @class Factory
+ * TODO
+ * @ingroup etime
+ */
+
+/**
+ */
+Factory::~Factory(void) {
+}
+
+/**
+ * @fn ParExeGraph *Factory::make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq);
+ * TODO
+ */
+
+/**
+ * @fn ParExeNode *Factory::makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage);
+ * TODO
+ */
+
+/**
+ * @fn ParExeEdge *Factory::makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "");
+ * TODO
+ */
+
+/* internal */
+class StandardFactory: public Factory {
+public:
+
+	ParExeGraph *make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *resources, ParExeSequence *seq) override {
+		PropList props;
+		return new ParExeGraph(nullptr, proc, resources, seq);
+	}
+
+	ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) override {
+		return new ParExeNode(g, stage, i);
+	}
+
+	ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type, int latency, string name) override {
+		return new ParExeEdge(src, snk, type, latency, name);
+	}
+
+};
+
+
+/**
+ * TODO
+ */
+Factory *Factory::make(void) {
+	return new StandardFactory;
+}
+
+
+/**
  * @class AbstractTimeBuilder
  * This is the base class of @ref etime classes producing time for block.
  * It is made of:
@@ -78,13 +132,15 @@ namespace etime {
  */
 
 
+
 /** */
-p::declare reg = p::init("otawa::etime::AbstractTimeBuilder", Version(1, 0, 0))
+p::declare AbstractTimeBuilder::reg = p::init("otawa::etime::AbstractTimeBuilder", Version(1, 0, 0))
 	.extend<BBProcessor>()
 	.maker<AbstractTimeBuilder>()
 	.require(ipet::ASSIGNED_VARS_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(EVENTS_FEATURE)
+	.require(hard::PROCESSOR_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -159,6 +215,8 @@ void AbstractTimeBuilder::setup(WorkSpace *ws) {
 	_builder->setFactory(_engine->getFactory());
 	_builder->setProcessor(_proc);
 	_builder->setResources(&_resources);
+	_builder->setWorkSpace(ws);
+	_builder->setExplicit(_explicit);
 	_generator->setSystem(ipet::SYSTEM(ws));
 	_generator->setWorkspace(ws);
 }
@@ -298,11 +356,11 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 	// initialize the sequence
 	//bnode = 0;
 	Vector<EventCase> all_events;
-	if(src)
+	if(src != nullptr)
 		collectEvents(all_events, src, IN_PREFIX, EVENT);
-	if(e) {
-		collectEvents(all_events, src, IN_PREFIX, PREFIX_EVENT);
-		collectEvents(all_events, src, IN_BLOCK, EVENT);
+	if(e != nullptr) {
+		collectEvents(all_events, e, IN_PREFIX, PREFIX_EVENT);
+		collectEvents(all_events, e, IN_BLOCK, EVENT);
 	}
 	collectEvents(all_events, snk, IN_BLOCK, EVENT);
 
@@ -422,13 +480,12 @@ void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>
 	if(logFor(LOG_BB))
 		displayTimes(times, events);
 
-	// cleanup
-	delete g;
-
 	// apply the times to the ILP
 	_generator->add(g, times);
 
-	// clean the times
+	// clean all
+	delete g;
+	ASSERT(_proc->pipeline()->stages()->numNodes() == 0);
 	for(auto t = *times; t; t++)
 		delete t;
 }

@@ -254,6 +254,12 @@ PropertyType::~PropertyType(void) {
 View::View(Manager *man, cstring name, string label): Named(name, label), _man(man) {
 }
 
+/**
+ */
+View::~View(void) {
+
+}
+
 /*inline List<PropertyType *>::Iter types(void) const { return *_props; }
 
 	virtual Viewer *explore( const Vector<PropertyType *>& types) = 0;

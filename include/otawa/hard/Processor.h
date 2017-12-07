@@ -279,10 +279,12 @@ public:
 	class Make {
 		friend class Processor;
 	public:
-		inline Make(string arch): _arch(arch), _frequency(0) { }
+		inline Make(string arch): _arch(arch), _frequency(0), pf(nullptr) { }
 		inline Make& model(string m) { _model = m; return *this; }
 		inline Make& builder(string b) { _builder = b; return *this; }
 		inline Make& frequency(t::uint64 f) { _frequency = f; return *this; }
+		inline Make& platform(hard::Platform *p) { pf = p; return *this; }
+		inline Make& platform(string name) { pf = Platform::find(name); return *this; }
 		inline Make& add(Stage *s) { stages.add(s); return *this; }
 		inline Make& add(Stage& s) { stages.add(&s); return *this; }
 		inline Make& add(Stage::Make& m) { stages.add(new Stage(m)); return *this; }
@@ -294,18 +296,22 @@ public:
 		t::uint64 _frequency;
 		genstruct::Vector<Stage *> stages;
 		genstruct::Vector<Queue *> queues;
+		hard::Platform *pf;
 	};
 
 	Processor(void);
 	Processor(const Make& m, cstring name = "");
 	Processor(const Processor& proc, cstring name = "");
 	virtual ~Processor(void);
+
 	inline elm::String getArch(void) const { return arch; };
 	inline elm::String getModel(void) const { return model; };
 	inline elm::String getBuilder(void) const { return builder; };
 	inline const elm::genstruct::Table<Stage *>& getStages(void) const { return stages; };
 	inline const elm::genstruct::Table<Queue *>& getQueues(void) const { return queues; };
 	inline t::uint64 getFrequency(void) const { return frequency; }
+
+	inline hard::Platform *platform(void) const { return _pf; }
 
 	static const Processor null;
 	static Processor *load(const elm::sys::Path& path) throw(LoadException);
@@ -327,6 +333,7 @@ private:
 	elm::genstruct::AllocatedTable<Queue *> queues;
 	t::uint64 frequency;
 	Process *_process;
+	hard::Platform *_pf;
 };
 
 

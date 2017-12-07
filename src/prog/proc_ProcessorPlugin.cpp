@@ -202,7 +202,7 @@ void ProcessorPlugin::removePath(const elm::sys::Path& path) {
  * @param name	Name of the looked processor.
  * @return		An instance of the processor or NULL if it cannot be found.
  */
-Processor *ProcessorPlugin::getProcessor(cstring name) {
+Processor *ProcessorPlugin::getProcessor(string name) {
 	const AbstractRegistration *reg = Registry::find(name);
 	if(!reg) {
 		ProcessorPlugin *plugin = get(name);
@@ -221,7 +221,7 @@ Processor *ProcessorPlugin::getProcessor(cstring name) {
  * @param name	Name of the looked feature.
  * @return		Found feature or null.
  */
-AbstractFeature *ProcessorPlugin::getFeature(cstring name) {
+AbstractFeature *ProcessorPlugin::getFeature(string name) {
 	AbstractIdentifier *id = getIdentifier(name);
 	if(!id)
 		return 0;
@@ -238,7 +238,7 @@ AbstractFeature *ProcessorPlugin::getFeature(cstring name) {
  * @param name	Name of the identifier.
  * @return		Found identifier or null.
  */
-AbstractIdentifier *ProcessorPlugin::getIdentifier(cstring name) {
+AbstractIdentifier *ProcessorPlugin::getIdentifier(string name) {
 	AbstractIdentifier *id = AbstractIdentifier::find(name);
 	if(!id && get(name))
 		id = AbstractIdentifier::find(name);

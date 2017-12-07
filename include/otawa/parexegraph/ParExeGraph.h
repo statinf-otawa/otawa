@@ -252,6 +252,7 @@ namespace otawa {
 		inline int numResources() {return _resources.length();}
 		inline Resource *resource(int index){return _resources[index];}
 		inline int numInstructions(){return _sequence->length();}
+		inline void setLastNode(ParExeNode *node) { _last_node = node; }
 
 		// build the graph
 		virtual void build();

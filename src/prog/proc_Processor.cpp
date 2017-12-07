@@ -256,8 +256,10 @@ Processor::Processor(void): stats(0), ws(0), _progress(0) {
 Processor::~Processor(void) {
 	if(flags & IS_TIED)
 		for(FeatureIter f(*_reg); f; f++)
-			if(f->kind() == FeatureUsage::provide)
+			if(f->kind() == FeatureUsage::provide) {
 				ws->invalidate(f->feature());
+				break;
+			}
 	if(flags & IS_ALLOCATED)
 		delete _reg;
 }

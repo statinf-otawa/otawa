@@ -34,7 +34,7 @@ class Registry: public Initializer<AbstractRegistration> {
 	typedef genstruct::HashTable<String, const AbstractRegistration *> htab_t; 
 
 public:
-	static const AbstractRegistration *find(CString name);
+	static const AbstractRegistration *find(string name);
 
 	// Iter class
 	class Iter: public htab_t::Iterator {

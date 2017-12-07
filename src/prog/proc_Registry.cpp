@@ -53,7 +53,7 @@ Registry Registry::_;
  * @param name	Name of the processor to look for.
  * @return		Found processor or null.
  */
-const AbstractRegistration *Registry::find(CString name) {
+const AbstractRegistration *Registry::find(string name) {
 	return _.procs.get(name, 0);
 }
 

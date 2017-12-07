@@ -496,7 +496,8 @@ void ParExeNode::buildContendersMasks(){
 void ParExeGraph::createSequenceResources(){
 
     int resource_index = _resources.length();
-    int reg_num = _ws->platform()->regCount();
+    //int reg_num = _ws->platform()->regCount();
+    int reg_num = _microprocessor->processor()->platform()->regCount();
 
     // prepare table of registers
     genstruct::AllocatedTable<bool> is_input(reg_num);
@@ -1422,14 +1423,16 @@ ParExeGraph::ParExeGraph(
  	_branch_penalty(2),
 	_explicit(false)
 {
-	const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
-	if (cache && cache->instCache())
-		_cache_line_size = cache->instCache()->blockSize();
-	else {
-		/*_cache_line_size = ws->process()->instSize();
-		if(!_cache_line_size)
-			_cache_line_size = 1;*/
-		_cache_line_size = 0;
+	if(_ws != nullptr) {
+		const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
+		if (cache && cache->instCache())
+			_cache_line_size = cache->instCache()->blockSize();
+		else {
+			/*_cache_line_size = ws->process()->instSize();
+			if(!_cache_line_size)
+				_cache_line_size = 1;*/
+			_cache_line_size = 0;
+		}
 	}
 	_props = props;
 	ASSERT(!hw_resources->isEmpty());

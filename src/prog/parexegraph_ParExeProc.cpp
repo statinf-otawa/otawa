@@ -322,7 +322,11 @@ ParExePipeline *ParExeStage::addFunctionalUnit(
  * Build a parametric execution processor from processor description.
  * @param proc	Processor description.
  */
-ParExeProc::ParExeProc(const hard::Processor *proc) {
+ParExeProc::ParExeProc(const hard::Processor *proc)
+:	_proc(proc),
+	_mem_stage(nullptr),
+	_branch_stage(nullptr)
+{
 	ASSERT(proc);
 
 	// Create queues

@@ -47,10 +47,10 @@ public:
 	static void addPath(const elm::sys::Path& path);
 	static void removePath(const elm::sys::Path& path);
 	static ProcessorPlugin *get(string name);
-	static Processor *getProcessor(cstring name);
-	static AbstractFeature *getFeature(cstring name);
-	static AbstractIdentifier *getIdentifier(cstring name);
-	static void setErrorHandler (ErrorHandler *error_handler);
+	static Processor *getProcessor(string name);
+	static AbstractFeature *getFeature(string name);
+	static AbstractIdentifier *getIdentifier(string name);
+	static void setErrorHandler(ErrorHandler *error_handler);
 	static ErrorHandler *getErrorHandler(void);
 
 private:

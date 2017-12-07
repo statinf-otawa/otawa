@@ -20,15 +20,17 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/hard/Platform.h>
-#include <otawa/hard/CacheConfiguration.h>
-#include <otawa/prog/WorkSpace.h>
-#include <otawa/hard/Processor.h>
-#include <elm/serial2/XOMUnserializer.h>
 #include <elm/genstruct/Table.h>
-#include <otawa/prog/Manager.h>
-#include <otawa/hard/Memory.h>
+#include <elm/serial2/XOMUnserializer.h>
 #include <elm/xom.h>
+
+#include <otawa/hard/CacheConfiguration.h>
+#include <otawa/hard/Platform.h>
+#include <otawa/hard/Processor.h>
+#include <otawa/prog/WorkSpace.h>
+#include <otawa/prog/Manager.h>
+#include <otawa/prop/DynIdentifier.h>
+#include <otawa/hard/Memory.h>
 
 namespace otawa { namespace hard {
 
@@ -128,6 +130,10 @@ namespace otawa { namespace hard {
  */
 
 
+// internal use
+p::id<bool> Platform::MAGIC("");
+
+
 /**
  * @class Platform Platform.h
  * @ingroup hard
@@ -152,6 +158,7 @@ Platform::Platform(const Platform::Identification& _id, const PropList& props)
 	rcnt(0),
 	_banks(&null_banks)
 {
+	MAGIC(this) = true;
 }
 
 
@@ -163,6 +170,7 @@ Platform::Platform(cstring name, const Identification& _id, const PropList& prop
 	rcnt(0),
 	_banks(&null_banks)
 {
+	MAGIC(this) = true;
 }
 
 
@@ -176,6 +184,22 @@ Platform::Platform(const Platform& platform, const PropList& props)
 	rcnt(0),
 	_banks(&null_banks)
 {
+	MAGIC(this) = true;
+}
+
+
+/**
+ * Find a platform by its identifier, possibly loading required
+ * plugin.
+ * @param id	Platform identifier.
+ * @return		Found platform or null.
+ */
+Platform *Platform::find(string id) {
+	AbstractIdentifier *i = ProcessorPlugin::getIdentifier(id);
+	if(!MAGIC(i))
+		return nullptr;
+	else
+		return static_cast<Platform *>(i);
 }
 
 

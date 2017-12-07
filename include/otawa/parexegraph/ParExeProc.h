@@ -197,6 +197,7 @@ namespace otawa {
 	  } instruction_category_t;
 
 	  ParExeProc(const hard::Processor *proc);
+	  inline const hard::Processor *processor(void) const { return _proc; }
 	  inline void addQueue(elm::String name, int size){_queues.add(new ParExeQueue(name, size));}
 	  inline ParExeQueue * queue(int index) {return _queues[index];}
 	  inline void setFetchStage(ParExeStage * stage) {_fetch_stage = stage;}
@@ -219,6 +220,7 @@ namespace otawa {
 	  };
 
 	  private:
+	  	  const hard::Processor *_proc;
 		  elm::genstruct::Vector<ParExeQueue *> _queues;
 		  ParExePipeline _pipeline;
 		  elm::genstruct::SLList<ParExeStage *> _inorder_stages;

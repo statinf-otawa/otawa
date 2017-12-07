@@ -8,7 +8,9 @@ set(SOURCES
     "EdgeTimeBuilder.cpp"
 	"hook.cpp"
     "StandardBuilder.cpp"
+    "StandardEngine.cpp"
     "StandardEventBuilder.cpp"
+    "StandardGenerator.cpp"
 )
 
 include_directories(".")

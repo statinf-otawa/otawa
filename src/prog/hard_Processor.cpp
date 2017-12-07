@@ -427,7 +427,7 @@ Dispatch::~Dispatch(void)
 
 /**
  */
-Processor::Processor(void): AbstractIdentifier(""), frequency(0), _process(0) {
+Processor::Processor(void): AbstractIdentifier(""), frequency(0), _process(nullptr), _pf(nullptr) {
 }
 
 
@@ -440,7 +440,8 @@ Processor::Processor(const Make& m, cstring name)
   model(m._model),
   builder(m._builder),
   frequency(m._frequency),
-  _process(0)
+  _process(nullptr),
+  _pf(m.pf)
 {
 	if(m.stages) {
 		stages.allocate(m.stages.length());
@@ -466,7 +467,8 @@ Processor::Processor(const Processor& proc, cstring name)
 	model(proc.model),
 	builder(proc.builder),
 	frequency(proc.frequency),
-	_process(proc._process)
+	_process(proc._process),
+	_pf(proc.platform())
 {
 	if(proc.stages.count()) {
 
@@ -679,6 +681,7 @@ protected:
 				dump(proc);
 			}
 			proc->_process = ws->process();
+			proc->_pf = ws->process()->platform();
 			config = proc;
 		}
 
@@ -691,6 +694,7 @@ protected:
 				dump(proc);
 			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			proc->_process = ws->process();
+			proc->_pf = ws->process()->platform();
 			config = proc;
 		}
 

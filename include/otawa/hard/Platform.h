@@ -87,6 +87,7 @@ public:
 
 	// Constructors
 	static const Identification ANY_PLATFORM;
+	static Platform *find(string id);
 	Platform(const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(cstring name, const Identification& id, const PropList& props = PropList::EMPTY);
 	Platform(const Platform& platform, const PropList& props = PropList::EMPTY);
@@ -114,6 +115,7 @@ private:
 	Identification id;
 	int rcnt;
 	const banks_t *_banks;
+	static p::id<bool> MAGIC;
 };
 inline io::Output& operator<<(io::Output& out, const Platform::Identification& id) { id.print(out); return out; }
 

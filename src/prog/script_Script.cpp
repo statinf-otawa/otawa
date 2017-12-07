@@ -549,7 +549,7 @@ void Script::work(WorkSpace *ws) {
 							log << "INFO: preparing to run " << *name << io::endl;
 						PropList list = props;
 						makeConfig(step, list);
-						Processor *proc = ProcessorPlugin::getProcessor(name);
+						Processor *proc = ProcessorPlugin::getProcessor(*name);
 						if(timed)
 							sw.start();
 						ws->run(proc, list, true);

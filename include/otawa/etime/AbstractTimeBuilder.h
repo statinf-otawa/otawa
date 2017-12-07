@@ -50,9 +50,9 @@ class Factory {
 public:
 	virtual ~Factory(void);
 	virtual ParExeGraph *make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq) = 0;
-	virtual ParExeNode *makeNode(ParExeInst *i, ParExeStage *stage) = 0;
+	virtual ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) = 0;
 	virtual ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "") = 0;
-	static Factory& DEFAULT;
+	static Factory *make(void);
 };
 
 class Builder {
@@ -65,10 +65,12 @@ public:
 	inline ParExeProc *processor(void) const { return _processor; }
 	inline resources_t *resources(void) const { return _resources; }
 	inline Factory *factory(void) const { return _factory; }
+	inline bool isExplicit(void) const { return _explicit; }
 	inline void setWorkSpace(WorkSpace *ws) { _ws = ws; }
 	inline void setProcessor(ParExeProc *processor) { _processor = processor; }
 	inline void setResources(resources_t *resources) { _resources = resources; }
 	inline void setFactory(Factory *factory) { _factory = factory; }
+	inline void setExplicit(bool is_explicit) { _explicit = is_explicit; }
 
 	static Builder& DEFAULT;
 
@@ -77,6 +79,7 @@ private:
 	ParExeProc *_processor;
 	resources_t *_resources;
 	Factory *_factory;
+	bool _explicit;
 };
 
 class Engine {
