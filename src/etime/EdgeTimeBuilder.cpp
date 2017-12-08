@@ -549,7 +549,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 				if((*e).fst->occurrence() == SOMETIMES)
 					log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address() << " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") " << (*e).snd << io::endl;
 		}
-		ASSERTP(false, "too many events!")
+		ASSERTP(false, "too many events! (" << countDynEvents(all_events) << ")")
 	}
 
 #	if 0
