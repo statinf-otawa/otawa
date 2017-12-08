@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project("otawa")
 set(PACKAGE "otawa")
-add_definitions(-g3 -O2)
+
 # C++ flags
 if(CMAKE_BUILD_TYPE MATCHES Release)
 	add_definitions(-DNDEBUG)
