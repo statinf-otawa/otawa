@@ -29,6 +29,17 @@ extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
 
 namespace etime {
 
+io::Output& operator<<(io::Output& out, part_t p) {
+	static cstring label[] = {
+			"in-prefix",
+			"in-edge",
+			"in-block"
+	};
+	out << label[p];
+	return out;
+}
+
+
 /**
  * @class EventCase
  * TODO
@@ -149,8 +160,8 @@ p::declare AbstractTimeBuilder::reg = p::init("otawa::etime::AbstractTimeBuilder
  */
 AbstractTimeBuilder::AbstractTimeBuilder(p::declare& r)
 :	BBProcessor(r),
-	_builder(&Builder::DEFAULT),
-	_engine(&Engine::DEFAULT),
+	_builder(nullptr),
+	_engine(nullptr),
 	_generator(&Generator::DEFAULT),
 	_proc(nullptr),
 	_explicit(false),
@@ -211,6 +222,12 @@ void AbstractTimeBuilder::setup(WorkSpace *ws) {
 	_proc = new ParExeProc(proc);
 	buildResources();
 
+	// if required, add default actions
+	if(_builder == nullptr)
+		_builder = Builder::make(*this);
+	if(_engine == nullptr)
+		_engine = Engine::make(*this);
+
 	// initialize the workers
 	_builder->setFactory(_engine->getFactory());
 	_builder->setProcessor(_proc);
@@ -231,6 +248,8 @@ void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
 	_generator->complete();
 
 	// cleanup
+	delete _builder;
+	delete _engine;
 	delete _proc;
 	for(auto res = resources_t::Iterator(_resources); res; res++)
 		delete *res;

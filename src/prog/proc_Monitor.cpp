@@ -55,6 +55,20 @@ Monitor::Monitor(void): flags(0), log_level(LOG_NONE), ws(0) {
 
 
 /**
+ * Build a monitor by copy.
+ * @param mon	Monitor to copy.
+ */
+Monitor::Monitor(const Monitor& mon)
+:	out(mon.out.stream()),
+	log(mon.log.stream()),
+	flags(mon.flags),
+	log_level(mon.log_level),
+	ws(mon.ws)
+{
+}
+
+
+/**
  * This property identifier is used for setting the output stream used by
  * the processor to write results.
  */

@@ -30,8 +30,9 @@ namespace otawa { namespace etime {
  */
 
 
-Builder::Builder(void)
-:	_ws(nullptr),
+Builder::Builder(const Monitor& mon)
+:	Monitor(mon),
+	_ws(nullptr),
 	_processor(nullptr),
 	_resources(nullptr),
 	_factory(nullptr),
@@ -86,6 +87,9 @@ Builder::~Builder(void) {
  */
 class StandardBuilder: public Builder {
 public:
+
+	StandardBuilder(const Monitor& mon): Builder(mon) {
+	}
 
 	ParExeGraph *build(ParExeSequence *seq) override {
 		ASSERT(workspace() != nullptr);
@@ -428,13 +432,12 @@ private:
 };
 
 
-// internal
-static StandardBuilder STANDARD_BUILDER;
-
 /**
  * TODO
  */
-Builder& Builder::DEFAULT = STANDARD_BUILDER;
+Builder *Builder::make(const Monitor& mon) {
+	return new StandardBuilder(mon);
+}
 
 } }	// otawa::etime
 

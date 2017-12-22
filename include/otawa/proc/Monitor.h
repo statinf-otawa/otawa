@@ -36,6 +36,7 @@ public:
 	static Monitor& null;
 
 	Monitor(void);
+	Monitor(const Monitor& mon);
 
 	typedef enum log_level_t {
 		LOG_NONE = 0,

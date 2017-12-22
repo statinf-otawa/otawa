@@ -246,6 +246,7 @@ namespace otawa {
 
 		// set/get information related to the graph
 		inline ParExeSequence *getSequence(void) const { return _sequence; }
+		inline ParExeProc *getMicroprocessor(void) const { return _microprocessor; }
 		inline ParExeNode * firstNode(){return _first_node;}
 		inline ParExeNode *lastNode(){return _last_node;}
 		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);

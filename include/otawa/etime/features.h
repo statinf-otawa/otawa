@@ -72,6 +72,7 @@ typedef enum place_t {
 	PREFIX = 1,
 	BLOCK = 2
 } place_t;
+io::Output& operator<<(io::Output& out, place_t p);
 
 
 // Event class

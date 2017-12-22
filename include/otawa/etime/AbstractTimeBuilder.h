@@ -31,15 +31,20 @@ namespace otawa { namespace etime {
 
 typedef elm::genstruct::Vector<Resource *> resources_t;
 typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } part_t;
+io::Output& operator<<(io::Output& out, part_t p);
 
 class EventCase {
 public:
 	inline EventCase(void): _e(nullptr), _p(IN_SIZE), _i(-1) { }
 	inline EventCase(Event *e, part_t p): _e(e), _p(p), _i(-1) { }
+
 	inline Event *event(void) const { return _e; }
 	inline part_t part(void) const { return _p; }
 	inline int index(void) const { return _i; }
 	inline void setIndex(int i) { _i = i; }
+
+	inline Event *operator->(void) const { return _e; }
+
 private:
 	Event *_e;
 	part_t _p;
@@ -55,9 +60,9 @@ public:
 	static Factory *make(void);
 };
 
-class Builder {
+class Builder: public Monitor {
 public:
-	Builder(void);
+	Builder(const Monitor& mon);
 	virtual ~Builder(void);
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
@@ -72,7 +77,7 @@ public:
 	inline void setFactory(Factory *factory) { _factory = factory; }
 	inline void setExplicit(bool is_explicit) { _explicit = is_explicit; }
 
-	static Builder& DEFAULT;
+	static Builder *make(const Monitor& mon);
 
 private:
 	WorkSpace *_ws;
@@ -82,12 +87,13 @@ private:
 	bool _explicit;
 };
 
-class Engine {
+class Engine: public Monitor {
 public:
+	Engine(const Monitor& mon);
 	virtual ~Engine(void);
 	Factory *getFactory(void);
 	virtual void compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events) = 0;
-	static Engine& DEFAULT;
+	static Engine *make(const Monitor& mon);
 };
 
 class Generator {
