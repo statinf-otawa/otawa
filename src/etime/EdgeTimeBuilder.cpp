@@ -896,7 +896,7 @@ int EdgeTimeBuilder::splitConfs(const config_list_t& confs, const event_list_t& 
 void EdgeTimeBuilder::displayConfs(const Vector<ConfigSet>& confs, const event_list_t& events) {
 	if(confs) {
 		for(int i = 0; i < confs.length(); i++) {
-			log << "\t\t\t\t[" << i << "] cost = " << confs[i].time() << " -> ";
+			log << "\t\t\t\t[" << i << "] cost = " << confs[i].time() << " with " << confs[i].count() << " confs" << " -> ";
 			for(ConfigSet::Iter conf(confs[i]); conf; conf++)
 				log << " " << (*conf).toString(events.length());
 			log << io::endl;
