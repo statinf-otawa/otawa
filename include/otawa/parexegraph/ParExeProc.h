@@ -151,7 +151,7 @@ namespace otawa {
     ParExeStage * _last_stage;
     ParExeStage * _first_stage;
   public:
-    ParExePipeline()  : _first_stage(NULL){}
+    ParExePipeline()  : _first_stage(nullptr), _last_stage(nullptr) {}
     ~ParExePipeline() {    }
     inline ParExeStage *lastStage() {return _last_stage;}
     inline ParExeStage *firstStage() {return _first_stage; }
