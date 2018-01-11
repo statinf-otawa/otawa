@@ -24,6 +24,6 @@ ARM or TriCore.
 
 ===== Include Tools =====
 
-OTAWA v2 comes with a slightly version of XDOT, named ''otawa-xdot.py''.
+OTAWA v2 comes with a slightly modified version of XDOT, named ''otawa-xdot.py''.
 [[https://github.com/jrfonseca/xdot.py]]. It is delivered under LGPL
 license (thanks for this great work).

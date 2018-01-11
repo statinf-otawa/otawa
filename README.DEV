@@ -12,7 +12,7 @@ of:
   
 ===== PARALLEL OTAWA =====
 
-The development of multicores provides an utterly important sources of computation power
+The development of multi-cores provides an utterly important sources of computation power
 but the price is the adoption of parallel way of programming. Unfortunately, this means
 that an application is split thread running concurrently with the possibility
 of synchronization problem leading to the use of time costly synchronization facilities
@@ -182,5 +182,3 @@ https://en.wikipedia.org/wiki/Software_transactional_memory
 https://en.wikipedia.org/wiki/Read-copy-update
 http://www.cl.cam.ac.uk/research/srg/netos/projects/archive/lock-free/
 http://kukuruku.co/hub/cpp/lock-free-data-structures-introduction
-
- 

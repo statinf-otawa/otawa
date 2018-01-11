@@ -181,6 +181,10 @@ public:
 namespace dfa { class BitSet; }
 extern Identifier<PostDomInfo *> PDOM_INFO;
 
+// Loop support
+class Loop;
+extern p::feature EXTENDED_LOOP_FEATURE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

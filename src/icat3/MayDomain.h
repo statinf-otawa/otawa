@@ -35,6 +35,7 @@ public:
 	inline const t& top(void) const { return _top; }
 	inline const t& init(void) const { return _init; }
 	inline void print(const t& a, io::Output& out) const { a.print(_set, _coll, out); }
+	inline io::Printable<t, MayDomain> print(const t& a) const { return io::p(a, *this); }
 	inline bool contains(const t& a, int i) { return(a[i] != BOT_AGE); }
 	inline void copy(t& d, const t& s) { d.copy(s); }
 	inline bool equals(const t& a, const t& b)

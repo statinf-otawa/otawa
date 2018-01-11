@@ -87,10 +87,8 @@ void MayDomain::update(const icache::Access& access, t& a) {
 	switch(access.kind()) {
 
 	case icache::FETCH:
-		if(_coll.cache()->set(access.address()) == _set) {
-			cerr << "DEBUG: update block " << LBLOCK(access)->address() << io::endl;
+		if(_coll.cache()->set(access.address()) == _set)
 			fetch(a, LBLOCK(access));
-		}
 		break;
 
 	case icache::PREFETCH:
@@ -139,14 +137,10 @@ public:
 		_domain.copy(d, _domain.bot());
 		t s;
 
-		cerr << "DEBUG: updating at " << v  << " (" << v->cfg() << ")" << io::endl;
-
 		// update and join along edges
 		for(auto e = _graph.preds(v); e; e++) {
 			Block *w = e->source();
 			_domain.copy(s, _store.get(w));
-			cerr << "DEBUG: updating along " << *e << " (" << e->source()->cfg() << ")" << io::endl;
-			cerr << "DEBUG: s = "; domain().print(s, cerr); cerr << io::endl;
 
 			// apply block
 			{
@@ -161,12 +155,10 @@ public:
 				if(accs.count() > 0)
 					update(accs, s);
 			}
-			cerr << "DEBUG: s' = "; domain().print(s, cerr); cerr << io::endl;
 
 			// merge result
 			_domain.join(d, s);
 		}
-		cerr << "DEBUG: d = "; domain().print(d, cerr); cerr << io::endl;
 	}
 
 private:
@@ -235,8 +227,9 @@ private:
 		for(CFGCollection::BlockIter b(cfgs); b; b++)
 			if(b->isBasic()) {
 				ada.domain().copy((*MAY_IN(b))[i], ada.store().get(b));
-				if(logFor(LOG_BLOCK))
-					log << "\t\t\t" << *b << ": "; ada.domain().print(ada.store().get(b), cerr); cerr << io::endl;
+				if(logFor(LOG_BLOCK)) {
+					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(b)) << io::endl;
+				}
 			}
 	}
 

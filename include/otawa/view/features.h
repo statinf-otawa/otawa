@@ -55,7 +55,7 @@ public:
 	virtual ~Viewer(void);
 
 	virtual void start(Block *b) = 0;
-	virtual  void start(Edge *e) = 0;
+	virtual void start(Edge *e) = 0;
 	virtual Address item(void) const = 0;
 	virtual void next(void) = 0;
 	virtual bool ended(void) const = 0;
