@@ -271,6 +271,7 @@ namespace se{
 
 			return copy();
 		}
+		return this; // nothing solidify
 	}
 
 	/************ SEReg methods ************/

@@ -479,8 +479,8 @@ extern int fft_line;
  * checksum "test.arm" 0xdac4ee63;
  *
  * // Function f
- * loop "f" + 0x24 10 in "f" / "g1" / "main";
- * loop "f" + 0x24 max 20 total 50 in "f" / "g2" / "main";
+ * loop "f" + 0x24 10 in "main" / "g1" / "f";
+ * loop "f" + 0x24 max 20 total 50 in "main" / "g2" / "f";
  * @endcode
  *
  * @par To Come
