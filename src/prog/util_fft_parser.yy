@@ -259,6 +259,8 @@ step:	full_address
 			{ path.push(otawa::ContextualStep::FUNCTION, *$1); delete $1; }
 |		'@' full_address
 			{ path.push(otawa::ContextualStep::CALL, *$2); delete $2; }
+|		STRING '@' full_address
+			{ path.push(otawa::ContextualStep::CALL, *$3); delete $3; }			
 ;
 
 path:

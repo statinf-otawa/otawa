@@ -266,8 +266,8 @@ public:
 	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) = 0;
 	virtual void startFunction(Output& out, CFG *cfg) = 0;
 	virtual void endFunction(Output& out) = 0;
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) = 0;
-	virtual void endLoop(Output& out) = 0;
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) = 0;
+	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) = 0;
 
 protected:
 	void printSourceLine(Output& out, Address address) {
@@ -427,7 +427,7 @@ public:
 		out << io::endl;
 	}
 
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) {
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) {
 		indent++;
 		printIndent(out, indent);
 		if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)) {
@@ -440,12 +440,31 @@ public:
 		else
 			out << "loop ";
 			addressOf(out, cfg, inst->address());
-			out << " ?; // " << inst->address() << " (";
+			out << " ? ";
+
+			if(contextual) {
+				out << "in";
+				bool first = true;
+				for(Vector<SynthBlock*>::Iter vsbi(callContext); vsbi; vsbi++) {
+					if(first)
+						first = false;
+					else
+						out << " /";
+					out << " \"" << vsbi->cfg()->name() << "\" @ ";
+					out << "0x" << io::hex(vsbi->callInst()->address().offset()) ;
+				}
+				if(!first)
+					out << " /";
+				out << " \"" << cfg->name() << "\"";
+			}
+
+
+			out << "; // 0x" << io::hex(inst->address().offset()) << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
 	}
 
-	virtual void endLoop(Output& out) {
+	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) {
 		indent--;
 	}
 
@@ -561,7 +580,7 @@ public:
 		out << "\t</function>\n\n";
 	}
 
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst) {
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) {
 		indent++;
 		printIndent(out, indent);
 		out << "<loop ";
@@ -573,7 +592,7 @@ public:
 		out << ") -->\n";
 	}
 
-	virtual void endLoop(Output& out) {
+	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) {
 		printIndent(out, indent);
 		out << "</loop>\n";
 		indent--;
@@ -617,7 +636,7 @@ private:
 // FFOutput processor
 class FFOutput: public CFGProcessor {
 public:
-	FFOutput(Printer& printer, bool removeDuplicatedTarget);
+	FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context);
 
 protected:
 	virtual void setup(WorkSpace *ws) {
@@ -627,7 +646,8 @@ protected:
 	virtual void processCFG(WorkSpace *ws, CFG *cfg);
 private:
 	void scanFun(ContextTree *ctree);
-	void scanLoop(CFG *cfg, ContextTree *ctree, int indent);
+	void scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBlock*>& callContext);
+	//void scanLoop(CFG *cfg, ContextTree *ctree, int indent);
 	bool checkLoop(ContextTree *ctree);
 	void scanTargets(CFG *cfg);
 
@@ -644,6 +664,7 @@ private:
 	Printer& _printer;
 	Vector<Address> displayedInstructions; // used to prevent same instruction being displayed twice.
 	bool _removeDuplicatedTarget;
+	bool contextual;
 };
 
 
@@ -718,7 +739,7 @@ private:
 	};
 	void generateCFGs(String path, int type = GeneratedCFGType::MULTIDOT);
 	void generateXMLs(String path, int type, PropList &props);
-	option::Switch xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
+	option::Switch contextual, xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
 		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML, outputSimpleCFGXML;
 };
 
@@ -976,7 +997,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 	if(outputSimpleCFGXML)
 		generateXMLs(String("") << "begin_xml_s" , 1, props);
 
-	Printer *p;
+	Printer *p = nullptr;
 
 	if(!debugging) {
 		// Load flow facts and record unknown values
@@ -1164,7 +1185,7 @@ void Command::work(PropList &props) throw(elm::Exception) {
 		ctrl.process(workspace(), props);
 
 		// display the context tree
-		FFOutput out(*p, removeDuplicatedTarget);
+		FFOutput out(*p, removeDuplicatedTarget, contextual);
 		out.process(workspace(), props);
 
 		// output footer for XML
@@ -1283,7 +1304,8 @@ Command::Command(void):
 		Version(1, 1, 0),
 		"Hugues Cassé <casse@irit.fr>",
 		"Generate a flow fact file for an application.",
-		"Copyright (c) 2005-15, IRIT - UPS"),
+		"Copyright (c) 2005-17, IRIT - UPS"),
+		contextual(*this, option::cmd, "-E", option::cmd, "--context", option::description, "enable contextual path output for loop bound", option::end),
 		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
 		dynbranch				(make_switch()			.cmd("-D").cmd("--dynbranch")		.description("check for dynamic branches")),
 		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
@@ -1309,7 +1331,7 @@ Command::Command(void):
 /**
  * Display the flow facts.
  */
-FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget) {
+FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget), contextual(context) {
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
@@ -1322,7 +1344,6 @@ void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	ContextTree *ctree = CONTEXT_TREE(cfg);
 	ASSERT(ctree);
 	scanFun(ctree);
-	scanTargets(cfg);
 }
 
 /**
@@ -1390,11 +1411,17 @@ void FFOutput::scanFun(ContextTree *ctree) {
 		_printer.startFunction(out, ctree->cfg());
 
 		// Scan the loop
-		scanLoop(ctree->cfg(), ctree, 0);
+		Vector<SynthBlock*> callContext;
+		scanLoop(ctree->cfg(), ctree, 0, callContext);
+
 
 		// Displayer footer
 		_printer.endFunction(out);
 	}
+
+	// Scan the dynamic branch
+	scanTargets(ctree->cfg());
+
 }
 
 
@@ -1404,7 +1431,7 @@ void FFOutput::scanFun(ContextTree *ctree) {
  * @param ctree		Current context tree.
  * @param indent	Current indentation.
  */
-void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
+void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBlock*>& callContext) {
 	ASSERT(ctree);
 
 	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
@@ -1422,9 +1449,59 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent) {
 				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
 					 << child->bb()->address() << io::endl;*/
 
-			_printer.startLoop(out, cfg, child->bb()->first());
-			scanLoop(cfg, child, indent + 1);
-			_printer.endLoop(out);
+
+
+			// indent = 0 means the top level, prepare the context
+
+			if(contextual && indent == 0) {
+				Vector<Vector<SynthBlock*> > vv;
+				Vector<SynthBlock*> v;
+				vv.add(v);
+				Vector<SynthBlock*> p;
+
+				for(CFG::CallerIter ci = cfg->callers(); ci; ci++)
+					vv[0].add(*ci);
+
+				int currLevel = 0;
+
+				if(vv[0].count() == 0) { // only main function
+					_printer.startLoop(out, cfg, child->bb()->first(), contextual, p);
+					scanLoop(cfg, child, indent + 1, p);
+					_printer.endLoop(out, contextual, p);
+				}
+				else {
+					while(vv[currLevel].count()) {
+						SynthBlock* sb = vv[currLevel].pop();
+						if(p.contains(sb)) {
+							elm::cerr << "Warning: processing recursive call " << sb->cfg()->name() << ", assert." << endl;
+							ASSERT(0);
+						}
+						p.addFirst(sb);
+
+						currLevel++;
+						if(vv.count() == currLevel)
+							vv.add(v);
+						for(CFG::CallerIter ci = sb->cfg()->callers(); ci; ci++)
+							vv[currLevel].add(*ci);
+
+						if(vv[currLevel].count() == 0) { // reaches the end
+							_printer.startLoop(out, cfg, child->bb()->first(), contextual, p);
+							scanLoop(cfg, child, indent + 1, p);
+							_printer.endLoop(out, contextual, p);
+						}
+						while(vv[currLevel].count() == 0 && currLevel > 0) {
+							currLevel--;
+							p.removeFirst();
+						}
+
+					}
+				}
+			} // only need to find all the context at the top level loop
+			else {
+				_printer.startLoop(out, cfg, child->bb()->first(), contextual, callContext);
+				scanLoop(cfg, child, indent + 1, callContext);
+				_printer.endLoop(out, contextual, callContext);
+			}
 		}
 	}
 }
