@@ -357,6 +357,7 @@ void RegBank::init(const Make& make) {
 	for(auto r = *make._regs; r; r++, i--) {
 		_regs[i] = *r;
 		r->_bank = this;
+		set(i, r);
 	}
 }
 
