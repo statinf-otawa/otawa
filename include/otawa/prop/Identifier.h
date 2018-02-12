@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	Identifier class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-09, IRIT UPS.
+ *	Copyright (c) 2003-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -22,8 +21,6 @@
 #ifndef OTAWA_PROP_IDENTIFIER_H
 #define OTAWA_PROP_IDENTIFIER_H
 
-#include <elm/rtti.h>
-#include <elm/meta.h>
 #include <otawa/type.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/PropList.h>

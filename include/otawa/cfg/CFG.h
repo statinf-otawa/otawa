@@ -83,12 +83,14 @@ public:
 	inline bool isBasic(void) const   { return (_type & MASK1)  == IS_BASIC; }
 
 	inline int id(void) const;
+	inline const BasicBlock *toBasic(void) const;
+	inline const SynthBlock *toSynth(void) const;
 	inline BasicBlock *toBasic(void);
 	inline SynthBlock *toSynth(void);
 	inline operator BasicBlock *(void) { return toBasic(); }
 	inline operator SynthBlock  *(void) { return toSynth(); }
 	inline CFG *cfg(void) const { return _cfg; }
-	inline Address address(void);
+	inline Address address(void) const;
 
 protected:
 	Block(t::uint16 type = IS_BASIC);
@@ -229,8 +231,10 @@ inline bool Edge::isForward(void) const { ASSERT(isTaken()); return source()->ad
 inline int Block::id(void) const { return index() + _cfg->offset(); }
 inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
 inline SynthBlock *Block::toSynth(void) { ASSERT(isCall());  return static_cast<SynthBlock  *>(this); }
+inline const BasicBlock *Block::toBasic(void) const { ASSERT(isBasic()); return static_cast<const BasicBlock *>(this); }
+inline const SynthBlock *Block::toSynth(void) const { ASSERT(isCall());  return static_cast<const SynthBlock  *>(this); }
 Output& operator<<(Output& out, Block *b);
-inline Address Block::address(void)
+inline Address Block::address(void) const
 	{ if(isBasic()) return toBasic()->address(); if(isSynth()) return toSynth()->address(); else return Address::null; }
 inline Address SynthBlock::address(void) const
 	{ if(_callee) return _callee->first()->address(); else return Address::null; }
