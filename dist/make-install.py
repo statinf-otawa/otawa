@@ -10,7 +10,8 @@ import stat
 map = {
 	"APP":		"OTAWA",
 	"DB_URL":	"http://tracesgroup.net/otawa/packages/2.0",
-	"DB_CONF":	"share/Otawa/install.xml"
+	"DB_CONF":	"share/Otawa/install.xml",
+	"DEFAULT":	"otawa"
 }
 path = "otawa-install.py"
 

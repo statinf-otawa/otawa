@@ -135,6 +135,9 @@ set(libotawa_SOURCES
 	"graph.cpp"
 	"view.cpp"
 
+#	rtti
+	"rtti.cpp"
+
 #	flow facts
 	"flowfact_ContextualLoopBound.cpp"
 
