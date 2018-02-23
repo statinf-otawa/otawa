@@ -37,6 +37,7 @@ set(libotawa_SOURCES
 	"cfg_ConditionalRestructurer.cpp"
 	"cfg_DelayedBuilder.cpp"
 	"cfg_Dominance.cpp"
+	"cfg_interproc.cpp"
 	"cfg_Loop.cpp"
 	"cfg_LoopIdentifier.cpp"
 	"cfg_LoopInfoBuilder.cpp"
