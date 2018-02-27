@@ -109,7 +109,6 @@ void MayDomain::update(const icache::Access& access, t& a) {
 
 
 /**
- *
  */
 class MayAdapter {
 public:
@@ -219,7 +218,7 @@ private:
 	void processSet(int i) {
 
 		// perform the analysis
-		MayAdapter ada(i, nullptr, *coll, *cfgs);
+		MayAdapter ada(i, init_may ? &init_may->get(i) : nullptr, *coll, *cfgs);
 		ai::SimpleAI<MayAdapter> ana(ada);
 		ana.run();
 

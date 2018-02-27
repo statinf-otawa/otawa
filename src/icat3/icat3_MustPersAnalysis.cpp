@@ -20,6 +20,7 @@
  *	02110-1301  USA
  */
 
+#include <elm/avl/Map.h>
 #include <elm/data/ListQueue.h>
 #include <otawa/ai/CFGCollectionGraph.h>
 #include <otawa/cfg/features.h>
@@ -28,7 +29,11 @@
 #include <otawa/icache/features.h>
 #include <otawa/proc/EdgeProcessor.h>
 #include <otawa/icat3/features.h>
+#include <otawa/ai/TransparentCFGCollectionGraph.h>
+#include <otawa/ai/SimpleAI.h>
 #include "MustPersDomain.h"
+
+#define DEBUG(x)	// cerr << "DEBUG: " << x << io::endl
 
 namespace otawa { namespace icat3 {
 
@@ -174,7 +179,7 @@ void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) con
 }
 
 
-/**
+/*
  * The set of CFG making a task is viewed with this class a tuple T = (V, E, F, ν, φ) where:
  * V is the set of all blocks of all CFG including basic blocks, ν_f or ω_f entry and exit point of function f,
  * E ⊆ V × Vs the set of edges,
@@ -185,147 +190,85 @@ void ACSStack::print(int set, const LBlockCollection& coll, io::Output& out) con
 
 #define AI_DEBUG(x)		//{ x }
 
-template <class S>
-class DefaultEdgeControler {
+
+/**
+ */
+class MustPersAdapter {
 public:
-	typedef typename S::t t;
-	typedef typename S::graph_t graph_t;
-	typedef typename S::domain_t domain_t;
-	typedef typename graph_t::vertex_t vertex_t;
-	typedef typename graph_t::edge_t edge_t;
+	typedef MustPersDomain domain_t;
+	typedef typename domain_t::t t;
+	typedef ai::TransparentCFGCollectionGraph graph_t;
+	typedef ai::ArrayStore<domain_t, graph_t> store_t;
 
-	DefaultEdgeControler(S& store)
-		: d(store.domain()), g(store.graph()), s(store) { }
+	MustPersAdapter(int set, const MustDomain::t *must_init, const ACS *pers_init, const LBlockCollection& coll, const CFGCollection& cfgs):
+		_domain(coll, set, must_init, pers_init),
+		_graph(cfgs),
+		_store(_domain, _graph) { }
 
-	void reset(void) {
-		s.reset();
-	}
+	inline domain_t& domain(void) { return _domain; }
+	inline graph_t& graph(void) { return _graph; }
+	inline store_t& store(void) { return _store; }
 
-	bool update(vertex_t v) {
-		AI_DEBUG(cerr << "DEBUG: examining " << v << io::endl;)
-
-		// entry of a CFG
-		if(v == g.entry()) {
-			s.set(v, d.init());
-			AI_DEBUG(cerr << "DEBUG:     INIT = "; d.print(d.init(), cerr); cerr << io::endl;)
-			return true;
-		}
-
-		// ⊔{(w, v) ∈ E} U(w, v, IN[w])
-		d.copy(t1, d.bot());
-		if(g.isEntry(v))
-			for(typename graph_t::Callers c = g.callers(v); c; c++)
-				for(typename graph_t::Predecessor e = g.preds(c); e; e++)
-					doCall(g.sourceOf(e), c);
-		else
-			for(typename graph_t::Predecessor e = g.preds(v); e; e++)
-				if(g.isCall(g.sourceOf(e)))
-					doReturn(g.exitOf(g.sourceOf(e)), v);
-				else
-					join(e);
-
-		// any update?
-		AI_DEBUG(cerr << "DEBUG:\t"; d.print(t1, cerr); cerr << " = "; d.print(s.get(v), cerr); cerr << io::endl;)
-		if(d.equals(t1, s.get(v)))
-			return false;
-		else {
-			AI_DEBUG(cerr << "DEBUG:\t\t" << v << " updated!\n";)
-			s.set(v, t1);
-			return true;
+	void update(const Bag<icache::Access>& accs, t& d) {
+		for(auto acc = *accs; acc; acc++) {
+			DEBUG("    " << *acc);
+			_domain.update(acc, d);
+			DEBUG("    " << _domain.print(d));
 		}
 	}
 
-	inline graph_t& graph(void) const { return g; }
-	inline const typename S::domain_t& domain(void) const { return d; }
+	void update(Block *v, t& d) {
+		// ∀v ∈ V \ {ν}, IN(v) = ⊔{(w, v) ∈ E} 𝕀*(β(w, v), (v, w), IN(w))
+		_domain.copy(d, _domain.bot());
+		t s;
 
-private:
+		// update and join along edges
+		DEBUG("compute IN of " << v);
+		for(auto e = _graph.preds(v); e; e++) {
+			Block *w = e->source();
+			_domain.copy(s, _store.get(w));
+			DEBUG("  by " << *e << " in " << v->cfg());
+			DEBUG("    " << _domain.print(s));
 
-	void doCall(typename graph_t::vertex_t v, typename graph_t::vertex_t w) {
-		d.copy(t2, s.get(v));
-		AI_DEBUG(cerr << "DEBUG:     entering IN(" << v << ") = "; d.print(t2, cerr); cerr << io::endl;)
-		d.doCall(t2, w);
-		AI_DEBUG(cerr << "DEBUG:     resulting in "; d.print(t2, cerr); cerr << io::endl;)
-		d.join(t1, t2);
-		AI_DEBUG(cerr << "DEBUG:     joined to "; d.print(t1, cerr); cerr << io::endl;)
-	}
-
-	void doReturn(typename graph_t::vertex_t v, typename graph_t::vertex_t w) {
-		d.copy(t2, s.get(v));
-		AI_DEBUG(cerr << "DEBUG:     leaving IN(" << v << ") = "; d.print(t2, cerr); cerr << io::endl;)
-		d.doReturn(t2, w);
-		AI_DEBUG(cerr << "DEBUG:     resulting in "; d.print(t2, cerr); cerr << io::endl;)
-		d.join(t1, t2);
-		AI_DEBUG(cerr << "DEBUG:     joined to "; d.print(t1, cerr); cerr << io::endl;)
-	}
-
-	void join(typename graph_t::vertex_t v) {
-		AI_DEBUG(cerr << "DEBUG:     joining IN(" << v << ") = "; d.print(s.get(v), cerr); cerr << io::endl;)
-		d.join(t1, s.get(v));
-		AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
-	}
-
-	void join(typename graph_t::edge_t e) {
-		vertex_t w = g.sourceOf(e);
-		d.copy(t2, s.get(w));
-		AI_DEBUG(cerr << "DEBUG:     IN(" << e << ") = "; d.print(t2, cerr); cerr << io::endl;)
-		d.update(e, t2); // update with the ACCESSes on both the predecessor w and e
-		AI_DEBUG(cerr << "DEBUG:     updated by " << e << ": "; d.print(t2, cerr); cerr << io::endl;)
-		d.join(t1, t2);
-		AI_DEBUG(cerr << "DEBUG:     result in "; d.print(t1, cerr); cerr << io::endl;)
-	}
-
-	typename S::domain_t& d;
-	graph_t& g;
-	S& s;
-	t t1, t2;
-};
-
-template <class C>
-class BreadthFirstDriver {
-public:
-	typedef typename C::graph_t graph_t;
-	typedef typename C::domain_t domain_t;
-	typedef typename graph_t::vertex_t vertex_t;
-
-	BreadthFirstDriver(C& controler): c(controler), g(c.graph()) { }
-
-	void run(void) {
-		c.reset();
-		// TODO --> avoid an if in controller
-		//for(typename graph_t::Successor e = g.succs(g.entry()); e; e++)
-		//	wl.put(g.sinkOf(e));
-		wl.put(g.entry());
-		while(wl) {
-			vertex_t v = wl.get();
-			AI_DEBUG(cerr << "DEBUG: processing " << v << io::endl;)
-			bool update = c.update(v);
-			if(update) {
-				if(g.isCall(v))
-					put(g.entryOf(v));
-				else if(g.isExit(v))
-					for(typename graph_t::Callers c = g.callers(v); c; c++)
-						for(typename graph_t::Successor e = g.succs(c); e; e++)
-							put(g.sinkOf(e));
-				else
-					for(typename graph_t::Successor e = g.succs(v); e; e++)
-						put(g.sinkOf(e));
+			// apply block
+			{
+				const Bag<icache::Access>& accs = icache::ACCESSES(w);
+				if(accs.count() > 0)
+					update(accs, s);
 			}
-			AI_DEBUG(cerr << io::endl;)
+
+			// loop support
+			if(LOOP_EXIT_EDGE(e))
+				for(LoopIter h(e->source()); h; h++) {
+					_domain.leaveLoop(s);
+					if(h == LOOP_EXIT_EDGE(e))
+						break;
+				}
+			if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
+				_domain.enterLoop(s);
+
+			// subprogram call support (PERS ACS level fix)
+			if(_graph.isReturn(e))
+				_domain.doReturn(s, v);
+			if(_graph.isCall(e))
+				_domain.doCall(s, e->sink()->outs()->sink());
+
+			// apply edge
+			{
+				const Bag<icache::Access>& accs = icache::ACCESSES(e);
+				if(accs.count() > 0)
+					update(accs, s);
+			}
+
+			// merge result
+			_domain.join(d, s);
 		}
 	}
 
 private:
-
-	void put(vertex_t v) {
-		if(!wl.contains(v)) {
-			wl.put(v);
-			AI_DEBUG(cerr << "DEBUG:     putting " << v << io::endl;)
-		}
-	}
-
-	C& c;
-	graph_t& g;
-	ListQueue<vertex_t> wl;
+	domain_t _domain;
+	graph_t _graph;
+	store_t _store;
 };
 
 
@@ -378,21 +321,20 @@ protected:
 
 	void processSet(int set) {
 
-		// perform the computation
-		MustPersDomain d(*coll, set, init_must ? &(*init_must)[set] : 0);
-		ai::CFGCollectionGraph g(*cfgs);
-		typedef ai::ArrayStore<MustPersDomain, ai::CFGCollectionGraph> store_t;
-		typedef DefaultEdgeControler<store_t> controler_t;
-		store_t s(d, g);
-		controler_t c(s);
-		BreadthFirstDriver<controler_t> ai(c);
-		ai.run();
+		// perform the analysis
+		MustPersAdapter ada(set, init_must ? &init_must->get(set) : nullptr, init_pers ? &init_pers->get(set) : nullptr, *coll, *cfgs);
+		ai::SimpleAI<MustPersAdapter> ana(ada);
+		ana.run();
 
-		// store the result
-		for(CFGCollection::BlockIter b(cfgs); b; b++) {
-			(*MUST_IN(b))[set] = d.must(s.get(b));
-			(*PERS_IN(b))[set] = d.pers(s.get(b));
-		}
+		// store the results
+		for(CFGCollection::BlockIter b(cfgs); b; b++)
+			if(b->isBasic()) {
+				ada.domain().mustDomain().copy((*MUST_IN(b))[set], ada.store().get(b).must);
+				ada.domain().persDomain().copy((*PERS_IN(b))[set], ada.store().get(b).pers);
+				if(logFor(LOG_BLOCK)) {
+					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(b)) << io::endl;
+				}
+			}
 	}
 
 	const LBlockCollection *coll;

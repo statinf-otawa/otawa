@@ -100,12 +100,16 @@ public:
 		PersDomain::t pers;
 	} t;
 
-	MustPersDomain(const LBlockCollection& coll, int set, const MustDomain::t *must_init = 0, const ACS *pers_init = 0);
+	MustPersDomain(const LBlockCollection& coll, int set, const MustDomain::t *must_init = nullptr, const ACS *pers_init = nullptr);
+	MustDomain& mustDomain(void) { return _must; }
+	PersDomain& persDomain(void) { return _pers; }
+
 	inline const t& bot(void) const { return _bot; }
 	inline const t& top(void) const { return _top; }
 	inline const t& init(void) const { return _init; }
 	inline void copy(t& d, const t& s) { d.must.copy(s.must); d.pers.copy(s.pers); }
 	void print(const t& a, io::Output& out) const;
+	inline io::Printable<t, MustPersDomain> print(const t& a) const { return io::p(a, *this); }
 	void join(t& d, const t& s);
 	inline bool contains(const t& a, int i) { return(a.must[i] != BOT_AGE); }
 	void update(const icache::Access& access, t& a);
@@ -116,6 +120,8 @@ public:
 	inline const PersDomain::t& pers(const t& a) { return a.pers; }
 	void doCall(t& a, Block *b);
 	void doReturn(t& a, Block *b);
+	void enterLoop(t& a);
+	void leaveLoop(t& a);
 
 private:
 	static p::id<int> DEPTH;

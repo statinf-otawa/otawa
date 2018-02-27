@@ -35,7 +35,7 @@ namespace otawa {
  * The CFG is graph representation of the execution path of the program where
  * nodes represents either a basic block, or a synthetic blocks, and edges, @ref Edge,
  * the control flow transitions between blocks. A @ref BasicBlock, represents
- * blocks of sequential instructions. A synthetic represents sub-CFG references a CFG
+ * blocks of sequential instructions. A synthetic block represents sub-CFG references a CFG
  * that may be a subprogram call or a separated subgraph of blocks. Whatever, CFG
  * have usually a single entry point and a single exit point. Only subprograms
  * with unresolved control target supports a second exit node, called "unknown":

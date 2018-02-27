@@ -175,6 +175,8 @@ void PersDomain::join(t& d, const t& s) {
  * @param a		ACS to update.
  */
 void PersDomain::update(const icache::Access& o, t& a) {
+	if(a.isBottom())
+		return;
 	update(o, a.whole());
 	for(int i = 0; i < a.depth(); i++)
 		update(o, a[i]);
@@ -252,7 +254,8 @@ bool PersDomain::equals(const ACS& a1, const ACS& a2) {
  * @param a2	Second ACS stack.
  */
 bool PersDomain::equals(const t& a1, const t& a2) {
-	ASSERT(a1.depth() == a2.depth());
+	if(a1.depth() != a2.depth())
+		return false;
 	if(a1.isBottom() != a2.isBottom())
 		return false;
 	if(!equals(a1.whole(), a2.whole()))

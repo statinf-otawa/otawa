@@ -55,15 +55,18 @@ public:
 
 	class Successor: public ip::Successor {
 	public:
-		Successor(Block *b);
+		inline Successor(Block *b): ip::Successor(b) { }
 	};
 	inline Successor succs(vertex_t v) const { return Successor(v); }
 
 	class Predecessor: public ip::Predecessor {
 	public:
-		Predecessor(Block *b);
+		Predecessor(Block *b): ip::Predecessor(b) { }
 	};
 	inline Predecessor preds(vertex_t v) const { return Predecessor(v); }
+
+	inline bool isCall(edge_t e) { return e->sink()->isCall() || (e->source()->isEntry() && e->source() != _coll.entry()->entry()); }
+	inline bool isReturn(edge_t e) { return e->source()->isCall() || (e->sink()->isExit() && e->sink() != _coll.entry()->exit()); }
 
 	// Indexed concept
 	inline int index(Block *v) const { return v->id(); }

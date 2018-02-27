@@ -114,14 +114,43 @@ bool MustPersDomain::equals(const t& a, const t& b) {
 	return _must.equals(a.must, b.must) && _pers.equals(a.pers, b.pers);
 }
 
+/**
+ * Called when a subprogram is called to adjust the ACS stack.
+ * @param a		Current ACS (to fix).
+ * @param b		Returning block.
+ */
 void MustPersDomain::doCall(t& a, Block *b) {
+	// TODO I dislike the way  is implemented: must be fixed in a different way!
 	DEPTH(b) = a.pers.depth();
 }
 
+/**
+ * Called when a subprogram is returning to adjust the ACS stack.
+ * @param a		Current ACS (to fix).
+ * @param b		Returning block.
+ */
 void MustPersDomain::doReturn(t& a, Block *b) {
 	int d = DEPTH(b);
 	while(a.pers.depth() > d)
 		_pers.leave(a.pers);
+}
+
+/**
+ * Must be called when a loop is entered to adjust the stack
+ * of PERS ACS.
+ * @param a		ACS to update.
+ */
+void MustPersDomain::enterLoop(t& a) {
+	_pers.enter(a.pers);
+}
+
+/**
+ * Must be called when a loop is left to adjust the stack
+ * of PERS ACS.
+ * @param a		ACS to update.
+ */
+void MustPersDomain::leaveLoop(t& a) {
+	_pers.leave(a.pers);
 }
 
 p::id<int> MustPersDomain::DEPTH("", -1);
