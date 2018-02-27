@@ -29,7 +29,7 @@
 #include <otawa/icache/features.h>
 #include <otawa/proc/EdgeProcessor.h>
 #include <otawa/icat3/features.h>
-#include <otawa/ai/TransparentCFGCollectionGraph.h>
+#include <otawa/cfg/CompositeCFG.h>
 #include <otawa/ai/SimpleAI.h>
 #include "MustPersDomain.h"
 
@@ -197,7 +197,7 @@ class MustPersAdapter {
 public:
 	typedef MustPersDomain domain_t;
 	typedef typename domain_t::t t;
-	typedef ai::TransparentCFGCollectionGraph graph_t;
+	typedef CompositeCFG graph_t;
 	typedef ai::ArrayStore<domain_t, graph_t> store_t;
 
 	MustPersAdapter(int set, const MustDomain::t *must_init, const ACS *pers_init, const LBlockCollection& coll, const CFGCollection& cfgs):

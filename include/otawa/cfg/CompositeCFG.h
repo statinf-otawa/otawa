@@ -1,8 +1,8 @@
 /*
- *	TransparentCFGCollectionGraph class interface
+ *	CompositeCFG class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2017, IRIT UPS.
+ *	Copyright (c) 2018, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -19,18 +19,18 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_AI_TRANSPARENTCFGCOLLECTIONGRAPH_H_
-#define OTAWA_AI_TRANSPARENTCFGCOLLECTIONGRAPH_H_
+#ifndef OTAWA_CFG_COMPOSITE_CFG_H_
+#define OTAWA_CFG_COMPOSITE_CFG_H_
 
 #include <elm/data/List.h>
 #include <otawa/cfg/interproc.h>
 #include <otawa/properties.h>
 
-namespace otawa { namespace ai {
+namespace otawa {
 
-class TransparentCFGCollectionGraph {
+class CompositeCFG {
 public:
-	TransparentCFGCollectionGraph(const CFGCollection& coll): _coll(coll) { }
+	CompositeCFG(const CFGCollection& coll): _coll(coll) { }
 
 	typedef Block *vertex_t;
 	typedef Edge *edge_t;
@@ -50,7 +50,7 @@ public:
 
 	class Iterator: public CFGCollection::BlockIter {
 	public:
-		inline Iterator(const TransparentCFGCollectionGraph& g): CFGCollection::BlockIter(&g._coll) { }
+		inline Iterator(const CompositeCFG& g): CFGCollection::BlockIter(&g._coll) { }
 	};
 
 	class Successor: public ip::Successor {
@@ -76,7 +76,7 @@ private:
 	const CFGCollection& _coll;
 };
 
-} }		// otawa::ai
+}		// otawa
 
-#endif /* OTAWA_AI_TRANSPARENTCFGCOLLECTIONGRAPH_H_ */
+#endif /* OTAWA_CFG_COMPOSITE_CFG_H_ */
 

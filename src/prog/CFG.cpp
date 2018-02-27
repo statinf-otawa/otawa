@@ -871,4 +871,27 @@ void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
 	add(v);
 }
 
+/**
+ * @class CompositeCFG
+ *
+ * This graph, implementing the interface of @ref ai graph, process the CFG collection of a task as single graph.
+ * This means that the @ref SynthBlock will be invisible for the analysis.
+ *
+ * Actually, iterating on the successor
+ * edges of a call bloc will give the edges between the entry and the first block of the called
+ * subprogram. In the same way, iterating on the successor edges of a return block of a function
+ * will iterate on the successor of the caller @ref SynthBlock.
+ *
+ * This works in the same looking to the predecessor: the predecessor of the first blocks of
+ * a subprogram will match the predecessor of the call @ref SynthBlock and the predecessors
+ * of a block following a call will be the return blocks of a called function.
+ *
+ * This allow to consider the collection of CFG as one unique graph but an practical outcome
+ * is that (a) for successors, the sink vertex is not always the currently processed vertex and
+ * (b) for predecessors, the source vertex is not always the currently processed vertex.
+ *
+ * @ingroup cfg
+ */
+
 }	// otawa
+

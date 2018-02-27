@@ -22,7 +22,7 @@
 
 #include "ai.h"
 #include <otawa/dfa/ai.h>
-#include <otawa/ai/TransparentCFGCollectionGraph.h>
+#include <otawa/cfg/CompositeCFG.h>
 
 using namespace elm;
 
@@ -253,30 +253,6 @@ namespace otawa { namespace ai {
  * Performed the analysis using the given adapter, that is, basically produces for each vertex
  * of the graph a domain value. The values are computed and propagated along the edges
  * until a fixpoint is found.
- */
-
-
-/**
- * @class TransparentCFGCollectionGraph
- *
- * This instance of @ref ai graph process the CFG collection of a task as single graph.
- * This means that the @ref SynthBlock, excepted those marked with the exclude identifier passed
- * at construction time, will be invisible for the analysis.
- *
- * Actually, iterating on the successor
- * edges of a call bloc will give the edges between the entry and the first block of the called
- * subprogram. In the same way, iterating on the successor edges of a return block of a function
- * will iterate on the successor of the caller @ref SynthBlock.
- *
- * This works in the same looking to the predecessor: the predecessor of the first blocks of
- * a subprogram will match the predecessor of the call @ref SynthBlock and the predecessors
- * of a block following a call will be the return blocks of a called function.
- *
- * This allow to consider the collection of CFG as one unique graph but an practical outcome
- * is that (a) for successors, the sink vertex is not always the currently processed vertex and
- * (b) for predecessors, the source vertex is not always the currently processed vertex.
- *
- * @ingroup ai
  */
 
 } } 	// otawa::ai

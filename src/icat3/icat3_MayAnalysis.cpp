@@ -21,7 +21,7 @@
  */
 
 #include <otawa/ai/ArrayStore.h>
-#include <otawa/ai/TransparentCFGCollectionGraph.h>
+#include <otawa/cfg/CompositeCFG.h>
 #include <otawa/ai/SimpleAI.h>
 #include <otawa/cfg/features.h>
 #include <otawa/icache/features.h>
@@ -114,7 +114,7 @@ class MayAdapter {
 public:
 	typedef MayDomain domain_t;
 	typedef typename domain_t::t t;
-	typedef ai::TransparentCFGCollectionGraph graph_t;
+	typedef CompositeCFG graph_t;
 	typedef ai::ArrayStore<domain_t, graph_t> store_t;
 
 	MayAdapter(int set, const t *init, const LBlockCollection& coll, const CFGCollection& cfgs):
