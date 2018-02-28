@@ -364,7 +364,7 @@ template <> void from_string(const string& str, SymAddress*& v) {
 	v = SymAddress::parse(str);
 }
 
-void from_string_split(const string& str, genstruct::Vector<string>& items) {
+void from_string_split(const string& str, Vector<string>& items) {
 	int i = str.indexOf(','), j = 0;
 	while(i >= 0) {
 		items.add(str.substring(j, i - j));

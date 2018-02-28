@@ -17,6 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.package ojawa;
  */
 
+#include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
 #include <otawa/prop/AbstractIdentifier.h>
 

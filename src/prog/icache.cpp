@@ -153,7 +153,7 @@ protected:
 private:
 	const hard::Cache *icache;
 	const hard::Memory *mem;
-	genstruct::Vector<Access> accs;
+	Vector<Access> accs;
 };
 
 p::declare AccessBuilder::reg = p::init("otawa::icache::AccessBuilder", Version(1, 0, 0))
@@ -257,7 +257,7 @@ protected:
 private:
 	const hard::Cache *icache;
 	const hard::Memory *mem;
-	genstruct::Vector<Access> accs;
+	Vector<Access> accs;
 };
 
 p::declare EdgeAccessBuilder::reg = p::init("otawa::icache::EdgeAccessBuilder", Version(1, 0, 0))

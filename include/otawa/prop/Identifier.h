@@ -264,10 +264,10 @@ template <> void from_string(const string& str, sys::Path& v);
 class SymAddress;
 template <> void from_string(const string& str, SymAddress*& v);
 
-void from_string_split(const string& str, genstruct::Vector<string>& items);
+void from_string_split(const string& str, Vector<string>& items);
 template <class T> void from_string(const string& str, Bag<T>& bag) {
-	genstruct::Vector<string> strs; from_string_split(str, strs);
-	genstruct::Vector<T> list(strs.length()); list.setLength(strs.length());
+	Vector<string> strs; from_string_split(str, strs);
+	Vector<T> list(strs.length()); list.setLength(strs.length());
 	for(int i = 0; i < strs.length(); i++) from_string(strs[i], list[i]);
 	bag = list;
 }
