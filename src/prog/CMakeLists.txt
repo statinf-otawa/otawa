@@ -124,6 +124,7 @@ set(libotawa_SOURCES
 
 #    abstract interpretation module
 	"ai.cpp"
+	"ai_FlowAwareRanking.cpp"
 
 #    utility module
 	"util_FlowFactLoader.cpp"

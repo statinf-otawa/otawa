@@ -25,7 +25,11 @@
 
 #include <elm/io.h>
 
-namespace otawa { namespace ai {
+namespace otawa {
+
+class PropList;
+
+namespace ai {
 
 using namespace elm;
 
@@ -137,6 +141,25 @@ public:
 	 */
 	void update(const A& a, t& d);
 
+};
+
+/**
+ * Concept to represent a ranking function.
+ */
+class RankingConcept {
+public:
+
+	/**
+	 * Obtain the rank given in the property list by the identifier @ref RANK_OF.
+	 * @param props		Property list to look in.
+	 */
+	int rankOf(const PropList& props);
+
+	/**
+	 * Obtain the rank given in the property list by the identifier @ref RANK_OF.
+	 * @param props		Property list to look in.
+	 */
+	int rankOf(const PropList *props);
 };
 
 } }	// otawa::ai

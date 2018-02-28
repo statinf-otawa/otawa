@@ -21,8 +21,9 @@
  */
 
 #include "ai.h"
+#include <otawa/ai/FlowAwareRanking.h>
+#include <otawa/ai/RankingAI.h>
 #include <otawa/dfa/ai.h>
-#include <otawa/cfg/CompositeCFG.h>
 
 using namespace elm;
 
@@ -255,4 +256,75 @@ namespace otawa { namespace ai {
  * until a fixpoint is found.
  */
 
+
+/**
+ * @class RankingAI
+ * Perform an abstract interpretation of the domain, store and graph provided
+ * in the adapter and uses a ranking function to organize vertices to process
+ * the speed up the interpretation and convergence to the fix-point.
+ *
+ * @param A		Type of the adapter (must implement @ref AdapterConcept).
+ * @param R		Type of the ranking function (must implement @ref RankingConcept).
+ *
+ * @ingroup ai
+ */
+
+/**
+ * @fn RankingAI::RankingAI(A& adapter, R& rank);
+ * Build the abstract interpretation manager.
+ * @param adapter	Adapter to use.
+ * @param rank		Ranking function (default to @ref PropertyRanking).
+ */
+
+/**
+ * @fn RankingAI::run(void);
+ * Launch the abstract interpretation that halts as soon as a fix-point
+ * is reached. The resulting states are recorded for each vertex
+ * in the store of the adapter.
+ */
+
+
+/**
+ * @class PropertyRanking
+ * This class may be used with @ref RankingAI to organize the list of vertices to process
+ * according to the rank associated with each vertex. In this case, the vertices must inherit
+ * from @ref PropList and the rank is obtained from the @ref RANK_OF property.
+ *
+ * @ingroup ai
+ */
+
+/**
+ */
+int PropertyRanking::rankOf(const PropList& props) {
+	return RANK_OF(props);
+}
+
+
+/**
+ * Identifier used to rank the vertices of a graph according to
+ * a priority of processing (lower is better). It is particularly used
+ * by @ref PropertyRanking class and thereof by @ref Ranking AI.
+ *
+ * @par Features
+ *
+ * @par Hooks
+ * 	* @ref otawa::BasicBlock
+ */
+p::id<int> RANK_OF("otawa::ai::RANK_OF", -1);
+
+
+/**
+ * This feature ensures that a ranking has been assigned to each of block of the
+ * current CFG collection. The ranking value is an integer giving a priority (lesser
+ * is better) to process the block in a static analysis.
+ *
+ * @par Properties
+ * 		* @ref RANK_OF
+ *
+ * @par Implementation
+ * 		* @ref FlowAwareRanking
+ */
+p::feature RANKING_FEATURE("otawa::ai::RANKING_FEATURE", p::make<FlowAwareRanking>());
+
 } } 	// otawa::ai
+
