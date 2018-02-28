@@ -27,8 +27,10 @@
 
 namespace otawa {
 
-class LBlockSet;
-class LBlock;
+namespace cache {
+	class LBlockSet;
+	class LBlock;
+}
 
 namespace cat {
 
@@ -39,13 +41,13 @@ class CATNode: public elm::inhstruct::DLNode, public PropList {
 	//BasicBlock *headerevolution;
 	bool inloop;
 	//bool hasheaderevolution;
-	LBlock *lbl;	
+	cache::LBlock *lbl;
 	
 	
 public:
 
 	//constructor
-	CATNode(LBlock *lblock);
+	CATNode(cache::LBlock *lblock);
 	
 	// methodes
 	
@@ -55,7 +57,7 @@ public:
 	//BasicBlock *HEADEREVOLUTION(void);
 	bool INLOOP (void);
 	//bool HASHEADEREVOLUTION(void);
-	LBlock *lblock(){return lbl;};
+	cache::LBlock *lblock(){return lbl;};
 };
 
 } }	// otawa::cat

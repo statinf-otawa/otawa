@@ -19,7 +19,6 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/HashTable.h>
 #include <elm/io.h>
 
 #include <otawa/cache/LBlockSet.h>
@@ -179,14 +178,14 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			if(_explicit) {
 				StringBuffer buf;
 				buf << "eccg_";
-				if(!lblock->address())
+				if(lblock->address().isNull())
 					buf << "ENTRY";
 				else
 					buf << lblock->address()
 						<< '_' << lblock->bb()->index()
 						<< '_' << lblock->bb()->cfg()->label();
 				buf << '_';
-				if(!succ->lblock()->address())
+				if(succ->lblock()->address().isNull())
 					buf << "EXIT";
 				else
 					buf << succ->lblock()->address()
@@ -304,10 +303,10 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		 		cons2 = system->newConstraint(Constraint::LE);
 				cons->addLeft(1, HIT_VAR(lbloc));
 
-				unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+				unsigned long taglbloc = ((unsigned long)lbloc->address().offset()) >> dec;
 				for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++)
 				{
-					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> dec;
+					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address().offset()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1){
 						if (taglbloc == taginedge) {
@@ -343,9 +342,9 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		else if(Builder::NON_CONFLICT(lbloc)) {
 			cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, HIT_VAR(lbloc));
-			unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
+			unsigned long taglbloc = ((unsigned long)lbloc->address().offset()) >> dec;
 			for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++) {
-				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address()) >> 3;
+				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address().offset()) >> 3;
 				if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1) {
 						if(taglbloc == taginedge)

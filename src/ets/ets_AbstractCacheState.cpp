@@ -98,21 +98,21 @@ void AbstractCacheState::join(AbstractCacheState *state1, AbstractCacheState *st
 		cache_state[j]->clear();
 
 	//Adding of state1->hcat and state2->hcat in this.
-	for(genstruct::HashTable<address_t, int>::KeyIterator key(state1->hcat); key; key++)
-		if(!hcat.exists(key))
-			hcat.put(key, state1->hcat.get(key, -1));
-	for(genstruct::HashTable<address_t, int>::KeyIterator yek(state2->hcat); yek; yek++)
-		if(!hcat.exists(yek))
-			hcat.put(yek, state1->hcat.get(yek, -1));
+	for(HashMap<address_t, int>::KeyIter key(state1->hcat); key; key++)
+		if(!hcat.exists(*key))
+			hcat.put(*key, state1->hcat.get(*key, -1));
+	for(HashMap<address_t, int>::KeyIter yek(state2->hcat); yek; yek++)
+		if(!hcat.exists(*yek))
+			hcat.put(*yek, state1->hcat.get(*yek, -1));
 
 	//Ferdinand's Algorithme (Intersection(Join) - Must).
-	for(genstruct::HashTable<address_t, int>::KeyIterator k(htable); k; k++){
+	for(HashMap<address_t, int>::KeyIter k(htable); k; k++){
 		a=-1;
 		b=-1;
 		for(int i=0;i<state1->cache_state.length();i++){
-			if(state1->cache_state[i]->bit(state1->htable.get(k, -1)))
+			if(state1->cache_state[i]->bit(state1->htable.get(*k, -1)))
 				a=i;
-			if(state2->cache_state[i]->bit(state2->htable.get(k, -1)))
+			if(state2->cache_state[i]->bit(state2->htable.get(*k, -1)))
 				b=i;
 		}
 		if((a != -1) && (b != -1)) {
@@ -135,13 +135,13 @@ void AbstractCacheState::assignment(AbstractCacheState *other){
 		cache_state[i]->clear();
 		cache_state[i]->applyOr(*other->cache_state[i]);
 	}
-	for(genstruct::HashTable<address_t, int>::KeyIterator key(other->htable); key; key++){
-		if(!htable.exists(key))
-			htable.put(key, other->htable.get(key, -1));
+	for(HashMap<address_t, int>::KeyIter key(other->htable); key; key++){
+		if(!htable.exists(*key))
+			htable.put(*key, other->htable.get(*key, -1));
 	}
-	for(genstruct::HashTable<address_t, int>::KeyIterator k(other->hcat); k; k++){
-		if(!hcat.exists(k))
-			hcat.put(k, other->hcat.get(k, -1));
+	for(HashMap<address_t, int>::KeyIter k(other->hcat); k; k++){
+		if(!hcat.exists(*k))
+			hcat.put(*k, other->hcat.get(*k, -1));
 	}
 	cache_line = other->cache_line;
 }

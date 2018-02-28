@@ -18,8 +18,8 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/Vector.h>
+#include <elm/data/HashMap.h>
 #include <otawa/ast/FunAST.h>
 #include <otawa/ast/ASTInfo.h>
 #include <otawa/ast/features.h>

@@ -11,7 +11,7 @@
 #include <otawa/instruction.h>
 #include <otawa/cat/CATConstraintBuilder.h>
 #include <otawa/cache/LBlockSet.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/cat/CATBuilder.h>
 
 using namespace otawa::ilp;
@@ -38,7 +38,7 @@ CATDomain *CATProblem::gen(CFG *cfg, Block *bb) {
 	    int identif=0;	    
 	    for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 			adlbloc = inst->address();				
-			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
+			for (cache::LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				address_t address = lbloc->address();
 				if ((adlbloc == address)&& (bb == lbloc->bb()))
 					identif = lbloc->id();
@@ -69,17 +69,17 @@ CATDomain *CATProblem::preserve(CFG *cfg, Block *bb) {
 		adlbloc = inst->address();
 		if (!testnotconflit){
 			// lblocks iteration
-			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
+			for (cache::LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				if ((adlbloc == (lbloc->address()))&&(bb == (lbloc->bb()))){
 					//testnotconflit = true;
 					identif1 = lbloc->id();
-					unsigned long tag = ((unsigned long)adlbloc) >> dec;
-					for (LBlockSet::Iterator lbloc1(*lines); lbloc1; lbloc1++){
-						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
+					unsigned long tag = ((unsigned long)adlbloc.offset()) >> dec;
+					for (cache::LBlockSet::Iterator lbloc1(*lines); lbloc1; lbloc1++){
+						unsigned long taglblock = ((unsigned long)lbloc1->address().offset()) >> dec;
 						if (adlbloc != (lbloc1->address())&&(tag == taglblock)){
 							identnonconf = lbloc1->id();
 							// the state of the first lblock in BB become nonconflict
-							LBlock *ccgnode = lines->lblock(identif1);
+							cache::LBlock *ccgnode = lines->lblock(identif1);
 							//								ccgnode->setNonConflictState(true);
 							cat::CATBuilder::NON_CONFLICT(ccgnode) = true;
 							break;
@@ -95,7 +95,7 @@ CATDomain *CATProblem::preserve(CFG *cfg, Block *bb) {
 
 
 		if (!visit){
-			for (LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
+			for (cache::LBlockSet::Iterator lbloc(*lines); lbloc; lbloc++){
 				if (adlbloc == (lbloc->address())){
 					identif2 = lbloc->id();
 					break ;

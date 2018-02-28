@@ -76,7 +76,7 @@ def:
 		{
 			ast::ASTInfo *info = ASTInfo::getInfo(loader->ws);
 			address_t addr = loader->file->findLabel($1 + 1);
-			if(!addr)
+			if(addr.isNull())
 				throw LoadException(_ << "Cannot resolve label \"" << $1 << "\".");
 			Inst *inst = loader->ws->findInstAt(addr);
 			if(!inst)

@@ -21,6 +21,7 @@
 #ifndef OTAWA_ETS_ETS_H
 #define OTAWA_ETS_ETS_H
 
+#include <otawa/proc/Feature.h>
 #include <otawa/prop/Identifier.h>
 
 namespace otawa { namespace ets {

@@ -130,7 +130,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	engine.process();
 
 	// Add the annotations from the DFA result
-	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+	for (CFGCollection::Iter cfg(coll); cfg; cfg++) {
 		for (CFG::BlockIter block = cfg->blocks(); block; block++)
 			if(block->isBasic())	{
 				dfa::XCFGVisitor<Problem>::key_t pair(*cfg, block->toBasic());
@@ -160,7 +160,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	address_t adinst;
 	LBlock *aux;
 
-	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+	for (CFGCollection::Iter cfg(coll); cfg; cfg++) {
 		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
 			if (cfg != ENTRY_CFG(fw) || bb->isBasic()) {
 				dfa::BitSet *info = IN(bb);
@@ -212,7 +212,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	new Edge(Graph::NODE(s), Graph::NODE(end));
 
 	// Cleanup the DFA annotations
-	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for (CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for (CFG::BlockIter block = cfg->blocks(); block; block++)
 			block->removeProp(&IN);
 }

@@ -75,22 +75,11 @@ add_subdirectory(odisasm)
 add_subdirectory(owcet)
 
 
-# Python bindings
-#if(WITH_PYTHON)
-#	if(PYTHONLIBS_FOUND)
-#		add_subdirectory(opy)
-#	else()
-#		message(FATAL "cannot build Python binding: Python library not found") 
-#	endif()
-#endif()
 
 # legacy code
 if(USE_LEGACY)
-	add_subdirectory(ccg)
 	add_subdirectory(ast)
-	add_subdirectory(cat)
 	add_subdirectory(ets)
-	if(HAS_LP_SOLVE OR LP_SOLVE5_LIB)
-	#	add_subdirectory(oipet)
-	endif()
+	add_subdirectory(cat)
+	add_subdirectory(ccg)
 endif()

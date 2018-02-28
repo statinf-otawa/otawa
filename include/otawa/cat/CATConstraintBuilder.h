@@ -31,7 +31,7 @@ namespace otawa {
 
 // Extern classes
 class ContextTree;
-class LBlockSet;
+namespace cache { class LBlockSet; }
 
 namespace cat {
 	
@@ -45,8 +45,8 @@ public:
 
 private:
 	bool _explicit;
-	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
-	void buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
+	void processLBlockSet(WorkSpace *fw, cache::LBlockSet *lbset);
+	void buildLBLOCKSET(cache::LBlockSet *lcache, ContextTree *root);
 };
 
 } }	// otawa::cat

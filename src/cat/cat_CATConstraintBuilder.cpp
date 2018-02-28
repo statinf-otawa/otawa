@@ -20,7 +20,7 @@
  *	02110-1301  USA
  */
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/io.h>
 
 #include <otawa/cache/LBlockSet.h>
@@ -39,7 +39,6 @@
 #include <otawa/instruction.h>
 #include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/ipet/TrivialInstCacheManager.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/util/LBlockBuilder.h>
 

@@ -177,10 +177,7 @@ int AST::countInstructions(void) const {
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::ast", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
 } }		// otawa::ast

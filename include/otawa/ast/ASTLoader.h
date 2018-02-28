@@ -21,7 +21,7 @@
 #ifndef OTAWA_AST_AST_LOADER_H
 #define OTAWA_AST_AST_LOADER_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/proc/Processor.h>
 
 // Externals
@@ -34,13 +34,15 @@ void ast_error(otawa::ast::ASTLoader *loader, const char *msg);
 
 namespace otawa { namespace ast {
 
+using namespace elm;
+
 // ASTLoader class
 class ASTLoader: public Processor {
 	friend int ::ast_parse(ASTLoader *loader);
 	friend void ::ast_error(ASTLoader *loader, const char *msg);
 	
 	elm::String path;
-	elm::genstruct::Vector<String> calls;
+	Vector<String> calls;
 	WorkSpace *ws;
 	File *file;
 	

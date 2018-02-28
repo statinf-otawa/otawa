@@ -99,6 +99,8 @@ ACSComputation::~ACSComputation(void) {
  * @param ast	AST to process.
  */	
 void ACSComputation::processAST(WorkSpace *ws, AST *ast) {
+	const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION(ws);
+	ASSERT(caches);
 	for(int j=0;j<cache_size;j++){
 		AbstractCacheState *acs= new AbstractCacheState(j);
 		AC_OUT(cout <<"||||||- "<<j<<" -||||||\n");
@@ -106,7 +108,7 @@ void ACSComputation::processAST(WorkSpace *ws, AST *ast) {
 		AC_OUT(cout <<"|| length["<<j<<"] : "<<cache_line_length<<'\n');
 		AC_OUT(cout <<"|| htable["<<j<<"] : "<<acs->htable.count()<<'\n');
 		if (cache_line_length != 0){
-			for(int i = 0; i<ws->cache().instCache()->wayCount(); i++){
+			for(int i = 0; i < caches->instCache()->wayCount(); i++){
 				acs->cache_state.add(new BitVector(cache_line_length));
 			}
 			/*AbstractCacheState::AbstractCacheState *tmp =*/ applyProcess(ws, ast, acs);
@@ -123,6 +125,9 @@ void ACSComputation::processAST(WorkSpace *ws, AST *ast) {
  * @param acs	AbstractCacheState of preceding nodes.
  */
 void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState *acs) {
+	const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION(ws);
+	ASSERT(caches);
+
 	if (HITS(ast) == -1){
 		HITS(ast) = 0;
 		MISSES(ast) = 0;
@@ -144,15 +149,15 @@ void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState 
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			int same_lblock = 0;
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
-				if(ws->cache().hasInstCache() && !ws->cache().isUnified()) {
-					int which_line = ws->cache().instCache()->line(inst->address());
+				if(caches->hasInstCache() && !caches->isUnified()) {
+					int which_line = caches->instCache()->line(inst->address());
 					if ((which_line == acs->cache_line)&&(!acs->htable.exists(inst->address()))){
 						if (same_lblock == 0 ){
 							AC_OUT(cout <<"|| "<< inst->address() <<" ~ "<< which_line <<" indice : "<<cache_line_length<<'\n');
 							acs->htable.put(inst->address(), cache_line_length);
 							cache_line_length++;
 						}
-						if (same_lblock < (int)(ws->cache().instCache()->blockSize()/inst->size())-1)
+						if (same_lblock < (int)(caches->instCache()->blockSize()/inst->size())-1)
 							same_lblock++;
 						else 
 							same_lblock = 0;
@@ -199,6 +204,9 @@ void ACSComputation::initialization(WorkSpace *ws, AST *ast, AbstractCacheState 
  * @remarks I use in this method the C. Ferdinand's algorithme (Update - Must) to load one l-block in the ACS. 
  */
 AbstractCacheState * ACSComputation::applyProcess(WorkSpace *ws, AST *ast, AbstractCacheState *state){
+	const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION(ws);
+	ASSERT(caches);
+
 	switch (ast->kind()){
 		case AST_Call:{	
 			AC_OUT(cout << ".:Call : "<< " :.\n");
@@ -223,7 +231,7 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *ws, AST *ast, Abstr
 			ACS(ast->toBlock()) = acs;
 			address_t last = ast->toBlock()->block()->address() + ast->toBlock()->size();
 			for(Inst *inst = ast->toBlock()->block(); inst->address() < last; inst = inst->nextInst()){
-				if(ws->cache().hasInstCache() && !ws->cache().isUnified()) {
+				if(caches->hasInstCache() && !caches->isUnified()) {
 					if (acs->htable.exists(inst->address())){
 							
 						AC_OUT(cout<<"|| en entree : "<<"\n";
@@ -236,9 +244,9 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *ws, AST *ast, Abstr
 						}
 						cout<<'\n');
 							
-						//Ferdinand's algorithme (Update - Must).
+						// Ferdinand's algorithme (Update - Must).
 						bool stop = false;
-						genstruct::Vector<BitVector *> cache_tmp;
+						Vector<BitVector *> cache_tmp;
 						cache_tmp.add(new BitVector(acs->cache_state[0]->size()));
 						cache_tmp[0]->set(acs->htable.get(inst->address(), -1), true);
 						for(int x=0;x<acs->cache_state.length();x++){
@@ -262,7 +270,7 @@ AbstractCacheState * ACSComputation::applyProcess(WorkSpace *ws, AST *ast, Abstr
 							acs->cache_state.set(y, new BitVector(*cache_tmp.get(y)));
 						}
 							
-						//Muller's categorisations in 1994.
+						// Muller's categorisations in 1994.
 						if(stop==true){
 							if(!acs->byConflict()){
 								if(!acs->hcat.exists(inst->address())){

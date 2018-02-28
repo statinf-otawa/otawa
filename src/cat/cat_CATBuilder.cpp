@@ -42,10 +42,15 @@ using namespace otawa::ilp;
 using namespace otawa::ipet;
 using namespace otawa::dfa;
 
-namespace otawa { namespace cat {
+namespace otawa {
+
+class BasicBlock;
+
+namespace cat {
 
 using namespace otawa;
 using namespace cache;
+
 
 /**
  * Does anybody know anything about this?
@@ -73,12 +78,12 @@ static Identifier<BitSet *> SET("", 0);
  *
  * @ingroup cat
  */
-Identifier<BasicBlock *> LOWERED_CATEGORY("otawa::cat::LOWERED_CATEGORY", 0);
+Identifier<otawa::BasicBlock *> LOWERED_CATEGORY("otawa::cat::LOWERED_CATEGORY", 0);
 
 
 /**
  */
-void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
+void CATBuilder::processLBlockSet(WorkSpace *fw, cache::LBlockSet *lbset) {
 	ASSERT(fw);
 	ASSERT(lbset);
 
@@ -91,7 +96,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	engine.process();
 
 	// Assign ACS to BB
-	for (CFGCollection::Iterator cfg(coll); cfg; cfg++) {
+	for (CFGCollection::Iter cfg(coll); cfg; cfg++) {
 		for(CFG::BlockIter block = cfg->blocks(); block; block++)
 			if(block->isBasic()) {
 				dfa::XCFGVisitor<CATProblem>::key_t pair(*cfg, block->toBasic());
@@ -107,7 +112,7 @@ void CATBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 	setCATEGORISATION(lbset, ct, cach->blockBits());
 
 	// Clean up
-	for (CFGCollection::Iterator cfg(coll); cfg; cfg++)
+	for (CFGCollection::Iter cfg(coll); cfg; cfg++)
 		for (CFG::BlockIter block = cfg->blocks(); block; block++)
 			IN(block).remove();
 }
@@ -199,7 +204,7 @@ void CATBuilder::setCATEGORISATION(LBlockSet *lineset ,ContextTree *S ,int dec){
 		 */
 		for(ContextTree::BlockIterator bk(S); bk; bk++) {
 			if(bk->isBasic())
-				for(BasicBlock::InstIter inst = bk->toBasic()->insts(); inst; inst++) {
+				for(otawa::BasicBlock::InstIter inst = bk->toBasic()->insts(); inst; inst++) {
 					address_t adlbloc = inst->address();
 					for (LBlockSet::Iterator lbloc(*lineset); lbloc; lbloc++){
 						if ((adlbloc == (lbloc->address()))&&(bk == lbloc->bb())){
@@ -243,8 +248,8 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 		for (int i=0;i < number;i++){
 		if (in->contains(i)){
 			cacheline = idset->lblock(i);
-			tagcachline = ((unsigned long)cacheline->address()) >> dec;
-			unsigned long tagline = ((unsigned long)line->address()) >> dec;
+			tagcachline = ((unsigned long)cacheline->address().offset()) >> dec;
+			unsigned long tagline = ((unsigned long)line->address().offset()) >> dec;
 				if (tagcachline == tagline )
 					nonconflitdetected = true;
 			}
@@ -258,8 +263,8 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 	for (int i=0;i < number;i++) {
 			if (in->contains(i)) {
 				cacheline = idset->lblock(i);
-				tagcachline = ((unsigned long)cacheline->address()) >> dec;
-			    tagline = ((unsigned long)line->address()) >> dec;
+				tagcachline = ((unsigned long)cacheline->address().offset()) >> dec;
+			    tagline = ((unsigned long)line->address().offset()) >> dec;
 				if(cacheline->address() == line->address()
 				&& line->bb() != cacheline->bb())
 					nonconflict = true;
@@ -274,8 +279,8 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 		for (int i=0;i < number;i++){
 			if (in->contains(i)) {
 				cacheline = idset->lblock(i);
-				tagcachline = ((unsigned long)cacheline->address()) >> dec;
-				unsigned long tagline = ((unsigned long)line->address()) >> dec;
+				tagcachline = ((unsigned long)cacheline->address().offset()) >> dec;
+				unsigned long tagline = ((unsigned long)line->address().offset()) >> dec;
 				if(tagcachline == tagline && line->bb() != cacheline->bb())
 					test = true;
 				if(tagcachline != tagline )
@@ -308,8 +313,8 @@ void CATBuilder::worst(LBlock *line , ContextTree *node , LBlockSet *idset, int 
 				m = m + 1;
 			}
 			//cacheline = lineset->returnLBLOCK(i);
-			tagcachline = ((unsigned long)idset->lblock(U[0])->address()) >> dec;
-		    tagline = ((unsigned long)idset->lblock(U[1])->address()) >> dec;
+			tagcachline = ((unsigned long)idset->lblock(U[0])->address().offset()) >> dec;
+		    tagline = ((unsigned long)idset->lblock(U[1])->address().offset()) >> dec;
 			if(tagcachline == tagline)
 					dfm = true;
 		}

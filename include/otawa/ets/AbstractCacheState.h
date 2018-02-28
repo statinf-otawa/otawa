@@ -22,8 +22,8 @@
 #define OTAWA_ETS_ABSTRACTCACHESTATE_H
 
 #include <elm/util/BitVector.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Vector.h>
 #include <elm/io.h>
 #include <otawa/base.h>
 
@@ -34,8 +34,8 @@ namespace otawa { namespace ets {
 // AbstractCacheState class	
 class AbstractCacheState{
 	public :
-		genstruct::Vector<BitVector *> cache_state;//<bitVector *>
-		genstruct::HashTable<address_t, int> htable;//<l-block, its index in BitVector>
+		Vector<BitVector *> cache_state;//<bitVector *>
+		HashMap<address_t, int> htable;//<l-block, its index in BitVector>
 		int cache_line;
 		typedef enum categorisation_t {
 			ALWAYS_MISS = 0,
@@ -44,7 +44,7 @@ class AbstractCacheState{
 			CONFLICT = 3
 		} categorisation_t;
 		categorisation_t categorisation;
-		genstruct::HashTable<address_t, int> hcat;//<l-block, its categorisation>
+		HashMap<address_t, int> hcat;//<l-block, its categorisation>
 		
 		inline AbstractCacheState(AbstractCacheState *acs);
 		inline AbstractCacheState(int which_line);

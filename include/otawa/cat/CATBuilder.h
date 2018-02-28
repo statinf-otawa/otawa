@@ -32,8 +32,10 @@ namespace dfa { class BitSet; }
 
 class CFG;
 class ContextTree;
-class LBlock;
-class LBlockSet;
+namespace cache {
+	class LBlock;
+	class LBlockSet;
+}	// cache
 
 namespace cat {
 
@@ -45,14 +47,14 @@ public:
 	CATBuilder(p::declare& r = reg);
 	virtual void processWorkSpace(WorkSpace *fw );
 private:
-	dfa::BitSet *buildLBLOCKSET(LBlockSet *lcache, ContextTree *root);
-	void processLBlockSet(WorkSpace *fw, LBlockSet *lbset);
-	void setCATEGORISATION(LBlockSet *lineset, ContextTree *S, int dec);
-	void worst(LBlock *line, ContextTree *S, LBlockSet *cacheline, int dec);
+	dfa::BitSet *buildLBLOCKSET(cache::LBlockSet *lcache, ContextTree *root);
+	void processLBlockSet(WorkSpace *fw, cache::LBlockSet *lbset);
+	void setCATEGORISATION(cache::LBlockSet *lineset, ContextTree *S, int dec);
+	void worst(cache::LBlock *line, ContextTree *S, cache::LBlockSet *cacheline, int dec);
 };
 
 // Properties
-extern Identifier<BasicBlock *> LOWERED_CATEGORY;
+extern Identifier<otawa::BasicBlock *> LOWERED_CATEGORY;
 
 } }		// otawa::cat
 

@@ -21,7 +21,7 @@
 #include <elm/assert.h>
 #include <otawa/cfg.h>
 #include <otawa/instruction.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/util/ContextTree.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/prog/WorkSpace.h>
@@ -91,9 +91,9 @@ Domain *Problem::preserve(CFG *cfg, Block *bb) {
 				if (adlbloc == lbloc->address() && bb == lbloc->bb()) {
 					testnotconflit = true;
 					identif1 = lbloc->id();
-					unsigned long tag = ((unsigned long)adlbloc) >> dec;
+					unsigned long tag = ((unsigned long)adlbloc.offset()) >> dec;
 					for(LBlockSet::Iterator lbloc1(*ccggraph); lbloc1; lbloc1++) {
-						unsigned long taglblock = ((unsigned long)lbloc1->address()) >> dec;
+						unsigned long taglblock = ((unsigned long)lbloc1->address().offset()) >> dec;
 						if(adlbloc != lbloc1->address() && tag == taglblock
 						&& bb != lbloc1->bb()) {
 							ccggraph->lblock(identif1);

@@ -33,7 +33,7 @@
 namespace otawa {
 	
 class BasicBlock;
-class LBlockSet;
+namespace cache { class LBlockSet; }
 
 namespace cat {
 
@@ -58,7 +58,7 @@ public:
 
 
 class CATProblem {
-    LBlockSet *lines;
+	cache::LBlockSet *lines;
     const hard::Cache *cach;
     WorkSpace *fw;
     int size;
@@ -81,7 +81,7 @@ class CATProblem {
 		delete d;
 	}
     
-	CATProblem (LBlockSet *point, int _size, const hard::Cache *mem, WorkSpace *_fw){
+	CATProblem (cache::LBlockSet *point, int _size, const hard::Cache *mem, WorkSpace *_fw){
 		lines = point;
 		size = _size;
 		cach = mem;	

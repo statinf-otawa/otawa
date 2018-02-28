@@ -21,7 +21,7 @@
 #ifndef OTAWA_ETS_ACS_COMPUTATION_H
 #define OTAWA_ETS_ACS_COMPUTATION_H
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/ast/ASTProcessor.h>
 #include <otawa/ets/AbstractCacheState.h>
 #include <otawa/hard/CacheConfiguration.h>

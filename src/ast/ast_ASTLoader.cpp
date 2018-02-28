@@ -157,7 +157,7 @@ AST *ASTLoader::makeBlock(elm::CString entry, elm::CString exit) {
 		return new BlockAST(entry_inst, exit_addr - entry_inst->address());
 			
 	// Resolve called labels
-	genstruct::Vector<Inst *> call_insts;
+	Vector<Inst *> call_insts;
 	for(int i = 0; i < calls.length(); i++) {
 		Inst *inst = ws->findInstAt(findLabel(calls[i].toCString()));
 		if(!inst)
@@ -230,7 +230,7 @@ address_t ASTLoader::findLabel(elm::String raw_label) {
 
 	// Retrieve the labels
 	address_t addr = file->findLabel(label);
-	if(!addr)
+	if(addr.isNull())
 		throw LoadException(_ << "Cannot resolve label \"" << label << "\".");
 	return addr;
 }

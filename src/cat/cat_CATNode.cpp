@@ -26,9 +26,8 @@
 
 namespace otawa { namespace cat {
 
-CATNode::CATNode(LBlock *lblock ){
+CATNode::CATNode(cache::LBlock *lblock ){
 		lbl = lblock;
-//		hasheaderevolution = false;						
  }
 
 void CATNode::setHEADERLBLOCK(BasicBlock *hlb, bool loop){

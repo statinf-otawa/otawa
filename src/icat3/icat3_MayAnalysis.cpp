@@ -26,7 +26,9 @@
 #include <otawa/cfg/features.h>
 #include <otawa/icache/features.h>
 #include <otawa/icat3/features.h>
+#include "../../include/otawa/ai/RankingAI.h"
 #include "MayDomain.h"
+
 
 namespace otawa { namespace icat3 {
 
@@ -230,6 +232,10 @@ private:
 					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(b)) << io::endl;
 				}
 			}
+
+		// ranked alternative
+		ai::RankingAI<MayAdapter, ai::PropertyRanking> ana2(ada);
+		ana2.run();
 	}
 
 	const Container<ACS> *init_may;

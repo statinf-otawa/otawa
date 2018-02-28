@@ -102,7 +102,7 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
  * @param index		Index in the BB lblock table.
  * @paramlblocks	BB lblock table.
  */
-void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, genstruct::AllocatedTable<LBlock*> *lblocks) {
+void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock*> *lblocks) {
 
 	// test if the l-block is cacheable
 	Address addr = inst->address();
@@ -154,9 +154,9 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *block) {
 
 	// Allocate the BB lblock table
 	int num_lblocks =
-		((bb->address() + bb->size() + cache->blockMask()) >> cache->blockBits())
-		- (bb->address() >> cache->blockBits());
-	genstruct::AllocatedTable<LBlock*> *lblocks = new genstruct::AllocatedTable<LBlock*>(num_lblocks);
+		((bb->address() + bb->size() + cache->blockMask()).offset() >> cache->blockBits())
+		- (bb->address().offset() >> cache->blockBits());
+	AllocArray<LBlock*> *lblocks = new AllocArray<LBlock*>(num_lblocks);
 	BB_LBLOCKS(bb) = lblocks;
 
 	// Traverse instruction
@@ -302,7 +302,7 @@ Identifier<LBlockSet **> LBLOCKS("otawa::ccg::LBLOCKS", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<genstruct::AllocatedTable<LBlock* >* > BB_LBLOCKS("otawa::ccg::BB_LBLOCKS", 0);
+Identifier<AllocArray<LBlock* >* > BB_LBLOCKS("otawa::ccg::BB_LBLOCKS", 0);
 
 
 /**

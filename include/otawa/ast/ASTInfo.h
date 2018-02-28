@@ -21,14 +21,16 @@
 #ifndef OTAWA_AST_AST_INFO_H
 #define OTAWA_AST_AST_INFO_H
 
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Vector.h>
 #include <otawa/ast/FunAST.h>
 
 // Extern
 int heptane_parse(void);
 
 namespace otawa { namespace ast {
+
+using namespace elm;
 
 // ASTInfo class
 class ASTInfo: public PropList {
@@ -37,9 +39,9 @@ public:
 	static ASTInfo *getInfo(WorkSpace *ws);
 	FunAST *getFunction(Inst *inst);
 
-	class Iterator: public elm::genstruct::Vector<FunAST *>::Iterator {
+	class Iterator: public Vector<FunAST *>::Iter {
 	public:
-		inline Iterator(ASTInfo *info):  elm::genstruct::Vector<FunAST *>::Iterator(info->funs) { }
+		inline Iterator(ASTInfo *info):  Vector<FunAST *>::Iter(info->funs) { }
 	};
 	
 	void add(FunAST *fun);
@@ -50,8 +52,8 @@ private:
 	friend class FunAST;
 	friend class GenericProperty<ASTInfo *>;
 	friend int ::heptane_parse(void);
-	elm::genstruct::Vector<FunAST *> funs;
-	elm::genstruct::HashTable<String, FunAST *> _map;
+	Vector<FunAST *> funs;
+	HashMap<String, FunAST *> _map;
 	ASTInfo(WorkSpace *ws);
 };
 	
