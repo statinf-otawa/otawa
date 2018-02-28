@@ -100,7 +100,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 		return;
 	BasicBlock *bb = b->toBasic();
 	clp::Manager::step_t step = man->start(bb);
-	genstruct::Vector<Pair<clp::Value, BlockAccess::action_t> > addrs;
+	Vector<Pair<clp::Value, BlockAccess::action_t> > addrs;
 	while(step) {
 		if(man->state()->equals(clp::State::EMPTY)) {
 			step = man->next();

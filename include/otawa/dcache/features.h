@@ -118,7 +118,7 @@ public:
 
 private:
 	int _set;
-	genstruct::Vector<Block *> blocks;
+	Vector<Block *> blocks;
 };
 
 
@@ -219,9 +219,9 @@ private:
 inline io::Output& operator<<(io::Output& out, const DirtyManager::t& v) { v.print(out); return out; }
 
 // useful typedefs
-typedef genstruct::AllocatedTable<ACS *> acs_stack_t;
-typedef genstruct::Vector<ACS *> acs_table_t;
-typedef genstruct::Vector<acs_stack_t> acs_stack_table_t;
+typedef AllocArray<ACS *> acs_stack_t;
+typedef Vector<ACS *> acs_table_t;
+typedef Vector<acs_stack_t> acs_stack_table_t;
 
 
 // block analysis
@@ -252,13 +252,13 @@ extern p::feature CONSTRAINTS_FEATURE;
 extern Identifier<ilp::Var *> MISS_VAR;
 
 // MAY analysis
-extern Identifier<genstruct::Vector<ACS *> *> ENTRY_MAY_ACS;
+extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
 extern p::feature MAY_ACS_FEATURE;
-extern Identifier<genstruct::Vector<ACS *> *> MAY_ACS;
+extern Identifier<Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis
 extern p::feature DIRTY_FEATURE;
-extern Identifier<genstruct::AllocatedTable<DirtyManager::t> > DIRTY;
+extern Identifier<AllocArray<DirtyManager::t> > DIRTY;
 
 // Purge analysis
 typedef enum {

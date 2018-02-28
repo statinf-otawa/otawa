@@ -349,7 +349,7 @@ protected:
 		// initialize the dirty sets
 		for(CFGCollection::Iter cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
 			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-				DIRTY(bb).ref().allocate(cache->rowCount());
+				DIRTY(bb) = AllocArray<DirtyManager::t>(cache->rowCount());
 
 		// perform the analysis
 		for(int i = 0; i < cache->rowCount(); i++)
@@ -408,7 +408,7 @@ p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis
  * @p Hook
  * @li @ref otawa::BasicBlock
  */
-Identifier<genstruct::AllocatedTable<DirtyManager::t> > DIRTY("otawa::dcache::DIRTY", genstruct::AllocatedTable<DirtyManager::t>::EMPTY);
+Identifier<AllocArray<DirtyManager::t> > DIRTY("otawa::dcache::DIRTY", AllocArray<DirtyManager::t>::null);
 
 } }		// otawa::dcache
 

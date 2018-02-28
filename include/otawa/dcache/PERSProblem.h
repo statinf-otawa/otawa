@@ -87,7 +87,7 @@ public:
 		inline Item& getItem(const int idx) const { ASSERT(!isBottom); return(*data.get(idx)); }
 		void ageAll(void);
 		inline void setNotBottom(void) { isBottom = false; }
-		inline void set(const ACS& w, const genstruct::Table<ACS *>& d) {
+		inline void set(const ACS& w, const Array<ACS *>& d) {
 			isBottom = false;
 			whole = w;
 			int m = min(data.count(), d.count());
@@ -102,7 +102,7 @@ public:
 
 	private:
 		Item whole;
-		genstruct::Vector<Item*> data;
+		Vector<Item*> data;
 		bool isBottom;
 	};
 

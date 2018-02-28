@@ -22,7 +22,7 @@
 #ifndef MAYACSBUILDER_H_
 #define MAYACSBUILDER_H_
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/util/HalfAbsInt.h>
@@ -146,7 +146,7 @@ private:
 
 elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom);
 
-typedef elm::genstruct::Vector<MAYProblem::Domain*> may_acs_t;
+typedef elm::Vector<MAYProblem::Domain*> may_acs_t;
 
 
 // ACSMayBuilder class
@@ -160,7 +160,7 @@ public:
 private:
 	void processLBlockSet(otawa::WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
 	bool unrolling;
-	genstruct::Vector<ACS *> *may_entry;
+	Vector<ACS *> *may_entry;
 };
 
 } } // otawa::dcache

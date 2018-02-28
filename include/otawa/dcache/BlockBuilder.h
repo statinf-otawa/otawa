@@ -51,7 +51,7 @@ protected:
 private:
 	const hard::Cache *cache;
 	const hard::Memory *mem;
-	genstruct::Vector<BlockAccess> blocks;
+	Vector<BlockAccess> blocks;
 	Address sp;
 	BlockCollection *colls;
 	clp::Manager *man;

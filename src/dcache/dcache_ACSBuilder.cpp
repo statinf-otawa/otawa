@@ -190,7 +190,7 @@ p::feature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", new Maker<ACSBuil
  * @li @ref MUST_ACS_FEATURE
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
+Identifier<Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
 
 
 /**
@@ -199,7 +199,7 @@ Identifier<genstruct::Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
  * at the entry of the task. If not defined, the T (top) value is assumed.
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
+Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
 
 
 /**
@@ -353,9 +353,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
-					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->item(line);
+					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->get(line);
 					int len = pers.length();
-					stack.allocate(len);
+					stack.tie(len, new ACS *[len]);
 					for(int i = 0; i < len; i++)
 						stack[i] = new ACS(pers.getItem(i));
 				}
@@ -384,9 +384,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 					if(logFor(LOG_BLOCK))
 						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
 					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
-					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->item(line);
+					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->get(line);
 					int len = pers.length();
-					stack.allocate(len);
+					stack.tie(len, new ACS *[len]);
 					for(int i = 0; i < len; i++)
 						stack[i] = new ACS(pers.getItem(i));
 				}
@@ -414,7 +414,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	DATA_FIRSTMISS_LEVEL(fw) = level;
 
 	// prepare the template of the final vector
-	typedef genstruct::Vector<ACS *> acs_result_t;
+	typedef Vector<ACS *> acs_result_t;
 	acs_result_t temp(cache->rowCount());
 	typedef acs_stack_table_t level_acs_t;
 	level_acs_t level_temp(cache->rowCount());
@@ -1172,7 +1172,7 @@ p::feature PERS_ACS_FEATURE("otawa::dcache::PERS_ACS_FEATURE", new Maker<ACSBuil
  *
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
+Identifier<Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
 
 
 /**
@@ -1184,7 +1184,7 @@ Identifier<genstruct::Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
  *
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
+Identifier<Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
 
 
 /**

@@ -128,10 +128,7 @@ unsigned int BlockAccess::count = 0;
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::dcache", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
 } } // otawa::dcache

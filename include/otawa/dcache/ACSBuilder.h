@@ -159,7 +159,7 @@ private:
 	void processLBlockSet(otawa::WorkSpace*, const BlockCollection& coll, const hard::Cache *);
 	data_fmlevel_t level;
 	bool unrolling;
-	genstruct::Vector<ACS *> *must_entry;
+	Vector<ACS *> *must_entry;
 };
 
 } }	// otawa::dcache

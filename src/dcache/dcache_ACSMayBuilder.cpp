@@ -157,7 +157,7 @@ p::feature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", new Maker<ACSMayBui
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
+Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
 
 
 /**
@@ -165,7 +165,7 @@ Identifier<genstruct::Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
  * The vector contains one ACS for each cache set.
  * @ingroup dcache
  */
-Identifier<genstruct::Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
+Identifier<Vector<ACS *> *> ENTRY_MAY_ACS("otawa::dcache::ENTRY_MAY_ACS", 0);
 
 
 /**
@@ -254,7 +254,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
 
 	// prepare the template of the final vector
-	typedef genstruct::Vector<ACS *> acs_result_t;
+	typedef Vector<ACS *> acs_result_t;
 	acs_result_t temp(cache->rowCount());
 	for(int i = 0; i < cache->rowCount(); i++)
 		temp.add(0);
@@ -276,7 +276,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 	// !!TODO!! code to do cleanup
 	/* for (CFGCollection::Iterator cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
 		for (CFG::BBIterator bb(cfg); bb; bb++)
-			ACS_MAY(bb) = new genstruct::Vector<MAYProblem::Domain*>;
+			ACS_MAY(bb) = new Vector<MAYProblem::Domain*>;
 
 	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
 

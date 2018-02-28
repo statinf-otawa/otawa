@@ -131,7 +131,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				acs_stack_t *stack;
 				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(bb);
 				if(stack_table)
-					stack = &stack_table->item(line);
+					stack = &stack_table->get(line);
 				else
 					stack = &empty_stack;
 				prob.setPers(dom, *pers->get(line), *stack);
