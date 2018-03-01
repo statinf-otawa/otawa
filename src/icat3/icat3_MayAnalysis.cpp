@@ -234,8 +234,9 @@ private:
 			}
 
 		// ranked alternative
-		ai::RankingAI<MayAdapter, ai::PropertyRanking> ana2(ada);
-		ana2.run();
+		// TODO test it
+		/*ai::RankingAI<MayAdapter, ai::PropertyRanking> ana2(ada);
+		ana2.run();*/
 	}
 
 	const Container<ACS> *init_may;
