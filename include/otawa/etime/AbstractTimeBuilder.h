@@ -30,7 +30,7 @@
 namespace otawa { namespace etime {
 
 typedef elm::genstruct::Vector<Resource *> resources_t;
-typedef enum { IN_PREFIX = 0, IN_EDGE = 1, IN_BLOCK = 2, IN_SIZE = 3 } part_t;
+typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } part_t;
 io::Output& operator<<(io::Output& out, part_t p);
 
 class EventCase {
@@ -50,6 +50,8 @@ private:
 	part_t _p;
 	int _i;
 };
+io::Output& operator<<(io::Output& out, const EventCase& e);
+
 
 class Factory {
 public:
@@ -60,10 +62,10 @@ public:
 	static Factory *make(void);
 };
 
-class Builder: public Monitor {
+class XGraphBuilder: public Monitor {
 public:
-	Builder(const Monitor& mon);
-	virtual ~Builder(void);
+	XGraphBuilder(const Monitor& mon);
+	virtual ~XGraphBuilder(void);
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
 	inline WorkSpace *workspace(void)  const { return _ws; }
@@ -77,7 +79,7 @@ public:
 	inline void setFactory(Factory *factory) { _factory = factory; }
 	inline void setExplicit(bool is_explicit) { _explicit = is_explicit; }
 
-	static Builder *make(const Monitor& mon);
+	static XGraphBuilder *make(const Monitor& mon);
 
 private:
 	WorkSpace *_ws;
@@ -87,25 +89,31 @@ private:
 	bool _explicit;
 };
 
-class Engine: public Monitor {
+class XGraphSolver: public Monitor {
 public:
-	Engine(const Monitor& mon);
-	virtual ~Engine(void);
+	XGraphSolver(const Monitor& mon);
+	virtual ~XGraphSolver(void);
 	Factory *getFactory(void);
-	virtual void compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events) = 0;
-	static Engine *make(const Monitor& mon);
+	virtual void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& events) = 0;
+	inline sys::Path dumpDir(void) const { return _dir; }
+	inline void setDumpDir(sys::Path dir) { _dir = dir; }
+	static XGraphSolver *make(const Monitor& mon);
+private:
+	sys::Path _dir;
 };
 
-class Generator {
+class ILPGenerator: public Monitor {
 public:
-	virtual ~Generator(void);
+	ILPGenerator(const Monitor& mon);
+	virtual ~ILPGenerator(void);
 	virtual void add(ParExeGraph *g, List<ConfigSet *> times) = 0;
 	virtual void complete(void) = 0;
 	inline WorkSpace *workspace(void) const { return _ws; }
 	inline ilp::System *system(void) const { return _sys; }
 	inline void setWorkspace(WorkSpace *ws) { _ws = ws; }
 	inline void setSystem(ilp::System *sys) { _sys = sys; }
-	static Generator& DEFAULT;
+
+	static ILPGenerator *make(const Monitor& mon);
 private:
 	WorkSpace *_ws;
 	ilp::System *_sys;
@@ -116,12 +124,12 @@ public:
 	static p::declare reg;
 	AbstractTimeBuilder(p::declare& r = reg);
 
-	inline Engine *engine(void) const { return _engine; }
-	inline Generator *generator(void) const { return _generator; }
-	inline Builder *builder(void) const { return _builder; }
-	inline void setBuilder(Builder *builder) { _builder = builder; }
-	inline void setEngine(Engine *engine) { _engine = engine; }
-	inline void setGenerator(Generator *generator) { _generator = generator; }
+	inline XGraphSolver *solver(void) const { return _solver; }
+	inline ILPGenerator *generator(void) const { return _generator; }
+	inline XGraphBuilder *builder(void) const { return _builder; }
+	inline void setBuilder(XGraphBuilder *builder) { _builder = builder; }
+	inline void setSolver(XGraphSolver *solver) { _solver = solver; }
+	inline void setGenerator(ILPGenerator *generator) { _generator = generator; }
 
 	void configure(const PropList& props) override;
 
@@ -139,9 +147,9 @@ private:
 	void displayTimes(const List<ConfigSet *>& confs, const Vector<EventCase>& events);
 
 
-	Builder *_builder;
-	Engine *_engine;
-	Generator *_generator;
+	XGraphBuilder *_builder;
+	XGraphSolver *_solver;
+	ILPGenerator *_generator;
 	ParExeProc *_proc;
 	resources_t _resources;
 

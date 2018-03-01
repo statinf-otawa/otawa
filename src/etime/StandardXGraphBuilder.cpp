@@ -24,13 +24,13 @@
 namespace otawa { namespace etime {
 
 /**
- * @class Builder
+ * @class TimeBuilder
  * TODO
  * @ingroup etime
  */
 
 
-Builder::Builder(const Monitor& mon)
+XGraphBuilder::XGraphBuilder(const Monitor& mon)
 :	Monitor(mon),
 	_ws(nullptr),
 	_processor(nullptr),
@@ -42,41 +42,41 @@ Builder::Builder(const Monitor& mon)
 
 /**
  */
-Builder::~Builder(void) {
+XGraphBuilder::~XGraphBuilder(void) {
 }
 
 /**
- * @fn ParExeGraph *Builder::build(ParExeSequence *seq);
+ * @fn ParExeGraph *XGraphBuilder::build(ParExeSequence *seq);
  * TODO
  */
 
 /**
- * @fn ParExeProc *Builder::processor(void) const;
+ * @fn ParExeProc *XGraphBuilder::processor(void) const;
  * TODO
  */
 
 /**
- * @fn resources_t *Builder::resources(void) const;
+ * @fn resources_t *XGraphBuilder::resources(void) const;
  * TODO
  */
 
 /**
- * @fn Factory *Builder::factory(void) const;
+ * @fn Factory *XGraphBuilder::factory(void) const;
  * TODO
  */
 
 /**
- * @fn void Builder::setProcessor(ParExeProc *processor);
+ * @fn void XGraphBuilder::setProcessor(ParExeProc *processor);
  * TODO
  */
 
 /**
- * @fn void Builder::setResources(resources_t *resources);
+ * @fn void XGraphBuilder::setResources(resources_t *resources);
  * TODO
  */
 
 /**
- * @fn void Builder::setFactory(Factory *factory);
+ * @fn void XGraphBuilder::setFactory(Factory *factory);
  * TODO
  */
 
@@ -85,10 +85,10 @@ Builder::~Builder(void) {
  * @class StandardBuilder
  * TODO
  */
-class StandardBuilder: public Builder {
+class StandardXGraphBuilder: public XGraphBuilder {
 public:
 
-	StandardBuilder(const Monitor& mon): Builder(mon) {
+	StandardXGraphBuilder(const Monitor& mon): XGraphBuilder(mon) {
 	}
 
 	ParExeGraph *build(ParExeSequence *seq) override {
@@ -435,8 +435,8 @@ private:
 /**
  * TODO
  */
-Builder *Builder::make(const Monitor& mon) {
-	return new StandardBuilder(mon);
+XGraphBuilder *XGraphBuilder::make(const Monitor& mon) {
+	return new StandardXGraphBuilder(mon);
 }
 
 } }	// otawa::etime

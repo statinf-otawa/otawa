@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/ipet.h>
 #include <otawa/etime/AbstractTimeBuilder.h>
 
 namespace otawa { namespace etime {
@@ -30,37 +31,47 @@ namespace otawa { namespace etime {
  */
 
 /**
+ * TODO
  */
-Generator::~Generator(void) {
+ILPGenerator::ILPGenerator(const Monitor& mon):
+	Monitor(mon),
+	_ws(nullptr),
+	_sys(nullptr)
+{ }
+
+
+/**
+ */
+ILPGenerator::~ILPGenerator(void) {
 }
 
 /**
- * @fn void Generator::add(ParExeGraph *g, List<ConfigSet *> times);
+ * @fn void ILPGenerator::add(ParExeGraph *g, List<ConfigSet *> times);
  * TODO
  */
 
 /**
- * @fn void Generator::complete(void);
+ * @fn void ILPGenerator::complete(void);
  * TODO
  */
 
 /**
- * @fn WorkSpace *Generator::workspace(void) const;
+ * @fn WorkSpace *ILPGenerator::workspace(void) const;
  * TODO
  */
 
 /**
- * @fn ilp::System *Generator::system(void) const;
+ * @fn ilp::System *ILPGenerator::system(void) const;
  * TODO
  */
 
 /**
- * @fn void Generator::setWorkspace(WorkSpace *ws);
+ * @fn void ILPGenerator::setWorkspace(WorkSpace *ws);
  * TODO
  */
 
 /**
- * @fn void Generator::setSystem(ilp::System *sys);
+ * @fn void ILPGenerator::setSystem(ilp::System *sys);
  * TODO
  */
 
@@ -68,8 +79,11 @@ Generator::~Generator(void) {
 /**
  * TODO
  */
-class StandardGenerator: public Generator {
+class StandardILPGenerator: public ILPGenerator {
 public:
+
+	StandardILPGenerator(const Monitor& mon): ILPGenerator(mon) {
+	}
 
 	void add(ParExeGraph *g, List<ConfigSet *> times) override {
 
@@ -81,10 +95,11 @@ public:
 
 };
 
-// internal
-static StandardGenerator STANDARD_GENERATOR;
-
-/// TODO
-Generator& Generator::DEFAULT = STANDARD_GENERATOR;
+/**
+ * TODO
+ */
+ILPGenerator *ILPGenerator::make(const Monitor& mon) {
+	return new StandardILPGenerator(mon);
+}
 
 } }		// otawa::etime

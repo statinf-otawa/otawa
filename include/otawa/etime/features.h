@@ -60,6 +60,7 @@ typedef enum occurence_t {
 	SOMETIMES = 1,
 	ALWAYS = 2
 } occurrence_t;
+io::Output& operator<<(io::Output& out, occurrence_t occ);
 
 typedef enum type_t {
 	LOCAL = 0,

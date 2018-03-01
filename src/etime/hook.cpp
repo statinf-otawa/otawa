@@ -141,6 +141,15 @@ namespace otawa { namespace etime {
  * The event always happens and the event object provides
  * mainly the Event::cost() (in cycles) of the event.
  */
+io::Output& operator<<(io::Output& out, occurrence_t occ) {
+	static cstring labels[] = {
+		"never",
+		"sometimes",
+		"always"
+	};
+	out << labels[int(occ)];
+	return out;
+}
 
 
 /**

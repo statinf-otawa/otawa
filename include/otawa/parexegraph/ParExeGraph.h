@@ -281,7 +281,7 @@ namespace otawa {
 		virtual int delta(ParExeNode *a, Resource *res);
 
 		// tracing
-		void dump(elm::io::Output& dotFile, const string& info = "");
+		void dump(elm::io::Output& dotFile, const string& info = "", const string& custom = "");
 		void display(elm::io::Output& output);
 
 

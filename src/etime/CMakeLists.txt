@@ -7,10 +7,10 @@ set(SOURCES
 	"AbstractTimeBuilder.cpp"
     "EdgeTimeBuilder.cpp"
 	"hook.cpp"
-    "StandardBuilder.cpp"
-    "StandardEngine.cpp"
     "StandardEventBuilder.cpp"
-    "StandardGenerator.cpp"
+    "StandardILPGenerator.cpp"
+    "StandardXGraphBuilder.cpp"
+    "StandardXGraphSolver.cpp"
 )
 
 include_directories(".")

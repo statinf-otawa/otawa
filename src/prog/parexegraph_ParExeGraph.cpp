@@ -1077,6 +1077,7 @@ string escape(const string& s) {
 	StringBuffer buf;
 	for(int i = 0; i < s.length(); i++)
 		switch(s[i]) {
+		case '\n':	buf << "\\l"; break;
 		case '<':
 		case '>':
 		case '\\':
@@ -1098,13 +1099,13 @@ void ParExeGraph::customDump(io::Output& out) {
 }
 
 // ---------------------------------------
-void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
+void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const string& custom) {
     int i=0;
     bool first_line = true;
     int width = 5;
     dotFile << "digraph G {\n";
 
-    // dipsplay information if any
+    // display information if any
     if(info)
     	dotFile << "\"info\" [shape=record, label=\"{" << escape(info) << "}\"];\n";
 
@@ -1157,6 +1158,8 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info) {
     // custom information
     dotFile << "\"custom\" [shape=record, label= \"";
     customDump(dotFile);
+    if(custom)
+    	dotFile << escape(custom);
     dotFile << "\"];\n";
 
     // edges between info, legend, code

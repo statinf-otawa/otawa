@@ -19,25 +19,26 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/sys/System.h>
 #include <otawa/etime/AbstractTimeBuilder.h>
 
 namespace otawa { namespace etime {
 
 /**
- * @class Engine
+ * @class XGraphSolver
  * TODO
  * @ingroup etime
  */
 
 /**
  */
-Engine::Engine(const Monitor& mon): Monitor(mon) {
+XGraphSolver::XGraphSolver(const Monitor& mon): Monitor(mon) {
 
 }
 
 /**
  */
-Engine::~Engine(void) {
+XGraphSolver::~XGraphSolver(void) {
 }
 
 /**
@@ -45,12 +46,22 @@ Engine::~Engine(void) {
  * Default implementation returns Factory::DEFAULT.
  * @return	Engine factory for execution graph.
  */
-Factory *Engine::getFactory(void) {
+Factory *XGraphSolver::getFactory(void) {
 	return Factory::make();
 }
 
 /**
- * @fn void Engine::compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events);
+ * @fn void XGraphSolver::compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events);
+ * TODO
+ */
+
+/**
+ * @fn sys::Path XGraphSolver::dumpDir(void) const;
+ * TODO
+ */
+
+/**
+ * @fn void XGraphSolver::setDumpDir(sys::Path dir);
  * TODO
  */
 
@@ -58,15 +69,28 @@ Factory *Engine::getFactory(void) {
 /**
  * TODO
  */
-class StandardEngine: public Engine {
+class StandardXGraphSolver: public XGraphSolver {
 public:
+	typedef t::uint32 mask_t;
 
-	StandardEngine(const Monitor& mon): Engine(mon), bedge(nullptr) {
+	StandardXGraphSolver(const Monitor& mon): XGraphSolver(mon), bedge(nullptr) {
+	}
+
+	/**
+	 * Convert ExeGraph position to etime part.
+	 * @param i		Instruction to get part from.
+	 * @return		Corresponding etime part.
+	 */
+	part_t partOf(ParExeInst *i) {
+		if(i->codePart() == PROLOGUE)
+			return IN_PREFIX;
+		else
+			return IN_BLOCK;
 	}
 
 	/**
 	 */
-	void compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& all_events) {
+	void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& all_events) {
 		Vector<EventCase> events;
 		Vector<EventCase> always_events;
 
@@ -76,13 +100,9 @@ public:
 		for(auto evt = *all_events; evt; evt++) {
 
 			// find the instruction
-			while((*evt).part() != IN_PREFIX && inst->codePart() != otawa::BLOCK) {
+			while(!(inst->inst() == (*evt).event()->inst() && partOf(inst) == (*evt).part())) {
 				inst++;
-				ASSERT(inst);
-			}
-			while(inst->inst() != evt->inst()) {
-				inst++;
-				ASSERTP(inst, "no instruction for event " << evt->inst()->address() << ":" << evt->inst());
+				ASSERTP(inst, "no instruction for event " << *evt);
 			}
 
 			// apply the event
@@ -134,14 +154,39 @@ public:
 			ot::time cost = g->analyze();
 
 			// dump it if needed
-			// TODO
-			/*if(_do_output_graphs) {
-				if (source)
-					outputGraph(graph, target->index(), source->index(), event_mask,
-							_ << source << " -> " << target << " (cost = " << cost << ")");
-				else
-					outputGraph(graph, target->index(), 0, event_mask, _ << target << " (cost = " << cost << ")");
-			}*/
+			if(!dumpDir().isEmpty()) {
+
+				// gather information
+				Block *v = g->lastNode()->inst()->basicBlock();
+				Block *w = g->firstNode()->inst()->basicBlock();
+				bool alone = partOf(g->firstNode()->inst()) == IN_BLOCK;
+
+				// build the name
+				StringBuffer buffer;
+				buffer	<< dumpDir() << "/"
+						<< v->cfg()->name()
+						<< "-bb" << v->index()
+						<< "-ctxt" << w->index()
+						<< "-case" << prev
+						<< ".dot";
+
+				// build the information
+				StringBuffer info;
+				info << "CFG " << v->cfg() << "|";
+				if(!alone) {
+					info << w;
+					if(w->cfg() != v->cfg())
+						info << " (" << w->cfg() << ")";
+					info << " -> ";
+				}
+				info << v;
+
+				// dump to the file
+				io::OutStream *stream = sys::System::createFile(buffer.toString());
+				io::Output out(*stream);
+				g->dump(out, info.toString(), dumpEvents(all_events, prev));
+				delete stream;
+			}
 
 			// insert the time
 			if(times.isEmpty()) {
@@ -436,16 +481,52 @@ public:
 
 	}
 
+	/**
+	 * TODO
+	 */
+	string dumpEvents(const Vector<EventCase>& all_events, mask_t mask) {
+		StringBuffer out;
+		out << "events|";
+		bool first = true;
+		for(auto e = *all_events; e; e++) {
+
+			// display separator
+			if(first)
+				first = false;
+			else
+				out << "\n";
+
+			// define activation
+			out << "[";
+			if((*e).index() < 0) {
+				if((*e).event()->occurrence() == ALWAYS)
+					out << "A";
+				else
+					out << "N";
+			}
+			else {
+				if((mask & (1 << (*e).index())) != 0)
+					out << "1";
+				else
+					out << "0";
+			}
+			out << "] ";
+
+			// display event
+			out << (*e).event()->inst()->address() << " " << (*e).event()->detail();
+		}
+		return out.toString();
+	}
+
 	// TODO so ugly
 	ParExeEdge *bedge;
-
 };
 
 /**
  * TODO
  */
-Engine *Engine::make(const Monitor& mon) {
-	return new StandardEngine(mon);
+XGraphSolver *XGraphSolver::make(const Monitor& mon) {
+	return new StandardXGraphSolver(mon);
 }
 
 } }	// otawa::etime

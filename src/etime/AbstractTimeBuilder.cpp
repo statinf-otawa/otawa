@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/data/quicksort.h>
 #include <otawa/etime/AbstractTimeBuilder.h>
 #include <otawa/ipet/features.h>
 
@@ -30,9 +31,8 @@ extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
 namespace etime {
 
 io::Output& operator<<(io::Output& out, part_t p) {
-	static cstring label[] = {
+	static cstring label[IN_SIZE] = {
 			"in-prefix",
-			"in-edge",
 			"in-block"
 	};
 	out << label[p];
@@ -76,6 +76,13 @@ io::Output& operator<<(io::Output& out, part_t p) {
  * @fn void EventCase::setIndex(int i);
  * TODO
  */
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const EventCase& e) {
+	out << e->name() << " at " << e.part() << "/" << e.event()->inst()->address() << " (" << e.event()->occurrence() << ", "<< e.event()->detail() << ")";
+	return out;
+}
 
 
 /**
@@ -161,8 +168,8 @@ p::declare AbstractTimeBuilder::reg = p::init("otawa::etime::AbstractTimeBuilder
 AbstractTimeBuilder::AbstractTimeBuilder(p::declare& r)
 :	BBProcessor(r),
 	_builder(nullptr),
-	_engine(nullptr),
-	_generator(&Generator::DEFAULT),
+	_solver(nullptr),
+	_generator(nullptr),
 	_proc(nullptr),
 	_explicit(false),
 	_predump(false),
@@ -224,16 +231,19 @@ void AbstractTimeBuilder::setup(WorkSpace *ws) {
 
 	// if required, add default actions
 	if(_builder == nullptr)
-		_builder = Builder::make(*this);
-	if(_engine == nullptr)
-		_engine = Engine::make(*this);
+		_builder = XGraphBuilder::make(*this);
+	if(_solver == nullptr)
+		_solver = XGraphSolver::make(*this);
+	if(_generator == nullptr)
+		_generator = ILPGenerator::make(*this);
 
 	// initialize the workers
-	_builder->setFactory(_engine->getFactory());
+	_builder->setFactory(_solver->getFactory());
 	_builder->setProcessor(_proc);
 	_builder->setResources(&_resources);
 	_builder->setWorkSpace(ws);
 	_builder->setExplicit(_explicit);
+	_solver->setDumpDir(_dir);
 	_generator->setSystem(ipet::SYSTEM(ws));
 	_generator->setWorkspace(ws);
 }
@@ -249,7 +259,7 @@ void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
 
 	// cleanup
 	delete _builder;
-	delete _engine;
+	delete _solver;
 	delete _proc;
 	for(auto res = resources_t::Iterator(_resources); res; res++)
 		delete *res;
@@ -363,6 +373,7 @@ void AbstractTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
  * @param e		Edge to compute for.
  */
 void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk) {
+
 	if(logFor(Processor::LOG_BLOCK)) {
 		log << "\t\t\t";
 		if(src)
@@ -383,15 +394,27 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 	}
 	collectEvents(all_events, snk, IN_BLOCK, EVENT);
 
+	// sort events
+	class EventCaseComparator {
+	public:
+		static inline int compare(const EventCase& c1, const EventCase& c2) {
+			if(c1.part() != c2.part())
+				return c1.part() - c2.part();
+			else
+				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+		}
+	};
+	elm::quicksort(all_events, EventCaseComparator());
+
 	// usual simple case: few events
 	if(countDynEvents(all_events) <= _event_th) {
 		ParExeSequence *seq = new ParExeSequence();
 		int index = 0;
 
 		// fill the prefix
-		if(snk)
-			for(BasicBlock::InstIter inst = snk->insts(); inst; inst++) {
-				ParExeInst * par_exe_inst = new ParExeInst(inst, snk, PROLOGUE, index++);
+		if(src)
+			for(BasicBlock::InstIter inst = src->insts(); inst; inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(inst, src, PROLOGUE, index++);
 				seq->addLast(par_exe_inst);
 			}
 
@@ -445,8 +468,10 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
  * TODO
  */
 void AbstractTimeBuilder::collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id) {
-	for(Identifier<Event *>::Getter event(props, id); event; event++)
+	for(Identifier<Event *>::Getter event(props, id); event; event++) {
 		events.add(EventCase(event, part));
+		//cerr << "DEBUG: adding evnt at " << event->inst()->address() << io::endl;
+	}
 }
 
 
@@ -472,21 +497,16 @@ void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>
 	// log used events
 	if(logFor(LOG_BB))
 		for(auto e = *events; e; e++)
-			log << "\t\t\t\t" << (*e).part() << ": " << (*e).event()->inst()->address()
+			/*log << "\t\t\t\t" << (*e).part() << ": " << (*e).event()->inst()->address()
 				<< " -> " << (*e).event()->name() << " (" << (*e).event()->detail() << ") "
-				<< io::endl;
+				<< io::endl;*/
+			log << "\t\t\t\t" << *e << io::endl;
 
 	// numbers the dynamic events
 	int cnt = 0;
 	for(int i = 0; i < events.count(); i++)
-		if(events[i].event()->occurrence() == SOMETIMES) {
+		if(events[i].event()->occurrence() == SOMETIMES)
 			events[i].setIndex(cnt++);
-			if(logFor(LOG_BB))
-				log << "\t\t\t\t(" << char(cnt + 'a') << ") " << events[i].event()->inst()->address() << "\t" << events[i].event()->name()
-					<< " " << events[i].part() << io::endl;
-		}
-	if(logFor(LOG_BB))
-		log << "\t\t\t\tdynamic events = " << cnt << io::endl;
 
 	// build the graph
 	ParExeGraph *g = _builder->build(seq);
@@ -495,7 +515,7 @@ void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>
 
 	// compute the times
 	List<ConfigSet *> times;
-	_engine->compute(g, times, events);
+	_solver->compute(g, times, events);
 	if(logFor(LOG_BB))
 		displayTimes(times, events);
 
