@@ -246,6 +246,7 @@ void AbstractTimeBuilder::setup(WorkSpace *ws) {
 	_solver->setDumpDir(_dir);
 	_generator->setSystem(ipet::SYSTEM(ws));
 	_generator->setWorkspace(ws);
+	_generator->setExplicit(_explicit);
 }
 
 
@@ -425,7 +426,8 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 		}
 
 		// perform the computation
-		processSequence(seq, all_events);
+		processSequence(e, seq, all_events);
+		delete seq;
 		return;
 	}
 
@@ -445,7 +447,7 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 		}
 
 		// perform the computation
-		processSequence(seq, all_events);
+		processSequence(e, seq, all_events);
 		delete seq;
 		return;
 	}
@@ -492,7 +494,7 @@ int AbstractTimeBuilder::countDynEvents(const Vector<EventCase>& events) {
 /**
  * TODO
  */
-void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>& events) {
+void AbstractTimeBuilder::processSequence(Edge *e, ParExeSequence *seq, Vector<EventCase>& events) {
 
 	// log used events
 	if(logFor(LOG_BB))
@@ -520,7 +522,7 @@ void AbstractTimeBuilder::processSequence(ParExeSequence *seq, Vector<EventCase>
 		displayTimes(times, events);
 
 	// apply the times to the ILP
-	_generator->add(g, times);
+	_generator->add(e, times, events);
 
 	// clean all
 	delete g;

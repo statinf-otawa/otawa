@@ -106,17 +106,23 @@ class ILPGenerator: public Monitor {
 public:
 	ILPGenerator(const Monitor& mon);
 	virtual ~ILPGenerator(void);
-	virtual void add(ParExeGraph *g, List<ConfigSet *> times) = 0;
+	virtual void add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& events) = 0;
 	virtual void complete(void) = 0;
 	inline WorkSpace *workspace(void) const { return _ws; }
 	inline ilp::System *system(void) const { return _sys; }
+	inline bool isExplicit(void) const { return _explicit; }
+	inline bool isRecording(void) const { return _recording; }
 	inline void setWorkspace(WorkSpace *ws) { _ws = ws; }
 	inline void setSystem(ilp::System *sys) { _sys = sys; }
+	inline void setExplicit(bool exp) { _explicit = exp; }
+	inline void setRecording(bool recording) { _recording = recording; }
 
 	static ILPGenerator *make(const Monitor& mon);
 private:
 	WorkSpace *_ws;
 	ilp::System *_sys;
+	bool _explicit;
+	bool _recording;
 };
 
 class AbstractTimeBuilder: public BBProcessor {
@@ -143,9 +149,8 @@ private:
 	void buildResources(void);
 	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id);
 	int countDynEvents(const Vector<EventCase>& events);
-	void processSequence(ParExeSequence *seq, Vector<EventCase>& events);
+	void processSequence(Edge *e, ParExeSequence *seq, Vector<EventCase>& events);
 	void displayTimes(const List<ConfigSet *>& confs, const Vector<EventCase>& events);
-
 
 	XGraphBuilder *_builder;
 	XGraphSolver *_solver;

@@ -210,10 +210,9 @@ endif()
 find_program(HG_PATH hg)
 if(HG_PATH)
     execute_process(
-        COMMAND "${HG_PATH}" summary
+        COMMAND "${HG_PATH}" identify --num -r .
         OUTPUT_VARIABLE OTAWA_VERSION
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-    string(REGEX REPLACE "parent: ([^:]+):.*" "\\1" OTAWA_VERSION "${OTAWA_VERSION}")
 endif()
 if(OTAWA_TAG)
     set(OTAWA_VERSION "${OTAWA_VERSION}-${OTAWA_TAG}")
