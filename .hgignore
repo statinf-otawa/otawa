@@ -37,4 +37,13 @@ src/prog/util_fft_lexer.cc
 src/prog/util_fft_parser.cpp
 src/prog/util_fft_parser.h
 src/config/otawa-config
+src/ast/ast_lexer.cc
+src/ast/ast_parser.cpp
+src/ast/ast_parser.h
 
+
+dist/otawa-install.py
+
+test/etime/xgraphs
+test/benchs/bs
+test/benchs/multi

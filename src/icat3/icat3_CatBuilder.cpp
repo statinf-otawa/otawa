@@ -198,7 +198,7 @@ void ACSManager::print(const LBlock *lb, Output& out) {
 CacheState& ACSManager::use(int set) {
 	if(!used.contains(set)) {
 		if(_states[set] == nullptr)
-			_states[set] = new CacheState(coll, set);
+			_states[set] = new CacheState(coll, set, _has_may);
 		if(_states[set]->must_state == nullptr)
 			_states[set]->must_state = new MustDomain::t;
 		_states[set]->must_dom.copy(*_states[set]->must_state, (*MUST_IN(_b))[set]);
@@ -307,6 +307,9 @@ protected:
 					log << " (" << HEADER(accs[i]) << ")";
 				log << " ACS = "; man->print(lb, log); log << io::endl;
 			}
+
+			// update the current ACS
+			man->update(accs[i]);
 		}
 	}
 

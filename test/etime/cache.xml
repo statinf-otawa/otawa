@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cache-config>
+	<icache>
+		<block_bits>4</block_bits>
+		<way_bits>0</way_bits>
+		<row_bits>12</row_bits>
+	</icache>
+</cache-config>
