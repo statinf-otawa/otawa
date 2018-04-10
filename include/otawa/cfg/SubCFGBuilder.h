@@ -61,8 +61,9 @@ private:
 
 };
 
-extern Identifier<Address> CFG_START;
-extern Identifier<Address> CFG_STOP;
+extern p::feature SPLIT_CFG;
+extern p::id<Address> CFG_START;
+extern p::id<Address> CFG_STOP;
 
 }	// otawa
 

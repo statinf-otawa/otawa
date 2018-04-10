@@ -405,7 +405,6 @@
  * @li @ref otawa::ipet::BB_TIME_FEATURE
  * @li @ref otawa::ipet::CONTROL_CONSTRAINTS_FEATURE
  * @li @ref otawa::ipet::DATA_CACHE_SUPPORT_FEATURE
- * @li @ref otawa::ipet::DELTA_SEQUENCES_FEATURE
  * @li @ref otawa::ipet::FLOW_FACTS_CONSTRAINTS_FEATURE
  * @li @ref otawa::ipet::FLOW_FACTS_FEATURE
  * @li @ref otawa::ipet::ILP_SYSTEM_FEATURE
@@ -423,8 +422,8 @@
  *
  * @par Instruction Cache features
  *
- * @li @ref otawa::CCG_FEATURE
- * @li @ref otawa::COLLECTED_LBLOCKS_FEATURE
+ * @li @ref otawa::ccg::FEATURE
+ * @li @ref otawa::ccg::COLLECTED_LBLOCKS_FEATURE
  * @li @ref otawa::ICACHE_ACS_FEATURE
  * @li @ref otawa::ICACHE_ACS_MAY_FEATURE
  * @li @ref otawa::ICACHE_CATEGORY_FEATURE
@@ -464,14 +463,16 @@
  * @par Data Cache Features (module dcache)
  *
  * Include @ref otawa/dcache/features.h
- *
  * @li @ref otawa::dcache::CATEGORY_FEATURE
+ * @li @ref otawa::dcache::CLP_BLOCK_FEATURE
  * @li @ref otawa::dcache::CONSTRAINTS_FEATURE
  * @li @ref otawa::dcache::DATA_BLOCK_FEATURE
  * @li @ref otawa::dcache::DIRTY_FEATURE
  * @li @ref otawa::dcache::MAY_ACS_FEATURE
  * @li @ref otawa::dcache::MUST_ACS_FEATURE
- * @li @ref otawa::dcache::PERS_ACS_FATURE
+ * @li @ref otawa::dcache::PERS_ACS_FEATURE
+ *
+ *
  *
  * @par Branch Features (module branch)
  *

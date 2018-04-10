@@ -22,7 +22,7 @@
 #ifndef OTAWA_DISPLAY_GENDRAWER_H
 #define OTAWA_DISPLAY_GENDRAWER_H
 
-#include <otawa/display/AbstractDrawer.h>
+#include "AbstractDrawer.h"
 
 namespace otawa { namespace display {
 

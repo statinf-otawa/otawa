@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/display/AbstractDrawer.h>
+#include "../../include/otawa/display/AbstractDrawer.h"
 
 namespace otawa { namespace display {
 

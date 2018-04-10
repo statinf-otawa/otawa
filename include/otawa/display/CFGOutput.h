@@ -22,9 +22,9 @@
 #ifndef OTAWA_CFGOUTPUT_H_
 #define OTAWA_CFGOUTPUT_H_
 
-#include <otawa/display/AbstractDrawer.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
+#include "AbstractDrawer.h"
 
 namespace otawa {
 

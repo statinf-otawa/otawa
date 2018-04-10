@@ -185,6 +185,11 @@ extern Identifier<PostDomInfo *> PDOM_INFO;
 class Loop;
 extern p::feature EXTENDED_LOOP_FEATURE;
 
+// Split CFG support
+extern p::feature SPLIT_CFG;
+extern p::id<Address> CFG_START;
+extern p::id<Address> CFG_STOP;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */
