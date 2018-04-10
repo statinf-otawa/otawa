@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	SubCFGBuilder class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2009, IRIT UPS.
+ *	Copyright (c) 2009-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -39,26 +38,12 @@ public:
 protected:
 	virtual void transform(CFG *cfg, CFGMaker& maker);
 private:
-	Address start;
-	elm::Vector<Address> stops;
-	Block *_start_bb;
-	elm::Vector<Block *> _stop_bbs;
-	CFGMaker *maker;
-	CFG *cfg;
+	Address _start_addr;
+	elm::Vector<Address> _stop_addrs;
+	location_t _start;
+	elm::Vector<location_t> _stops;
 	void floodForward(void);
 	void floodBackward(void);
-	static const char BOTTOM = -1,
-					  FALSE = 0,
-					  TRUE = 1;
-	inline static char toString(char c) {
-			switch(c) {
-			case BOTTOM: return '_';
-			case FALSE: return 'F';
-			case TRUE: return 'T';
-			default: return '?';
-			}
-		}
-
 };
 
 extern p::feature SPLIT_CFG;

@@ -186,9 +186,13 @@ class Loop;
 extern p::feature EXTENDED_LOOP_FEATURE;
 
 // Split CFG support
+typedef Pair<BasicBlock *, Inst *> location_t;
 extern p::feature SPLIT_CFG;
 extern p::id<Address> CFG_START;
 extern p::id<Address> CFG_STOP;
+extern p::id<location_t> LOCATION_START;
+extern p::id<location_t> LOCATION_STOP;
+io::Output& operator<<(io::Output& out, const location_t& loc);
 
 } // otawa
 

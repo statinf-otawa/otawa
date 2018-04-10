@@ -91,6 +91,17 @@ public:
 	inline Ref<T, I>& operator++(int) const { ref()++; return *this; }
 	inline Ref<T, I>& operator--(int) const { ref()--; return *this; }
 
+	class Getter: public PreIterator<Getter, const T&> {
+	public:
+		inline Getter(Ref<T, I>& r): getter(r._prop, r._id) { }
+		inline const T& item(void) const { return ((GenericProperty<T> *)*getter)->value(); }
+		inline bool ended(void) const { return getter.ended(); }
+		inline void next(void) { getter.next(); }
+	private:
+		PropList::Getter getter;
+	};
+	inline Getter all(void) { return Getter(*this); }
+
 private:
 	PropList& _prop;
 	const I& _id;

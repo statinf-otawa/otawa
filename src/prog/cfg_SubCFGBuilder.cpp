@@ -35,7 +35,7 @@ namespace otawa {
 /**
  */
 SubCFGBuilder::SubCFGBuilder(void)
-: CFGTransformer(reg), _start_bb(0), maker(0), cfg(0) {
+: CFGTransformer(reg), _start(location_t(nullptr, nullptr)) /*maker(0), cfg(0)*/ {
 }
 
 /**
@@ -46,35 +46,20 @@ p::declare SubCFGBuilder::reg = p::init("otawa::SubCFGBuilder", Version(3, 0, 0)
 	.maker<SubCFGBuilder>();
 
 
-/**
- * Provide the start address of a sub-CFG to extract (inclusive).
- * Only one start address can be given. If not provided, the start is assumed to be
- * the first address of the CFG.
- *
- * In configuration of, @ref otawa::SubCFGBuilder.
- *
- * @ingroup cfg
- */
-p::id<Address> CFG_START("otawa::CFG_START");
-
-/**
- * Provide the stop address of a sub-CFG to extract (exclusive).
- * Several stop address can be given. If not provided, the stop is assumed to be the last address
- * of the blocks preceding the exit of the current CFG.
- *
- * In configuration of, @ref otawa::SubCFGBuilder.
- *
- * @ingroup cfg
- */
-p::id<Address> CFG_STOP("otawa::CFG_STOP", false);
-
-
 // Internal work
 static p::id<bool> IS_START("", false);
 static p::id<bool> IS_STOP("", false);
-static p::id<Address> ADDR("");
+static p::id<Inst *> ADDR("");
 static p::id<bool> IS_ON_FORWARD_PATH("", false);
 static p::id<bool> IS_ON_BACKWARD_PATH("", false);
+
+
+/**
+ */
+io::Output& operator<<(io::Output& out, const location_t& loc) {
+	out << loc.snd->address() << " (BB " << loc.fst->index() << ")";
+	return out;
+}
 
 
 /**
@@ -101,10 +86,19 @@ static p::id<bool> IS_ON_BACKWARD_PATH("", false);
  */
 void SubCFGBuilder::configure(const PropList &props) {
 	Processor::configure(props);
-	start = CFG_START(props);
-	stops.clear();
+
+	// look for start
+	_start = otawa::LOCATION_START(props);
+	if(_start.fst == nullptr)
+		_start_addr = CFG_START(props);
+
+	// look for stops
+	_stops.clear();
+	_stop_addrs.clear();
+	for(Identifier<location_t>::Getter stop(props, LOCATION_STOP); stop; stop++)
+		_stops.add(stop);
 	for(Identifier<Address>::Getter stop(props, CFG_STOP); stop; stop++)
-		stops.add(stop);
+		_stop_addrs.add(stop);
 }
 
 /**
@@ -112,7 +106,7 @@ void SubCFGBuilder::configure(const PropList &props) {
  */
 void SubCFGBuilder::floodForward(void) {
 	VectorQueue<Block *> todo;
-	todo.put(_start_bb);
+	todo.put(_start.fst);
 	while(todo) {
 		Block *bb = todo.get();
 		IS_ON_FORWARD_PATH(*bb) = true;
@@ -130,8 +124,8 @@ void SubCFGBuilder::floodForward(void) {
  */
 void SubCFGBuilder::floodBackward() {
 	VectorQueue<Block *> todo;
-	for(Vector<Block *>::Iter stop(_stop_bbs); stop; stop++)
-		todo.put(stop);
+	for(auto stop = *_stops; stop; stop++)
+		todo.put((*stop).fst);
 	while (todo){
 		Block *bb = todo.get();
 		IS_ON_BACKWARD_PATH(*bb) = true;
@@ -155,61 +149,60 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 	}
 
 	// record the start tag
-	if(start.isNull()) {
-		_start_bb = cfg->entry()->outs()->sink();
-		start = _start_bb->address();
-	}
-	else {
+	if(!_start_addr.isNull()) {
 		bool done = false;
 		for(auto b = cfg->blocks(); b; b++) {
 			if(!b->isBasic())
 				continue;
 			BasicBlock *bb = b->toBasic();
-			if(bb->address() <= start && start < bb->address() + bb->size()) {
-				_start_bb = bb;
-				done = true;
-				break;
+			if(bb->address() <= _start_addr && _start_addr < bb->topAddress()) {
+				for(auto i = bb->insts(); i; i++)
+					if(i->address() <= _start_addr && _start_addr < i->topAddress()) {
+						_start = location_t(bb, i);
+						done = true;
+						break;
+					}
+				if(done)
+					break;
 			}
 		}
 		if(!done)
-			throw ProcessorException(*this, "cannot find the start address!");
+			throw ProcessorException(*this, _ << "cannot the start address " << _start_addr);
 	}
-	IS_START(_start_bb) = true;
+	else if(_start.fst == nullptr)
+		_start = location_t(cfg->entry()->outs()->sink()->toBasic(), cfg->first());
+	IS_START(_start.fst) = true;
 	if(isVerbose())
-		log << "\tstart at " << start << io::endl;
+		log << "\tstart at " << _start << io::endl;
 
 	// record the stop tags
-	if(!stops)
-		for(auto prev = cfg->exit()->ins(); prev; prev++) {
-			IS_STOP(prev->source()) = true;
-			if(prev->source()->isBasic()) {
-				BasicBlock *bb = prev->source()->toBasic();
-				ADDR(bb) = bb->topAddress();
-				stops.add(bb->topAddress());
-			}
-			_stop_bbs.add(prev->source());
-		}
-	else {
-		bool done = false;
+	if(_stop_addrs) {
 		for(auto b = cfg->blocks(); b; b++) {
 			if(!b->isBasic())
 				continue;
 			BasicBlock *bb = b->toBasic();
-			for(auto stop = *stops; stop; stop++)
-				if(bb->address() <= *stop && *stop < bb->address() + bb->size()) {
-					IS_STOP(bb) = true;
-					ADDR(bb) = stop;
-					_stop_bbs.add(bb);
-					done = true;
+			for(auto stop = *_stop_addrs; stop; stop++)
+				if(bb->address() <= *stop && *stop < bb->topAddress()) {
+					for(auto i = bb->insts(); i; i++)
+						if(i->address() <= *stop && *stop < bb->topAddress()) {
+							_stops.add(location_t(bb, *i));
+							break;
+						}
 					break;
 				}
-		}
-		if(!done)
-			throw ProcessorException(*this, "cannot find any stop address!");
+			}
 	}
-	if(isVerbose())
-		for(auto a = *stops; a; a++)
-			log << "\tstop at " << *a << io::endl;
+	else if(!_stops)
+		for(auto e = cfg->exit()->ins(); e; e++)
+			_stops.add(location_t(e->source()->toBasic(), e->source()->toBasic()->last()));
+	if(!_stops)
+		throw ProcessorException(*this, "cannot find any stop address!");
+	for(auto stop = *_stops; stop; stop++) {
+		IS_STOP((*stop).fst) = true;
+		ADDR((*stop).fst) = (*stop).snd;
+		if(isVerbose())
+			log << "\tstop at " << *stop << io::endl;
+	}
 
 	// start flood analysis
 	floodForward();
@@ -230,24 +223,30 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 			BasicBlock *bb = v->toBasic();
 
 			// determine start address
-			Address start_addr = bb->address();
-			if(IS_START(bb))
-				start_addr = start;
+			location_t start(bb, bb->first());
+			if(IS_START(v))
+				start = _start;
 
 			// determine stop address
-			Address stop_addr = ADDR(bb);
-			if(stop_addr.isNull())
-				stop_addr = bb->topAddress();
+			location_t stop(bb, bb->last());
+			if(IS_STOP(bb))
+				stop.snd = ADDR(bb);
+
+			log << "DEBUG: splitting " << start << " - " << stop << io::endl;
 
 			// build the split block
 			Vector<Inst *> is;
 			auto i = bb->insts();
-			while(i->address() < start_addr)
+			while(i != start.snd) {
+				ASSERT(i);
 				i++;
-			while(i && i->address() < stop_addr) {
+			}
+			while(i != stop.snd) {
+				ASSERT(i);
 				is.add(i);
 				i++;
 			}
+			is.add(i);
 			BasicBlock *vbb = CFGTransformer::build(is.detach());
 			map(bb, vbb);
 			orgs.add(v);
@@ -299,8 +298,12 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
  * are included in the sub-CFG.
  *
  * @par Configuration
- *	* @ref otawa::CFG_START (only one allowed)
+ *	* @ref otawa::CFG_START
+ *	* @ref otawa::LOCATION_START
  *	* @ref otawa::CFG_STOP (several allowed)
+ *	* @ref otawa::LOCATION_STOP (several allowed)
+ *
+ * Only one otawa::CFG_START or otawa::LOCATION_START can be defined.
  *
  * @par Default processor
  * 	* @ref otawa::SubCFGBuilder
@@ -308,5 +311,56 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
  * @ingroup cfg
  */
 p::feature SPLIT_CFG("otawa::SPLIT_CFG", p::make<SubCFGBuilder>());
+
+
+/**
+ * Provide the start address of a sub-CFG to extract (inclusive).
+ * Only one start address can be given. If not provided, the start is assumed to be
+ * the first address of the CFG.
+ *
+ * @par Feature
+ * 	* otawa::SPLIT_CFG
+ *
+ * @ingroup cfg
+ */
+p::id<Address> CFG_START("otawa::CFG_START");
+
+/**
+ * Provide the stop address of a sub-CFG to extract (exclusive).
+ * Several stop address can be given. If not provided, the stop is assumed to be the last address
+ * of the blocks preceding the exit of the current CFG.
+ *
+ * @par Feature
+ * 	* otawa::SPLIT_CFG
+ *
+ * @ingroup cfg
+ */
+p::id<Address> CFG_STOP("otawa::CFG_STOP", false);
+
+
+/**
+ * Provide the start location of a sub-CFG to extract (inclusive).
+ * Only one start location can be given. If not provided, the start
+ * location is assumed to be the first address of the CFG.
+ *
+ * @par Feature
+ * 	* otawa::SPLIT_CFG
+ *
+ * @ingroup cfg
+ */
+p::id<location_t> LOCATION_START("otawa::LOCATION_START", location_t(nullptr, nullptr));
+
+/**
+ * Provide the stop location of a sub-CFG to extract (inclusive).
+ * Several stop locations can be given. If not provided, the stop location
+ * is assumed to be the last instruction of the blocks preceding the exit
+ * of the current CFG.
+ *
+ * @par Feature
+ * 	* otawa::SPLIT_CFG
+ *
+ * @ingroup cfg
+ */
+p::id<location_t> LOCATION_STOP("otawa::LOCATION_STOP", location_t(nullptr, nullptr));
 
 }	// otawa
