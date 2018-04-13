@@ -49,9 +49,23 @@ p::declare CLPBlockBuilder::reg = p::init("otawa::dcache::CLPBlockBuilder", Vers
 	.base(BBProcessor::reg)
 	.maker<CLPBlockBuilder>()
 	.provide(DATA_BLOCK_FEATURE)
+	.provide(CLP_BLOCK_FEATURE)
 	.require(otawa::clp::CLP_ANALYSIS_FEATURE)
 	.require(hard::CACHE_CONFIGURATION_FEATURE)
 	.require(hard::MEMORY_FEATURE);
+
+
+/**
+ * This feature ensures that accessed data blocks have been built for data cache analysis based
+ * on the reference obtaine from CLP analysis.
+ *
+ * @par Default Processor
+ * @li @ref CLPBlockBuilder
+ *
+ * @see clp
+ * @ingroup dcache
+ */
+p::feature CLP_BLOCK_FEATURE("otawa::dcache::CLP_BLOCK_FEATURE", new Maker<CLPBlockBuilder>());
 
 
 /**
