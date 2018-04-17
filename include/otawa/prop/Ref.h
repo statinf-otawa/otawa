@@ -86,10 +86,10 @@ public:
 	inline Ref<T, I>& operator^=(const T& v) const { ref() ^=  v; return *this; }
 	inline Ref<T, I>& operator<<=(const T& v) const { ref() <<=  v; return *this; }
 	inline Ref<T, I>& operator>>=(const T& v) const { ref() >>=  v; return *this; }
-	inline Ref<T, I>& operator++(void) const { ref()++; return *this; }
-	inline Ref<T, I>& operator--(void) const { ref()--; return *this; }
-	inline Ref<T, I>& operator++(int) const { ref()++; return *this; }
-	inline Ref<T, I>& operator--(int) const { ref()--; return *this; }
+	inline Ref<T, I>& operator++(void) { ref()++; return *this; }
+	inline Ref<T, I>& operator--(void) { ref()--; return *this; }
+	inline Ref<T, I>& operator++(int) { ref()++; return *this; }
+	inline Ref<T, I>& operator--(int) { ref()--; return *this; }
 
 	class Getter: public PreIterator<Getter, const T&> {
 	public:

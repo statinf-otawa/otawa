@@ -119,14 +119,16 @@ public:
 	// Getter class
 	class Getter: public PreIterator<Getter, const T&> {
 	public:
-		inline Getter(const PropList *list, Identifier<T>& id): getter(list, id) { }
-		inline Getter(const PropList& list, Identifier<T>& id): getter(list, id) { }
+		inline Getter(const PropList *list, const Identifier<T>& id): getter(list, id) { }
+		inline Getter(const PropList& list, const Identifier<T>& id): getter(list, id) { }
 		inline const T& item(void) const { return ((GenericProperty<T> *)*getter)->value(); }
 		inline bool ended(void) const { return getter.ended(); }
 		inline void next(void) { getter.next(); }
 	private:
 		PropList::Getter getter;
 	};
+	inline Getter all(const PropList *l) const { return Getter(l, *this); }
+	inline Getter all(const PropList& l) const { return Getter(l, *this); }
 
 private:
 	T def;
