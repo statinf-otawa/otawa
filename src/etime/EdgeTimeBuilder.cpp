@@ -1507,6 +1507,9 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 				events[i].fst->estimate(c, true);
 		c->addRight(1, x_hts);
 	}
+
+	// record the HTS variable
+	ipet::VAR(edge).add(x_hts);
 }
 
 
