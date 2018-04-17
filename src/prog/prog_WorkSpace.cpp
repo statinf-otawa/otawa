@@ -37,11 +37,12 @@
 
 // Trace
 //#define FRAMEWORK_TRACE
-#if defined(NDEBUG) || !defined(FRAMEWORK_TRACE)
-#	define TRACE(str)
-#else
+#if !defined(NDEBUG) && defined(FRAMEWORK_TRACE)
 #	define TRACE(str) cerr << __FILE__ << ':' << __LINE__ << ": " << str << '\n';
+#else
+#	define TRACE(str)
 #endif
+
 
 /**
  * @defgroup prog	Program Representation
@@ -249,8 +250,11 @@ WorkSpace::WorkSpace(Process *_proc): proc(_proc), cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	ASSERT(_proc);
 	const List<AbstractFeature *>& feats = _proc->features();
-	for(List<AbstractFeature *>::Iter i(feats); i; i++)
-		dep_map.put(*i, new Dependency());
+	for(List<AbstractFeature *>::Iter i(feats); i; i++) {
+		Dependency *dep = new Dependency();
+		TRACE("added process feature " << dep << " for " << i->name());
+		dep_map.put(*i, dep);
+	}
 }
 
 
@@ -263,8 +267,11 @@ WorkSpace::WorkSpace(const WorkSpace *ws): cancelled(false) {
 	ASSERT(ws);
 	proc = ws->process();
 	const List<AbstractFeature *>& feats = ws->process()->features();
-	for(List<AbstractFeature *>::Iter i(feats); i; i++)
-		dep_map.put(*i, new Dependency());
+	for(List<AbstractFeature *>::Iter i(feats); i; i++) {
+		Dependency *dep = new Dependency();
+		TRACE("added process feature " << dep << " for " << i->name());
+		dep_map.put(*i, dep);
+	}
 }
 
 
@@ -277,12 +284,15 @@ WorkSpace::~WorkSpace(void) {
 	// collect root dependencies
 	Vector<Dependency *> roots;
 	for(dep_map_t::Iterator i(dep_map); i; i++)
-		if((*i)->_used.isEmpty() && !roots.contains(*i))
+		if((*i)->_used.isEmpty() && !roots.contains(*i)) {
+			TRACE("ROOT: " << *i << " -> " << i->_proc << " for " << i.key()->name());
 			roots.add(*i);
+		}
 
 	// invalidate dependencies
 	for(Vector<Dependency *>::Iter i(roots); i; i++)
 		invalidate(i);
+	ASSERTP(dep_map.count() == 0, "dependency map should be empty!");
 }
 
 
@@ -535,9 +545,12 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 void WorkSpace::add(Processor *proc, bool del_proc) {
 	ASSERT(proc);
 	Dependency *d = new Dependency(proc, del_proc);
+	TRACE("added " << d << " for " << proc->name());
 	for(FeatureIter fu(proc->registration()); fu; fu++)
-		if(fu->kind() == FeatureUsage::provide)
+		if(fu->kind() == FeatureUsage::provide) {
 			dep_map.put(&fu->feature(), d);
+			TRACE("\tfor " << fu->feature().name());
+		}
 		else if(fu->kind() == FeatureUsage::require) {
 				Dependency *ud = dep_map.get(&fu->feature(), 0);
 				if(!ud) {
@@ -559,11 +572,13 @@ void WorkSpace::add(Processor *proc, bool del_proc) {
  */
 void WorkSpace::remove(Dependency *dep) {
 	ASSERT(dep);
+	TRACE("remove " << dep << " for " << dep->_proc->name());
 
 	// remove provided features
-	for(List<FeatureUsage>::Iter fu(dep->_proc->registration().features()); fu; fu++)
-		if((*fu).kind() == FeatureUsage::provide)
-			dep_map.remove(&(*fu).feature());
+	//for(List<FeatureUsage>::Iter fu(dep->_proc->registration().features()); fu; fu++)
+	for(FeatureIter fu(dep->_proc->registration()); fu; fu++)
+		if(fu->kind() == FeatureUsage::provide)
+			dep_map.remove(&fu->feature());
 
 	// release its own dependencies
 	for(List<Dependency *>::Iter i(dep->_used); i; i++)
