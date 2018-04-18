@@ -87,7 +87,7 @@ double AbstractConstraint::coefficient(Var *var) const {
 	if(!var)
 		return constant();
 	else {
-		for(Expression::Iterator i(&_expr); i; i++)
+		for(Expression::Iter i(&_expr); i; i++)
 			if((*i).fst == var)
 				return (*i).snd;
 			return 0;
@@ -139,7 +139,15 @@ void AbstractConstraint::sub(double coef, Var *var) {
 /**
  */
 dyndata::AbstractIter<Term> *AbstractConstraint::terms(void) {
-	return new datastruct::IteratorMaker<Term, Expression::Iterator>(Expression::Iterator(&_expr));
+	return new datastruct::IteratorMaker<Term, Expression::Iter>(Expression::Iter(&_expr));
+}
+
+
+/**
+ */
+void AbstractConstraint::reset(void) {
+	_expr.reset();
+	_cst = 0;
 }
 
 
@@ -251,7 +259,7 @@ dyndata::AbstractIter<Constraint*> *AbstractSystem::constraints(void) {
 /**
  */
 dyndata::AbstractIter<Constraint::Term> *AbstractSystem::objTerms(void) {
-	return new dyndata::IterInst<Term, Expression::Iterator>(Expression::Iterator(&obj));
+	return new dyndata::IterInst<Term, Expression::Iter>(Expression::Iter(&obj));
 }
 
 

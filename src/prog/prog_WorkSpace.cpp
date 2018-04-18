@@ -292,7 +292,6 @@ WorkSpace::~WorkSpace(void) {
 	// invalidate dependencies
 	for(Vector<Dependency *>::Iter i(roots); i; i++)
 		invalidate(i);
-	ASSERTP(dep_map.count() == 0, "dependency map should be empty!");
 }
 
 

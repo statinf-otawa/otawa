@@ -66,6 +66,9 @@ public:
 	virtual ILPPlugin *plugin(void);
 	virtual Var *newVar(Var::type_t type, const string& name = "") = 0;
 
+	// 1.2.1 interface
+	virtual void resetObjectFunction(void) = 0;
+
 	// shortcuts
 	inline void addObject(const Term& t) { addObjectFunction(t.snd, t.fst); }
 	inline void subObject(const Term& t) { addObjectFunction(-t.snd, t.fst); }

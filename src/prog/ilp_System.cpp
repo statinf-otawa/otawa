@@ -129,6 +129,12 @@ string System::lastErrorMessage(void) {
 
 
 /**
+ * @fn void System::resetObjectFunction(void);
+ * Reset the object function that is now equal to 0.
+ */
+
+
+/**
  * @fn Var *System::newVar(Var::type_t type, const string& name);
  * Build a new variable with the given type.
  * @param type	Type of the variable.
@@ -630,7 +636,7 @@ bool System::hasDump(format_t fmt) {
  * @param e	Expression to add.
  */
 void System::addObject(const Expression& e) {
-	for(Expression::Iterator i(&e); i; i++)
+	for(Expression::Iter i(&e); i; i++)
 		addObject(*i);
 }
 
@@ -639,7 +645,7 @@ void System::addObject(const Expression& e) {
  * @param e	Expression to subtract.
  */
 void System::subObject(const Expression& e) {
-	for(Expression::Iterator i(&e); i; i++)
+	for(Expression::Iter i(&e); i; i++)
 		subObject(*i);
 }
 

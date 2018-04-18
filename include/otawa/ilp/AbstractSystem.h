@@ -46,10 +46,12 @@ public:
 	virtual void setComparator(comparator_t comp);
 	virtual void setLabel(const string& label);
 
-	class TermIter: public Expression::Iterator {
+	class TermIter: public Expression::Iter {
 	public:
-		inline TermIter(AbstractConstraint *cons): Expression::Iterator(&cons->_expr) { }
+		inline TermIter(AbstractConstraint *cons): Expression::Iter(&cons->_expr) { }
 	};
+
+	void reset(void) override;
 
 private:
 	friend class AbstractSystem;

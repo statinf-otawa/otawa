@@ -94,6 +94,7 @@ public:
 	dyndata::AbstractIter<ilp::Constraint::Term> *terms(void);
 	virtual void setComparator(comparator_t comp) { cmp = comp; }
 	virtual void setLabel(const string& label) { _label = label; }
+	virtual void reset(void) override;
 
 private:
 	friend class System;
@@ -224,6 +225,10 @@ public:
 	virtual void dumpSolution(io::Output& out = elm::cout);
 	dyndata::AbstractIter<ilp::Constraint *> *constraints(void);
 	dyndata::AbstractIter<ilp::Constraint::Term> *objTerms(void);
+
+	void resetObjectFunction(void) override {
+		ofun->reset();
+	}
 
 	class LocalVar: public ilp::Var {
 	public:
@@ -463,12 +468,7 @@ inline Constraint *Constraint::next(void) const {
  * Free all ressources.
  */
 Constraint::~Constraint(void) {
-	Factor *fact = facts;
-	while(fact) {
-		Factor *next = fact->next();
-		delete fact;
-		fact = next;
-	}
+	reset();
 	sys->removeConstraint(this);
 }
 
@@ -558,6 +558,20 @@ void Constraint::dump(elm::io::Output& out) {
 			out << "_" << fact->variable()->column();
 	}
 }
+
+
+/**
+ */
+void Constraint::reset(void) {
+	cst = 0;
+	Factor *fact = facts;
+	while(fact) {
+		Factor *next = fact->next();
+		delete fact;
+		fact = next;
+	}
+}
+
 
 /**
  * Build a new lp_solve system.

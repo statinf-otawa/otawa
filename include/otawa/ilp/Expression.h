@@ -21,7 +21,7 @@
 #ifndef OTAWA_ILP_EXPRESSION_H_
 #define OTAWA_ILP_EXPRESSION_H_
 
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 
 namespace otawa { namespace ilp {
 
@@ -58,15 +58,20 @@ public:
 
 	double eval(System *sys);
 
-	class Iterator: public genstruct::SLList<Term>::Iterator {
+	class Iter: public List<Term>::Iter {
 	public:
-		inline Iterator(const Expression *expr): genstruct::SLList<Term>::Iterator(expr->terms) { }
-		inline Iterator(const Iterator& iter): genstruct::SLList<Term>::Iterator(iter) { }
-		inline Iterator& operator=(const Iterator& iter) { genstruct::SLList<Term>::Iterator::operator=(iter); return *this; }
+		inline Iter(void) { }
+		inline Iter(const Expression *expr): List<Term>::Iter(expr->terms) { }
 	};
 
+	inline Iter begin(void) const { return Iter(this); }
+	inline Iter end(void) const { return Iter(); }
+	inline Iter operator*(void) const { return begin(); }
+
+	inline void reset(void) { terms.clear(); }
+
 private:
-	genstruct::SLList<Term> terms;
+	List<Term> terms;
 };
 
 } }		// otawa::ilp

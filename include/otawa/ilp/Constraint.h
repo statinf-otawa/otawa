@@ -72,6 +72,9 @@ public:
 
 	};
 
+	// interface 1.2.1
+	virtual void reset(void) = 0;
+
 };
 
 io::Output& operator<<(io::Output& out, Constraint::comparator_t comp);

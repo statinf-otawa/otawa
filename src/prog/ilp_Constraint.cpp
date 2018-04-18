@@ -89,11 +89,18 @@ namespace otawa { namespace ilp {
 
 
 /**
+ * @fn void Constraint::reset(void);
+ * Reset the constraint, i.e. remove all left and right members.
+ * @snce ILP interface 1.2.1.
+ */
+
+
+/**
  * Add an expression to the left part of the constraint.
  * @param e		Added expression.
  */
 void Constraint::add(const Expression& e) {
-	for(Expression::Iterator i(&e); i; i++)
+	for(Expression::Iter i(&e); i; i++)
 		add(*i);
 }
 
@@ -103,7 +110,7 @@ void Constraint::add(const Expression& e) {
  * @param e		Subtracted expression.
  */
 void Constraint::sub(const Expression& e) {
-	for(Expression::Iterator i(&e); i; i++)
+	for(Expression::Iter i(&e); i; i++)
 		sub(*i);
 }
 
