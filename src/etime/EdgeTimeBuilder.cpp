@@ -691,7 +691,7 @@ void EdgeTimeBuilder::processSequence(void) {
 	// simple trivial case
 	if(events.isEmpty()) {
 		ot::time cost = graph->analyze();
-		this->genForOneCost(cost, edge, events);
+		genForOneCost(cost, edge, events);
 		// dump it if needed
 		if(_do_output_graphs) {
 			if (source)
@@ -782,6 +782,7 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 
 	// add to the objective function
 	sys->addObjectFunction(cost, var);
+	cerr << "DEBUG: add cost " << cost << " to " << edge << io::endl;
 	if(record)
 		LTS_TIME(edge) = cost;
 
@@ -1509,7 +1510,8 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 	}
 
 	// record the HTS variable
-	ipet::VAR(edge).add(x_hts);
+	if(record)
+		HTS_VAR(edge) = x_hts;
 }
 
 
@@ -1567,6 +1569,16 @@ p::id<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
  */
 p::id<ot::time> HTS_OFFSET("otawa::etime::HTS_OFFSET", 0);
 
+
+/**
+ * Produced only if the RECORD_TIME configuration is set,
+ * record for each edge the variable corresponding to the
+ * occurrences of the HTS.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ */
+p::id<ilp::Var *> HTS_VAR("otawa::etime::HTS_VAR", nullptr);
 
 /**
  * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated

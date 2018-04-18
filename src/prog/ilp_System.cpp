@@ -636,8 +636,8 @@ bool System::hasDump(format_t fmt) {
  * @param e	Expression to add.
  */
 void System::addObject(const Expression& e) {
-	for(Expression::Iter i(&e); i; i++)
-		addObject(*i);
+	for(auto i: e)
+		addObject(i);
 }
 
 /**

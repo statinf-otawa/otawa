@@ -156,6 +156,7 @@ extern p::id<bool> RECORD_TIME;
 extern p::feature EDGE_TIME_FEATURE;
 extern p::id<ot::time> LTS_TIME;
 extern p::id<ot::time> HTS_OFFSET;
+extern p::id<ilp::Var *> HTS_VAR;
 
 } }	// otawa::etime
 
