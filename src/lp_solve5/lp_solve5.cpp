@@ -123,27 +123,16 @@ private:
 	Factor *getFacts();
 	// TermIterInst class
 	class TermIterInst: public dyndata::AbstractIter<ilp::Constraint::Term> {
+	public:
+		TermIterInst(Constraint *_cons) : cur(_cons->getFacts()) { }
+		bool ended (void) const override { return (!cur); }
+		ilp::Constraint::Term item(void) const override { return Term(cur->getVar(), cur->coefficient()); }
+		void next(void) override { cur = cur->next(); }
 
+	private:
 		Factor *cur;
-		public:
-		TermIterInst(Constraint *_cons) : cur(_cons->getFacts()) {
-		}
-
-		bool ended (void) const {
-			return (!cur);
-		}
-
-		ilp::Constraint::Term item(void) const {
-			return Term(cur->getVar(), cur->coefficient());
-
-		}
-
-		void next(void) {
-			cur = cur->next();
-
-		}
 	};
-	// Attributes
+
 	System *sys;
 	Constraint *nxt;
 	Factor *facts;
@@ -570,6 +559,7 @@ void Constraint::reset(void) {
 		delete fact;
 		fact = next;
 	}
+	facts = nullptr;
 }
 
 
