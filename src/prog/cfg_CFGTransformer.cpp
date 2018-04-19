@@ -216,6 +216,9 @@ void CFGTransformer::transform(CFG *g, CFGMaker& m) {
 		}
 	}
 
+	// report context
+	if(g->hasProp(CONTEXT))
+		CONTEXT(m) = CONTEXT(g);
 }
 
 /**

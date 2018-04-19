@@ -434,7 +434,7 @@ ContextualStep ContextualStep::null;
 /**
  * Private identifier for contextual properties.
  */
-AbstractIdentifier ContextualProperty::ID;
+AbstractIdentifier ContextualProperty::ID("ContextualProperty::ID");
 
 
 /**

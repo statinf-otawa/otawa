@@ -22,6 +22,7 @@
 
 #include <otawa/display/CFGOutput.h>
 #include <otawa/proc/Processor.h>
+#include <otawa/prog/Process.h>
 #include <elm/sys/Path.h>
 #include <otawa/display/CFGDrawer.h>
 #include <otawa/display/GenDrawer.h>
@@ -247,7 +248,17 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
 	StringBuffer title;
 
 	// make body
+	Pair<cstring, int> line;
 	for(BasicBlock::InstIter inst(bb); inst; inst++){
+
+		// manage source line
+		Option<Pair<cstring, int>> nline = workspace()->process()->getSourceLine(inst->address());
+		if(!nline)
+			line = pair(cstring(""), 0);
+		else if(line.fst != (*nline).fst || line.snd != (*nline).snd) {
+			line = *nline;
+			out << line.fst << ":" << line.snd << io::endl;
+		}
 
 		// display labels
 		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
