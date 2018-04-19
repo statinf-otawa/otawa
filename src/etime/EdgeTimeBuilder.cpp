@@ -782,7 +782,6 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 
 	// add to the objective function
 	sys->addObjectFunction(cost, var);
-	cerr << "DEBUG: add cost " << cost << " to " << edge << io::endl;
 	if(record)
 		LTS_TIME(edge) = cost;
 
