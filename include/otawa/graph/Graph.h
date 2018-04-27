@@ -246,14 +246,14 @@ inline Node::Node(Graph *graph)
 
 inline bool Node::isPredOf(const Node *node) {
 	for(Successor succ(this); succ; succ++)
-		if(succ == node)
+		if(*succ == node)
 			return true;
 	return false;
 }
 	
 inline bool Node::isSuccOf(const Node *node) {
 	for(Predecessor pred(this); pred; pred++)
-		if(pred == node)
+		if(*pred == node)
 			return true;
 	return false;
 }

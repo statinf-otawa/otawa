@@ -259,6 +259,11 @@ private:
 	bool _fix;
 };
 
+
+// useful accessors
+inline Block::EdgeCollection OUT_EDGES(const Block *b) { return b->outEdges(); }
+inline Block::EdgeCollection IN_EDGES(const Block *b) { return b->outEdges(); }
+
 } // otawa
 
 #endif // OTAWA_CFG_CFG_H

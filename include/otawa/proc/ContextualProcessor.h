@@ -23,6 +23,7 @@
 #define OTAWA_PROC_CONTEXTUALPROCESSOR_H_
 
 #include <otawa/proc/CFGProcessor.h>
+#include <otawa/prop/ContextualProperty.h>
 
 namespace otawa {
 

@@ -18,14 +18,12 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
- 
+
+#include <elm/data/HashMap.h>
 #include <otawa/otawa.h>
 #include <otawa/app/Application.h>
 #include <otawa/cfg.h>
 #include <elm/options.h>
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/VectorQueue.h>
 #include <otawa/cfg/features.h>
 
 using namespace otawa;

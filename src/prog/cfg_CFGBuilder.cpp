@@ -85,10 +85,10 @@ void CFGBuilder::setup(WorkSpace *ws) {
 void CFGBuilder::cleanup(WorkSpace *ws) {
 
 	// build the CFG information
-	CFGInfo *info = new CFGInfo(ws);
+	/*CFGInfo *info = new CFGInfo(ws);
 	for(Iter maker(*this); maker; maker++)
 		info->add(maker->build());
-	track(CFG_INFO_FEATURE, CFG_INFO(ws) = info);
+	track(CFG_INFO_FEATURE, CFG_INFO(ws) = info);*/
 
 	// cleanup
 	AbstractCFGBuilder::cleanup(ws);

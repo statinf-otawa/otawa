@@ -51,14 +51,17 @@ private:
 class Vertex {
 	friend class Edge;
 	friend class DiGraphBuilder;
-	typedef elm::List<Edge *> edges_t;
 public:
+	typedef elm::List<Edge *> edges_t;
+
 	inline Vertex(void): idx(0) { }
 	inline int index(void) const { return idx; }
 
 	typedef edges_t::Iter EdgeIter;
-	inline EdgeIter ins(void) const { return EdgeIter(_ins); }
-	inline EdgeIter outs(void) const { return EdgeIter(_outs); }
+	inline const edges_t& inEdges(void) const { return _ins; }
+	inline const edges_t& outEdges(void) const { return _outs; }
+	inline EdgeIter ins(void) const { return _ins.begin(); }
+	inline EdgeIter outs(void) const { return _outs.begin(); }
 	inline int countIns(void) const { return _ins.count(); }
 	inline int countOuts(void) const { return _outs.count(); }
 
@@ -109,6 +112,7 @@ public:
 template <class V, class E>
 class GenVertex: public Vertex {
 public:
+
 	class EdgeIter: public PreIterator<EdgeIter, E *> {
 		friend class GenVertex<V, E>;
 	public:
@@ -121,6 +125,66 @@ public:
 		EdgeIter(const Vertex::EdgeIter& it): i(it) { }
 		Vertex::EdgeIter i;
 	};
+
+	class EdgeCollection {
+	public:
+		inline EdgeCollection(const edges_t& edges): _edges(edges) { }
+	private:
+		inline EdgeIter begin(void) const { return EdgeIter(_edges.begin()); }
+		inline EdgeIter end(void) const { return EdgeIter(_edges.end()); }
+		const edges_t& _edges;
+	};
+
+	inline EdgeCollection inEdges(void) const { return EdgeCollection(Vertex::inEdges()); }
+	inline EdgeCollection outEdges(void) const { return EdgeCollection(Vertex::outEdges()); }
+
+	class SuccIter: public PreIterator<SuccIter, V *> {
+	public:
+		inline SuccIter(void) { }
+		inline SuccIter(const Vertex::EdgeIter& i): _i(i) { }
+		inline bool ended(void) const { return _i.ended(); }
+		inline V *item(void) const { return _i->sink(); }
+		inline void next(void) { _i.next(); }
+		inline bool operator==(const SuccIter& i) const { return _i == i._i; }
+		inline bool operator!=(const SuccIter& i) const { return !operator==(i); }
+	private:
+		Vertex::EdgeIter _i;
+	};
+
+	class SuccCollection {
+	public:
+		inline SuccCollection(const V *v): _v(v) { }
+		inline SuccIter begin(void) const { return SuccIter(_v->outs()); }
+		inline SuccIter end(void) const { return SuccIter(); }
+	private:
+		const V *_v;
+	};
+
+	inline SuccCollection succs(void) const { return SuccCollection(this); }
+
+	class PredIter: public PreIterator<SuccIter, V *> {
+	public:
+		inline PredIter(void) { }
+		inline PredIter(const Vertex::EdgeIter& i): _i(i) { }
+		inline bool ended(void) const { return _i.ended(); }
+		inline V *item(void) const { return _i->source(); }
+		inline void next(void) { _i.next(); }
+		inline bool operator==(const PredIter& i) const { return _i == i._i; }
+		inline bool operator!=(const PredIter& i) const { return !operator==(i); }
+	private:
+		Vertex::EdgeIter _i;
+	};
+
+	class PredCollection {
+	public:
+		inline PredCollection(const V *v): _v(v) { }
+		inline PredIter begin(void) const { return PredIter(_v->ins()); }
+		inline PredIter end(void) const { return PredIter(); }
+	private:
+		const V *_v;
+	};
+
+	inline PredCollection preds(void) const { return PredCollection(this); }
 
 	inline EdgeIter ins(void) const { return EdgeIter(Vertex::ins()); }
 	inline EdgeIter outs(void) const { return EdgeIter(Vertex::outs()); }
