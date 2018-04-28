@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	CFG class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2003-07, IRIT UPS.
+ *	Copyright (c) 2003-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -263,6 +262,62 @@ private:
 // useful accessors
 inline Block::EdgeCollection OUT_EDGES(const Block *b) { return b->outEdges(); }
 inline Block::EdgeCollection IN_EDGES(const Block *b) { return b->outEdges(); }
+inline Block::SuccCollection SUCCS(const Block *b) { return b->succs(); }
+inline Block::PredCollection PREDS(const Block *b) { return b->preds(); }
+
+// back access
+extern Identifier<bool> BACK_EDGE;
+class BackIter: public Block::EdgeIter {
+public:
+	inline BackIter(void) { }
+	inline BackIter(const Block *b): Block::EdgeIter(b->ins()) { step(); }
+	inline void next(void) { Block::EdgeIter::next(); step(); }
+private:
+	void step(void)
+		{ while(!ended() && !BACK_EDGE(item())) Block::EdgeIter::next(); }
+};
+
+class BACK_EDGES {
+public:
+	inline BACK_EDGES(const Block *b): _b(b) { }
+	inline BackIter begin(void) const { return BackIter(_b); }
+	inline BackIter end(void) const { return BackIter(); }
+private:
+	const Block *_b;
+};
+
+
+// entry access
+class EntryIter: public Block::EdgeIter {
+public:
+	inline EntryIter(void) { }
+	inline EntryIter(const Block *b): Block::EdgeIter(b->ins()) { step(); }
+	inline void next(void) { Block::EdgeIter::next(); step(); }
+private:
+	void step(void)
+		{ while(!ended() && BACK_EDGE(item())) Block::EdgeIter::next(); }
+};
+
+class ENTRY_EDGES {
+public:
+	inline ENTRY_EDGES(const Block *b): _b(b) { }
+	inline EntryIter begin(void) const { return EntryIter(_b); }
+	inline EntryIter end(void) const { return EntryIter(); }
+private:
+	const Block *_b;
+};
+
+
+// exit access
+extern Identifier<elm::Vector<Edge*> *> EXIT_LIST;
+class EXIT_EDGES {
+public:
+	inline EXIT_EDGES(const Block *b): _b(b) { ASSERT(b->hasProp(EXIT_LIST)); }
+	inline Vector<Edge *>::Iter begin(void) const { return EXIT_LIST(_b)->begin(); }
+	inline Vector<Edge *>::Iter end(void) const { return EXIT_LIST(_b)->end(); }
+private:
+	const Block *_b;
+};
 
 } // otawa
 

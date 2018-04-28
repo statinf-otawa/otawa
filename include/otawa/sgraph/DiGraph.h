@@ -121,6 +121,7 @@ public:
 		inline bool ended(void) const { return i.ended(); }
 		inline E *item(void) const { return static_cast<E *>(*i); }
 		inline void next(void) { i.next(); }
+		inline bool equals(const EdgeIter& it) const { return i.equals(it.i); }
 	private:
 		EdgeIter(const Vertex::EdgeIter& it): i(it) { }
 		Vertex::EdgeIter i;
@@ -129,9 +130,9 @@ public:
 	class EdgeCollection {
 	public:
 		inline EdgeCollection(const edges_t& edges): _edges(edges) { }
-	private:
 		inline EdgeIter begin(void) const { return EdgeIter(_edges.begin()); }
 		inline EdgeIter end(void) const { return EdgeIter(_edges.end()); }
+	private:
 		const edges_t& _edges;
 	};
 
@@ -141,47 +142,45 @@ public:
 	class SuccIter: public PreIterator<SuccIter, V *> {
 	public:
 		inline SuccIter(void) { }
-		inline SuccIter(const Vertex::EdgeIter& i): _i(i) { }
+		inline SuccIter(const GenVertex<V, E> *v): _i(v->Vertex::outs()) { }
 		inline bool ended(void) const { return _i.ended(); }
-		inline V *item(void) const { return _i->sink(); }
+		inline V *item(void) const { return static_cast<V *>(_i->sink()); }
 		inline void next(void) { _i.next(); }
-		inline bool operator==(const SuccIter& i) const { return _i == i._i; }
-		inline bool operator!=(const SuccIter& i) const { return !operator==(i); }
+		inline bool equals(const SuccIter& i) const { return _i.equals(i._i); }
 	private:
 		Vertex::EdgeIter _i;
 	};
 
 	class SuccCollection {
 	public:
-		inline SuccCollection(const V *v): _v(v) { }
-		inline SuccIter begin(void) const { return SuccIter(_v->outs()); }
+		inline SuccCollection(const GenVertex<V, E> *v): _v(v) { }
+		inline SuccIter begin(void) const { return SuccIter(_v); }
 		inline SuccIter end(void) const { return SuccIter(); }
 	private:
-		const V *_v;
+		const GenVertex<V, E> *_v;
 	};
 
 	inline SuccCollection succs(void) const { return SuccCollection(this); }
 
-	class PredIter: public PreIterator<SuccIter, V *> {
+	class PredIter: public PreIterator<PredIter, V *> {
 	public:
 		inline PredIter(void) { }
-		inline PredIter(const Vertex::EdgeIter& i): _i(i) { }
+		inline PredIter(const GenVertex<V, E> *v): _i(v->Vertex::ins()) { }
 		inline bool ended(void) const { return _i.ended(); }
-		inline V *item(void) const { return _i->source(); }
+		inline V *item(void) const { return static_cast<V *>(_i->source()); }
 		inline void next(void) { _i.next(); }
-		inline bool operator==(const PredIter& i) const { return _i == i._i; }
-		inline bool operator!=(const PredIter& i) const { return !operator==(i); }
+		inline bool equals(const PredIter& i) const { return _i.equals(i._i); }
 	private:
 		Vertex::EdgeIter _i;
 	};
 
 	class PredCollection {
 	public:
-		inline PredCollection(const V *v): _v(v) { }
-		inline PredIter begin(void) const { return PredIter(_v->ins()); }
+		inline PredCollection(const GenVertex<V, E> *v): _v(v) { }
+		inline PredIter begin(void) const { return PredIter(_v); }
 		inline PredIter end(void) const { return PredIter(); }
 	private:
-		const V *_v;
+		const GenVertex<V, E> *_v;
 	};
 
 	inline PredCollection preds(void) const { return PredCollection(this); }

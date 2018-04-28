@@ -324,8 +324,8 @@ ParExePipeline *ParExeStage::addFunctionalUnit(
  */
 ParExeProc::ParExeProc(const hard::Processor *proc)
 :	_proc(proc),
-	_mem_stage(nullptr),
-	_branch_stage(nullptr)
+	_branch_stage(nullptr),
+	_mem_stage(nullptr)
 {
 	ASSERT(proc);
 

@@ -145,12 +145,7 @@ namespace otawa {
    */
 
   class ParExePipeline { 
-  protected:
-    elm::genstruct::Vector<ParExeStage *> _stages;
-  private:
-    ParExeStage * _last_stage;
-    ParExeStage * _first_stage;
-  public:
+  	public:
     ParExePipeline()  : _first_stage(nullptr), _last_stage(nullptr) {}
     ~ParExePipeline() {    }
     inline ParExeStage *lastStage() {return _last_stage;}
@@ -165,6 +160,12 @@ namespace otawa {
     };
 
     inline StageIterator stages(void) const { return StageIterator(this); }
+
+    protected:
+      elm::genstruct::Vector<ParExeStage *> _stages;
+    private:
+      ParExeStage * _first_stage;
+      ParExeStage * _last_stage;
   };
 
 
