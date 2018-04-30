@@ -53,11 +53,14 @@ public:
 	public:
 		inline Iter(void) { }
 		inline Iter(WorkSpace *ws): elm::FragTable<CFG *>::Iter(get(ws)->cfgs) { }
+		inline Iter(const FragTable<CFG *>::Iter& i): FragTable<CFG *>::Iter(i) { }
 		inline Iter(const CFGCollection *cfgs): elm::FragTable<CFG *>::Iter(cfgs->cfgs) { }
 		inline Iter(const CFGCollection& cfgs): elm::FragTable<CFG *>::Iter(cfgs.cfgs) { }
 	};
-	inline Iter items(void) const { return Iter(this); }
+	inline Iter items(void) const { return cfgs.begin(); }
 	inline Iter operator*(void) const { return items(); }
+	inline Iter begin(void) const { return items(); }
+	inline Iter end(void) const { return cfgs.end(); }
 
 	class BlockIter: public PreIterator<BlockIter, Block *> {
 	public:

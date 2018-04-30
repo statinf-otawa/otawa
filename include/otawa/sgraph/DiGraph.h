@@ -23,7 +23,7 @@
 #define OTAWA_SIGRAPH_DIGRAPH_H_
 
 #include <elm/data/List.h>
-#include <elm/genstruct/FragTable.h>
+#include <elm/data/FragTable.h>
 
 namespace otawa {
 
@@ -75,13 +75,26 @@ private:
 
 class DiGraph {
 	friend class DiGraphBuilder;
-	typedef genstruct::FragTable<Vertex *> v_t;
+	typedef FragTable<Vertex *> v_t;
 public:
 	inline Vertex *entry(void) const { return e; }
-	typedef v_t::Iterator VertexIter;
-	inline VertexIter vertices(void) const { return VertexIter(v); }
+	typedef v_t::Iter VertexIter;
 	inline int count(void) const { return v.count(); }
 	inline Vertex *at(int index) const { return v[index]; }
+	inline VertexIter begin(void) const { return v.begin(); }
+	inline VertexIter end(void) const { return v.end(); }
+
+	class VertexAccess {
+	public:
+		inline VertexAccess(const DiGraph& g): _g(g) { }
+		inline VertexIter begin(void) const { return _g.begin(); }
+		inline VertexIter end(void) const { return _g.end(); }
+		inline operator VertexIter(void) const { return _g.begin(); }
+	private:
+		const DiGraph& _g;
+	};
+	inline VertexAccess vertices(void) const { return VertexAccess(*this); }
+
 private:
 	Vertex *e;
 	v_t v;
@@ -197,19 +210,31 @@ public:
 		friend class GenDiGraph<V, E>;
 	public:
 		inline VertexIter(void) { }
-		inline VertexIter(const VertexIter& it): i(it.i) { }
 		inline bool ended(void) const { return i.ended(); }
 		inline V *item(void) const { return static_cast<V *>(*i); }
 		inline void next(void) { i.next(); }
+		inline bool equals(const VertexIter& it) const { return i.equals(it.i); }
 	private:
 		inline VertexIter(const DiGraph::VertexIter& it): i(it) { }
 		DiGraph::VertexIter i;
 	};
 
 	inline V *entry(void) const { return static_cast<V *>(DiGraph::entry()); }
-	inline VertexIter vertices(void) const { return VertexIter(DiGraph::vertices()); }
 	inline V *at(int index) const { return static_cast<V *>(DiGraph::at(index)); }
 
+	inline VertexIter begin(void) const { return DiGraph::begin(); }
+	inline VertexIter end(void) const { return DiGraph::end(); }
+
+	class VertexAccess {
+	public:
+		inline VertexAccess(const DiGraph& g): _g(g) { }
+		inline VertexIter begin(void) const { return _g.begin(); }
+		inline VertexIter end(void) const { return _g.end(); }
+		inline operator VertexIter(void) const { return _g.begin(); }
+	private:
+		const DiGraph& _g;
+	};
+	inline VertexAccess vertices(void) const { return VertexAccess(*this); }
 };
 
 template <class V, class E>

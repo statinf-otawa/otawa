@@ -60,8 +60,8 @@ public:
 	}
 
 private:
-	genstruct::FragTable<inhstruct::DLList> lists;
-	genstruct::FragTable<NOPInst> nops;
+	FragTable<inhstruct::DLList> lists;
+	FragTable<NOPInst> nops;
 };
 
 
