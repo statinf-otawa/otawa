@@ -23,7 +23,7 @@
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
 #include <otawa/dfa/BitSet.h>
-#include <otawa/util/GenGraph.h>
+#include <otawa/graph/GenGraph.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
@@ -32,8 +32,6 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ccg/Builder.h>
 #include <otawa/ccg/DFA.h>
-#include <otawa/ccg/Edge.h>
-#include <otawa/ccg/Node.h>
 
 using namespace otawa::ilp;
 using namespace otawa;
@@ -42,6 +40,45 @@ namespace otawa { namespace ccg {
 
 // DFA Properties
 static Identifier<dfa::BitSet *> IN("", 0);
+
+
+/**
+ * @class Edge
+ * This class represents edges in the CCG representation.
+ * They allow hooking annotations.
+
+ * @par Plugin
+ * @li @ref ccg
+ *
+ * @ingroup ccg
+ */
+
+/**
+ * Build a new CCG edge.
+ */
+Edge::Edge(void) { }
+
+/**
+ * Delete an edge.
+ */
+Edge::~Edge(void) {
+}
+
+
+/**
+ * @class Node
+ * Node of a CCG (Cache Conflict Graph).
+ *
+ * @par Plugin
+ * @li @ref ccg
+ *
+ * @ingroup ccg
+ */
+
+Node::Node(LBlock *node){
+	lbl = node;
+}
+
 
 
 /**
@@ -112,13 +149,16 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 		ccgs = new Collection(cache->rowCount());
 		fw->addProp(new DeletableProperty<Collection *>(Graph::GRAPHS, ccgs));
 	}
-	Graph *ccg = new Graph;
+
+	// build the graph
+	Graph *ccg = new Graph();
 	ccgs->ccgs[lbset->line()] = ccg;
+	sgraph::GenDiGraphBuilder<Node, Edge> builder(ccg, nullptr);
 
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
 		Node *node = new Node(lblock);
-		ccg->add(node);
+		builder.add(node);
 		Graph::NODE(lblock) = node;
 	}
 
@@ -178,7 +218,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 								if (info->contains(i)) {
 									LBlock *lblock = lbset->lblock(i);
 									Node *node = Graph::NODE(lblock);
-									new Edge (node, Graph::NODE(lbloc));
+									builder.add(node, Graph::NODE(lbloc), new Edge());
 								}
 							aux = lbloc;
 							test = true;
@@ -187,7 +227,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 						}
 
 						if(adinst == address && !visit && bb == lbloc->bb()) {
-							new Edge(Graph::NODE(aux), Graph::NODE(lbloc));
+							builder.add(Graph::NODE(aux), Graph::NODE(lbloc), new Edge);
 							aux = lbloc;
 							break;
 						}
@@ -204,12 +244,12 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	for (int i = 0; i< length; i++)
 		if (info->contains(i)) {
 			LBlock *ccgnode1 = lbset->lblock(i);
-			new Edge(Graph::NODE(ccgnode1), Graph::NODE(end));
+			builder.add(Graph::NODE(ccgnode1), Graph::NODE(end), new Edge());
 		}
 
 	// Build edge from 'S' till 'end'
 	LBlock *s = lbset->lblock(0);
-	new Edge(Graph::NODE(s), Graph::NODE(end));
+	builder.add(Graph::NODE(s), Graph::NODE(end), new Edge());
 
 	// Cleanup the DFA annotations
 	for (CFGCollection::Iter cfg(coll); cfg; cfg++)

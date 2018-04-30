@@ -21,7 +21,7 @@
  */
 #ifndef BBHG_H_
 #define BBHG_H_
-#include <otawa/util/GenGraph.h>
+#include <otawa/graph/GenGraph.h>
 #include <otawa/otawa.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/otawa.h>

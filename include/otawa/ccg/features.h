@@ -22,7 +22,7 @@
 #define OTAWA_CCG_FEATURES_H_
 
 #include <elm/inhstruct/DLList.h>
-#include <otawa/util/GenGraph.h>
+#include <otawa/sgraph/DiGraph.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/Inst.h>
 
@@ -103,8 +103,26 @@ private:
 };
 
 
+// Node class
+class Node: public sgraph::GenVertex<Node, Edge> {
+public:
+	Node(LBlock *node);
+	LBlock *lblock(){return lbl;};
+private:
+	LBlock *lbl;
+};
+
+
+// Edge class
+class Edge: public PropList, public sgraph::GenEdge<Node, Edge> {
+public:
+	Edge(void);
+	~Edge(void);
+};
+
+
 // Graph class
-class Graph: public graph::GenGraph<Node, Edge> {
+class Graph: public sgraph::GenDiGraph<Node, Edge> {
 public:
 
 	// Properties

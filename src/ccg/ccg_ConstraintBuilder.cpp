@@ -25,7 +25,6 @@
 #include <otawa/ccg/Builder.h>
 #include <otawa/ccg/ConstraintBuilder.h>
 #include <otawa/ccg/DFA.h>
-#include <otawa/ccg/Node.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/Dominance.h>
 #include <otawa/hard/CacheConfiguration.h>
@@ -172,8 +171,8 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		}
 
 		// Put variables on edges
-		for(Graph::OutIterator edge(Graph::NODE(lblock)); edge; edge++) {
-			Node *succ = edge->target();
+		for(auto edge: Graph::NODE(lblock)->outEdges()) {
+			Node *succ = edge->sink();
 			String name;
 			if(_explicit) {
 				StringBuffer buf;
@@ -209,7 +208,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		if (lbloc->id() == 0) {
 			// !!CONS!!
 			Constraint *cons18 = system->newConstraint(Constraint::EQ,1);
-			for(Graph::OutIterator edge(Graph::NODE(lbloc)); edge; edge++)
+			for(auto edge: Graph::NODE(lbloc)->outEdges())
 				cons18->add(1, VAR(edge));
 		}
 
@@ -241,10 +240,9 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			Constraint *cons17 = system->newConstraint(Constraint::EQ);
 			cons17->addLeft(1, BB_VAR(lbloc));
 
-			for(graph::GenGraph<Node, Edge>::OutIterator edge(Graph::NODE(lbloc));
-			edge; edge++) {
+			for(auto edge: Graph::NODE(lbloc)->outEdges()) {
 				cons17->addRight(1, VAR(edge));
-				Node *target = edge->target();
+				Node *target = edge->sink();
 				if (target->lblock()->id() == lbset->count() - 1)
 					findend = true;
 
@@ -265,8 +263,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			used = false;
 			bool finds = false;
 			ilp::Var * psi;
-			for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
-			inedge; inedge++) {
+			for(auto inedge: Graph::NODE(lbloc)->inEdges()) {
 
 				cons->addRight(1, VAR(inedge));
 				Node *source = inedge->source();
@@ -304,7 +301,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 				cons->addLeft(1, HIT_VAR(lbloc));
 
 				unsigned long taglbloc = ((unsigned long)lbloc->address().offset()) >> dec;
-				for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++)
+				for(auto inedge: Graph::NODE(lbloc)->inEdges())
 				{
 					unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address().offset()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
@@ -323,8 +320,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 		 		cons2 = system->newConstraint(Constraint::EQ);
 		 		cons2->addLeft(1, HIT_VAR(lbloc));
 	//	 		unsigned long taglbloc = ((unsigned long)lbloc->address()) >> dec;
-		 		for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(lbloc));
-		 		inedge; inedge++) {
+		 		for(auto inedge: Graph::NODE(lbloc)->inEdges()) {
 		 			// cout << "examine block (addr = " <<  lbloc->address() <<   ") " << lbloc->id() << " avec predecesseur : " << inedge->lblock()->id() << "\n";
 //		 			unsigned long taginedge = ((unsigned long)inedge->lblock()->address()) >> dec;
 					if(inedge->source()->lblock()->id() != 0
@@ -343,7 +339,7 @@ void ConstraintBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset) {
 			cons = system->newConstraint(Constraint::EQ);
 			cons->addLeft(1, HIT_VAR(lbloc));
 			unsigned long taglbloc = ((unsigned long)lbloc->address().offset()) >> dec;
-			for(Graph::InIterator inedge(Graph::NODE(lbloc)); inedge; inedge++) {
+			for(auto inedge: Graph::NODE(lbloc)->inEdges()) {
 				unsigned long taginedge = ((unsigned long)inedge->source()->lblock()->address().offset()) >> 3;
 				if(inedge->source()->lblock()->id() != 0
 					&& inedge->source()->lblock()->id() != lbset->count() - 1) {
@@ -400,8 +396,7 @@ void ConstraintBuilder::addConstraintHeader(
 				BasicBlock *header = cont->bb();
 				bool used = false;
 				Constraint *cons32 = system->newConstraint(Constraint::LE);
-				for(graph::GenGraph<Node, Edge>::InIterator inedge(Graph::NODE(boc));
-				inedge; inedge++) {
+				for(auto inedge: Graph::NODE(boc)->inEdges()) {
 					Node *source = inedge->source();
 					if(source->lblock()->id() != 0
 					&& source->lblock()->id() !=  size-1) {

@@ -6,7 +6,7 @@
  */
 
 #include <elm/assert.h>
-#include <otawa/util/Graph.h>
+#include <otawa/graph/Graph.h>
 #include <elm/io.h>
 
 using namespace elm;

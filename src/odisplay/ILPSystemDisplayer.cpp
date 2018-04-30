@@ -19,6 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/data/FragTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/sys/System.h>
 
 #include <otawa/cfg/CFGCollector.h>
@@ -176,8 +178,8 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// collect constraints
 	cout << "\t\t<h1><a name=\"__constraints\">Constraints</a></h1>\n";
-	typedef genstruct::FragTable<ilp::Constraint *> cons_store_t;
-	genstruct::HashTable<string, cons_store_t *> cons_map;
+	typedef FragTable<ilp::Constraint *> cons_store_t;
+	HashMap<string, cons_store_t *> cons_map;
 	for(ilp::System::ConstIterator cons(system); cons; cons++) {
 		string lab = cons->label();
 		cons_store_t *store = cons_map.get(lab, 0);
@@ -189,11 +191,11 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// display constraints
-	for(genstruct::HashTable<string, cons_store_t *>::PairIterator store(cons_map); store; store++) {
+	for(HashMap<string, cons_store_t *>::PairIter store(cons_map); store; store++) {
 		const string& label = (*store).fst;
 		if(label)
 			cout << "\t\t\t\t<h2>" << label << "</h2>\n";
-		for(cons_store_t::Iterator cons(*(*store).snd); cons; cons++)
+		for(cons_store_t::Iter cons(*(*store).snd); cons; cons++)
 			displayCons(*cons);
 		delete (*store).snd;
 	}
