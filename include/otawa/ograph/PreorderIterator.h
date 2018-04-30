@@ -23,9 +23,10 @@
 #define OTAWA_GRAPH_PREORDERITERATOR_H_
 
 #include <elm/data/VectorQueue.h>
-#include <otawa/graph/GenGraph.h>
 
-namespace otawa { namespace graph {
+#include "../ograph/GenGraph.h"
+
+namespace otawa { namespace ograph {
 
 // PreorderIterator class
 template <class G>

@@ -24,14 +24,14 @@
 
 #include <elm/assert.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/graph/GenGraph.h>
 #include "Microprocessor.h"
 #include <otawa/instruction.h>
 #include <elm/genstruct/DLList.h>
 #include <otawa/otawa.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/graph/PreorderIterator.h>
 #include <otawa/cfg.h>
+#include "../ograph/GenGraph.h"
+#include "../ograph/PreorderIterator.h"
 
 namespace otawa { 
 
@@ -154,7 +154,7 @@ class ExeInst {
      elm::genstruct::Vector<N *> _contenders;
    public:
      inline ExeNode(ExeGraph<N> *graph, PipelineStage<N> *stage, ExeInst<N> *inst)
-       :   GenGraph<N,ExeEdge>::GenNode((otawa::graph::Graph *)graph->graph()),
+       :   GenGraph<N,ExeEdge>::GenNode((otawa::ograph::Graph *)graph->graph()),
        _inst(inst), _pipeline_stage(stage), _needs_operands(false),
        _produces_operands(false)
 	 {
@@ -295,10 +295,10 @@ class ExeInst {
    };
 
    typedef GenGraph<N,typename ExeGraph<N>::ExeEdge> Graph;
-   class PreorderIterator: public graph::PreorderIterator<Graph> {
+   class PreorderIterator: public ograph::PreorderIterator<Graph> {
    public:
      inline PreorderIterator(ExeGraph<N> * graph, N *node)
-       : graph::PreorderIterator<Graph>(*graph->graph(), node) {}
+       : ograph::PreorderIterator<Graph>(*graph->graph(), node) {}
    }; 	 
  };
 

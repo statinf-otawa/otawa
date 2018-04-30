@@ -18,11 +18,12 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#include <otawa/graph/Graph.h>
 #include <elm/io.h>
+
+#include "../../include/otawa/ograph/Graph.h"
 using namespace elm;
 
-namespace otawa { namespace graph {
+namespace otawa { namespace ograph {
 
 /**
  * @class Node

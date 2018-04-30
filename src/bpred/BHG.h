@@ -23,10 +23,10 @@
 #define BHG_H_
 
 #include <otawa/cfg.h>
-#include <otawa/graph/GenGraph.h>
 #include <otawa/otawa.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/otawa.h>
+#include "../../include/otawa/ograph/GenGraph.h"
 
 namespace otawa { namespace bpred {
 
@@ -36,7 +36,7 @@ class BHGEdge;
 
 
 
-class BHG : public otawa::graph::GenGraph<BHGNode,BHGEdge> {
+class BHG : public otawa::ograph::GenGraph<BHGNode,BHGEdge> {
 protected:
 	friend class BHGNode;
 	friend class BHGEdge;
@@ -50,7 +50,7 @@ public:
 
 
 
-class BHGEdge : public otawa::graph::GenGraph<BHGNode,BHGEdge>::GenEdge {
+class BHGEdge : public otawa::ograph::GenGraph<BHGNode,BHGEdge>::GenEdge {
 private:
 	bool m_edge_taken;
 public:
@@ -62,7 +62,7 @@ public:
 
 
 
-class BHGNode : public otawa::graph::GenGraph<BHGNode,BHGEdge>::GenNode{
+class BHGNode : public otawa::ograph::GenGraph<BHGNode,BHGEdge>::GenNode{
 private:
 	bool m_entry;
 	bool m_exit;

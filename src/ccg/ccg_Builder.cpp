@@ -23,7 +23,6 @@
 #include <otawa/dfa/XIterativeDFA.h>
 #include <otawa/dfa/XCFGVisitor.h>
 #include <otawa/dfa/BitSet.h>
-#include <otawa/graph/GenGraph.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
@@ -32,6 +31,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ccg/Builder.h>
 #include <otawa/ccg/DFA.h>
+#include "../../include/otawa/ograph/GenGraph.h"
 
 using namespace otawa::ilp;
 using namespace otawa;

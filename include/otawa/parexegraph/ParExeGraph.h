@@ -29,11 +29,11 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
 #include <otawa/hard/Platform.h>
-#include <otawa/graph/GenGraph.h>
-#include <otawa/graph/PreorderIterator.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/parexegraph/ParExeProc.h>
 #include <otawa/parexegraph/Resource.h>
+#include "../ograph/GenGraph.h"
+#include "../ograph/PreorderIterator.h"
 
 
 namespace otawa {
@@ -212,7 +212,7 @@ namespace otawa {
 	 *
 	 */
 
-	class ParExeGraph: public graph::GenGraph<ParExeNode, ParExeEdge> {
+	class ParExeGraph: public ograph::GenGraph<ParExeNode, ParExeEdge> {
 		friend class InstIterator;
 		friend class ParExeNode;
 	protected:
@@ -309,10 +309,10 @@ namespace otawa {
 				: ParExeStage::NodeIterator(stage) {}
 		};
 
-		class PreorderIterator: public graph::PreorderIterator<ParExeGraph> {
+		class PreorderIterator: public ograph::PreorderIterator<ParExeGraph> {
 		public:
 			inline PreorderIterator(ParExeGraph * graph)
-				: graph::PreorderIterator<ParExeGraph>(*graph, graph->firstNode()) {}
+				: ograph::PreorderIterator<ParExeGraph>(*graph, graph->firstNode()) {}
 		};
 
 		class Predecessor: public PreIterator<Predecessor, ParExeNode *> {
@@ -347,7 +347,7 @@ namespace otawa {
 	 *
 	 */
 	// a node in an execution graph (ParExeGraph)
-	class ParExeNode: public graph::GenGraph<ParExeNode,ParExeEdge>::GenNode{
+	class ParExeNode: public ograph::GenGraph<ParExeNode,ParExeEdge>::GenNode{
 	private:
 		ParExeStage *_pipeline_stage;								// pipeline stage to which the node is related
 		ParExeInst *_inst;											// instruction to which the node is related
@@ -411,7 +411,7 @@ namespace otawa {
 	 *
 	 */
 	// an edge in an execution graph (ParExeGraph)
-	class ParExeEdge: public graph::GenGraph<ParExeNode,ParExeEdge>::GenEdge{
+	class ParExeEdge: public ograph::GenGraph<ParExeNode,ParExeEdge>::GenEdge{
 	public:
 		typedef enum edge_type_t {SOLID = 1, SLASHED = 2} edge_type_t_t;
 	private:

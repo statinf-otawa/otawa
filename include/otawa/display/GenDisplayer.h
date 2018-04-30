@@ -21,14 +21,14 @@
 #ifndef OTAWA_DISPLAY_GENGRAPHDISPLAYER_H
 #define OTAWA_DISPLAY_GENGRAPHDISPLAYER_H
 
+#include "../ograph/GenGraph.h"
 #include "Displayer.h"
-#include <otawa/graph/GenGraph.h>
 
 namespace otawa { namespace display {
 
 template <class V, class E>
 class GenDisplayer {
-	typedef graph::GenGraph<V, E> graph_t;
+	typedef ograph::GenGraph<V, E> graph_t;
 
 	class MyEdge;
 	class MyVertex: public AbstractGraph::Vertex {

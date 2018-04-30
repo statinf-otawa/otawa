@@ -21,7 +21,8 @@
 #ifndef OTAWA_GRAPH_GEN_GRAPH_H
 #define OTAWA_GRAPH_GEN_GRAPH_H
 #include <elm/PreIterator.h>
-#include <otawa/graph/Graph.h>
+
+#include "../ograph/Graph.h"
 
 // GCC work-around
 #if defined(__GNUC__) && __GNUC__ <= 4 && __GNUC_MINOR__ <= 0
@@ -30,7 +31,7 @@
 #	define OTAWA_GCAST(t, e) static_cast<t>(e)
 #endif
 
-namespace otawa { namespace graph {
+namespace otawa { namespace ograph {
 
 // GenGraph class
 template <class N, class E>
@@ -41,31 +42,31 @@ public:
 	typedef E *Edge;
 
 	// GenNode class
-	class GenNode: private graph::Node {
+	class GenNode: private ograph::Node {
 		friend class GenGraph<N, E>;
 	protected:
-		inline GenNode(GenGraph<N, E> *g = 0): graph::Node(&g->_g) { }
+		inline GenNode(GenGraph<N, E> *g = 0): ograph::Node(&g->_g) { }
 		virtual ~GenNode(void) { }
 	public:
 		//inline graph::Graph *graph(void) const { return graph::Node::graph(); }
-		inline int index(void) const { return graph::Node::index(); }
-		inline bool hasSucc(void) const { return graph::Node::hasSucc(); }
-		inline bool hasPred(void) const { return graph::Node::hasPred(); }
-		inline int countSucc(void) const { return graph::Node::countSucc(); }	
-		inline int countPred(void) const { return graph::Node::countPred(); }
-		inline bool isPredOf(const GenNode *node) { return graph::Node::countPred(); }
-		inline bool isSuccOf(const GenNode *node) { return graph::Node::isSuccOf(); }
+		inline int index(void) const { return ograph::Node::index(); }
+		inline bool hasSucc(void) const { return ograph::Node::hasSucc(); }
+		inline bool hasPred(void) const { return ograph::Node::hasPred(); }
+		inline int countSucc(void) const { return ograph::Node::countSucc(); }	
+		inline int countPred(void) const { return ograph::Node::countPred(); }
+		inline bool isPredOf(const GenNode *node) { return ograph::Node::countPred(); }
+		inline bool isSuccOf(const GenNode *node) { return ograph::Node::isSuccOf(); }
 	};
 
 	// GenEdge class
-	class GenEdge: private graph::Edge {
+	class GenEdge: private ograph::Edge {
 		friend class GenGraph<N, E>;
 	protected:
 		virtual ~GenEdge(void) { }
 	public:
-		inline GenEdge(GenNode *source, GenNode *target): graph::Edge(_(source), _(target)) { }
-		inline N *source(void) const { return OTAWA_GCAST(N *, graph::Edge::source()); }
-		inline N *target(void) const { return OTAWA_GCAST(N *, graph::Edge::target()); }
+		inline GenEdge(GenNode *source, GenNode *target): ograph::Edge(_(source), _(target)) { }
+		inline N *source(void) const { return OTAWA_GCAST(N *, ograph::Edge::source()); }
+		inline N *target(void) const { return OTAWA_GCAST(N *, ograph::Edge::target()); }
 	};
 
 	// Collection concept
@@ -77,7 +78,7 @@ public:
 	
 	// Iterator class
 	class Iter: public elm::PreIterator<Iter, N *> {
-		graph::Graph::Iter iter;
+		ograph::Graph::Iter iter;
 	public:
 		inline Iter(const GenGraph<N, E> *graph): iter(&graph->_g) { }
 		inline Iter(const GenGraph<N, E>& graph): iter(&graph._g) { }
@@ -152,15 +153,15 @@ public:
 	};
 
 	// private
-	inline static const graph::Node *_(const GenNode *node) { return node; }; 
-	inline static const graph::Edge *_(const GenEdge *edge) { return edge; }; 
-	inline const graph::Graph *_(void) const { return this; }; 
-	inline static graph::Node *_(GenNode *node) { return node; }; 
-	inline static graph::Edge *_(Edge *edge) { return edge; }; 
-	inline graph::Graph *_(void) { return this; }
+	inline static const ograph::Node *_(const GenNode *node) { return node; }; 
+	inline static const ograph::Edge *_(const GenEdge *edge) { return edge; }; 
+	inline const ograph::Graph *_(void) const { return this; }; 
+	inline static ograph::Node *_(GenNode *node) { return node; }; 
+	inline static ograph::Edge *_(Edge *edge) { return edge; }; 
+	inline ograph::Graph *_(void) { return this; }
 
 private:
-	graph::Graph _g;
+	ograph::Graph _g;
 };
 
 } }	// otawa::graph

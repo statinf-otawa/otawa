@@ -6,12 +6,12 @@
  */
 
 #include <elm/assert.h>
-#include <otawa/graph/Graph.h>
 #include <elm/io.h>
+#include "../../include/otawa/ograph/Graph.h"
 
 using namespace elm;
 
-namespace otawa { namespace graph {
+namespace otawa { namespace ograph {
 
 /**
  * @class Edge

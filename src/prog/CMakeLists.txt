@@ -134,7 +134,7 @@ set(libotawa_SOURCES
 	"util_Bag.cpp"
 	"util_Node.cpp"
 	"util_Edge.cpp"
-	"graph.cpp"
+	"ograph.cpp"
 	"view.cpp"
 
 #	rtti

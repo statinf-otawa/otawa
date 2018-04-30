@@ -19,14 +19,14 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/graph/GenGraph.h>
-#include <otawa/graph/Graph.h>
-#include <otawa/graph/PreorderIterator.h>
+#include "../../include/otawa/ograph/GenGraph.h"
+#include "../../include/otawa/ograph/Graph.h"
+#include "../../include/otawa/ograph/PreorderIterator.h"
 
-namespace otawa { namespace graph {
+namespace otawa { namespace ograph {
 
 /**
- * @defgroup graph Graph Management
+ * @defgroup ograph Old Graph Management
  *
  * OTAWA provides several graph implementations and algorithm to use them.
  * A graph is OTAWA-compliant if it implements the @ref otawa::concept::DiGraph
@@ -85,7 +85,7 @@ namespace otawa { namespace graph {
  * The obtained class implements a bidirectional graph with all facilities
  * provided for @ref Graph available.
  *
- * @ingroup graph
+ * @ingroup ograph
  */
 
 /**
@@ -95,7 +95,7 @@ namespace otawa { namespace graph {
  * accepted.
  * @param N	Type of nodes (must inherit from @ref GenGraph<N, E>::Node).
  * @param E Type of edges (must inherit from @ref GenGraph<N, E>::Edge).
- * @ingroup graph
+ * @ingroup ograph
  */
 
 
@@ -104,7 +104,7 @@ namespace otawa { namespace graph {
  * An iterator allowing to traverse the graph using preorder, that is, a
  * node is only traversed when its predecessors has been traversed.
  * @param G	Type of traversed graph.
- * @ingroup graph
+ * @ingroup ograph
  */
 
 
@@ -135,7 +135,7 @@ namespace otawa { namespace graph {
  */
 void Graph::clear(void) {
 	for(Iter node(this); node; node++) {
-		for(graph::Edge *edge = node->outs, *next; edge; edge = next) {
+		for(ograph::Edge *edge = node->outs, *next; edge; edge = next) {
 			next = edge->sedges;
 			delete edge;
 		}
@@ -187,11 +187,11 @@ void Graph::remove(Node *node) {
  * Destroy an edge.
  * @param edge	Edge to destroy.
  */
-void Graph::remove(graph::Edge *edge) {
+void Graph::remove(ograph::Edge *edge) {
 
 	// Remove edge from successor list
-	graph::Edge *prev = 0;
-	for(graph::Edge *cur = edge->src->outs; cur != edge; prev = cur, cur = cur->sedges)
+	ograph::Edge *prev = 0;
+	for(ograph::Edge *cur = edge->src->outs; cur != edge; prev = cur, cur = cur->sedges)
 		ASSERT(cur);
 	if(prev)
 		prev->sedges = edge->sedges;
@@ -200,7 +200,7 @@ void Graph::remove(graph::Edge *edge) {
 
 	// Remove edge from predecessor list
 	prev = 0;
-	for(graph::Edge *cur = edge->tgt->ins; cur != edge; prev = cur, cur = cur->tedges)
+	for(ograph::Edge *cur = edge->tgt->ins; cur != edge; prev = cur, cur = cur->tedges)
 		ASSERT(cur);
 	if(prev)
 		prev->tedges = edge->tedges;
@@ -277,4 +277,4 @@ bool Graph::isPredecessorOf(Node *pred, Node *ref) const {
  * Build an iterator on the given graph.
  */
 
-} } // otawa::graph
+} } // otawa::ograph

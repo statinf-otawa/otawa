@@ -31,7 +31,7 @@
 #include <elm/util/Option.h>
 #include <elm/util/BitVector.h>
 
-namespace otawa { namespace graph {
+namespace otawa { namespace ograph {
 
 using namespace elm;
 
@@ -131,10 +131,10 @@ class Graph {
 	friend class Node;
 	friend class Edge;
 public:
-	typedef otawa::graph::Node *Vertex;
-	typedef otawa::graph::Edge *Edge;
+	typedef otawa::ograph::Node *Vertex;
+	typedef otawa::ograph::Edge *Edge;
 	~Graph(void);
-	void remove(graph::Edge *edge);
+	void remove(ograph::Edge *edge);
 
 	// Collection concept
 	inline int count(void) const { return nodes.count(); }
@@ -160,18 +160,18 @@ public:
 	inline void remove(const Iter& iter) { nodes.remove(iter); }
 	
 	// DiGraph concept
-	Node *sinkOf(graph::Edge *edge) const { return edge->sink(); }
+	Node *sinkOf(ograph::Edge *edge) const { return edge->sink(); }
 	int outDegree(Node *vertex) const;
 	bool isSuccessorOf(Node *succ, Node *ref) const;
 
 	// OutIterator class
-	class OutIterator: public elm::PreIterator<OutIterator, graph::Edge *> {
+	class OutIterator: public elm::PreIterator<OutIterator, ograph::Edge *> {
 	public:
 		inline OutIterator(const Node *source): iter(source) { }
 		inline OutIterator(const Graph& graph, const Node *source): iter(source) { }
 		inline OutIterator(const OutIterator& iterator): iter(iterator.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
-		inline graph::Edge *item(void) const { return iter.edge(); }
+		inline ograph::Edge *item(void) const { return iter.edge(); }
 		inline void next(void) { iter.next(); }
 	private:
 		Node::Successor iter;
@@ -179,18 +179,18 @@ public:
 	typedef OutIterator Successor;
 
 	// BiDiGraph concept
-	Node *sourceOf(graph::Edge *edge) const { return edge->source(); }
+	Node *sourceOf(ograph::Edge *edge) const { return edge->source(); }
 	int inDegree(Node *vertex) const;
 	bool isPredecessorOf(Node *prev, Node *ref) const;
 
 	// InIterator class
-	class InIterator: public elm::PreIterator<InIterator, graph::Edge *> {
+	class InIterator: public elm::PreIterator<InIterator, ograph::Edge *> {
 	public:
 		inline InIterator(const Node *source): iter(source) { }
 		inline InIterator(const Graph& graph, const Node *source): iter(source) { }
 		inline InIterator(const InIterator& iterator): iter(iterator.iter) { }
 		inline bool ended(void) const { return iter.ended(); }
-		inline graph::Edge *item(void) const { return iter.edge(); }
+		inline ograph::Edge *item(void) const { return iter.edge(); }
 		inline void next(void) { iter.next(); }
 	private:
 		Node::Predecessor iter;

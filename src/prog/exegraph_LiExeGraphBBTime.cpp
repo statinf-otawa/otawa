@@ -11,7 +11,7 @@
 using namespace otawa;
 using namespace otawa::hard;
 using namespace elm;
-using namespace otawa::graph;
+using namespace otawa::ograph;
 using namespace otawa::ipet;
 
 #define DO_LOG

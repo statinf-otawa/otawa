@@ -24,7 +24,7 @@
 using namespace otawa;
 using namespace otawa::hard;
 using namespace elm;
-using namespace otawa::graph;
+using namespace otawa::ograph;
 
 //#define ACCURATE_STATS
 #if defined(NDEBUG) || !defined(ACCURATE_STATS)
