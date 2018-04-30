@@ -9,7 +9,7 @@
 
 #include <elm/io.h>
 #include <otawa/base.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

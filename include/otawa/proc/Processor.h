@@ -30,10 +30,10 @@
 #include <elm/genstruct/HashTable.h>
 #include <elm/util/Cleaner.h>
 
-#include <otawa/properties.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/proc/Registration.h>
 #include <otawa/proc/Monitor.h>
+#include "../prop.h"
 
 namespace otawa {
 

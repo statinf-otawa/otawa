@@ -24,10 +24,10 @@
 
 #include <elm/assert.h>
 #include <elm/genstruct/Vector.h>
-#include <otawa/properties.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/cfg/CFG.h>
+#include "../prop.h"
 
 namespace otawa {
 

@@ -11,7 +11,7 @@
 #include <elm/string.h>
 #include <elm/inhstruct/DLList.h>
 #include <otawa/base.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

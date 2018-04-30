@@ -24,98 +24,11 @@
 
 namespace otawa { namespace display {
 
-Identifier<DisplayedCFG::Vertex> DisplayedCFG::VERTEX("");
-Identifier<DisplayedCFG::Edge> DisplayedCFG::EDGE("");
-
-/**
- * @class DisplayedCFG
- * @ref AbstractGraph implementation to display a CFG.
- * Notice it is advised to use @ref CFGDecorator to make
- * easier decoration of the CFG.
- *
- * @ingroup display
- */
-
-/**
- */
-DisplayedCFG::DisplayedCFG(CFG& cfg): _cfg(&cfg) {
-	for(CFG::BlockIter b = _cfg->blocks(); b; b++) {
-		VERTEX(b) = Vertex(b);
-		for(Block::EdgeIter e = b->outs(); e; e++)
-			EDGE(e) = Edge(e);
-	}
-}
-
-/**
- */
-DisplayedCFG::~DisplayedCFG(void) {
-	for(CFG::BlockIter b = _cfg->blocks(); b; b++) {
-		VERTEX(b).remove();
-		for(Block::EdgeIter e = b->outs(); e; e++)
-			EDGE(e).remove();
-	}
-}
-
-class BlockIter: public dyndata::AbstractIter<const AbstractGraph::Vertex *> {
-public:
-	inline BlockIter(const CFG::BlockIter& iter): i(iter) { }
-	virtual bool ended(void) const { return i.ended(); }
-	virtual const AbstractGraph::Vertex *item(void) const { return &*DisplayedCFG::VERTEX(i); }
-	virtual void next(void) { i.next(); }
-private:
-	CFG::BlockIter i;
-};
-
-class EdgeIter: public dyndata::AbstractIter<const AbstractGraph::Edge *> {
-public:
-	inline EdgeIter(const Block::EdgeIter& iter): i(iter) { }
-	virtual bool ended(void) const { return i.ended(); }
-	virtual const AbstractGraph::Edge *item(void) const { return &*DisplayedCFG::EDGE(i); }
-	virtual void next(void) { i.next(); }
-private:
-	Block::EdgeIter i;
-};
-
-/**
- */
-dyndata::AbstractIter<const AbstractGraph::Vertex *> *DisplayedCFG::vertices(void) const {
-	return new BlockIter(_cfg->blocks());
-}
-
-/**
- */
-dyndata::AbstractIter<const AbstractGraph::Edge *> *DisplayedCFG::outs(const AbstractGraph::Vertex& v) const {
-	return new EdgeIter(block(v)->outs());
-}
-
-/**
- */
-dyndata::AbstractIter<const AbstractGraph::Edge *> *DisplayedCFG::ins(const AbstractGraph::Vertex& v) const {
-	return new EdgeIter(block(v)->ins());
-}
-
-/**
- */
-const AbstractGraph::Vertex& DisplayedCFG::sourceOf(const AbstractGraph::Edge& e) const {
-	return *VERTEX(edge(e)->source());
-}
-
-/**
- */
-const AbstractGraph::Vertex& DisplayedCFG::sinkOf(const AbstractGraph::Edge& e) const {
-	return *VERTEX(edge(e)->sink());
-}
-
-/**
- */
-string DisplayedCFG::id(const AbstractGraph::Vertex& v) const {
-	return _ << block(v)->id();
-}
-
-
 /**
  * @class CFGDecorator
  * Decorator dedicated to CFGs.
+ *
+ * @ingroup display
  */
 
 CFGDecorator::CFGDecorator(WorkSpace *workspace)
@@ -154,24 +67,6 @@ void CFGDecorator::decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyl
 		label << "taken";
 	else if(edge->isBoth())
 		label << "both";
-}
-
-/**
- */
-void CFGDecorator::decorate(const AbstractGraph& graph, Text& caption, GraphStyle& style) const {
-	decorate(DisplayedCFG::cfg(graph), caption, style);
-}
-
-/**
- */
-void CFGDecorator::decorate(const AbstractGraph& graph, const AbstractGraph::Vertex& vertex, Text& content, VertexStyle& style) const {
-	decorate(DisplayedCFG::cfg(graph), DisplayedCFG::block(vertex), content, style);
-}
-
-/**
- */
-void CFGDecorator::decorate(const AbstractGraph& graph, const AbstractGraph::Edge& edge, Text& label, EdgeStyle& style) const {
-	decorate(DisplayedCFG::cfg(graph), DisplayedCFG::edge(edge), label, style);
 }
 
 /**

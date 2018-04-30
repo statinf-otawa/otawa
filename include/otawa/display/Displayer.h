@@ -26,6 +26,7 @@
 #include <elm/sys/Path.h>
 #include <otawa/display/display.h>
 #include <otawa/prop/AbstractIdentifier.h>
+#include <otawa/graph/DiGraph.h>
 
 namespace otawa { namespace display {
 
@@ -36,37 +37,34 @@ public:
 	inline Exception(string msg): otawa::Exception(msg) { }
 };
 
-class AbstractGraph {
-public:
-
-	class Vertex {
-	};
-
-	class Edge {
-	};
-
-	virtual ~AbstractGraph(void);
-	virtual dyndata::AbstractIter<const Vertex *> *vertices(void) const = 0;
-	virtual dyndata::AbstractIter<const Edge *> *outs(const Vertex& v) const = 0;
-	virtual dyndata::AbstractIter<const Edge *> *ins(const Vertex& v) const = 0;
-	virtual const Vertex& sourceOf(const Edge& v) const = 0;
-	virtual const Vertex& sinkOf(const Edge& v) const = 0;
-	virtual string id(const Vertex& v) const = 0;
-
-};
-
 class Decorator {
 public:
 	virtual ~Decorator(void);
-	virtual void decorate(const AbstractGraph& graph, Text& caption, GraphStyle& style) const;
-	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Vertex& vertex, Text& content, VertexStyle& style) const;
-	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Edge& edge, Text& label, EdgeStyle& style) const;
+	virtual void decorate(graph::DiGraph *graph, Text& caption, GraphStyle& style) const;
+	virtual void decorate(graph::DiGraph *graph, graph::Vertex *vertex, Text& content, VertexStyle& style) const;
+	virtual void decorate(graph::DiGraph *graph, graph::Edge *edge, Text& label, EdgeStyle& style) const;
+};
+
+template <class G, class V, class E>
+class GenDecorator: public Decorator {
+public:
+
+	virtual void decorate(G *graph, Text& caption, GraphStyle& style) const { }
+	virtual void decorate(G *graph, V *vertex, Text& content, VertexStyle& style) const { }
+	virtual void decorate(G *graph, E *edge, Text& label, EdgeStyle& style) const { }
+
+	void decorate(graph::DiGraph *graph, Text& caption, GraphStyle& style) const override
+		{ decorate(static_cast<G *>(graph), caption, style); }
+	void decorate(graph::DiGraph *graph, graph::Vertex *vertex, Text& content, VertexStyle& style) const override
+		{ decorate(static_cast<G *>(graph), static_cast<V *>(vertex), content, style); }
+	void decorate(graph::DiGraph *graph, graph::Edge *edge, Text& label, EdgeStyle& style) const override
+		{ decorate(static_cast<G *>(graph), static_cast<E *>(edge), label, style); }
 };
 
 class Displayer {
 public:
 
-	Displayer(const AbstractGraph& graph, const Decorator& decorator, output_mode_t out);
+	Displayer(graph::DiGraph *graph, const Decorator& decorator, output_mode_t out);
 	virtual ~Displayer(void);
 	virtual void process(void) throw(Exception) = 0;
 
@@ -76,7 +74,7 @@ public:
 	inline void setLayout(layout_t l) { layout = l; }
 
 protected:
-	const AbstractGraph& g;
+	graph::DiGraph *g;
 	const Decorator& d;
 	output_mode_t output;
 	layout_t layout;
@@ -92,9 +90,9 @@ public:
 	virtual ~Provider(void);
 
 	virtual bool accepts(output_mode_t out) = 0;
-	virtual Displayer *make(const AbstractGraph& g, const Decorator& d, output_mode_t out = OUTPUT_ANY) = 0;
+	virtual Displayer *make(graph::DiGraph *g, const Decorator& d, output_mode_t out = OUTPUT_ANY) = 0;
 
-	static Displayer *display(const AbstractGraph& g, const Decorator& d, output_mode_t out = OUTPUT_ANY);
+	static Displayer *display(graph::DiGraph *g, const Decorator& d, output_mode_t out = OUTPUT_ANY);
 	static Provider *get(cstring name = "");
 	static Provider *get(output_mode_t out);
 

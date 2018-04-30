@@ -26,7 +26,7 @@
 
 #include <otawa/proc/AbstractFeature.h>
 #include <otawa/prog/Inst.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

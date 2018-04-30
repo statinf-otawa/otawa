@@ -30,7 +30,7 @@
 #include <elm/sys/Thread.h>
 #include <elm/util/LockPtr.h>
 
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace elm { namespace xom {
 	class Element;

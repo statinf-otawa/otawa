@@ -22,9 +22,9 @@
 #define OTAWA_HARD_PLATFORM_H
 
 #include <elm/sys/Path.h>
-#include <otawa/properties.h>
 #include <otawa/hard/Register.h>
 #include <otawa/prog/Manager.h>
+#include "../prop.h"
 
 // External classes
 namespace elm {

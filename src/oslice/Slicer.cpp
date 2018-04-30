@@ -243,9 +243,9 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
 			// full program will use different abstract graph
 			// DotDisplayer(workspace(), slicingCFGOutputPath, 1).display(coll);
-			display::DisplayedCFG ag(**cfg);
+			//display::DisplayedCFG ag(**cfg);
 			SlicingDecorator d(workspace(), 1);
-			display::Displayer *disp = display::Provider::display(ag, d, display::OUTPUT_RAW_DOT);
+			display::Displayer *disp = display::Provider::display(cfg, d, display::OUTPUT_RAW_DOT);
 			// set up the path
 			Path dir;
 			if(_slicingCFGOutputPath.length() == 0)
@@ -277,9 +277,9 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 
 	if(_outputCFG) {
 		for(CFGCollection::Iter cfg(sliced_coll); cfg; cfg++) {
-			display::DisplayedCFG ag(**cfg);
+			//display::DisplayedCFG ag(**cfg);
 			SlicingDecorator d(workspace(), 0);
-			display::Displayer *disp = display::Provider::display(ag, d, display::OUTPUT_RAW_DOT);
+			display::Displayer *disp = display::Provider::display(cfg, d, display::OUTPUT_RAW_DOT);
 			// set up the path
 			Path dir;
 			if(_slicedCFGOutputPath.length() == 0)

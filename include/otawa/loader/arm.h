@@ -22,8 +22,8 @@
 #ifndef OTAWA_LOADER_ARM_H
 #define OTAWA_LOADER_ARM_H
 
-#include <otawa/properties.h>
 #include <otawa/prog/Inst.h>
+#include "../prop.h"
 
 namespace otawa { namespace arm {
 

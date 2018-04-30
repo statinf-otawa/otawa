@@ -86,8 +86,8 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// generate the CFGs
 	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
-		display::DisplayedCFG dcfg(**cfg);
-		display::Displayer *disp = prov->make(dcfg, decor);
+		//display::DisplayedCFG dcfg(**cfg);
+		display::Displayer *disp = prov->make(cfg, decor);
 		if(cfg->index() == 0)
 			disp->setPath(dir / "index.dot");
 		else

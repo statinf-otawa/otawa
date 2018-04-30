@@ -19,8 +19,8 @@
  *	along with OTAWA; if not, write to the Free Software 
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#include "../../include/otawa/prop.h"
 #include "graphviz.h"
-#include <otawa/properties.h>
 
 namespace otawa { namespace display {
 

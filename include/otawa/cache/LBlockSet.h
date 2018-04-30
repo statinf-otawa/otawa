@@ -23,12 +23,12 @@
 #define OTAWA_CACHE_LBLOCKSET_H
 
 #include <elm/assert.h>
-#include <otawa/properties.h>
 #include <otawa/instruction.h>
 #include <elm/data/Vector.h>
 #include <elm/data/Array.h>
 #include <otawa/cache/LBlock.h>
 #include <elm/PreIterator.h>
+#include "../prop.h"
 
 namespace otawa { namespace cache {
 

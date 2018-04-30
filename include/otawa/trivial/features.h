@@ -21,7 +21,7 @@
 #ifndef OTAWA_TRIVIAL_FEATURES_H_
 #define OTAWA_TRIVIAL_FEATURES_H_
 
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa { namespace trivial {
 

@@ -23,7 +23,7 @@
 #include <elm/io.h>
 #include <elm/util/VarArg.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/properties.h>
+#include "../../include/otawa/prop.h"
 
 using namespace elm;
 

@@ -6,7 +6,8 @@
  */
 
 #include <elm/io.h>
-#include <otawa/properties.h>
+
+#include "../../include/otawa/prop.h"
 using namespace elm;
 
 namespace otawa {

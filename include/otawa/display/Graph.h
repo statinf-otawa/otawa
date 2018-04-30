@@ -7,8 +7,8 @@
 #ifndef OTAWA_DISPLAY_GRAPH_H
 #define OTAWA_DISPLAY_GRAPH_H
 
-#include <otawa/properties.h>
 #include <otawa/display/display.h>
+#include "../prop.h"
 
 namespace otawa { namespace display {
 

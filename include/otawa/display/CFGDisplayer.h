@@ -26,6 +26,7 @@
 
 namespace otawa { namespace display {
 
+#if 0
 class DisplayedCFG: public AbstractGraph {
 	friend class CFGDecorator;
 	friend class BlockIter;
@@ -64,8 +65,9 @@ private:
 	static Identifier<Vertex> VERTEX;
 	static Identifier<Edge> EDGE;
 };
+#endif
 
-class CFGDecorator: public Decorator {
+class CFGDecorator: public display::GenDecorator<CFG, Block, otawa::Edge> {
 public:
 
 	CFGDecorator(WorkSpace *ws);
@@ -75,13 +77,9 @@ public:
 	bool display_props;
 	Color source_color, label_color;
 
-	virtual void decorate(CFG *graph, Text& caption, GraphStyle& style) const;
-	virtual void decorate(CFG *graph, Block *block, Text& content, VertexStyle& style) const;
-	virtual void decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const;
-
-	virtual void decorate(const AbstractGraph& graph, Text& caption, GraphStyle& style) const;
-	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Vertex& vertex, Text& content, VertexStyle& style) const;
-	virtual void decorate(const AbstractGraph& graph, const AbstractGraph::Edge& edge, Text& label, EdgeStyle& style) const;
+	void decorate(CFG *graph, Text& caption, GraphStyle& style) const override;
+	void decorate(CFG *graph, Block *block, Text& content, VertexStyle& style) const override;
+	void decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const override;
 
 	void setDisplayOptions(bool _da = true, bool _dsl = true, bool _dp = false, Color _sc = Color("darkgreen"), Color _lc = Color("blue"));
 

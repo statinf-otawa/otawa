@@ -26,7 +26,8 @@
 #include <elm/genstruct/Vector.h>
 #include <elm/sys/Path.h>
 #include <elm/io/Monitor.h>
-#include <otawa/properties.h>
+
+#include "../prop.h"
 
 namespace otawa {
 

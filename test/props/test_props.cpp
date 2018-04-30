@@ -5,12 +5,12 @@
  *	test/props/test_props.cpp -- OTAWA props module test.
  */
 
-#include <otawa/properties.h>
 #include <elm/genstruct/Vector.h>
 #include <elm/test.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/prop/info.h>
 #include <otawa/prop/ContextualProperty.h>
+#include "../../include/otawa/prop.h"
 
 using namespace elm;
 using namespace otawa;

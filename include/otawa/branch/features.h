@@ -23,7 +23,7 @@
 
 #include <elm/io.h>
 #include <otawa/proc/AbstractFeature.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

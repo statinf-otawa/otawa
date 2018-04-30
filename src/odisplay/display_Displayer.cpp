@@ -20,11 +20,12 @@
  */
 
 #include <otawa/display/Displayer.h>
-#include <otawa/display/GenDisplayer.h>
+//#include <otawa/display/GenDisplayer.h>
 #include <otawa/proc/ProcessorPlugin.h>
 
 namespace otawa { namespace display {
 
+#if 0
 /**
  * @class AbstractGraph
  * Interface that must be implemented by graph to be displayed by
@@ -67,7 +68,7 @@ AbstractGraph::~AbstractGraph(void) {
  * @class AbstractGraph::Edge
  * Interface that must be implemented by edge of an @ref AbstractGraph.
  */
-
+#endif
 
 /**
  * @class Decorator
@@ -93,7 +94,7 @@ Decorator::~Decorator(void) {
  * @param caption	Text to generate graph caption in.
  * @param style		Style to tune (only text member is used).
  */
-void Decorator::decorate(const AbstractGraph& graph, Text& caption, GraphStyle& style) const {
+void Decorator::decorate(graph::DiGraph *graph, Text& caption, GraphStyle& style) const {
 }
 
 /**
@@ -103,7 +104,7 @@ void Decorator::decorate(const AbstractGraph& graph, Text& caption, GraphStyle& 
  * @param content	Text to generate vertex content in.
  * @param style		Style to tune (text, shape and fill members are used).
  */
-void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Vertex& vertex, Text& content, VertexStyle& style) const {
+void Decorator::decorate(graph::DiGraph *graph, graph::Vertex *vertex, Text& content, VertexStyle& style) const {
 }
 
 /**
@@ -113,10 +114,10 @@ void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Vertex
  * @param edge		Text to generate edge label in.
  * @param style		Style to tune (text and line members are used).
  */
-void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Edge& e, Text& label, EdgeStyle& style) const {
+void Decorator::decorate(graph::DiGraph *graph, graph::Edge *e, Text& label, EdgeStyle& style) const {
 }
 
-
+#if 0
 /**
  * @class GenDisplayer
  * This class provides display of graph (based on @ref Displayer class) for @ref GenGraph
@@ -129,6 +130,7 @@ void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Edge& 
  *
  * @ingroup display
  */
+#endif
 
 /**
  * @class Displayer
@@ -144,7 +146,7 @@ void Decorator::decorate(const AbstractGraph& graph, const AbstractGraph::Edge& 
 
 /**
  */
-Displayer::Displayer(const AbstractGraph& graph, const Decorator& decorator, output_mode_t out)
+Displayer::Displayer(graph::DiGraph *graph, const Decorator& decorator, output_mode_t out)
 	: g(graph), d(decorator), output(out), layout(MAPPED)
 { }
 
@@ -299,7 +301,7 @@ Provider *Provider::get(output_mode_t out) {
  * @param out	Required output.
  * @return		Graph displayer.
  */
-Displayer *Provider::display(const AbstractGraph& g, const Decorator& d, output_mode_t out) {
+Displayer *Provider::display(graph::DiGraph *g, const Decorator& d, output_mode_t out) {
 	if(!def) {
 		def = Provider::get(out);
 		if(!def)

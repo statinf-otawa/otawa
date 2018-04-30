@@ -24,9 +24,9 @@
 #define OTAWA_FLOWFACT_CONTEXTUALLOOPBOUND_H_
 
 #include <otawa/base.h>
-#include <otawa/properties.h>
 #include <elm/genstruct/Tree.h>
 #include <elm/genstruct/Vector.h>
+#include "../prop.h"
 
 namespace otawa {
 

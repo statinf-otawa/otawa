@@ -9,9 +9,9 @@
 
 #include <elm/sys/Plugin.h>
 #include <otawa/base.h>
-#include <otawa/properties.h>
 #include <otawa/prog/Process.h>
 #include <otawa/hard/Platform.h>
+#include "../prop.h"
 
 
 namespace otawa {

@@ -26,10 +26,10 @@
 #include <elm/genstruct/Table.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/prog/ProgItem.h>
-#include <otawa/properties.h>
 #include <otawa/prog/features.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/sem/inst.h>
+#include "../prop.h"
 
 namespace otawa {
 

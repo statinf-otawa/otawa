@@ -27,8 +27,8 @@
 #include <elm/util/MessageException.h>
 #include <elm/xom.h>
 #include <elm/sys/Plugger.h>
-#include <otawa/properties.h>
 #include <otawa/base.h>
+#include "../prop.h"
 
 namespace otawa {
 

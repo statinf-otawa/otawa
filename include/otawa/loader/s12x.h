@@ -22,7 +22,7 @@
 #ifndef OTAWA_LOADER_S12X_H
 #define OTAWA_LOADER_S12X_H
 
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa { namespace s12x {
 

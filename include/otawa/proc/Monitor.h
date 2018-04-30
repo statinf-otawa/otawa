@@ -22,7 +22,7 @@
 #define OTAWA_PROC_MONITOR_H_
 
 #include <otawa/base.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

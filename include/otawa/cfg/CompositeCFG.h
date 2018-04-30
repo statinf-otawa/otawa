@@ -24,7 +24,7 @@
 
 #include <elm/data/List.h>
 #include <otawa/cfg/interproc.h>
-#include <otawa/properties.h>
+#include "../prop.h"
 
 namespace otawa {
 

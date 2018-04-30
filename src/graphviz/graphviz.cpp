@@ -2,7 +2,7 @@
  *	graphviz plugin
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2007-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -135,7 +135,7 @@ private:
 class Displayer: public display::Displayer {
 public:
 
-	Displayer(const display::AbstractGraph& g, const display::Decorator& d, display::output_mode_t mode)
+	Displayer(graph::DiGraph *g, const display::Decorator& d, display::output_mode_t mode)
 		: display::Displayer(g, d, mode == display::OUTPUT_ANY ? display::OUTPUT_RAW_DOT : mode)
 		{ }
 
@@ -181,8 +181,6 @@ public:
 	}
 
 private:
-	typedef display::AbstractGraph::Vertex Vertex;
-	typedef display::AbstractGraph::Edge Edge;
 
 	void gen(Output& out){
 		out << "digraph main {\n";
@@ -215,23 +213,23 @@ private:
 		out << "];\n";
 
 		// generate the nodes
-		for(dyndata::Iter<const Vertex *> v(g.vertices()); v; v++)
-			gen(out, **v);
+		for(auto v: *g)
+			gen(out, v);
 
 		// generate the edges
-		for(dyndata::Iter<const Vertex *> v(g.vertices()); v; v++)
-			for(dyndata::Iter<const Edge *> e(g.outs(**v)); e; e++)
-				gen(out, **e);
+		for(auto v: *g)
+			for(auto e: v->outEdges())
+				gen(out, e);
 
 		out << "}\n";
 	}
 
-	void gen(Output& out, const Vertex& v) {
+	void gen(Output& out, graph::Vertex *v) {
 		display::VertexStyle style;
 		d.decorate(g, v, text, style);
 		string content = text.text();
 		bool com = false;
-		out << '\t' << g.id(v) << " [";
+		out << '\t' << v->index() << " [";
 		if(content) {
 			comma(out, com);
 			out << "label=<" << content << ">";
@@ -251,12 +249,12 @@ private:
 		out << "];\n";
 	}
 
-	void gen(Output& out, const Edge& e) {
+	void gen(Output& out, graph::Edge *e) {
 		display::EdgeStyle style;
 		d.decorate(g, e, text, style);
 		string label = text.text();
 		bool com = false;
-		out << '\t' << g.id(g.sourceOf(e)) << " -> " << g.id(g.sinkOf(e)) << " [";
+		out << '\t' << e->source()->index() << " -> " << e->sink()->index() << " [";
 		if(label) {
 			comma(out, com);
 			out << "label=<" << label << ">";
@@ -399,7 +397,7 @@ public:
 
 	/**
 	 */
-	virtual display::Displayer *make(const display::AbstractGraph& g, const display::Decorator& d, display::output_mode_t out) {
+	virtual display::Displayer *make(graph::DiGraph *g, const display::Decorator& d, display::output_mode_t out) {
 		return new Displayer(g, d, out);
 	}
 

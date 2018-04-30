@@ -22,7 +22,8 @@
 
 #include <elm/rtti/Class.h>
 #include <elm/rtti/type_of.h>
-#include <otawa/properties.h>
+
+#include "../../include/otawa/prop.h"
 
 using namespace elm;
 

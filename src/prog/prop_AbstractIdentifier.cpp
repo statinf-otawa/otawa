@@ -19,10 +19,10 @@
 
 #include <elm/io.h>
 #include <elm/genstruct/HashTable.h>
-#include <otawa/properties.h>
 #include <elm/util/Initializer.h>
 
 #include <otawa/prop/info.h>
+#include "../../include/otawa/prop.h"
 
 using namespace elm;
 

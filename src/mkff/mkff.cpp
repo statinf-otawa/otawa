@@ -41,7 +41,7 @@
 #include <otawa/cfgio/features.h>
 #include <otawa/data/clp/features.h>
 #include <otawa/display/CFGDisplayer.h>
-#include <otawa/display/InlinedCFGDisplayer.h>
+//#include <otawa/display/InlinedCFGDisplayer.h>
 #include <otawa/dynbranch/features.h>
 #include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/flowfact/features.h>
@@ -751,25 +751,28 @@ private:
 void Command::generateCFGs(String path, int type) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace()); // obtain the CFG Collection for outputing
 	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
-		display::AbstractGraph* ag;
+		//display::AbstractGraph* ag;
 		display::Decorator* d;
 
 		// we can customize the CFG here
+#if 0
 		if(type & GeneratedCFGType::INLINED) {
 			ag = new display::InlinedCFG(**cfg);
 			d = new display::InlinedCFGDecorator(workspace());
 		}
 		else {
-			ag = new display::DisplayedCFG(**cfg);
+#endif
+			//ag = new display::DisplayedCFG(**cfg);
 			if(type & GeneratedCFGType::COLORED)
 				d = new mkff::MKFFDotDecorator(workspace(), true, nosource | (type & GeneratedCFGType::NO_SOURCE), type & GeneratedCFGType::SHOW_CLP);
 			else
 				d = new mkff::MKFFDotDecorator(workspace(), false, nosource | (type & GeneratedCFGType::NO_SOURCE), type & GeneratedCFGType::SHOW_CLP);
-				//d = new display::MultipleDotDecorator(workspace());
+#if 0
 		}
+#endif
 
 		// obtain the displayer
-		display::Displayer *disp = display::Provider::display(*ag, *d, display::OUTPUT_RAW_DOT);
+		display::Displayer *disp = display::Provider::display(cfg, *d, display::OUTPUT_RAW_DOT);
 
 		// set up the path
 		Path dir;
@@ -788,7 +791,6 @@ void Command::generateCFGs(String path, int type) {
 		disp->process();
 		delete disp;
 		delete d;
-		delete ag;
 
 		if((type & GeneratedCFGType::INLINED) || (type & GeneratedCFGType::VIRTUALIZED)) // if only output a single CFG, then break at the first iteration
 			break;
