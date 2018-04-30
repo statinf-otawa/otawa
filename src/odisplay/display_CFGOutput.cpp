@@ -20,15 +20,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/sys/Path.h>
+#include <elm/sys/System.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/proc/Processor.h>
-#include <otawa/prog/Process.h>
-#include <elm/sys/Path.h>
-#include <otawa/display/CFGDrawer.h>
-#include <otawa/display/GenDrawer.h>
-#include <otawa/display/CFGAdapter.h>
-#include <otawa/display/InlinedCFGAdapter.h>
-#include <otawa/display/VirtualizedCFGAdapter.h>
+#include <otawa/program.h>
 
 namespace otawa { namespace display {
 
@@ -52,7 +48,7 @@ using namespace display;
 
 
 // Data
-cstring exts[] = {
+/*cstring exts[] = {
 	"",
 	"ps",
 	"pdf",
@@ -62,40 +58,38 @@ cstring exts[] = {
 	"svg",
 	"dot",
 	"raw"
-};
+};*/
 
 // backlink to the CFGOutput
-static Identifier<CFGOutput *> OUT("", 0);
+//static Identifier<CFGOutput *> OUT("", 0);
 
 // CFGOutputDecorator class
-class CFGOutputDecorator {
+class CFGOutputDecorator: public CFGDecorator {
 public:
-	static bool rawInfo;
-	static void decorate(const CFGAdapter &graph, Output &caption, TextStyle &text, FillStyle &fill) {
-		CFGOutput *out = OUT(graph.cfg);
-		ASSERT(out);
-		out->genGraphLabel(graph.cfg, caption);
+	inline CFGOutputDecorator(CFGOutput& out, WorkSpace *ws, bool raw = false): CFGDecorator(ws), _out(out), rawInfo(raw) { }
+
+	void decorate(CFG *graph, Text& caption, GraphStyle& style) const override {
+		_out.genGraphLabel(graph, caption, style);
 	}
 
-	static void decorate(const CFGAdapter &graph, const CFGAdapter::Vertex vertex, Output &content, ShapeStyle &style) {
+	void decorate(CFG *graph, Block *block, Text& content, VertexStyle& style) const override {
 		style.shape = ShapeStyle::SHAPE_MRECORD;
 		style.raw = rawInfo;
-		CFGOutput *out = OUT(graph.cfg);
-		ASSERT(out);
-		out->genBBLabel(graph.cfg, vertex.b, content);
+		_out.genBBLabel(graph, block, content, style);
 	}
 
-	static void decorate(const CFGAdapter &graph, const CFGAdapter::Edge edge, Output &label, TextStyle &text, LineStyle &line) {
-		if(edge.edge->sink()->isSynth()
-		|| edge.edge->source()->isEnd()
-		|| edge.edge->sink()->isEnd())
-			line.style = LineStyle::DASHED;
-		CFGOutput *out = OUT(graph.cfg);
-		ASSERT(out);
-		out->genEdgeLabel(graph.cfg, edge.edge, label);
+	void decorate(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style) const override {
+		if(edge->sink()->isSynth()
+		|| edge->source()->isEnd()
+		|| edge->sink()->isEnd())
+			style.line.style = LineStyle::DASHED;
+		_out.genEdgeLabel(graph, edge, label, style);
 	}
+
+private:
+	CFGOutput& _out;
+	bool rawInfo;
 };
-bool CFGOutputDecorator::rawInfo = false;
 
 p::declare CFGOutput::reg =
 	p::init("otawa::display::CFGOutput", Version(1, 1, 0), CFGProcessor::reg)
@@ -104,8 +98,12 @@ p::declare CFGOutput::reg =
 /**
  * Build the processor.
  */
-CFGOutput::CFGOutput(AbstractRegistration& _reg): CFGProcessor(_reg), kind(OUTPUT_DOT), inlining(false), virtualized(false) {
-
+CFGOutput::CFGOutput(AbstractRegistration& _reg):
+	CFGProcessor(_reg),
+	kind(OUTPUT_DOT),
+	rawInfo(false),
+	dec(nullptr)
+{
 }
 
 
@@ -126,17 +124,6 @@ Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
 Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 
 /**
- * Configuration identifier of @ref CFGOutput to decide if only generating one file containing the inlined CFG for the whole program
- */
-Identifier<bool> CFGOutput::INLINING("otawa::display::CFGOutput::INLINING", false);
-
-/**
- * Configuration identifier of @ref CFGOutput to decide if only generating one file containing the virtualized CFG for the whole program
- */
-Identifier<bool> CFGOutput::VIRTUALIZED("otawa::display::CFGOutput::VIRTUALIZED", false);
-
-
-/**
  * Configuration identifier of @ref CFGOutput to decide if the blocks will be using the raw information from the CFGOutput::genBBLabel()
  */
 Identifier<bool> CFGOutput::RAW_BLOCK_INFO("otawa::display::CFGOutput::RAW_BLOCK_INFO", false);
@@ -147,80 +134,69 @@ void CFGOutput::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	kind = KIND(props);
 	path = PATH(props);
-	prefix = PREFIX(props);
-	inlining = INLINING(props);
-	virtualized = VIRTUALIZED(props);
 	rawInfo = RAW_BLOCK_INFO(props);
 }
 
+/**
+ */
+void CFGOutput::setup(WorkSpace *ws) {
+
+	// TODO Improve it. Remove the full directory before re-creating it!
+
+	// get a valid path
+	if(path.isEmpty())
+		path = sys::Path(ws->process()->program()->name()).setExtension(".cfg");
+
+	// remove existing one
+	if(path.exists()) {
+		if(!path.isDir())
+			throw ProcessorException(*this, _ << "cannot create the directory " << path << ": a file exists with same name" );
+	}
+
+	// create it
+	else {
+		try {
+			if(logFor(LOG_PROC))
+				cout << "\tcreating directory" << path << io::endl;
+			sys::System::makeDir(path);
+		}
+		catch(sys::SystemException& e) {
+			throw ProcessorException(*this, _ << "error during creation of " << path << ": " << e.message());
+		}
+	}
+}
 
 /**
  */
-void CFGOutput::processCFG(WorkSpace *fw, CFG *cfg) {
-	ASSERT(fw);
-	ASSERT(cfg);
+void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
 
-	// when inlining is enable, we only output the main CFG
-	if((inlining || virtualized) && (cfg->index() > 0))
-		return;
-
-	// Compute the name
-	string label = prefix;
-	label = _ << prefix << getMisc() << cfg->label();
-	if(label == "")
-		label = _ << prefix << getMisc() << cfg->label();
-	Path out_path = path;
-	out_path = out_path / label;
-	out_path = out_path.setExtension(exts[kind]);
-
-	// Perform the output
+	// compute the path
+	sys::Path opath;
+	if(g->index() == 0)
+		opath = path / "index";
+	else
+		opath = path / string(_ << g->index());
 	if(logFor(LOG_PROC))
-		cout << "\toutput " << label << " to " << out_path << io::endl;
-	OUT(cfg) = this;
+		cout << "\toutput CFG " << g << " to " << opath << io::endl;
 
-	CFGOutputDecorator::rawInfo = rawInfo;
-	if(virtualized) {
-		VirtualizedCFGAdapter cfga(cfg);
-		GenDrawer<VirtualizedCFGAdapter, CFGOutputDecorator> drawer(cfga);
-		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
-		drawer.default_vertex.text.size = 12;
-		drawer.default_edge_text.size = 12;
-		drawer.kind = kind;
-		drawer.path = out_path.toString().toCString();
-		drawer.draw();
-	}
-	else if(inlining) {
-		InlinedCFGAdapter cfga(cfg);
-		GenDrawer<InlinedCFGAdapter, CFGOutputDecorator> drawer(cfga);
-		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
-		drawer.default_vertex.text.size = 12;
-		drawer.default_edge_text.size = 12;
-		drawer.kind = kind;
-		drawer.path = out_path.toString().toCString();
-		drawer.draw();
-	}
-	else {
-		CFGAdapter cfga(cfg);
-		GenDrawer<CFGAdapter, CFGOutputDecorator> drawer(cfga);
-		drawer.default_vertex.shape = ShapeStyle::SHAPE_MRECORD;
-		drawer.default_vertex.text.size = 12;
-		drawer.default_edge_text.size = 12;
-		drawer.kind = kind;
-		drawer.path = out_path.toString().toCString();
-		drawer.draw();
-	}
-	cfg->removeProp(OUT);
+	// perform the output
+	dec = new CFGOutputDecorator(*this, ws);
+	display::Displayer *disp = display::Provider::display(g, *dec, kind);
+	disp->setPath(path);
+	disp->process();
+	delete dec;
 }
 
 
 /**
  * Called to generate the label of the graph.
  * May be overload to customize the output.
- * @param cfg	Displayed CFG.
- * @param out	Output to generate the CFG label to.
+ * @param cfg		Displayed CFG.
+ * @param caption	To generate the caption of the graph.
+ * @param style		Style for the graph (output).
  */
-void CFGOutput::genGraphLabel(CFG *cfg, Output& out) {
-	out << cfg->label() << " CFG";
+void CFGOutput::genGraphLabel(CFG *cfg, Text& caption, GraphStyle& style) {
+	dec->decorate(cfg, caption, style);
 }
 
 
@@ -229,53 +205,15 @@ void CFGOutput::genGraphLabel(CFG *cfg, Output& out) {
  * May be overload to customize the output.
  * In the end, this method call the genBBInfo() method.
  * To add a separation bar in genBBInfo(), frist output "---\n".
- * @param cfg	Displayed CFG.
- * @param b		Displayed Block.
- * @param out	Output to generate the CFG label to.
+ * @param cfg		Displayed CFG.
+ * @param block		Displayed Block.
+ * @param content	To output the content of the block.
+ * @param style		Style of the block (output).
  */
-void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
-
-	// display title
-	out << b;
-
-	// special of entry, exit or synthetic
-	if(b->isEnd() || b->isSynth())
-		return;
-	BasicBlock *bb = b->toBasic();
-
-	// make title
-	out << "\n---\n";
-	StringBuffer title;
-
-	// make body
-	Pair<cstring, int> line;
-	for(BasicBlock::InstIter inst(bb); inst; inst++){
-
-		// manage source line
-		Option<Pair<cstring, int>> nline = workspace()->process()->getSourceLine(inst->address());
-		if(!nline)
-			line = pair(cstring(""), 0);
-		else if(line.fst != (*nline).fst || line.snd != (*nline).snd) {
-			line = *nline;
-			out << line.fst << ":" << line.snd << io::endl;
-		}
-
-		// display labels
-		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-			if(label != "")
-				out << *label << ":\n";
-		for(Identifier<String>::Getter label(inst, otawa::LABEL); label; label++)
-			if(label != "")
-				out << *label << ":\n";
-
-		// display the instruction
-		out << "0x" << ot::address(inst->address()) << ":  ";
-		inst->dump(out);
-		out << "\n";
-	}
-
-	// give special format for Entry and Exit
-	genBBInfo(cfg, bb, out);
+void CFGOutput::genBBLabel(CFG *cfg, Block *block, Text& content, VertexStyle& style) {
+	dec->decorate(cfg, block, content, style);
+	if(rawInfo)
+		genBBInfo(cfg, block, content);
 }
 
 
@@ -285,28 +223,25 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *b, Output& out) {
  * In the end, this method call the genBBInfo() method.
  * @param cfg	Displayed CFG.
  * @param edge	Displayed edge.
- * @param out	Output to generate the CFG label to.
+ * @param label	Output to generate the CFG label to.
+ * @param style	Edge style (output).
  */
-void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out) {
-	if(edge->sink()->isSynth())
-		out << "call";
-	else if(edge->source()->isSynth())
-		out << "return";
-	else if(edge->isTaken() && !edge->source()->isEntry() && !edge->target()->isExit())
-		out << "taken";
-	genEdgeInfo(cfg, edge, out);
+void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Text& label, EdgeStyle& style) {
+	dec->decorate(cfg, edge, label, style);
+	if(rawInfo)
+		genEdgeInfo(cfg, edge, label);
 }
 
 
 /**
  * Generate the information part of a basic block (called after the list of instructions).
- * @param cfg	Displayed CFG.
- * @param bb	Displayed BB.
- * @param out	Output to generate the CFG label to.
+ * @param cfg		Displayed CFG.
+ * @param block		Displayed BB.
+ * @param content	To generate the BB information part.
  */
-void CFGOutput::genBBInfo(CFG *cfg, Block *bb, Output& out) {
+void CFGOutput::genBBInfo(CFG *graph, Block *block, Text& content) {
 	out << "---\n";
-	for(PropList::Iter prop(bb); prop; prop++) {
+	for(PropList::Iter prop(block); prop; prop++) {
 		out << prop->id()->name() << " = ";
 		prop->id()->print(out, prop);
 		out << io::endl;
@@ -318,9 +253,9 @@ void CFGOutput::genBBInfo(CFG *cfg, Block *bb, Output& out) {
  * Generate the information part of an edge (called after the label).
  * @param cfg	Displayed CFG.
  * @param edge	Displayed edge.
- * @param out	Output to generate the CFG label to.
+ * @param label	To generate the edge label.
  */
-void CFGOutput::genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out) {
+void CFGOutput::genEdgeInfo(CFG *graph, otawa::Edge *edge, Text& label) {
 	out << "\n";
 	for(PropList::Iter prop(edge); prop; prop++) {
 		out << prop->id()->name() << " = ";

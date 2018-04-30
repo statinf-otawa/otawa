@@ -24,7 +24,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
-#include "AbstractDrawer.h"
+#include <otawa/display/CFGDisplayer.h>
 
 namespace otawa {
 
@@ -45,28 +45,25 @@ public:
 	static Identifier<display::kind_t> KIND;
 	static Identifier<string> PATH;
 	static Identifier<string> PREFIX;
-	static Identifier<bool> INLINING;
-	static Identifier<bool> VIRTUALIZED;
 	static Identifier<bool> RAW_BLOCK_INFO;
 
-	virtual void genGraphLabel(CFG *cfg, Output& out);
-	virtual void genBBLabel(CFG *cfg, Block *bb, Output& out);
-	virtual void genEdgeLabel(CFG *cfg, otawa::Edge *edge, Output& out);
-	virtual void genBBInfo(CFG *cfg, Block *bb, Output& out);
-	virtual void genEdgeInfo(CFG *cfg, otawa::Edge *edge, Output& out);
+	virtual void genGraphLabel(CFG *graph, Text& caption, GraphStyle& style);
+	virtual void genBBLabel(CFG *graph, Block *block, Text& content, VertexStyle& style);
+	virtual void genEdgeLabel(CFG *graph, otawa::Edge *edge, Text& label, EdgeStyle& style);
+	virtual void genBBInfo(CFG *graph, Block *block, Text& content);
+	virtual void genEdgeInfo(CFG *graph, otawa::Edge *edge, Text& label);
 
 protected:
 	virtual void configure(const PropList &props);
+	virtual void setup(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg);
 	virtual string getMisc(void) { return ""; }
 
 private:
 	display::kind_t kind;
-	string path;
-	string prefix;
-	bool inlining;
-	bool virtualized;
+	sys::Path path;
 	bool rawInfo;
+	display::CFGDecorator *dec;
 };
 
 } }	// otawa::display

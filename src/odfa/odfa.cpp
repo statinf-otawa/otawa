@@ -39,7 +39,6 @@
 
 using namespace elm;
 using namespace otawa;
-using namespace otawa::display;
 
 Identifier<bool> BEFORE("", false);
 Identifier<bool> AFTER("", false);
