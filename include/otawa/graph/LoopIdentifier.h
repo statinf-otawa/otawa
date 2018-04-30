@@ -21,9 +21,9 @@
 #ifndef OTAWA_SGRAPH_LOOPINDENTIFIER_H_
 #define OTAWA_SGRAPH_LOOPINDENTIFIER_H_
 
-#include "DiGraph.h"
+#include "../graph/DiGraph.h"
 
-namespace otawa { namespace sgraph {
+namespace otawa { namespace graph {
 
 class LoopIdentifier {
 	typedef t::uint8 flags_t;

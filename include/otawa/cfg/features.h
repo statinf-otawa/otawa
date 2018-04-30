@@ -37,7 +37,7 @@ class CFGInfo;
 class LoopUnroller;
 class SESERegion;
 typedef elm::Tree<SESERegion*> PSTree;
-namespace sgraph { class Edge; }
+namespace graph { class Edge; }
 
 // CFGCollection Class
 class CFGCollection {

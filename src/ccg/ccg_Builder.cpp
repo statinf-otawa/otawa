@@ -153,7 +153,7 @@ void Builder::processLBlockSet(WorkSpace *fw, otawa::ccg::LBlockSet *lbset) {
 	// build the graph
 	Graph *ccg = new Graph();
 	ccgs->ccgs[lbset->line()] = ccg;
-	sgraph::GenDiGraphBuilder<Node, Edge> builder(ccg, nullptr);
+	graph::GenDiGraphBuilder<Node, Edge> builder(ccg, nullptr);
 
 	// Initialization
 	for(LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {

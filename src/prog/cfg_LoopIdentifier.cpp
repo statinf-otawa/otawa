@@ -21,7 +21,7 @@
 
 #include <otawa/cfg/features.h>
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/sgraph/LoopIdentifier.h>
+#include "../../include/otawa/graph/LoopIdentifier.h"
 
 namespace otawa {
 
@@ -32,7 +32,7 @@ public:
 protected:
 
 	void processCFG(WorkSpace *ws, CFG *cfg) {
-		sgraph::LoopIdentifier id(*cfg);
+		graph::LoopIdentifier id(*cfg);
 		for(CFG::BlockIter b = cfg->blocks(); b; b++)
 			if(id.isHeader(b)) {
 				LOOP_HEADER(b) = true;

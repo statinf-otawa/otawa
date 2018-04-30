@@ -855,7 +855,7 @@ void CFGMaker::call(SynthBlock *v, CFG *callee) {
 }
 
 void CFGMaker::add(Block *v) {
-	sgraph::GenDiGraphBuilder<Block, Edge>::add(v);
+	graph::GenDiGraphBuilder<Block, Edge>::add(v);
 	v->_cfg = cfg;
 }
 

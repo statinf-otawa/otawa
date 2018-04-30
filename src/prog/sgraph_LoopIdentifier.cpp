@@ -20,9 +20,10 @@
  */
 
 #include <elm/array.h>
-#include <otawa/sgraph/LoopIdentifier.h>
 
-namespace otawa { namespace sgraph {
+#include "../../include/otawa/graph/LoopIdentifier.h"
+
+namespace otawa { namespace graph {
 
 /**
  * @class LoopIdentifier
@@ -39,7 +40,7 @@ namespace otawa { namespace sgraph {
  * the number of edges and of vertices, O(|V| + k × |E|), where k is the
  * unstructuredness coefficient of the graph (usually close to 1).
  *
- * @ingroup sgraph
+ * @ingroup graph
  */
 
 /*

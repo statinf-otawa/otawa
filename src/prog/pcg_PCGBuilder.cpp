@@ -63,7 +63,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	PCGBlock *b = new PCGBlock(cfg);
 	map.put(cfg, b);
 	_pcg = new PCG();
-	sgraph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg, b);
+	graph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg, b);
 
 	// build a block for each CFG
 	for(cfg++; cfg; cfg++) {

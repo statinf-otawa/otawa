@@ -25,7 +25,7 @@
 #include <elm/data/List.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/prop/PropList.h>
-#include <otawa/sgraph/DiGraph.h>
+#include "../graph/DiGraph.h"
 #include "../prog/Bundle.h"
 
 using namespace elm;
@@ -38,7 +38,7 @@ class CFG;
 class CFGMaker;
 class SynthBlock;
 
-class Edge: public PropList, public sgraph::GenEdge<Block, Edge> {
+class Edge: public PropList, public graph::GenEdge<Block, Edge> {
 	friend class CFGMaker;
 public:
 	inline Edge(t::uint32 flags): _flags(flags) { }
@@ -57,7 +57,7 @@ private:
 io::Output& operator<<(io::Output& out, Edge *edge);
 
 
-class Block: public PropList, public sgraph::GenVertex<Block, Edge> {
+class Block: public PropList, public graph::GenVertex<Block, Edge> {
 	friend class CFGMaker;
 public:
 	static const t::uint16
@@ -182,7 +182,7 @@ private:
 	AllocArray<Inst *> _insts;
 };
 
-class CFG: public PropList, public sgraph::GenDiGraph<Block, Edge> {
+class CFG: public PropList, public graph::GenDiGraph<Block, Edge> {
 	friend class CFGMaker;
 	friend class CFGCollection;
 public:
@@ -239,7 +239,7 @@ inline Address SynthBlock::address(void) const
 	{ if(_callee) return _callee->first()->address(); else return Address::null; }
 
 
-class CFGMaker: public PropList, public sgraph::GenDiGraphBuilder<Block, Edge>  {
+class CFGMaker: public PropList, public graph::GenDiGraphBuilder<Block, Edge>  {
 public:
 	CFGMaker(Inst *first, bool fix = false);
 	inline Block *entry(void) const { return cfg->entry(); }
@@ -249,7 +249,7 @@ public:
 	void add(Block *v);
 	void call(SynthBlock *v, CFG *cfg);
 	void call(SynthBlock *v, const CFGMaker& cfg);
-	inline void add(Block *v, Block *w, Edge *e) { sgraph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
+	inline void add(Block *v, Block *w, Edge *e) { graph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
 	int count(void);
 	inline Block *at(int index) const { return cfg->at(index); }

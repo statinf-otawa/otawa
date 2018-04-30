@@ -19,12 +19,12 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/sgraph/DiGraph.h>
+#include "../../include/otawa/graph/DiGraph.h"
 
-namespace otawa { namespace sgraph {
+namespace otawa { namespace graph {
 
 /**
- * @defgroup sgraph Simple Graph
+ * @defgroup graph Simple Graph
  *
  * This group provides classes to represent simple directed-graph that may be
  * traversed in a bidirectionnal ways and algorithms to work on these graphs.
@@ -35,7 +35,7 @@ namespace otawa { namespace sgraph {
 /**
  * @class Edge
  * Represents an edge between two vertices in a @ref sgraph .
- * @ingroup sgraph
+ * @ingroup graph
  */
 
 /**
@@ -61,7 +61,7 @@ Edge::~Edge(void) {
 /**
  * @class Vertex
  * Represents a vertex in the @ref sgraph graphs.
- * @ingroup sgraph
+ * @ingroup graph
  */
 
 /**
@@ -108,7 +108,7 @@ Vertex::~Vertex(void) {
 /**
  * @class DiGraph
  * Directed graph representation in the @ref sgraph group.
- * @ingroup sgraph
+ * @ingroup graph
  */
 
 /**
@@ -133,6 +133,8 @@ Vertex::~Vertex(void) {
 /**
  * @class DiGraphBuilder
  * Builder for a DiGraph.
+ *
+ * @ingroup graph
  */
 
 /**

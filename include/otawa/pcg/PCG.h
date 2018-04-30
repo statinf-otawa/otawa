@@ -24,8 +24,7 @@
 
 #include <elm/PreIterator.h>
 #include <otawa/cfg/CFG.h>
-#include <otawa/sgraph/DiGraph.h>
-
+#include "../graph/DiGraph.h"
 #include "PCGBlock.h"
 
 namespace otawa {
@@ -34,7 +33,7 @@ using namespace elm::io;
 
 class PCGBlock;
 
-class PCGEdge: public PropList, public sgraph::GenEdge<PCGBlock, PCGEdge>::GenEdge {
+class PCGEdge: public PropList, public graph::GenEdge<PCGBlock, PCGEdge>::GenEdge {
 public:
 	PCGEdge(SynthBlock *block);
 	inline SynthBlock *block(void) const { return _block; }
@@ -44,7 +43,7 @@ private:
 	SynthBlock *_block;
 };
 
-class PCGBlock: public PropList, public sgraph::GenVertex<PCGBlock, PCGEdge> {
+class PCGBlock: public PropList, public graph::GenVertex<PCGBlock, PCGEdge> {
 public:
 	PCGBlock(CFG *cfg);
 	virtual ~PCGBlock(void);
@@ -57,10 +56,10 @@ private:
 	CFG *_cfg;
 };
 
-class PCG: public PropList, public sgraph::GenDiGraph<PCGBlock, PCGEdge> {
+class PCG: public PropList, public graph::GenDiGraph<PCGBlock, PCGEdge> {
 	friend class PCGBuilder;
 public:
-	typedef sgraph::GenDiGraph<PCGBlock, PCGEdge>::VertexIter Iter;
+	typedef graph::GenDiGraph<PCGBlock, PCGEdge>::VertexIter Iter;
 	inline Iter blocks(void) const { return vertices(); }
 };
 

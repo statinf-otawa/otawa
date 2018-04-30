@@ -29,7 +29,7 @@ namespace otawa {
 
 using namespace elm;
 
-namespace sgraph {
+namespace graph {
 
 
 // basic classes
