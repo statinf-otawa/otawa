@@ -142,12 +142,12 @@ public:
 	virtual void process(void) throw(display::Exception) {
 
 		// open the file
-		if(output == display::OUTPUT_RAW_DOT) {
-			if(!path)
+		if(_output == display::OUTPUT_RAW_DOT) {
+			if(!_path)
 				gen(cout);
 			else {
 				try {
-					io::OutStream *file = sys::System::createFile(path);
+					io::OutStream *file = sys::System::createFile(_path);
 					io::Output out(*file);
 					gen(out);
 					delete file;
@@ -162,9 +162,9 @@ public:
 		else {
 			elm::sys::ProcessBuilder builder(command());
 			builder.addArgument(outputOption());
-			if(path) {
+			if(_path) {
 				builder.addArgument("-o");
-				builder.addArgument(&path);
+				builder.addArgument(&_path);
 			}
 			Pair<sys::SystemInStream *, sys::SystemOutStream *> pipe = sys::System::pipe();
 			builder.setInput(pipe.fst);
@@ -343,7 +343,7 @@ private:
 	}
 
 	cstring command(void) {
-		switch(layout) {
+		switch(_layout) {
 		case display::RADIAL:	return "twopi";
 		case display::CIRCULAR:	return "circo";
 		case display::SPRING:	return "neato";
@@ -353,7 +353,7 @@ private:
 	}
 
 	cstring outputOption(void) {
-		switch(output) {
+		switch(_output) {
 		case display::OUTPUT_DOT:	return "-Tdot";
 		case display::OUTPUT_PDF:
 		case display::OUTPUT_PS:

@@ -68,17 +68,21 @@ public:
 	virtual ~Displayer(void);
 	virtual void process(void) throw(Exception) = 0;
 
-	inline void setPath(const sys::Path& p) { path = p; }
+	inline sys::Path path(void) const { return _path; }
+	inline layout_t layout(void) const { return _layout; }
+	inline output_mode_t output(void) const { return _output; }
+
+	void setPath(const sys::Path& p);
 	inline VertexStyle& defaultVertex(void) { return default_vertex; }
 	inline EdgeStyle& defaultEdge(void) { return default_edge; }
-	inline void setLayout(layout_t l) { layout = l; }
+	inline void setLayout(layout_t l) { _layout = l; }
 
 protected:
 	graph::DiGraph *g;
 	const Decorator& d;
-	output_mode_t output;
-	layout_t layout;
-	sys::Path path;
+	output_mode_t _output;
+	layout_t _layout;
+	sys::Path _path;
 	VertexStyle default_vertex;
 	EdgeStyle default_edge;
 };

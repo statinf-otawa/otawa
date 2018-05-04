@@ -92,7 +92,7 @@ private:
 };
 
 p::declare CFGOutput::reg =
-	p::init("otawa::display::CFGOutput", Version(1, 1, 0), CFGProcessor::reg)
+	p::init("otawa::display::CFGOutput", Version(2, 0, 0), CFGProcessor::reg)
 	.maker<CFGOutput>();
 
 /**
@@ -157,13 +157,17 @@ void CFGOutput::setup(WorkSpace *ws) {
 	else {
 		try {
 			if(logFor(LOG_PROC))
-				cout << "\tcreating directory" << path << io::endl;
+				log << "\tcreating directory" << path << io::endl;
 			sys::System::makeDir(path);
 		}
 		catch(sys::SystemException& e) {
 			throw ProcessorException(*this, _ << "error during creation of " << path << ": " << e.message());
 		}
 	}
+
+	// verbose output
+	if(logFor(LOG_PROC))
+		log << "\toutput directory = " << path << io::endl;
 }
 
 /**
@@ -176,13 +180,13 @@ void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
 		opath = path / "index";
 	else
 		opath = path / string(_ << g->index());
-	if(logFor(LOG_PROC))
-		cout << "\toutput CFG " << g << " to " << opath << io::endl;
 
 	// perform the output
 	dec = new CFGOutputDecorator(*this, ws);
 	display::Displayer *disp = display::Provider::display(g, *dec, kind);
-	disp->setPath(path);
+	disp->setPath(opath);
+	if(logFor(LOG_PROC))
+		log << "\toutput CFG " << g << " to " << disp->path() << io::endl;
 	disp->process();
 	delete dec;
 }
@@ -196,7 +200,7 @@ void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
  * @param style		Style for the graph (output).
  */
 void CFGOutput::genGraphLabel(CFG *cfg, Text& caption, GraphStyle& style) {
-	dec->decorate(cfg, caption, style);
+	dec->CFGDecorator::decorate(cfg, caption, style);
 }
 
 
@@ -211,7 +215,7 @@ void CFGOutput::genGraphLabel(CFG *cfg, Text& caption, GraphStyle& style) {
  * @param style		Style of the block (output).
  */
 void CFGOutput::genBBLabel(CFG *cfg, Block *block, Text& content, VertexStyle& style) {
-	dec->decorate(cfg, block, content, style);
+	dec->CFGDecorator::decorate(cfg, block, content, style);
 	if(rawInfo)
 		genBBInfo(cfg, block, content);
 }
@@ -227,7 +231,7 @@ void CFGOutput::genBBLabel(CFG *cfg, Block *block, Text& content, VertexStyle& s
  * @param style	Edge style (output).
  */
 void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Text& label, EdgeStyle& style) {
-	dec->decorate(cfg, edge, label, style);
+	dec->CFGDecorator::decorate(cfg, edge, label, style);
 	if(rawInfo)
 		genEdgeInfo(cfg, edge, label);
 }

@@ -25,50 +25,20 @@
 
 namespace otawa { namespace display {
 
-#if 0
-/**
- * @class AbstractGraph
- * Interface that must be implemented by graph to be displayed by
- * a @ref Displayer.
- * @ingroup display
- */
+// extension corresponding to output mode
+static cstring exts[] = {
+		"dot"
+		"ps",
+		"pdf",
+		"png",
+		"gif",
+		"jpg",
+		"svg",
+		"dot",
+		"dot",
+		"dot"
+};
 
-/**
- */
-AbstractGraph::~AbstractGraph(void) {
-}
-
-/**
- * @fn const datastruct::AbstractCollection<Vertex *>& AbstractGraph::vertices(void) const;
- * Get the collection of vertices of the graph.
- * @return	Collection of vertices.
- */
-
-/**
- * @fn const Vertex& AbstractGraph::sourceOf(const Edge& v) const;
- * Get the source of an edge.
- * @param v	Edge whose source is looked for.
- * @return	Edge source.
- */
-
-/**
- * @fn const Vertex& AbstractGraph::sinkOf(const Edge& v) const;
- * Get the sink of an edge.
- * @param v	Edge whose sink is looked for.
- * @return	Edge sink.
- */
-
-
-/**
- * @class AbstractGraph::Vertex
- * Interface that must be implemented by vertices of an @ref AbstractGraph.
- */
-
-/**
- * @class AbstractGraph::Edge
- * Interface that must be implemented by edge of an @ref AbstractGraph.
- */
-#endif
 
 /**
  * @class Decorator
@@ -147,7 +117,7 @@ void Decorator::decorate(graph::DiGraph *graph, graph::Edge *e, Text& label, Edg
 /**
  */
 Displayer::Displayer(graph::DiGraph *graph, const Decorator& decorator, output_mode_t out)
-	: g(graph), d(decorator), output(out), layout(MAPPED)
+	: g(graph), d(decorator), _output(out), _layout(MAPPED)
 { }
 
 /**
@@ -166,10 +136,15 @@ Displayer::~Displayer(void) { }
  */
 
 /**
- * @fn void Displayer::setPath(const sys::Path& p);
- * Set the path of generated file.
+ * Set the path of generated file. If the given file has no extension
+ * add the extension corresponding to the mode.
  * @param p	Generated file path.
  */
+void Displayer::setPath(const sys::Path& p) {
+	_path = p;
+	if(_path.extension() == "")
+		_path = _path.setExtension(exts[_output]);
+}
 
 /**
  * @fn Style& Displayer::defaultVertex(void);
