@@ -27,8 +27,7 @@
 
 #include <otawa/otawa.h>
 #include <otawa/pcg/PCG.h>
-#include <otawa/display/display.h>
-#include <otawa/display/GenDrawer.h>
+#include <otawa/display/Displayer.h>
 #include <otawa/pcg/PCGBuilder.h>
 #include <otawa/app/Application.h>
 
@@ -187,37 +186,21 @@ private:
 
 
 // PCGDecorator class
-class PCGDecorator {
+class PCGDecorator: public display::GenDecorator<PCG, PCGBlock, PCGEdge> {
 public:
-	static void decorate(
-		const PCGAdapter& graph,
-		Output &caption,
-		TextStyle &text,
-		FillStyle &fill
-	) {
-		caption << "PCG of " << graph._pcg->entry()->cfg()->label();
+	void decorate(PCG *graph, Text& caption, GraphStyle& style) const override {
+		caption.out() << "PCG of " << graph->entry()->cfg()->label();
 	}
 	
-	static void decorate(
-		const PCGAdapter& graph,
-		const PCGAdapter::Vertex& vertex,
-		Output &content,
-		ShapeStyle &style
-	) {
-		content << vertex.blk->getName();
+	virtual void decorate(PCG *graph, PCGBlock *vertex, Text& content, VertexStyle& style) const override {
+		content << vertex->getName();
 		//int cnt = BBCounter::COUNT(vertex.blk),
 		//	total = BBCounter::TOTAL(vertex.blk);
 		//if(cnt >= 0)
 		//	content << "\nBB: " << cnt << " / " << total;
 	}
 	
-	static void decorate(
-		const PCGAdapter& graph,
-		const PCGAdapter::Edge& edge,
-		Output &label,
-		TextStyle &text,
-		LineStyle &line
-	) {
+	virtual void decorate(PCG *graph, PCGEdge *edge, Text& label, EdgeStyle& style) const override {
 	}
 };
 
@@ -266,38 +249,6 @@ protected:
 		return name && !name.startsWith("_");		
 	}
 
-#	if 0
-	void selectChain(PCG *pcg, string chain) {
-		
-		// Find the chain
-		PCGBlock *to = 0;
-		/*for(PCG::PCGIterator block(pcg); block; block++) {
-			//cerr << "===>" << block->getName() << "<====\n";
-			if(block->getName() == chain) {
-				to = block;
-				break;
-			}
-		}*/
-		if(!to)
-			throw OptionException(_ << "no looked function \"" << chain << "\".");
-		
-		// Build the selection
-		VectorQueue<PCGBlock *> todo;
-		todo.put(to);
-		while(todo) {
-			
-			// Select the current one
-			PCGBlock *block = todo.get();
-			SELECTED(block) = true;
-			
-			// Look for parent
-			for(PCGBlock::PCGBlockInIterator parent(block); parent; parent++)
-				if(!SELECTED(parent) && accept(parent))
-					todo.put(parent);
-		}
-	}
-#	endif
-
 	virtual void work(const string &entry, PropList &props) throw(elm::Exception) {
 
 		// Build the PCG
@@ -307,29 +258,20 @@ protected:
 		PCG *pcg = PROGRAM_CALL_GRAPH(workspace());
 		ASSERT(pcg);
 
-		//for(PCG::Iter i(pcg); i; i++)
-		//	cerr << "DEBUG: " << *i << io::endl;
-	
-		// Select the interesting PCG blocks
-		/*if(chain)
-			selectChain(pcg, chain);
-		else*/
-			for(PCG::Iter block = pcg->blocks(); block; block++)
-				SELECTED(block) = accept(block);
-		
-		// count BB if required
-		/* if(bb_cnt) {
-			BBCounter counter;
-			counter.process(workspace(), props);
-		} */
+		// select part to display
+#		if 0
+		for(PCG::Iter block = pcg->blocks(); block; block++)
+			SELECTED(block) = accept(block);
+#		endif
 
-		// Display the PCG
-		PCGAdapter ad(pcg);
-		GenDrawer<PCGAdapter, PCGDecorator> drawer(ad);
-		drawer.kind = (kind_t)out.value();
-		drawer.path = entry + "." + out_values[out.value()].name;
-		drawer.draw();
+		// compute the path
+		sys::Path ppath = workspace()->process()->program()->name();
 		
+		// Display the PCG
+		PCGDecorator dec;
+		display::Displayer *disp = display::Provider::display(pcg, dec, kind_t(out.value()));
+		disp->process();
+		delete disp;
 	}
 	
 private:

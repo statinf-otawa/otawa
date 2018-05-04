@@ -26,6 +26,7 @@
 
 namespace otawa { namespace display {
 
+#if 0
 // GenDrawer class
 template <class G, class D>
 class GenDrawer: public AbstractDrawer {
@@ -101,6 +102,7 @@ public:
 		TextStyle& text,
 		LineStyle& line) { label << edge; }
 };
+#endif
 
 } } // otawa::display
 
