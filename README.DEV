@@ -270,6 +270,28 @@ A inline function named //type Class:fun(...)// is documented by:
 Private variables are usually not documented.
 
 
+==== Formatted documentation ====
+
+Doxygen uses the Markdown wiki-notation to format text.
+A non-exhaustive list of the tags is given below:
+  * \n to create a new paragraph,
+  * title \n ==== or # title # to create a section
+  * title \n ---- or ## title ## to create a new section
+  * > text to create a blockquote
+  * */+/- text for a bulleted list
+  * 1. text for a numbered list
+  * \t text for code block
+  * - - - for horizontal rule
+  * [text](url) for a link
+  * *text* or _text_ for emphasized text
+  * **text** or __text__ for even more emphasized text
+  * \c to avoid c to be used as special character
+  * `text` for code text
+  * ![alternate text](url) to include an image
+  * ![alternate text](url caption) to include an image with caption
+  * <url> for explicit link
+
+
   
 ===== PARALLEL OTAWA =====
 

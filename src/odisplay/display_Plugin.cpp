@@ -25,6 +25,34 @@
 namespace otawa { namespace display {
 
 /**
+ * @defgroup display Graph Display
+ *
+ * **module name:** `otawa/display`
+ *
+ * This module provides facilities to display graphs. To be displayed the
+ * graph must extend @ref otawa::graph::DiGraph class and the lookup is
+ * obtained from a @ref otawa::graph::Decorator class that configures the
+ * output for the graph, vertices and edges.
+ *
+ * To maintain type safety, you can use the class
+ * @ref otawa::display::GenDecoratorinstead of otawa::display::Decorator.
+ *
+ * The lookup of graphs, vertices and edges is made of a caption, supported
+ * by class otawa::display::Text supporting usual C++ output operator
+ * and special formatting tags. The style of vertices and edges is also
+ * described using several style classes:
+ *   * otawa::display::VertexStyle
+ *   * otawa::display::EdgeStyle
+ *
+ * Several output format are supported depending on the available plug-ins
+ * (`.dot`, postscript, PDF, image format and `view` meaning that the
+ * embedded OTAWA viewer, `otaw-xdot.py`, is invoked).
+ *
+ * For now, the only supported plugin is `otawa/graphviz` delegating the
+ * work to the [GraphViz](http://graphviz.org/) library.
+ */
+
+/**
  * @class Plugin
  * A plugin to provide driver to display graphs.
  * @ingroup display

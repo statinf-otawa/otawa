@@ -64,7 +64,6 @@ public:
 class Displayer {
 public:
 
-	Displayer(graph::DiGraph *graph, const Decorator& decorator, output_mode_t out);
 	virtual ~Displayer(void);
 	virtual void process(void) throw(Exception) = 0;
 
@@ -77,7 +76,11 @@ public:
 	inline EdgeStyle& defaultEdge(void) { return default_edge; }
 	inline void setLayout(layout_t l) { _layout = l; }
 
+	static Displayer *make(graph::DiGraph *g, const Decorator& d, output_mode_t out = OUTPUT_ANY);
+
 protected:
+	Displayer(graph::DiGraph *graph, const Decorator& decorator, output_mode_t out);
+
 	graph::DiGraph *g;
 	const Decorator& d;
 	output_mode_t _output;
@@ -104,6 +107,8 @@ private:
 	static List<Provider *> provs;
 	static Provider *def;
 };
+
+Displayer *make(graph::DiGraph *g, const Decorator& d, output_mode_t out = OUTPUT_ANY);
 
 } }	// otawa::display
 

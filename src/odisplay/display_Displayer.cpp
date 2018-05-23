@@ -87,21 +87,6 @@ void Decorator::decorate(graph::DiGraph *graph, graph::Vertex *vertex, Text& con
 void Decorator::decorate(graph::DiGraph *graph, graph::Edge *e, Text& label, EdgeStyle& style) const {
 }
 
-#if 0
-/**
- * @class GenDisplayer
- * This class provides display of graph (based on @ref Displayer class) for @ref GenGraph
- * graphs. It takes as parameter:
- * @li a @ref GenGraph -- for the graph itself,
- * @li a @ref GenDisplayer::Decorator -- to generate the content of vertices and the labels of edges.
- *
- * @param V		Class for vertices (same as passed to GenGraph).
- * @param E		Class for edges (same as passed to GenGraph).
- *
- * @ingroup display
- */
-#endif
-
 /**
  * @class Displayer
  * This class provides facility to output a graph of type @ref AbstractGraph.
@@ -123,6 +108,17 @@ Displayer::Displayer(graph::DiGraph *graph, const Decorator& decorator, output_m
 /**
  */
 Displayer::~Displayer(void) { }
+
+/**
+ * Obtain a displayer using a plug-in supporting the selected output type.
+ * If the output type is any, return a displayer with the default plug-in.
+ * @param g		Graph to display.
+ * @param d		Decorator to use.
+ * @param out	Output type (optional).
+ */
+Displayer *Displayer::make(graph::DiGraph *g, const Decorator& d, output_mode_t out) {
+	return Provider::display(g, d, out);
+}
 
 /**
  * @fn void Displayer::process(void);
@@ -296,5 +292,19 @@ List<Provider *> Provider::provs;
  * Default provider.
  */
 Provider *Provider::def = 0;
+
+
+/**
+ * Obtain a displayer using a plug-in supporting the selected output type.
+ * If the output type is any, return a displayer with the default plug-in.
+ * @param g		Graph to display.
+ * @param d		Decorator to use.
+ * @param out	Output type (optional).
+ *
+ * @ingroup display
+ */
+Displayer *make(graph::DiGraph *g, const Decorator& d, output_mode_t out) {
+	return Provider::display(g, d, out);
+}
 
 } }	// otawa::display

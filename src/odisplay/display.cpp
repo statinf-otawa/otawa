@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	display classes implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2007, IRIT UPS.
+ *	Copyright (c) 2018, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -271,6 +270,24 @@ OutputOption::OutputOption(option::Manager& man)
 		.description("select the path to output to.")
 		.argDescription("path"))
 { }
+
+
+/**
+ * @class VertexStyle
+ * Describes the style for a vertex as used by otawa::display::Displayer class.
+ * It is the aggregate of a shape, margin size, fill style, text style and
+ * line style.
+ *
+ * @ingroup display
+ */
+
+/**
+ * @class EdgeStyle
+ * Describes the style for an edge as used by otawa::display::Displayer class.
+ * It is the aggregate of a text style and a line style.
+ *
+ * @ingroup display
+ */
 
 } } // otawa::display
 

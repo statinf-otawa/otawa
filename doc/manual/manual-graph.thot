@@ -272,7 +272,7 @@ public:
 	}
 </code>
 
-The output using the default format is performed by:
+Finally, the output is built by calling the function ''process'' of the displayer:
 <code c++>
 CFG *g = ...;
 MyCFGDecorator decorator;
