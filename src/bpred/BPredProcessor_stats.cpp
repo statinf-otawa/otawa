@@ -67,6 +67,9 @@ String BPredProcessor::predictorToString() {
 			return String("Global 1bit");
 		}
 		break;
+	default:
+		ASSERT(false);
+		return "";
 	}
 }
 
@@ -114,7 +117,8 @@ String BPredProcessor::genStats(WorkSpace *fw,CFG *cfg) {
 	
 	system->dump(bf);
 	long int max = 0;
-	long int deb=0,fin=-1;			// HACK
+	long int deb=0;
+	//,fin=-1;			// HACK
 	const char *dmp = bf.block();
 
 	//////////////////////////////////
@@ -132,13 +136,13 @@ String BPredProcessor::genStats(WorkSpace *fw,CFG *cfg) {
 	long int k= deb+1;
 	/////////////////////////////////
 
-	long int d=k;
+	//long int d=k;
 	for( long int i = k,tmp_max=0 ; i<bf.size();++i) {
 		if(dmp[i]=='\n') {
 			if(tmp_max>max) {
 				max= tmp_max;
 			}
-			d=i;
+			//d=i;
 			tmp_max=0;
 		}
 		else {

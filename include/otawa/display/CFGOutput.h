@@ -24,7 +24,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/display/CFGDisplayer.h>
+#include "CFGDecorator.h"
 
 namespace otawa {
 

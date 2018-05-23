@@ -161,7 +161,7 @@ p::feature CONSTRAINTS_FEATURE("otawa::dcache::CONSTRAINTS_FEATURE", new Maker<C
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
+p::id<ilp::Var *> MISS_VAR("otawa::dcache::MISS_VAR", 0);
 
 
 /**

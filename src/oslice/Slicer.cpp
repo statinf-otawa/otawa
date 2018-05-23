@@ -1,8 +1,8 @@
 #include <elm/sys/System.h>
 
 #include <otawa/oslice/Slicer.h>
-#include <otawa/display/CFGDisplayer.h>
 #include <otawa/program.h>
+#include "../../include/otawa/display/CFGDecorator.h"
 
 namespace otawa { namespace oslice {
 

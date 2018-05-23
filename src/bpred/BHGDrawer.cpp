@@ -20,8 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include "BHGDrawer.h"
-#include <otawa/display/Driver.h>
-#include <otawa/display/graphviz.h>
+#include <otawa/display/Displayer.h>
 #include <elm/genstruct/HashTable.h>
 
 
@@ -40,64 +39,8 @@ namespace otawa { namespace bpred {
  * @param bhg BHG to print
  * @param graph configured Graph in which one wish to create the nodes and the edges
  */
-BHGDrawer::BHGDrawer(BHG *bhg, display::Graph *graph): _graph(graph), _made(false){
+BHGDrawer::BHGDrawer(BHG *bhg, sys::Path path): _made(false), _path(path) {
 	_bhg = bhg;
-}
-
-
-/**
- * Creates a new drawer, and makes the graph with all the data needed
- * @param bhg BHG to print
- * @param props properties to apply to all the items of the graph
- * (the Graph itself, Nodes, and Edges)
- * @param driver Driver to use to create the graph. The default is graphviz_driver
- */
-BHGDrawer::BHGDrawer(BHG *bhg, const PropList& props, display::Driver& driver): _made(false){
-	PropList general, nodes, edges;
-	general.addProps(props);
-	nodes.addProps(props);
-	edges.addProps(props);
-	onInit(general, nodes, edges);
-	
-	_graph = driver.newGraph(general, nodes, edges);
-
-	_bhg = bhg;
-}
-
-
-/**
- * Principal function. It creates Nodes and Edges to put in the Graph,
- * from the given BHG
- * @param bhg source BHG
- */
-void BHGDrawer::make(){
-	if(_made){
-		return;
-	}
-	ASSERT(_bhg);
-	ASSERT(_graph);
-
-
-	// Construct the Graph
-	genstruct::HashTable<void*, display::Node*> map;
-
-	for(BHG::Iter bb(_bhg); bb; bb++){
-		display::Node *node = _graph->newNode();
-		map.put(*bb, node);
-		onNode(*bb, node);
-	}
-
-	for(BHG::Iter bb(_bhg); bb; bb++){
-		display::Node *node = map.get(*bb);
-		for(BHG::OutIterator succ(bb); succ; succ++){
-			BHGEdge* edge = succ;
-			display::Edge *display_edge;
-			display_edge = _graph->newEdge(node,map.get(edge->target()));
-			onEdge(edge, display_edge);
-		}
-	}
-	onEnd(_graph);
-	_made = true;
 }
 
 
@@ -105,8 +48,10 @@ void BHGDrawer::make(){
  * This function only displays the graph made.
  */
 void BHGDrawer::display(void){
-	make();
-	_graph->display();
+	display::Displayer *disp = display::Provider::display(_bhg, *this);
+	disp->setPath(_path);
+	onInit(disp->defaultVertex(), disp->defaultEdge());
+	disp->process();
 }
 
 
@@ -117,10 +62,10 @@ void BHGDrawer::display(void){
  * @param nodes PropList for the default properties of nodes
  * @param edges PropList for the default properties of edges
  */
-void BHGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
-	display::SHAPE(nodes) = display::ShapeStyle::SHAPE_MRECORD;
-	display::FONT_SIZE(nodes) = 12;
-	display::FONT_SIZE(edges) = 12;
+void BHGDrawer::onInit(display::VertexStyle& vertex_style, display::EdgeStyle& edge_style) const {
+	vertex_style.shape = display::ShapeStyle::SHAPE_MRECORD;
+	vertex_style.text.size = 12;
+	edge_style.text.size = 12;
 }
 
 
@@ -130,28 +75,34 @@ void BHGDrawer::onInit(PropList& graph, PropList& nodes, PropList& edges){
  * @param bb BasicBlock from which the node has been made
  * @param node Node made. One can give some properties to it
  */
-void BHGDrawer::onNode(BHGNode *bb, otawa::display::Node *node){
-	display::SHAPE(node) = display::ShapeStyle::SHAPE_MRECORD;
+void BHGDrawer::onNode(BHGNode *bb, display::Text& content, display::VertexStyle& style) const {
+	style.shape = display::ShapeStyle::SHAPE_MRECORD;
+	content << display::begin(display::TABLE);
 
 	// make title
-
-	StringBuffer title;
-	title << bb->getCorrespondingBB()->index() << ":";
+	content << display::begin(display::ROW) << display::begin(display::CELL);
+	content << bb->getCorrespondingBB()->index() << ":";
 	for(int i=bb->getHistory().size()-1;i>=0;--i)
-		title << ((bb->getHistory().contains(i))?"1":"0");
-	display::TITLE(node) = title.toString();
-	StringBuffer body;
+		content << ((bb->getHistory().contains(i))?"1":"0");
+	content << display::end(display::CELL) << display::end(display::ROW);
+
+	// make body
 	if( bb->isEntry() || bb->isExit() ) {
-		if(bb->isEntry()) body << "ENTRY ";
+		content << display::hr << display::begin(display::ROW) << display::begin(display::CELL);
+		if(bb->isEntry())
+			content << "ENTRY ";
 		if(bb->isExit()) {
 
-			body << "EXIT :";
-			if(bb->exitsWithNT()) body << "NT ";
-			if(bb->exitsWithT()) body << "T";
-
+			content << "EXIT :";
+			if(bb->exitsWithNT())
+				content << "NT ";
+			if(bb->exitsWithT())
+				content << "T";
 		}
+		content << display::end(display::CELL) << display::end(display::ROW);
 	}
-	display::BODY(node) = body.toString();
+
+	content << display::end(display::TABLE);
 }
 
 
@@ -161,36 +112,45 @@ void BHGDrawer::onNode(BHGNode *bb, otawa::display::Node *node){
  * @param bhg_edge Edge of the BHG from which the Edge of the Graph has been made
  * @param display_edge Edge of the Graph made. One can give properties to it
  */
-void BHGDrawer::onEdge(BHGEdge *bhg_edge, otawa::display::Edge *display_edge){
+void BHGDrawer::onEdge(BHGEdge *bhg_edge, display::Text& label, display::EdgeStyle& style) const {
 
 	if(bhg_edge->isTaken()) {
-		display::LABEL(display_edge) = "T";
+		label << "T";
 	}
 	else {
-		display::LABEL(display_edge) = "NT";
+		label << "NT";
 	}
 
-}
-
-
-
-/**
- * This function is called when the BHG have been drawn.
- * One can add nodes, edges, or properties to the graph.
- * @param graph graph being drawn
- */
-void BHGDrawer::onEnd(otawa::display::Graph *graph){
 }
 
 
 /**
  * This function is called to display a node representing a called BHG.
  */
-void BHGDrawer::onCall(BHG *bhg, display::Node *node) {
-	StringBuffer bf;
-	bf << "classe @" << bhg->getClass(); 
-	display::TITLE(node) = bf.toString();
+void BHGDrawer::onCall(BHG *bhg, display::Text& label, display::GraphStyle& style) const {
+	label << "classe @" << bhg->getClass();
+}
+
+
+
+/**
+ */
+void BHGDrawer::decorate(graph::DiGraph *graph, display::Text& caption, display::GraphStyle& style) const {
+	onCall(_bhg, caption, style);
+}
+
+
+/**
+ */
+void BHGDrawer::decorate(graph::DiGraph *graph, graph::Vertex *vertex, display::Text& content, display::VertexStyle& style) const {
+	onNode(static_cast<BHGNode *>(vertex), content, style);
+}
+
+
+/**
+ */
+void BHGDrawer::decorate(graph::DiGraph *graph, graph::Edge *edge, display::Text& label, display::EdgeStyle& style) const {
+	onEdge(static_cast<BHGEdge *>(edge), label, style);
 }
 
 } }		// otawa::bpred
-

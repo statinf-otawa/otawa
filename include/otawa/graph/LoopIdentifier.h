@@ -34,7 +34,7 @@ class LoopIdentifier {
 		IRREDUCIBLE	= 0x08;
 
 public:
-	LoopIdentifier(const DiGraph& graph);
+	LoopIdentifier(const DiGraph& graph, Vertex *entry);
 	inline bool isHeader(Vertex *v) const { return _flags[v->index()] & HEADER; }
 	inline bool isReentry(Vertex *v) const { return _flags[v->index()] & REENTRY; }
 	inline bool isIrreducible(void) const { return _irred; }
@@ -67,6 +67,7 @@ private:
 	t::uint32 *_DFSP;
 	Vertex **_iloop;
 	bool _irred;
+	Vertex *_entry;
 };
 
 } }	// otawa::sgraph

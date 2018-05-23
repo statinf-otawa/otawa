@@ -60,7 +60,10 @@ class PCG: public PropList, public graph::GenDiGraph<PCGBlock, PCGEdge> {
 	friend class PCGBuilder;
 public:
 	typedef graph::GenDiGraph<PCGBlock, PCGEdge>::VertexIter Iter;
+	inline PCGBlock *entry(void) const { return _entry; }
 	inline Iter blocks(void) const { return vertices(); }
+private:
+	PCGBlock *_entry;
 };
 
 }	// otawa

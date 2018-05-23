@@ -25,7 +25,7 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/otawa.h>
 #include <otawa/cfg.h>
-#include "../../include/otawa/ograph/GenGraph.h"
+#include <otawa/graph/DiGraph.h>
 
 namespace otawa { namespace bpred {
 
@@ -35,44 +35,35 @@ class BBHGEdge;
 
 
 
-class BBHG : /*public otawa::PropList,*/ public otawa::ograph::GenGraph<BBHGNode,BBHGEdge> {
-protected:
+class BBHG: public otawa::graph::GenDiGraph<BBHGNode, BBHGEdge> {
 	friend class BHGNode;
 	friend class BHGEdge;
-	int m_history_size;
 public:
 	BBHG(int history_size);
 	int getClass();
-	void add(BBHGNode* node);
+	void add(graph::GenDiGraphBuilder<BBHGNode, BBHGEdge>& builder, BBHGNode* node);
+protected:
+	int m_history_size;
 };
 
 
 
 
-class BBHGEdge : public otawa::ograph::GenGraph<BBHGNode,BBHGEdge>::GenEdge {
-private:
-	bool m_edge_taken;
-	bool m_from_branch;
+class BBHGEdge: public otawa::graph::GenEdge<BBHGNode, BBHGEdge> {
 public:
-	BBHGEdge(BBHGNode *source, BBHGNode *target, bool taken=false, bool from_branch=false);
+	BBHGEdge(bool taken = false, bool from_branch = false);
 	~BBHGEdge();
 	bool isTaken();
 	bool isFromBranch();
+private:
+	bool m_edge_taken;
+	bool m_from_branch;
 };
 
 
 
 
-class BBHGNode : public otawa::ograph::GenGraph<BBHGNode,BBHGEdge>::GenNode{
-private:
-	bool m_entry;
-	bool m_exit;
-	bool m_exit_T; // exits with Taken
-	bool m_exit_NT; // exits with NotTaken
-	bool m_branch;
-	otawa::dfa::BitSet *m_history;
-	otawa::Block *m_bb;
-	int m_history_size;
+class BBHGNode : public otawa::graph::GenVertex<BBHGNode, BBHGEdge> {
 public:
 	BBHGNode(otawa::Block* cfg_bb,const otawa::dfa::BitSet& bs, bool branch=false, bool entry=false, bool exit=false, bool exit_T=false, bool exit_NT=false);
 	~BBHGNode();
@@ -87,6 +78,16 @@ public:
 	bool isSuccessor(BBHGNode* succ,bool& withT, bool& withNT);
 	bool equals(const BBHGNode& b);
 	void setExit(bool isExit, bool withT = false, bool withNT = false);
+
+private:
+	bool m_entry;
+	bool m_exit;
+	bool m_exit_T; // exits with Taken
+	bool m_exit_NT; // exits with NotTaken
+	bool m_branch;
+	otawa::dfa::BitSet *m_history;
+	otawa::Block *m_bb;
+	int m_history_size;
 };
 
 } }		// otawa::bpred

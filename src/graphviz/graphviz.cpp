@@ -62,41 +62,86 @@ private:
 class Text: public display::Text {
 public:
 
-	Text(void): filter(_buf.stream()), _out(filter), accept_hr(false) { }
+	Text(void): filter(_buf.stream()), _out(filter) { reset(); }
 
-	virtual io::Output& out(void) {
+	void reset(void) {
+		accept_hr = false;
+		_align = display::align::center;
+	}
+
+	io::Output& out(void) override {
 		return _out;
 	}
 
 	virtual void tag(display::text_style_t style, bool end) {
-		static struct {
-			cstring name;
-			bool begin;
-			bool end;
-		} names[] = {
-			{ "", false, false },
-			{ "B", false, false },
-			{ "I", false, false },
-			{ "U", false, false },
-			{ "SUP", false, false },
-			{ "SUB", false, false },
-			{ "TABLE", true, false },
-			{ "TR", false, true },
-			{ "TD", false, false },
-			{ "FONT", false, false }
-		};
-		if(style > display::CELL)
-			return;
-		_buf << '<';
-		if(end) _buf << "/";
-		_buf << names[style].name;
-		if(!end && style == display::TABLE)
-			_buf << " BORDER=\"0\"";
-		_buf << '>';
-		if(end)
-			accept_hr = names[style].end;
-		else
-			accept_hr = names[style].begin;
+		cstring name;
+
+		// default: do not accept <hr/>
+		accept_hr = false;
+
+		// process each style
+		switch(style) {
+
+		// simple styles
+		case display::NONE:			break;
+		case display::BOLD:			name = "B"; goto gen;
+		case display::ITALIC:		name = "I"; goto gen;
+		case display::UNDERLINE:	name = "U"; goto gen;
+		case display::SUPER:		name = "SUP"; goto gen;
+		case display::SUB:			name = "SUB"; goto gen;
+		case display::ROW:			name = "TR"; accept_hr = end; goto gen;
+		gen:
+			_buf << '<';
+			if(end) _buf << "/";
+			_buf << name << '>';
+			break;
+
+		// table cell
+		case display::CELL:
+			if(!end) {
+				_buf << "<TD";
+				switch(_align) {
+				case display::align::center:
+					break;
+				case display::align::left:
+					_buf << " ALIGN=\"LEFT\"";
+					break;
+				case display::align::right:
+					_buf << " ALIGN=\"RIGHT\"";
+					break;
+				}
+				_buf << ">";
+			}
+			else
+				_buf << "</TD>";
+			break;
+
+		// table style
+		case display::TABLE:
+			if(!end) {
+				_buf << "<TABLE BORDER=\"0\">";
+				accept_hr = true;
+			}
+			else
+				_buf << "</TABLE>";
+			break;
+
+		// font based style
+		case display::SMALL:
+			if(!end)
+				_buf << "<FONT POINT-SIZE=\"10\">";
+			else
+				_buf << "</FONT>";
+			break;
+		case display::BIG:
+			if(!end)
+				_buf << "<FONT POINT-SIZE=\"18\">";
+			else
+				_buf << "</FONT>";
+			break;
+		default:
+			break;
+		}
 	}
 
 	virtual void color(const display::Color& color, bool end) {
@@ -107,20 +152,38 @@ public:
 	}
 
 	virtual void tag(const display::Tag& tag) {
-		static cstring names[] = {
-			"<BR/>",
-			"<BR ALIGN=\"left\"/>",
-			"<BR ALIGN=\"center\"/>",
-			"<BR ALIGN=\"right\"/>",
-			"<HR/>"
-		};
-		if((tag.tag == display::HR && !accept_hr)
-		|| tag.tag > display::HR)
-			return;
-		_buf << names[tag.tag];
+		switch(tag.tag) {
+		case display::BR:
+			_buf << "<BR";
+			switch(_align) {
+			case display::align::center: break;
+			case display::align::left: _buf << " ALIGN=\"left\""; break;
+			case display::align::right: _buf << " ALIGN=\"right\""; break;
+			}
+			_buf << "/>";
+			break;
+		case display::BR_LEFT:
+			_buf << "<BR ALIGN=\"left\"/>";
+			break;
+		case display::BR_CENTER:
+			_buf << "<BR ALIGN=\"center\"/>";
+			break;
+		case display::BR_RIGHT:
+			_buf << "<BR ALIGN=\"right\"/>";
+			break;
+		case display::HR:
+			if(accept_hr)
+				_buf << "<HR/>";
+			break;
+		}
 	}
 
-	virtual void setURL(const string& url) { _url = url; }
+	void align(display::align align) override {
+		_align = align;
+	}
+
+	void setURL(const string& url) override { _url = url; }
+
 	inline string url(void) const { return _url; }
 	inline string text(void) { string r = _buf.toString(); _buf.reset(); return r; }
 
@@ -130,6 +193,7 @@ private:
 	Output _out;
 	string _url;
 	bool accept_hr;
+	display::align _align;
 };
 
 class Displayer: public display::Displayer {
@@ -203,6 +267,7 @@ private:
 		gen(out, default_vertex.text, com);
 		gen(out, default_vertex.shape, com);
 		gen(out, default_vertex.line, com);
+		genMargin(out, default_vertex, com);
 		out << "];\n";
 
 		// generate default edge style
@@ -224,8 +289,16 @@ private:
 		out << "}\n";
 	}
 
+	void genMargin(Output& out, const display::VertexStyle& style, bool& com) {
+		if(style.margin >= 0) {
+			comma(out, com);
+			out << "margin=" << style.margin;
+		}
+	}
+
 	void gen(Output& out, graph::Vertex *v) {
 		display::VertexStyle style;
+		text.reset();
 		d.decorate(g, v, text, style);
 		string content = text.text();
 		bool com = false;
@@ -238,19 +311,17 @@ private:
 			comma(out, com);
 			out << "URL=\"" << text.url() << "\"";
 		}
-		if(style.margin >= 0) {
-			comma(out, com);
-			out << "margin=" << style.margin;
-		}
 		gen(out, style.text, com);
 		gen(out, style.fill, com);
 		gen(out, style.shape, com);
 		gen(out, style.line, com);
+		genMargin(out, style, com);
 		out << "];\n";
 	}
 
 	void gen(Output& out, graph::Edge *e) {
 		display::EdgeStyle style;
+		text.reset();
 		d.decorate(g, e, text, style);
 		string label = text.text();
 		bool com = false;
@@ -377,7 +448,9 @@ public:
 	/**
 	 */
 	virtual bool accepts(display::output_mode_t out) {
+		cerr << "DEBUG: accepts " << int(out) << io::endl;
 		switch(out) {
+		case display::OUTPUT_ANY:
 		case display::OUTPUT_PS:
 		case display::OUTPUT_PDF:
 		case display::OUTPUT_PNG:

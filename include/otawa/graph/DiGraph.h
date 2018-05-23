@@ -77,7 +77,6 @@ class DiGraph {
 	friend class DiGraphBuilder;
 	typedef FragTable<Vertex *> v_t;
 public:
-	inline Vertex *entry(void) const { return e; }
 	typedef v_t::Iter VertexIter;
 	inline int count(void) const { return v.count(); }
 	inline Vertex *at(int index) const { return v[index]; }
@@ -96,15 +95,13 @@ public:
 	inline VertexAccess vertices(void) const { return VertexAccess(*this); }
 
 private:
-	Vertex *e;
 	v_t v;
 };
 
 class DiGraphBuilder {
 public:
-	DiGraphBuilder(Vertex *e);
-	DiGraphBuilder(DiGraph *g, Vertex *e);
-	inline Vertex *entry(void) const { return _g->entry(); }
+	DiGraphBuilder(void);
+	DiGraphBuilder(DiGraph *g);
 	void add(Vertex *vertex);
 	void add(Vertex *source, Vertex *sink, Edge *edge);
 	DiGraph *build(void);
@@ -219,7 +216,6 @@ public:
 		DiGraph::VertexIter i;
 	};
 
-	inline V *entry(void) const { return static_cast<V *>(DiGraph::entry()); }
 	inline V *at(int index) const { return static_cast<V *>(DiGraph::at(index)); }
 
 	inline VertexIter begin(void) const { return DiGraph::begin(); }
@@ -240,9 +236,8 @@ public:
 template <class V, class E>
 class GenDiGraphBuilder: private DiGraphBuilder {
 public:
-	inline GenDiGraphBuilder(V *entry): DiGraphBuilder(entry) { }
-	inline GenDiGraphBuilder(GenDiGraph<V, E> *g, V *entry): DiGraphBuilder(g, entry) { }
-	inline V *entry(void) const { return static_cast<V *>(DiGraphBuilder::entry()); }
+	inline GenDiGraphBuilder(void) { }
+	inline GenDiGraphBuilder(GenDiGraph<V, E> *g): DiGraphBuilder(g) { }
 	inline void add(V *v) { DiGraphBuilder::add(v); }
 	inline void add(V *v, V *w, E *e) { DiGraphBuilder::add(v, w, e); }
 	inline GenDiGraph<V, E> *build(void) { return static_cast<GenDiGraph<V, E> *>(DiGraphBuilder::build()); }

@@ -142,10 +142,8 @@ Vertex::~Vertex(void) {
  * @param g	Real digraph.
  * @param v	Entry vertex.
  */
-DiGraphBuilder::DiGraphBuilder(DiGraph *g, Vertex *v): _g(g), c(0) {
+DiGraphBuilder::DiGraphBuilder(DiGraph *g): _g(g), c(0) {
 	ASSERT(_g);
-	add(v);
-	_g->e = v;
 }
 
 
@@ -153,9 +151,7 @@ DiGraphBuilder::DiGraphBuilder(DiGraph *g, Vertex *v): _g(g), c(0) {
  * Construct the DiGraph builder.
  * @param v	Entry vertex.
  */
-DiGraphBuilder::DiGraphBuilder(Vertex *v): _g(new DiGraph()), c(0) {
-	add(v);
-	_g->e = v;
+DiGraphBuilder::DiGraphBuilder(void): _g(new DiGraph()), c(0) {
 }
 
 

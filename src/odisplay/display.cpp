@@ -214,6 +214,64 @@ Text::~Text(void) {
 
 const Tag br(BR), left(BR_LEFT), center(BR_CENTER), right(BR_RIGHT), hr(HR);
 
+/**
+ * Specialize input reading of output mode for option argument decoding.
+ */
+string operator>>(string s, output_mode_t& mode) {
+	static struct { cstring name; output_mode_t mode; } labs[]= {
+		{ "ps", 	OUTPUT_PS },
+		{ "pdf",	OUTPUT_PDF },
+		{ "png",	OUTPUT_PNG },
+		{ "gif",	OUTPUT_GIF },
+		{ "jpg",	OUTPUT_JPG },
+		{ "svg",	OUTPUT_SVG },
+		{ "dot",	OUTPUT_DOT },
+		{ "rawdot",	OUTPUT_RAW_DOT },
+		{ "view",	OUTPUT_VIEW },
+		{ "",		OUTPUT_ANY}
+	};
+	cerr << "DEBUG: called!\n";
+	//string s = in.scanWord();
+	for(int i = 0; labs[i].mode != OUTPUT_ANY; i++)
+		if(labs[i].name == s) {
+			mode = labs[i].mode;
+			return s;
+		}
+	throw IOException(_ << s << " is not a valid output mode!");
+}
+
+/**
+ * @class class TypeOption;
+ * Command line parameter implementation allowing to select a display output mode.
+ * @ingroup display
+ */
+
+/**
+ */
+TypeOption::TypeOption(option::Manager& man)
+: option::ValueOption<output_mode_t>(Make(man)
+	.cmd("-T")
+	.cmd("--out-type")
+	.description("select the type of output.")
+	.argDescription("type")
+	.def(OUTPUT_ANY))
+{ }
+
+
+/**
+ * @class OutputOption
+ * Command line parameter implementation allowing to select the output path.
+ * @ingroup display
+ */
+
+OutputOption::OutputOption(option::Manager& man)
+:	option::ValueOption<sys::Path>(Make(man)
+		.cmd("-o")
+		.cmd("--output")
+		.description("select the path to output to.")
+		.argDescription("path"))
+{ }
+
 } } // otawa::display
 
 BEGIN_ENUM(otawa::display::output_mode_t)

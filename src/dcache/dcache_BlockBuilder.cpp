@@ -56,7 +56,7 @@ p::declare BlockBuilder::reg = p::init("otawa::dcache::BlockBuilder", Version(1,
 /**
  * Provide the address of the stack pointer at the start of the task.
  */
-Identifier<Address> INITIAL_SP("otawa::dcache::INITIAL_SP", Address::null);
+p::id<Address> INITIAL_SP("otawa::dcache::INITIAL_SP", Address::null);
 
 
 /**
@@ -223,7 +223,7 @@ p::feature DATA_BLOCK_FEATURE("otawa::dcache::DATA_BLOCK_FEATURE", new Maker<Blo
  * @li @ref	WorkSpace
  * @ingroup dcache
  */
-Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_COLLECTION", 0);
+p::id<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_COLLECTION", 0);
 
 
 /**
@@ -234,7 +234,7 @@ Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_B
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
+p::id<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
 
 
 /**

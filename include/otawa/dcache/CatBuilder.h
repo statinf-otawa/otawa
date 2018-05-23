@@ -21,13 +21,13 @@
 #ifndef OTAWA_DCACHE_CATBUILDER_H_
 #define OTAWA_DCACHE_CATBUILDER_H_
 
-//#include <otawa/cache/categorisation/CATBuilder.h>
 #include <otawa/dcache/BlockBuilder.h>
 #include <otawa/dcache/ACSBuilder.h>
+#include <otawa/dcache/MUSTPERS.h>
+#include <otawa/dcache/ACSMayBuilder.h>
 #include "features.h"
 
 namespace otawa { namespace dcache {
-
 
 // CATBuilder class
 class CATBuilder: public Processor {
@@ -40,8 +40,14 @@ public:
 
 private:
 	void processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
+	void processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay);
+
 	data_fmlevel_t firstmiss_level;
-	//CategoryStats *cstats;
+	cache::category_t wt_def_cat;
+
+	MUSTPERS *prob;
+	MAYProblem *probMay;
+	bool has_pers;
 };
 
 } }	// otawa::dcache

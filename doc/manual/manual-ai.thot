@@ -4,7 +4,7 @@
 
 Abstract interpretation in OTAWA is performed on CFGs, and works by associating an abstract value (called "state") before and after each basic block. 
 
-Each particular analysis to be solved by abstract interpretation comprises 3 items: 
+Each particular analysis to be solved by abstract interpretation comprises 3 items:
 
   * The abstract domain, i.e. the set of all the possible abstract values. 
   * An update() function, which gives the output state of a basic block in function of its input state.

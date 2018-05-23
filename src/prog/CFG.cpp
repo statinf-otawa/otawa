@@ -617,8 +617,14 @@ void BasicBlock::BasicIns::next(void) {
  * @param type		Type of CFG (one of SUBPROG, SYNTH or any user type).
  */
 CFG::CFG(Inst *first, type_t type)
-: idx(0),  _offset(0), _type(type), fst(first), _exit(0), _unknown(0) {
-}
+:	idx(0),
+	_offset(0),
+	_type(type),
+	fst(first),
+	_entry(nullptr),
+	_exit(nullptr),
+	_unknown(nullptr)
+{ }
 
 /**
  */
@@ -764,9 +770,10 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
  * 				is not delayed.
  */
 CFGMaker::CFGMaker(Inst *first, bool fix)
-: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first), new Block(Block::IS_END | Block::IS_ENTRY)),
+: GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first)),
   _fix(fix) {
-	entry()->_cfg = cfg;
+	cfg->_entry = new Block(Block::IS_END | Block::IS_ENTRY);
+	add(cfg->_entry);
 }
 
 /**
@@ -870,28 +877,6 @@ void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
 	maker.cfg->_callers.add(v);
 	add(v);
 }
-
-/**
- * @class CompositeCFG
- *
- * This graph, implementing the interface of @ref ai graph, process the CFG collection of a task as single graph.
- * This means that the @ref SynthBlock will be invisible for the analysis.
- *
- * Actually, iterating on the successor
- * edges of a call bloc will give the edges between the entry and the first block of the called
- * subprogram. In the same way, iterating on the successor edges of a return block of a function
- * will iterate on the successor of the caller @ref SynthBlock.
- *
- * This works in the same looking to the predecessor: the predecessor of the first blocks of
- * a subprogram will match the predecessor of the call @ref SynthBlock and the predecessors
- * of a block following a call will be the return blocks of a called function.
- *
- * This allow to consider the collection of CFG as one unique graph but an practical outcome
- * is that (a) for successors, the sink vertex is not always the currently processed vertex and
- * (b) for predecessors, the source vertex is not always the currently processed vertex.
- *
- * @ingroup cfg
- */
 
 }	// otawa
 

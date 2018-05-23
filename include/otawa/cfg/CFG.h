@@ -58,6 +58,7 @@ io::Output& operator<<(io::Output& out, Edge *edge);
 
 
 class Block: public PropList, public graph::GenVertex<Block, Edge> {
+	friend class CFG;
 	friend class CFGMaker;
 public:
 	static const t::uint16
@@ -135,11 +136,16 @@ public:
 		{ return address() <= i->address() && i->address() < topAddress(); }
 
 	class InstIter: public AllocArray<Inst *>::Iter {
+		friend class BasicBlock;
 	public:
 		inline InstIter(void) { }
 		inline InstIter(const BasicBlock *bb): AllocArray<Inst *>::Iter(bb->_insts) { }
+	private:
+		inline InstIter(const AllocArray<Inst *>::Iter& i): AllocArray<Inst *>::Iter(i) { }
 	};
 	inline InstIter insts(void) const { return InstIter(this); }
+	inline InstIter begin(void) const { return _insts.begin(); }
+	inline InstIter end(void) const { return _insts.end(); }
 
 	class BundleIter: public PreIterator<BundleIter, Bundle> {
 	public:
@@ -205,6 +211,7 @@ public:
 	inline int offset(void) const { return _offset; }
 	inline Inst *first(void) const { return fst; }
 	inline Address address(void) const { return first()->address(); }
+	inline Block *entry(void) const  { return _entry; }
 	inline Block *exit(void) const { return _exit; }
 	inline Block *unknown(void) const { return _unknown; }
 	inline BlockIter blocks(void) const { return vertices(); }
@@ -217,7 +224,7 @@ private:
 	int idx, _offset;
 	type_t _type;
 	Inst *fst;
-	Block *_exit, *_unknown;
+	Block *_entry, *_exit, *_unknown;
 	List<SynthBlock *> _callers;
 };
 io::Output& operator<<(io::Output& out, CFG *cfg);

@@ -26,9 +26,9 @@
 #include <elm/sys/System.h>
 #include <elm/xom/String.h>
 #include <otawa/cfg.h>
-#include <otawa/display/CFGDisplayer.h>
 #include <otawa/manager.h>
 #include <otawa/program.h>
+#include "../../include/otawa/display/CFGDecorator.h"
 
 using namespace elm;
 using namespace otawa;

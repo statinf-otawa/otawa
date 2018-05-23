@@ -227,38 +227,39 @@ typedef Vector<acs_stack_t> acs_stack_table_t;
 // block analysis
 extern p::feature DATA_BLOCK_FEATURE;
 extern p::feature CLP_BLOCK_FEATURE;
-extern Identifier<Pair<int, BlockAccess *> > DATA_BLOCKS;
-extern Identifier<const BlockCollection *> DATA_BLOCK_COLLECTION;
-extern Identifier<Address> INITIAL_SP;
+extern p::id<Pair<int, BlockAccess *> > DATA_BLOCKS;
+extern p::id<const BlockCollection *> DATA_BLOCK_COLLECTION;
+extern p::id<Address> INITIAL_SP;
 
 // MUST analysis
 extern p::feature MUST_ACS_FEATURE;
 extern p::feature PERS_ACS_FEATURE;
-extern Identifier<acs_table_t *> MUST_ACS;
-extern Identifier<acs_table_t *> ENTRY_MUST_ACS;
-extern Identifier<acs_table_t *> PERS_ACS;
-extern Identifier<acs_table_t *> ENTRY_PERS_ACS;
-extern Identifier<acs_stack_table_t *> LEVEL_PERS_ACS;
-extern Identifier<bool> DATA_PSEUDO_UNROLLING;
-extern Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
+extern p::id<acs_table_t *> MUST_ACS;
+extern p::id<acs_table_t *> ENTRY_MUST_ACS;
+extern p::id<acs_table_t *> PERS_ACS;
+extern p::id<acs_table_t *> ENTRY_PERS_ACS;
+extern p::id<acs_stack_table_t *> LEVEL_PERS_ACS;
+extern p::id<bool> DATA_PSEUDO_UNROLLING;
+extern p::id<data_fmlevel_t> DATA_FIRSTMISS_LEVEL;
 
 // categories build
+extern p::id<cache::category_t> WRITETHROUGH_DEFAULT_CAT;
 extern p::feature CATEGORY_FEATURE;
-extern Identifier<cache::category_t> CATEGORY;
-extern Identifier<otawa::Block *> CATEGORY_HEADER;
+extern p::id<cache::category_t> CATEGORY;
+extern p::id<otawa::Block *> CATEGORY_HEADER;
 
 // ILP constraint build
 extern p::feature CONSTRAINTS_FEATURE;
-extern Identifier<ilp::Var *> MISS_VAR;
+extern p::id<ilp::Var *> MISS_VAR;
 
 // MAY analysis
 extern Identifier<Vector<ACS *> *> ENTRY_MAY_ACS;
 extern p::feature MAY_ACS_FEATURE;
-extern Identifier<Vector<ACS *> *> MAY_ACS;
+extern p::id<Vector<ACS *> *> MAY_ACS;
 
 // Dirty analysis
 extern p::feature DIRTY_FEATURE;
-extern Identifier<AllocArray<DirtyManager::t> > DIRTY;
+extern p::id<AllocArray<DirtyManager::t> > DIRTY;
 
 // Purge analysis
 typedef enum {
@@ -270,7 +271,7 @@ typedef enum {
 } purge_t;
 io::Output& operator<<(io::Output& out, purge_t purge);
 extern p::feature PURGE_FEATURE;
-extern Identifier<purge_t> PURGE;
+extern p::id<purge_t> PURGE;
 
 // WCET builder
 extern p::feature WCET_FUNCTION_FEATURE;

@@ -21,7 +21,7 @@
 #ifndef OTAWA_DISPLAY_MULTIPLE_DOT_DISPLAYER_H
 #define OTAWA_DISPLAY_MULTIPLE_DOT_DISPLAYER_H
 
-#include <otawa/display/CFGDisplayer.h>
+#include "../../include/otawa/display/CFGDecorator.h"
 
 using namespace otawa;
 

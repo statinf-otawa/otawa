@@ -57,7 +57,13 @@ p::declare CATBuilder::reg = p::init("otawa::dcache::CATBuilder", Version(1, 0, 
 
 /**
  */
-CATBuilder::CATBuilder(p::declare& r): Processor(r), firstmiss_level(DFML_NONE) {
+CATBuilder::CATBuilder(p::declare& r)
+:	Processor(r),
+	firstmiss_level(DFML_NONE),
+	prob(nullptr),
+	probMay(nullptr),
+	has_pers(false)
+{
 }
 
 
@@ -92,22 +98,85 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 
 /**
  */
+void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay) {
+
+	// initialization
+	bool done = false;
+	bool alwaysHit = false;
+	CATEGORY(b) = cache::NOT_CLASSIFIED;
+
+	if(dom.getMust().contains(b.block().index())) {
+		CATEGORY(b) = cache::ALWAYS_HIT;
+		alwaysHit = true;
+	}
+
+	else if(has_pers) { // persistent
+
+		// find the initial header
+		otawa::Block *header = 0;
+		if (LOOP_HEADER(bb))
+			header = bb;
+	  	else
+	  		header = ENCLOSING_LOOP_HEADER(bb);
+		if (!header && bb->cfg()->callCount() == 1) { // temp solution
+			CFG::CallerIter a = bb->cfg()->callers();
+			otawa::Block *cb = *a;
+			if (LOOP_HEADER(cb))
+				header = cb;
+			else
+				header = ENCLOSING_LOOP_HEADER(cb);
+		}
+
+		// look in the different levels
+		for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
+			if(dom.getPers().isPersistent(b.block().index(), k)) {
+				CATEGORY(b) = cache::FIRST_MISS;
+				CATEGORY_HEADER(b) = header;
+				done = true;
+				break;
+			}
+			otawa::Block *nh = ENCLOSING_LOOP_HEADER(header);
+
+			if (nh)
+				header = nh;
+			else if (header->cfg()->callCount() == 1) { // temp solution
+				CFG::CallerIter a = header->cfg()->callers();
+				otawa::Block *cb = *a;
+				if (LOOP_HEADER(cb))
+					header = cb;
+				else
+					header = ENCLOSING_LOOP_HEADER(cb);
+			}
+		}
+	} // end of else if(has_pers)
+
+	// out of MAY ?
+	if(!done && !domMay.contains(b.block().index())) {
+		CATEGORY(b) = cache::ALWAYS_MISS;
+		ASSERTP(alwaysHit == false, "AH has been set, this creates a conflict.")
+	}
+}
+
+
+/**
+ */
 void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache) {
 	if(coll.count() == 0)
 		return;
 
 	// prepare problem
 	int line = coll.cacheSet();
-	MUSTPERS prob(&coll, ws, cache);
-	MUSTPERS::Domain dom = prob.bottom();
+	prob = new MUSTPERS(&coll, ws, cache);
+	MUSTPERS::Domain dom = prob->bottom();
 
-	MAYProblem probMay(coll, ws, cache);
-	MAYProblem::Domain domMay = probMay.entry();
+	probMay = new MAYProblem(coll, ws, cache);
+	MAYProblem::Domain domMay = probMay->entry();
 
 	acs_stack_t empty_stack;
 	if(logFor(LOG_FUN))
 		log << "\tSET " << line << io::endl;
 
+	// traverse all CFGs
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++) {
@@ -120,13 +189,15 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 			if(logFor(LOG_BB))
 				log << "\t\t\t" << *bb << io::endl;
 
+			// get the MUST ACS at block entry
 			acs_table_t *ins = MUST_ACS(bb); // get the entry ACS
-			prob.setMust(dom, *ins->get(line)); // set the MUST domain
-			// get the PERS domain
+			prob->setMust(dom, *ins->get(line)); // set the MUST domain
+
+			// get the PERS ACS at block entry
 			acs_table_t *pers = PERS_ACS(bb);
-			bool has_pers = pers;
+			has_pers = pers;
 			if(!has_pers)
-				prob.emptyPers(dom);
+				prob->emptyPers(dom);
 			else {
 				acs_stack_t *stack;
 				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(bb);
@@ -134,85 +205,46 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					stack = &stack_table->get(line);
 				else
 					stack = &empty_stack;
-				prob.setPers(dom, *pers->get(line), *stack);
+				prob->setPers(dom, *pers->get(line), *stack);
 			}
 
-			if(MAY_ACS(bb)) // get the MAY domain
+			// get the MAY ACS at block entry
+			if(MAY_ACS(bb))
 				domMay = *(MAY_ACS(bb)->get(line));
 
+			// traverse all accesses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
-				if(b.kind() != BlockAccess::BLOCK) {
+
+				// special case: store + write-through => default category
+				if(cache->writePolicy() == hard::Cache::WRITE_THROUGH && b.action() == dcache::BlockAccess::STORE)
+					CATEGORY(b) = wt_def_cat;
+
+				// not block: can't do anything
+				// TODO improve it in case of range smaller than the cache
+				else if(b.kind() != BlockAccess::BLOCK)
 					CATEGORY(b) = cache::NOT_CLASSIFIED;
-					prob.ageAll(dom);
-				}
-				else if(b.block().set() == line) {
-					// initialization
-					bool done = false;
-					bool alwaysHit = false;
-					CATEGORY(b) = cache::NOT_CLASSIFIED;
 
-					if(dom.getMust().contains(b.block().index())) {
-						CATEGORY(b) = cache::ALWAYS_HIT;
-						alwaysHit = true;
-					}
+				// for a single block: compute more precise category
+				else if(b.block().set() == line)
+					processLBlock(bb, b, dom, domMay);
 
-					else if(has_pers) { // persistent
-
-						// find the initial header
-						otawa::Block *header = 0;
-						if (LOOP_HEADER(bb))
-							header = bb;
-					  	else
-					  		header = ENCLOSING_LOOP_HEADER(bb);
-						if (!header && bb->cfg()->callCount() == 1) { // temp solution
-							CFG::CallerIter a = bb->cfg()->callers();
-							otawa::Block *cb = *a;
-							if (LOOP_HEADER(cb))
-								header = cb;
-							else
-								header = ENCLOSING_LOOP_HEADER(cb);
-						}
-
-						// look in the different levels
-						for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
-							if(dom.getPers().isPersistent(b.block().index(), k)) {
-								CATEGORY(b) = cache::FIRST_MISS;
-								CATEGORY_HEADER(b) = header;
-								done = true;
-								break;
-							}
-							otawa::Block *nh = ENCLOSING_LOOP_HEADER(header);
-
-							if (nh)
-								header = nh;
-							else if (header->cfg()->callCount() == 1) { // temp solution
-								CFG::CallerIter a = header->cfg()->callers();
-								otawa::Block *cb = *a;
-								if (LOOP_HEADER(cb))
-									header = cb;
-								else
-									header = ENCLOSING_LOOP_HEADER(cb);
-							}
-						}
-					} // end of else if(has_pers)
-
-					// out of MAY ?
-					if(!done && !domMay.contains(b.block().index())) {
-						CATEGORY(b) = cache::ALWAYS_MISS;
-						ASSERTP(alwaysHit == false, "AH has been set, this creates a conflict.")
-					}
-
-					// update state
-					//prob.inject(dom, b.block().index());
-					//((MAYProblem::Domain*)(domMay))->inject(b.block().index());
-					prob.update(dom, b);
-					probMay.update(domMay, b);
-				}
+				// update ACSs
+				cerr << "DEBUG: updating " << b << io::endl;
+				prob->update(dom, b);
+				probMay->update(domMay, b);
+				cerr << "DEBUG: MUSTPERS = "; prob->print(cerr, dom); cerr << io::endl;
+				cerr << "DEBUG: MAY = "; prob->print(cerr, dom); cerr << io::endl;
 			}
 		}
 	}
+
+	// clean the problems
+	delete prob;
+	prob = nullptr;
+	delete probMay;
+	probMay = nullptr;
 }
 
 
@@ -221,9 +253,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 void CATBuilder::configure(const PropList &props) {
 	Processor::configure(props);
 	firstmiss_level = DATA_FIRSTMISS_LEVEL(props);
-	//cstats = CATEGORY_STATS(props);
-	//if(cstats)
-	//	cstats->reset();
+	wt_def_cat = dcache::WRITETHROUGH_DEFAULT_CAT(props);
 }
 
 
@@ -245,15 +275,30 @@ void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
  * This features ensures that a category each data block access have received
  * a category describing its hit/miss behavior.
  *
- * @p Default processor
- * @li @ref CATBuilder
+ * @par Configuration
+ *	* @ref WRITETHROUGH_DEFAULT_CAT
  *
- * @p Properties
- * @li @ref CATEGORY
- * @li @ref CATEGORY_HEADER
+ * @par Default processor
+ *	* @ref CATBuilder
+ *
+ * @par Properties
+ *	* @ref CATEGORY
+ *	*@ref CATEGORY_HEADER
+ *
  * @ingroup dcache
  */
 p::feature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", new Maker<CATBuilder>());
+
+
+/**
+ * Used to configure @ref CATEGORY_FEATURE.
+ *
+ * Specify the category of a store access when the cache supports write-through policy.
+ * As a default, the category is @ref ALWAYS_HIT assuming that there is a Write Buffer to hide
+ * the memory write time. If there is no Write Buffer, you can use this identifier
+ * to configure category as @ref ALWAYS_MISS.
+ */
+p::id<cache::category_t> WRITETHROUGH_DEFAULT_CAT("otawa::dcache::WRITETHROUGH_DEFAULT_CAT", cache::ALWAYS_HIT);
 
 
 /**
@@ -264,7 +309,7 @@ p::feature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", new Maker<CATBuil
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<otawa::Block *> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
+p::id<otawa::Block *> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
 
 
 /**
@@ -274,7 +319,7 @@ Identifier<otawa::Block *> CATEGORY_HEADER("otawa::dcache::CATEGORY_HEADER", 0);
  * @li @ref BlockAccess
  * @ingroup dcache
  */
-Identifier<cache::category_t> CATEGORY("otawa::dcache::CATEGORY", cache::NOT_CLASSIFIED); // changed from INVALID_CATEGORY, which can be used to check the soundness
+p::id<cache::category_t> CATEGORY("otawa::dcache::CATEGORY", cache::NOT_CLASSIFIED); // changed from INVALID_CATEGORY, which can be used to check the soundness
 
 
 /**

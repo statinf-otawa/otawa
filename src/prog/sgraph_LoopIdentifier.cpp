@@ -49,12 +49,13 @@ namespace otawa { namespace graph {
 
 /**
  */
-LoopIdentifier::LoopIdentifier(const DiGraph& graph)
+LoopIdentifier::LoopIdentifier(const DiGraph& graph, Vertex *entry)
 :	g(graph),
 	_flags(new flags_t[g.count()]),
 	_DFSP(new t::uint32[g.count()]),
 	_iloop(new Vertex *[g.count()]),
-	_irred(false)
+	_irred(false),
+	_entry(entry)
 {
 	// initialization
 	array::set(_flags, g.count(), flags_t(0));
@@ -62,7 +63,7 @@ LoopIdentifier::LoopIdentifier(const DiGraph& graph)
 	array::set(_iloop, g.count(), null<Vertex>());
 
 	// run the DFS
-	DFS(g.entry(), 1);
+	DFS(_entry, 1);
 }
 
 

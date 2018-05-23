@@ -16,8 +16,10 @@
 @include manual-props.thot
 @include manual-procs.thot
 @include manual-features.thot
+@include manual-graph.thot
 @include manual-elm.thot
 @include manual-dfa.thot
 @include manual-ai.thot
 @include manual-refs.thot
 @include manual-formats.thot
+@include manual-gloss.thot

@@ -58,164 +58,159 @@ using namespace otawa::display;
  * 
  * The options includes:
  * 
- * @li -I|--no_intern -- do not dump C internal functions (starting by '_' in the PCG).
- * 
- * @li -c|--chain @i function -- bound the PCG to network between the entry function
- * 		and the given @i function (useful when the PCG is too big).
-
- * -o|--output @i type -- select the type of output (the @i type may be one of
- * 		ps, pdf, png, gif, jpg, svg, dot).
+ * -o|--output path -- path of the file to output to.
+ *
+ * -S|--statistics -- display statistics about each subprogram.
+ *
+ * -T|--out-type @i type -- select the type of output (the @i type may be one of
+ * 		ps, pdf, png, gif, jpg, svg, dot, view).
  */
+
+// TODO re-enabled these options.
+/*
+* @li -I|--no_intern -- do not dump C internal functions (starting by '_' in the PCG).
+*
+* @li -c|--chain @i function -- bound the PCG to network between the entry function
+* 		and the given @i function (useful when the PCG is too big).
+*/
 
 
 // Selection tag
 Identifier<bool> SELECTED("", false);
 
-// BBCounter analysis
-#if 0
-class BBCounter: public Processor {
+class Stat {
 public:
-	static Identifier<int> COUNT;
-	static Identifier<int> TOTAL;
+	Stat(void)
+	:	bb_cnt(0),
+		inst_cnt(0),
+		bra_cnt(0),
+		mem_cnt(0),
+		caller_cnt(0),
+		callee_cnt(0)
+	{ }
 
-	BBCounter(void): Processor("BBCounter", Version(1, 0, 0)) {
-		require(PCG_FEATURE);
+	void process(Block *b) {
+
+		// end case
+		if(b->isEnd())
+			return;
+
+		// call case
+		else if(b->isSynth())
+			callee_cnt++;
+
+		// basic block case
+		else {
+
+			// manage instruction
+			BasicBlock *bb = b->toBasic();
+			bb_cnt++;
+			for(auto i: *bb) {
+				inst_cnt++;
+				if(i->isBranch())
+					bra_cnt++;
+				if(i->isMem())
+					mem_cnt++;
+			}
+
+			// manage addresses
+			addr_max = max(addr_max, bb->topAddress());
+			addr_min = min(addr_min, bb->address());
+		}
 	}
+
+	void process(CFG *g) {
+		for(auto b: *g)
+			process(b);
+		for(auto c = g->callers(); c; c++)
+			caller_cnt++;
+	}
+
+	int bb_cnt;
+	int inst_cnt;
+	int bra_cnt;
+	int mem_cnt;
+	int caller_cnt;
+	int callee_cnt;
+	Address addr_max;
+	Address addr_min;
+};
+
+p::id<Stat> STAT("");
+
+class StatBuilder: public CFGProcessor {
+public:
+	static p::declare reg;
+	StatBuilder(void): CFGProcessor(reg) { }
 
 protected:
 
-	void eval(PCGBlock *block) {
-		if(TOTAL(block) >= 0)
-			return;
-		TOTAL(block) = 0;
-		int total = 0;
-		for(PCGBlock::PCGBlockOutIterator called(block); called; called++) {
-			eval(called);
-			total += TOTAL(*called);
-		}
-		int cnt = block->getCFG()->count();
-		COUNT(block) = cnt;
-		TOTAL(block) = total + cnt;
+	void processCFG(WorkSpace *ws, CFG *cfg) override {
+		(*STAT(cfg)).process(cfg);
 	}
 
-	virtual void processWorkSpace(WorkSpace *ws) {
-		PCG *pcg = PCG::ID(ws);
-		ASSERT(pcg);
-		for(PCG::PCGIterator child(pcg); child; child++)
-			eval(child);
-	}
-
-private:
 };
-Identifier<int> BBCounter::COUNT("BBCounter::COUNT", -1);
-Identifier<int> BBCounter::TOTAL("BBCounter::TOTAL", -1);
-#endif
 
-// PCGAdapter class
-
-class PCGAdapter {
-public:
-	inline PCGAdapter(PCG *pcg): _pcg(pcg) { ASSERT(pcg); }
-
-	// DiGraph concept
-	class Vertex {
-	public:
-		inline Vertex(void): blk(0) { }
-		inline Vertex(PCGBlock *block): blk(block) { }
-		inline bool operator==(const Vertex& vertex) const { return blk == vertex.blk; }
-		PCGBlock *blk;
-	};
-
-	class Edge {
-	public:
-		inline Edge(const Vertex& source, const Vertex& sink)
-			: src(source.blk), snk(sink.blk) { }
-		inline Vertex source(void) const { return src; }
-		inline Vertex sink(void) const { return snk; }
-	private:
-		PCGBlock *src, *snk;
-	};
-
-	class Successor: public PreIterator<Successor, Edge> {
-	public:
-	 	inline Successor(const PCGAdapter& pcg, const Vertex &source): blk(source.blk), iter(source.blk->outs()) { }
-	 	inline bool ended(void) const { return iter.ended(); }
-	 	inline Edge item (void) const { return Edge(blk, iter->sink()); }
-	 	void next(void) { iter.next(); }
-	private:
-		PCGBlock *blk;
-		PCGBlock::EdgeIter iter;
-	};
-	
-	// DiGraphWithVertexMap concept
-	template <class T>
-	class VertexMap: public HashMap<Vertex, T> {
-	public:
-		VertexMap(const PCGAdapter& pcg) { }
-	};
-
-	// Collection<Vertex> concept
-	inline int count(void) const { return _pcg->count(); }
-	//inline bool contains(const Vertex &item) const { return _pcg->pcgbs().contains(item.blk); }
-	//inline bool isEmpty (void) const { return _pcg->pcgbs(); }
-	//inline operator bool (void) const { return !isEmpty(); }
-
-	class Iter: public PreIterator<Iter, Vertex> {
-	public:
-		inline Iter(const PCGAdapter& ad): iter(ad._pcg->blocks()) { look(); }
-	 	inline bool ended(void) const { return iter.ended(); }
-	 	inline Vertex item(void) const { return *iter; }
-	 	void next(void) { iter.next(); look(); }
-	private:
-		void look(void) {
-			while(iter) {
-				if(SELECTED(iter))
-					break;
-				iter.next();
-			}
-		}
-		typename PCG::Iter iter;
-	};
-
-	inline Vertex sinkOf(const Edge& e) const { return e.sink(); }
-
-private:
-	PCG *_pcg;
-	friend class PCGDecorator;
-};
+p::declare StatBuilder::reg = p::init("StatBuilder", Version(1, 0, 0))
+	.extend<CFGProcessor>()
+	.make<StatBuilder>();
 
 
 // PCGDecorator class
 class PCGDecorator: public display::GenDecorator<PCG, PCGBlock, PCGEdge> {
 public:
+	PCGDecorator(bool stat): _stat(stat) { }
+
 	void decorate(PCG *graph, Text& caption, GraphStyle& style) const override {
 		caption.out() << "PCG of " << graph->entry()->cfg()->label();
 	}
 	
-	virtual void decorate(PCG *graph, PCGBlock *vertex, Text& content, VertexStyle& style) const override {
+	void decorate(PCG *graph, PCGBlock *vertex, Text& content, VertexStyle& style) const override {
+		if(_stat) {
+			content
+				<< display::begin(display::TABLE)
+				<< display::begin(display::ROW)
+				<< display::begin(display::CELL);
+		}
 		content << vertex->getName();
-		//int cnt = BBCounter::COUNT(vertex.blk),
-		//	total = BBCounter::TOTAL(vertex.blk);
-		//if(cnt >= 0)
-		//	content << "\nBB: " << cnt << " / " << total;
+		if(_stat) {
+
+			// display intercell
+			content
+				<< display::end(display::CELL)
+				<< display::end(display::ROW)
+				<< display::hr
+				<< display::begin(display::ROW)
+				<< display::align::left
+				<< display::begin(display::CELL)
+				<< display::begin(display::SMALL);
+
+
+			// display statistics
+			const Stat& s = STAT(vertex->cfg());
+			content
+				<< s.addr_min << " - " << s.addr_max << display::br
+				<< "BB: " << s.bb_cnt << display::br
+				<< "Inst.: " << s.inst_cnt << display::br
+				<< "Memory: " << s.mem_cnt << display::br
+				<< "Branch: " << s.bra_cnt << display::br
+				<< "Calls: " << s.callee_cnt << display::br
+				<< "Called by: " << s.caller_cnt << display::br;
+
+			// display table end
+			content
+				<< display::end(display::SMALL)
+				<< display::end(display::CELL)
+				<< display::end(display::ROW)
+				<< display::end(display::TABLE);
+		}
 	}
 	
-	virtual void decorate(PCG *graph, PCGEdge *edge, Text& label, EdgeStyle& style) const override {
+	void decorate(PCG *graph, PCGEdge *edge, Text& label, EdgeStyle& style) const override {
 	}
-};
 
-
-// Enumerated type
-EnumOption<int>::value_t out_values[] = {
-	{ "type of output", OUTPUT_DOT },
-	{ "ps", OUTPUT_PS },
-	{ "pdf", OUTPUT_PDF }, 	
-	{ "png", OUTPUT_PNG }, 	
-	{ "gif", OUTPUT_GIF }, 	
-	{ "jpg", OUTPUT_JPG }, 	
-	{ "svg", OUTPUT_SVG }, 	
-	{ "dot", OUTPUT_DOT },
-	{ 0, 0 }
+private:
+	bool _stat;
 };
 
 
@@ -223,21 +218,17 @@ EnumOption<int>::value_t out_values[] = {
  * Manager for the application.
  */
 class OPCG: public Application {
-	SwitchOption no_int;
-	ValueOption<string> chain;
-	ValueOption<display::output_mode_t> out;
-	SwitchOption bb_cnt;
-	
 public:
 
-	OPCG(void):	Application(Application::Make("opcg", Version(1, 1, 0))
-		.author("F. Nemer")
+	OPCG(void):	Application(Application::Make("opcg", Version(2, 0, 0))
+		.author("F. Nemer, H. Cassé <casse@irit.fr>")
 		.description("Draw the program call tree of the given executable.")
-		.copyright("Copyright (c) 2010 IRIT - UPS")),
+		.copyright("Copyright (c) 2018 IRIT - UPS")),
 		no_int(SwitchOption::Make(*this).cmd("-I").cmd("--no-internal").description("do not include internal functions (starting with '_')")),
 		chain(ValueOption<string>::Make(*this).cmd("-c").cmd("--chain").description("generate calling chain to a function").argDescription("function")),
-		out(ValueOption<display::output_mode_t>::Make(*this).cmd("-o").cmd("--out").description("select the output")),
-		bb_cnt(SwitchOption::Make(*this).cmd("--count-bb").description("display BB counts/total for each function"))
+		stat(SwitchOption::Make(*this).cmd("-S").cmd("--statistics").description("display statistics for each function")),
+		out_type(this),
+		out_path(this)
 	{ }
 	
 protected:
@@ -265,16 +256,36 @@ protected:
 #		endif
 
 		// compute the path
-		sys::Path ppath = workspace()->process()->program()->name();
+		sys::Path path;
+		if(out_path)
+			path = out_path;
+		else {
+			path = workspace()->process()->program()->name();
+			path = path.withoutExt();
+			string name = path.namePart();
+			if(entry != "main")
+				name = name + "-" + entry;
+			name = name + "-pcg";
+			path = path.parent() / name;
+		}
 		
 		// Display the PCG
-		PCGDecorator dec;
-		display::Displayer *disp = display::Provider::display(pcg, dec, kind_t(out.value()));
+		PCGDecorator dec(stat);
+		display::Displayer *disp = display::Provider::display(pcg, dec, out_type);
+		disp->defaultVertex().shape= display::VertexStyle::SHAPE_MRECORD;
+		disp->defaultVertex().margin = 0;
+		disp->setPath(path);
 		disp->process();
 		delete disp;
 	}
 	
 private:
+	SwitchOption no_int;
+	ValueOption<string> chain;
+	SwitchOption stat;
+	display::TypeOption out_type;
+	display::OutputOption out_path;
+
 	string prog_name;
 	string entry;
 };

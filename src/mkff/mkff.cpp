@@ -40,8 +40,6 @@
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
 #include <otawa/data/clp/features.h>
-#include <otawa/display/CFGDisplayer.h>
-//#include <otawa/display/InlinedCFGDisplayer.h>
 #include <otawa/dynbranch/features.h>
 #include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/flowfact/features.h>
@@ -57,6 +55,7 @@
 #include "display_MKFFDotDisplayer.h"
 #include <time.h>
 #include <otawa/cfgio/Output.h>
+#include "../../include/otawa/display/CFGDecorator.h"
 
 
 using namespace elm;

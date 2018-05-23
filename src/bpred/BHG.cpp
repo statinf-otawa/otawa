@@ -27,8 +27,7 @@ using namespace otawa;
 namespace otawa { namespace bpred {
 
 /// BHGEdge
-BHGEdge::BHGEdge(BHGNode *source, BHGNode *target, bool taken) :
-		otawa::ograph::GenGraph<BHGNode,BHGEdge>::GenEdge(source,target) {
+BHGEdge::BHGEdge(bool taken) {
 	this->m_edge_taken = taken;
 	
 }
@@ -84,8 +83,8 @@ bool BHGNode::exitsWithNT() {
 bool BHGNode::isSuccessor(BHGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(BHG::OutIterator s(this);s ;s++) {
-		if(s->target()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
+	for(auto s = outs();s ;s++) {
+		if(s->sink()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
 			withT = withT || s->isTaken();
 			withNT = withNT || !(s->isTaken());
 		}
@@ -116,13 +115,14 @@ BHG::BHG(int history_size) {
 }
 
 void BHG::add(BHGNode *node) {
-	if(node->getHistory().size() == this->m_history_size) {
+	// TODO
+	/*if(node->getHistory().size() == this->m_history_size) {
 		otawa::ograph::GenGraph<BHGNode,BHGEdge>::add(node);
 	}
 	else {
 		cerr << "BHG::add => history sizes don't match";
 
-	}
+	}*/
 }
 int BHG::getClass() {
 	return this->m_history_size;

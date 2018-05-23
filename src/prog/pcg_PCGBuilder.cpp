@@ -58,12 +58,15 @@ PCGBuilder::PCGBuilder(p::declare& r): Processor(r), _pcg(0) {
 void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	const CFGCollection *coll = otawa::INVOLVED_CFGS(ws);
 
-	// initialize the PCG
+	// prepare the builder
 	CFGCollection::Iter cfg(coll);
-	PCGBlock *b = new PCGBlock(cfg);
-	map.put(cfg, b);
 	_pcg = new PCG();
-	graph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg, b);
+	graph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg);
+
+	// make the entry node
+	_pcg->_entry = new PCGBlock(cfg);
+	builder.add(_pcg->_entry);
+	map.put(cfg, _pcg->_entry);
 
 	// build a block for each CFG
 	for(cfg++; cfg; cfg++) {

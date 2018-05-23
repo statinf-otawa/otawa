@@ -32,7 +32,7 @@
 #include <otawa/cfg/LoopReductor.h>
 
 #include <otawa/display/Displayer.h>
-#include <otawa/display/CFGDisplayer.h>
+#include "../../include/otawa/display/CFGDecorator.h"
 
 using namespace otawa::dfa;
 

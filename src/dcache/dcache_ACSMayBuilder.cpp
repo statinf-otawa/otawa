@@ -157,7 +157,7 @@ p::feature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE", new Maker<ACSMayBui
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-Identifier<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
+p::id<Vector<ACS *> *> MAY_ACS("otawa::dcache::MAY_ACS", 0);
 
 
 /**

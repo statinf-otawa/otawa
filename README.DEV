@@ -9,6 +9,267 @@ of:
   * ''inc'' to install development files like includes,
   * ''doc'' to build and install automatic documentation.
 
+
+===== Source Formatting =====
+
+The source format used in OTAWA is very close to usual C++ source formatting.
+
+==== Identifiers ====
+
+The identifiers must match the following rules:
+  * Class identifiers are composed of joined words starting with an upper case and continued
+with lower case (eg BasicBlock)
+  * Function identifiers are in lower case but, if they are composed of several words, all
+words except the first one starts with an upper case and they are join as is (eg loadWorkspace). 
+  * Name space, parameters and local variable identifiers are low case and if they contains
+several words, are separated by ''_''.
+  * Member variables or attributes follows the same rules as name spaces, parameters and
+variables but are prefixed by ''_''.
+  * Accessors of a member variable ''_x'' are named ''x'' and x must match the rule
+of methods or member functions.
+  * Setters of a member variable ''_x''are named ''setX'' and X must match the rule
+of method or member functions.
+  * Local variables or member variables, not aimed to be read by the class use, must
+be as short as possible (typically 1 character or most often no more than 4 characters).
+  * For other identifier, try to keep them short but readable.
+  * Except for some type name suffixed by ''_t'', no other type mark is accepted on the
+identifiers.
+
+
+==== Files ====
+
+**The indentation is made using 1 tabulation that must be configured, in your preferred
+text editor, to represent 4 spaces! Lines must be no longer than 80 characters!**
+
+Any header file for a class //Class// defined in namespace //module// must be
+declared in a header file with path include/otawa/module/Class.h with the
+following format:
+<code c++>
+/*
+ *	Class interface
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2018, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+#ifndef OTAWA_OTAWA_MODULE_CLASS_H
+#define OTAWA_OTAWA_MODULE_CLASS_H
+
+namespace otawa { namespace module {
+
+...
+
+} }	// otawa::module
+
+#endif	// OTAWA_MODULE_CLASS_H
+</code> 
+
+Whatever the type of the class (template or not), a source file must exist
+with name Class.cpp following the format:
+<code c++>
+/*
+ *	Class implementation
+ *
+ *	This file is part of OTAWA
+ *	Copyright (c) 2018, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ */
+
+namespace otawa { namespace module {
+
+...
+
+} }	// otawa::module
+</code>
+
+==== Class Declaration ====
+
+A class is declared as usual in C++ keeping the ''class'' declaration and
+the extension as much possible on the same line. Then comes the different
+parts of the class:
+  * list of friends if any
+  * list of private types if any
+  * ''public:'' keyword
+  * list of public types if any
+  * constructor / destructors
+  * function members (static or not)
+  * ''private:'' keyword
+  * private variable members
+  * private function members
+
+After the class, an overload of operators ''<<'' or ''>>'' can be provided.
+
+For evolution purpose, it is advised to declare member function as private.
+In most cases, getter and setters are easy to write and may prevent break
+in future evolution. Public member variable are only permitted in very
+rare and special cases to make easier the use of a class.
+
+Inline function members must embed their body (if possible) in the class declaration.
+Except for template classes, the body if an inline function must be no longer
+than 1 line.
+
+
+==== Statement Writing ====
+
+The goal of the following is to make the code as readable as possible and
+therefore as shorter and light as possible.
+
+**Braces, ''{'' or ''}'', must be avoided as much as possible because (a) they make
+longer the code and (b) they may obfuscate the reading.**
+
+**Only 1 statement per line is accepted.**
+
+Simple ''if(c) s;'' instructions must be formatted as:
+<code c++>
+if(c)
+	s;
+</code>  
+
+''if'' with ''else'' must be written:
+<code c++>
+if(c)
+	s1;
+else
+	s2;
+</code>
+
+Other complex statement can be written:
+<code c++>
+while(c)
+	s;
+
+do
+	s;
+while(c);
+</code>
+
+If a sub-statement is composed, requiring the use of braces, the open brace
+starts on the ''if''/''while''/''do'' line. The content of the braces is
+indented and the closing brace is on the next not-indented line.
+<code c++>
+if(c) {
+	s1;
+	s2;
+	...
+}
+</code>
+
+The switch must match the following format:
+<code c++>
+switch(c) {
+case c1:
+	...
+	break;
+case c2:
+	...
+	break;
+...
+}
+</code>
+
+If the statements of a case is very short, a one line case is also accepted:
+<code c++>
+switch(c) {
+case c1: ...; break;
+case c2: ...; break;
+...
+}
+</code>
+
+''return'', ''break'' and ''continue'' are permitted as they make simpler the main flow
+of the algorithm. The ''goto'' may be permitted in ''switch'' in order to
+factorize come code parts.
+
+It is a good idea to structure the code in block prefixed by a line of comments
+explaining the block. Formulae in UTF-8 are allowed and even encouraged as
+they may play the role of assertions and avoid long explanations. 
+
+The functions must very shorts: typically 10-15 lines shorts. The only exception
+concerns very long ''switch'' where each case is mostly independent.  
+
+
+
+==== Expression Writing ====
+
+The expressions syntax must follow the usual English typography:
+  * no space between unary operators and their argument,
+  * 1 space between binary or ternary operator and their arguments,
+  * no space after ''('' or ''['' or before '']'' or '')'',
+  * no space before a '','' but 1 space after a '',''.
+
+When a function call is too long to fit a line width, a new line must be inserted
+after the call open parenthesis and the arguments are written on the next line,
+one argument per line followed by a '','' or the closing '')''.
+
+
+==== C++ Idiom ====
+
+''#define'' must be avoided as much as possible: use ''const'' variable instead.
+
+If available, prefer an ELM class instead of an STL class.
+
+Ternary operator, ... '?' ... ':' ..., must be avoided as they make the syntax
+very obscure.
+
+An overloaded virtual member function must be suffixed by ''override''.
+
+The use of ellipsis parameter ''...'' is forbidden. Operator ''<<'' overloading
+a good idea to maintain typing, safety and genericity.
+
+Avoid ''this->'' notation (not required).
+
+==== Source Documentation ====
+
+The source documentation is only done in source, ''.cpp'', files and is supported
+by Doxygen. Refer to  for tag details.
+
+A class named Class is documented as follows:
+<code c++>
+/**
+ * @class Class
+ * ...
+ */
+</code>
+
+A member function is documented as before the definition of the function.
+
+A inline function named //type Class:fun(...)// is documented by:
+<code c++>
+/**
+ * @fn type Class:fun(...);
+ * ...
+ */
+</code>
+
+Private variables are usually not documented.
+
+
   
 ===== PARALLEL OTAWA =====
 

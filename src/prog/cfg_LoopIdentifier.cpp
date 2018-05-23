@@ -32,7 +32,7 @@ public:
 protected:
 
 	void processCFG(WorkSpace *ws, CFG *cfg) {
-		graph::LoopIdentifier id(*cfg);
+		graph::LoopIdentifier id(*cfg, cfg->entry());
 		for(CFG::BlockIter b = cfg->blocks(); b; b++)
 			if(id.isHeader(b)) {
 				LOOP_HEADER(b) = true;

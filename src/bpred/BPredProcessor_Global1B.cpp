@@ -103,9 +103,9 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::Vector<BCGNode*> list_nodes;
 		
-		for(unsigned int i = 0 ; i< bcgs.length();++i) {
+		for(int i = 0 ; i < bcgs.length();++i) {
 			BCG* g=bcgs[i];
-			for(BCG::Iter n(g);n;n++)
+			for(auto n: *g)
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
@@ -115,7 +115,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes_BBHG;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::Vector<BBHGNode*> v;
-		for(BBHG::Iter node(bbhg);node;node++) {
+		for(auto node: *bbhg) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
@@ -145,9 +145,9 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					NEW_SPECIAL_CONSTRAINT(C11,EQ,0);
 					C11->addLeft(1,XbApi);
 					
-					for(BCG::OutIterator s(v[i]);s;s++) {
+					for(auto s: v[i]->outEdges()) {
 						Var *XbApiSs;
-						NEW_VAR_FROM_BUFF(XbApiSs,XbApi->name() << "S" << s->target()->getCorrespondingBBNumber());
+						NEW_VAR_FROM_BUFF(XbApiSs,XbApi->name() << "S" << s->sink()->getCorrespondingBBNumber());
 						if(!added_vars.exists(XbApiSs)) {
 							C11->addRight(1,XbApiSs);
 							added_vars.add(XbApiSs,XbApiSs);
@@ -170,9 +170,9 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					NEW_SPECIAL_CONSTRAINT(C12,EQ,0);
 					C12->addLeft(1,XbApi);
 					
-					for(BCG::InIterator p(v[i]);p;p++) {
+					for(auto p: v[i]->inEdges()) {
 						Var *XpApiSb;
-						Var *Xp = ipet::VAR(getBB(p->source()->getCorrespondingBBNumber(),cfg));
+						Var *Xp = ipet::VAR(getBB(p->source()->getCorrespondingBBNumber(), cfg));
 						NEW_VAR_FROM_BUFF(XpApiSb,Xp->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "S" << bb->index());
 						if(!added_vars.exists(XpApiSb)) {
 							C12->addRight(1,XpApiSb);
@@ -193,10 +193,10 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 #if C21_1b>0
 				{
 					BCG* bcg;
-					for(unsigned int ig=0;ig<bcgs.length();ig++) {
+					for(int ig=0;ig<bcgs.length();ig++) {
 						if(bcgs[ig]->getHistory() == v[i]->getHistory()) {
 							bcg=bcgs[ig];
-							for(BCG::Iter n(bcg);n;n++) {
+							for(auto n: *bcg) {
 								bool withT=false, withNT=false;
 								if(v[i]->isSuccessor(n,withT,withNT)) {
 									NEW_SPECIAL_CONSTRAINT(C21,EQ,0);
@@ -260,10 +260,10 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					NEW_VAR_FROM_BUFF(Eb_sdApi, Eb_sd->name() << "A" << BitSet_to_String(v[i]->getHistory()));
 					C22->addRight(1,Eb_sdApi);
 					
-					for(BCG::OutIterator s(v[i]);s;s++) {
+					for(auto s: v[i]->outEdges()) {
 						if(s->isTaken() == (d==1)) {
 							Var *XbApiDdSs;
-							NEW_VAR_FROM_BUFF(XbApiDdSs,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D" << d << "S" << s->target()->getCorrespondingBBNumber());
+							NEW_VAR_FROM_BUFF(XbApiDdSs,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D" << d << "S" << s->sink()->getCorrespondingBBNumber());
 							C22->addLeft(1,XbApiDdSs);
 						}
 					}
@@ -292,7 +292,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		NEW_SPECIAL_CONSTRAINT(C3_start,LE,1);
 		NEW_SPECIAL_CONSTRAINT(C3_end,LE,1);
 		
-		for(BCG::Iter n(bcgs[ig]);n;n++) {
+		for(auto n: *bcgs[ig]) {
 			Var *Xb=ipet::VAR(getBB(n->getCorrespondingBBNumber(),cfg));
 			ASSERT(Xb);
 			if(n->isEntry()) {
@@ -390,20 +390,20 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					P24->addRight(1,XbApiStart);
 				}
 
-				for(BCG::OutIterator s(v[i]);s;s++) {
+				for(auto s: v[i]->outEdges()) {
 					if(s->isTaken()) {
 						Var *XbApiD1Ss;
-						NEW_VAR_FROM_BUFF(XbApiD1Ss,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D1S" << s->target()->getCorrespondingBBNumber());								
+						NEW_VAR_FROM_BUFF(XbApiD1Ss,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D1S" << s->sink()->getCorrespondingBBNumber());
 						P23->addRight(1,XbApiD1Ss);
 					}
 					else {
 						Var *XbApiD0Ss;
-						NEW_VAR_FROM_BUFF(XbApiD0Ss,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D0S" << s->target()->getCorrespondingBBNumber());															
+						NEW_VAR_FROM_BUFF(XbApiD0Ss,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()) << "D0S" << s->sink()->getCorrespondingBBNumber());
 						P21->addRight(1,XbApiD0Ss);
 					}
 				}
 
-				for(BCG::InIterator p(v[i]);p;p++) {
+				for(auto p: v[i]->inEdges()) {
 					Var *Xp=ipet::VAR(getBB(p->source()->getCorrespondingBBNumber(),cfg));
 					if(p->isTaken()) {
 						Var *XpApiD1Sb;
@@ -482,7 +482,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 		
 			elm::Vector<BBHGNode*> v=BB_classes_BBHG.get(bb);
 	
-			for(unsigned int i=0;i<v.length();++i) {
+			for(int i=0;i<v.length();++i) {
 				for(Block::EdgeIter edge = v[i]->getCorrespondingBB()->outs();edge;edge++) {
 					NEW_SPECIAL_CONSTRAINT(H5,LE,0);
 					Var *XbApi, *MbApi;
@@ -517,7 +517,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes;
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		elm::Vector<BBHGNode*> v;
-		for(BBHG::Iter node(bbhg);node;node++) {
+		for(auto node: *bbhg) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
@@ -540,7 +540,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 		if(BB_classes.exists(bb)) {
 			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
-			for(unsigned int i=0;i<v.length();++i) {
+			for(int i=0;i<v.length();++i) {
 				Var *XbApi;
 				NEW_VAR_FROM_BUFF(XbApi,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()));
 				H1->addRight(1,XbApi);
@@ -566,7 +566,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 
 			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
-			for(unsigned int i=0;i<v.length();++i) {
+			for(int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H41,EQ,0);
 //				HashTable<Var* , Var*> hist_done;
 				Var *XbApi;
@@ -578,7 +578,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 					NEW_VAR_FROM_BUFF(XpApi,"estart" << "_" << bb->index() << "A" << BitSet_to_String(v[i]->getHistory()));
 					H41->addRight(1,XpApi);
 				}
-				for(BBHG::InIterator p(v[i]);p;p++) {
+				for(auto p: v[i]->inEdges()) {
 
 					Var *Xp=ipet::VAR(p->source()->getCorrespondingBB());
 					ASSERT(Xp);
@@ -607,7 +607,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 
 			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 	
-			for(unsigned int i=0;i<v.length();++i) {
+			for(int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H42,EQ,0);
 				Var *XbApi;
 				NEW_VAR_FROM_BUFF(XbApi,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -617,12 +617,12 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 					NEW_VAR_FROM_BUFF(XpApi,"e" << v[i]->getCorrespondingBB()->index() << "_end" << "A" << BitSet_to_String(v[i]->getHistory()));
 					H42->addRight(1,XpApi);
 				}
-				for(BBHG::OutIterator s(v[i]);s;s++) {
-					Var *Xs=ipet::VAR(s->target()->getCorrespondingBB());
+				for(auto s: v[i]->outEdges()) {
+					Var *Xs=ipet::VAR(s->sink()->getCorrespondingBB());
 					ASSERT(Xs);
 					
 					Var *XsApi;
-					NEW_VAR_FROM_BUFF(XsApi,"e" << bb->index() << "_" << s->target()->getCorrespondingBB()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
+					NEW_VAR_FROM_BUFF(XsApi,"e" << bb->index() << "_" << s->sink()->getCorrespondingBB()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
 					H42->addRight(1,XsApi);
 					
 				}
@@ -661,11 +661,11 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 			if(BB_classes.exists(bb)) {
 				elm::Vector<BBHGNode*> v=BB_classes.get(bb);
 				HashMap<Var* ,Var*> hist_done;
-				for(unsigned int i = 0 ; i<v.length();++i) {
-					for(BBHG::OutIterator s(v[i]);s;s++) {
-						if(s->target()->getCorrespondingBB()->index() == edge->target()->index()) {
+				for(int i = 0 ; i<v.length();++i) {
+					for(auto s: v[i]->outEdges()) {
+						if(s->sink()->getCorrespondingBB()->index() == edge->target()->index()) {
 							Var *eb_sApi;
-							NEW_VAR_FROM_BUFF(eb_sApi,"e" << bb->index() << "_" << s->target()->getCorrespondingBB()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
+							NEW_VAR_FROM_BUFF(eb_sApi,"e" << bb->index() << "_" << s->sink()->getCorrespondingBB()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
 							if(!hist_done.exists(eb_sApi)) {
 								H2->addRight(1,eb_sApi);
 								hist_done.add(eb_sApi,eb_sApi);
@@ -708,7 +708,7 @@ bool BPredProcessor::isBranch(Block* bb) {
  * @return returns a boolean value set to True if a similar BBHG Node has been found.
  */
 bool BPredProcessor::contains(const elm::Vector< BBHGNode* >& v, BBHGNode& n, BBHGNode * &contained) {
-	for(unsigned int i=0;i<v.length();++i) {
+	for(int i=0;i<v.length();++i) {
 		if(n.equals(*(v[i])) ) {
 			contained = v[i];
 			return true;
@@ -734,8 +734,9 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 	unite.add(0);
 	///////////////////////////
 	
+	graph::GenDiGraphBuilder<BBHGNode, BBHGEdge> builder(&bbhg);
 	Block* entry=cfg->entry();
-	int position=0;
+	//int position=0;
 	dfa::BitSet h(*this->mitraInit);
 //	while(true) {
 		BBHGNode *n= new BBHGNode(entry,h,isBranch(entry),true);
@@ -744,7 +745,7 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 		if(!contains(final_nodes,*n,tmp)) {
 			final_nodes.add(n);
 			todo_nodes.add(n);
-			bbhg.add(n);
+			builder.add(n);
 	
 			while(!todo_nodes.isEmpty()) {
 				BBHGNode *courant=todo_nodes.pop();
@@ -769,22 +770,25 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 				}
 ////////////////////
 
-				for(unsigned int i=0;i<suivants.length();++i) {
+				for(int i=0;i<suivants.length();++i) {
 					BBHGNode *s = suivants[i];
 					if(s!=NULL) {
 						BBHGNode *cs;
-						bool todo_n=false, final_n=false;
+						//bool todo_n=false;
+						bool final_n=false;
 						if(!(final_n=contains(final_nodes,*s,cs))) {
 							final_nodes.add(s);
-							bbhg.add(s);
+							builder.add(s);
 							
 							todo_nodes.add(s);
-							BBHGEdge *e = new BBHGEdge(courant,s,s->getHistory().contains(0),isBr);
+							BBHGEdge *e = new BBHGEdge(s->getHistory().contains(0),isBr);
+							builder.add(courant, s, e);
 							final_edges.add(e);
 	
 						}
 						else {
-							BBHGEdge *e = new BBHGEdge(courant,cs,cs->getHistory().contains(0),isBr);
+							BBHGEdge *e = new BBHGEdge(cs->getHistory().contains(0),isBr);
+							builder.add(courant, cs, e);
 							final_edges.add(e);
 							delete s; // cree par suivant
 						}
@@ -806,7 +810,7 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 
 
 	// Rajout des sorties
-	for(BBHG::Iter bb(&bbhg); bb; bb++){
+	for(auto bb: bbhg){
 			bb->setExit(bb->getCorrespondingBB()==cfg->exit(),false,false);
 	}
 
@@ -828,8 +832,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		StringBuffer buf;
 		buf << "bbhg.ps";
 		String filename = buf.toString();
-		otawa::display::OUTPUT_PATH(props) = filename.toCString();
-		BBHGDrawer drawer(&bbhg, props);
+		BBHGDrawer drawer(&bbhg, filename);
 		drawer.display();
 	}
 	HashMap<String ,Var*> ht_vars;
@@ -841,8 +844,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 		StringBuffer buf;
 		buf << "bhg.ps";
 		String filename = buf.toString();
-		otawa::display::OUTPUT_PATH(props) = filename.toCString();
-		BHGDrawer drawer(&bhg, props);
+		BHGDrawer drawer(&bhg, filename);
 		drawer.display();
 	}
 	

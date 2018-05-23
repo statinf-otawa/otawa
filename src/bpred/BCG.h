@@ -24,7 +24,7 @@
 
 #include <otawa/otawa.h>
 #include <otawa/dfa/BitSet.h>
-#include "../../include/otawa/ograph/GenGraph.h"
+#include <otawa/graph/DiGraph.h>
 
 namespace otawa { namespace bpred {
 
@@ -34,41 +34,34 @@ class BCGEdge;
 
 
 
-class BCG : public otawa::ograph::GenGraph<BCGNode,BCGEdge> {
-private:
-	int m_class;
-	otawa::dfa::BitSet *m_history;
+class BCG: public otawa::graph::GenDiGraph<BCGNode, BCGEdge> {
 public:
 	BCG(int _class);
 	BCG(const otawa::dfa::BitSet& _hist);
 	~BCG();
 	int getClass();
 	otawa::dfa::BitSet& getHistory(); 
+private:
+	int m_class;
+	otawa::dfa::BitSet *m_history;
 };
 
 
 
 
-class BCGEdge : public otawa::ograph::GenGraph<BCGNode,BCGEdge>::GenEdge {
-private:
-	bool m_edge_taken;
+class BCGEdge: public otawa::graph::GenEdge<BCGNode, BCGEdge> {
 public:
-	BCGEdge(BCGNode *source, BCGNode *target, bool taken);
+	BCGEdge(bool taken);
 	~BCGEdge();
 	bool isTaken();
+private:
+	bool m_edge_taken;
 };
 
 
 
 
-class BCGNode : public otawa::ograph::GenGraph<BCGNode,BCGEdge>::GenNode{
-private:
-	bool m_entry;
-	bool m_exit;
-	bool m_exit_T; // exits with Taken
-	bool m_exit_NT; // exits with NotTaken
-	otawa::dfa::BitSet *m_history;
-	int m_bb;
+class BCGNode: public otawa::graph::GenVertex<BCGNode, BCGEdge> {
 public:
 	BCGNode(int cfg_bb, bool entry, bool exit, bool exit_T=false, bool exit_NT=false);
 	BCGNode(int cfg_bb, bool entry, bool exit,const otawa::dfa::BitSet *history, bool exit_T=false, bool exit_NT=false);
@@ -82,6 +75,13 @@ public:
 	bool isSuccessor(BCGNode* succ,bool& withT, bool& withNT);
 	otawa::dfa::BitSet& getHistory(); 
 
+private:
+	bool m_entry;
+	bool m_exit;
+	bool m_exit_T; // exits with Taken
+	bool m_exit_NT; // exits with NotTaken
+	otawa::dfa::BitSet *m_history;
+	int m_bb;
 };
 
 } }		// otawa::bpred

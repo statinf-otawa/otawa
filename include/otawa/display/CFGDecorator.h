@@ -26,47 +26,6 @@
 
 namespace otawa { namespace display {
 
-#if 0
-class DisplayedCFG: public AbstractGraph {
-	friend class CFGDecorator;
-	friend class BlockIter;
-	friend class EdgeIter;
-
-	class Vertex: public AbstractGraph::Vertex {
-	public:
-		inline Vertex(Block *b = 0): block(b) { }
-		Block *block;
-	};
-
-	class Edge: public AbstractGraph::Edge {
-	public:
-		inline Edge(otawa::Edge *e = 0): edge(e) { }
-		otawa::Edge *edge;
-	};
-
-
-public:
-	DisplayedCFG(CFG& cfg);
-	~DisplayedCFG(void);
-
-	virtual dyndata::AbstractIter<const AbstractGraph::Vertex *> *vertices(void) const;
-	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *outs(const AbstractGraph::Vertex& v) const;
-	virtual dyndata::AbstractIter<const AbstractGraph::Edge *> *ins(const AbstractGraph::Vertex& v) const;
-	virtual const AbstractGraph::Vertex& sourceOf(const AbstractGraph::Edge& v) const;
-	virtual const AbstractGraph::Vertex& sinkOf(const AbstractGraph::Edge& v) const;
-	virtual string id(const AbstractGraph::Vertex& v) const;
-
-private:
-	static CFG *cfg(const AbstractGraph& g) { return static_cast<const DisplayedCFG&>(g)._cfg; }
-	static Block *block(const AbstractGraph::Vertex& v) { return static_cast<const Vertex&>(v).block; }
-	static otawa::Edge *edge(const AbstractGraph::Edge& v) { return static_cast<const Edge&>(v).edge; }
-
-	CFG *_cfg;
-	static Identifier<Vertex> VERTEX;
-	static Identifier<Edge> EDGE;
-};
-#endif
-
 class CFGDecorator: public display::GenDecorator<CFG, Block, otawa::Edge> {
 public:
 

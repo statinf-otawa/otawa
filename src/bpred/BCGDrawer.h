@@ -22,27 +22,28 @@
 #ifndef BCGDRAWER_H_
 #define BCGDRAWER_H_
 #include "BCG.h"
-#include <otawa/display/Driver.h>
-#include <otawa/display/graphviz.h>
+#include <otawa/display/Displayer.h>
 
 namespace otawa { namespace bpred {
 
-class BCGDrawer {
-protected:
-	BCG *_bcg;
-	display::Graph *_graph;
-	bool _made;
-	virtual void onInit(PropList& graph, PropList& nodes, PropList& edges);
-	virtual void onNode(BCGNode *bb, otawa::display::Node *node);
-	virtual void onEdge(BCGEdge *bcg_edge, otawa::display::Edge *display_edge);
-	virtual void onCall(BCG *bcg, display::Node *node);
-	virtual void onEnd(otawa::display::Graph *graph);
-	virtual void make();
-	
+class BCGDrawer: public display::Decorator {
 public:
-	BCGDrawer(BCG *bcg, display::Graph *graph);
-	BCGDrawer(BCG *bcg, const PropList& props = PropList::EMPTY, display::Driver& driver = display::graphviz_driver);
+	BCGDrawer(BCG *bcg, sys::Path path);
 	virtual void display();
+
+	void decorate(graph::DiGraph *graph, display::Text& caption, display::GraphStyle& style) const override;
+	void decorate(graph::DiGraph *graph, graph::Vertex *vertex, display::Text& content, display::VertexStyle& style) const override;
+	void decorate(graph::DiGraph *graph, graph::Edge *edge, display::Text& label, display::EdgeStyle& style) const override;
+
+protected:
+	virtual void onInit(display::VertexStyle& vertex_style, display::EdgeStyle& edge_style) const;
+	virtual void onNode(BCGNode *bb, display::Text& content, display::VertexStyle& style) const;
+	virtual void onEdge(BCGEdge *bcg_edge, display::Text& label, display::EdgeStyle& style) const;
+	virtual void onCall(BCG *bcg, display::Text& label, display::GraphStyle& style) const;
+	
+	BCG *_bcg;
+	bool _made;
+	sys::Path _path;
 };
 
 } } // otawa::bpred

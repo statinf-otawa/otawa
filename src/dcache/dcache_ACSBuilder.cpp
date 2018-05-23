@@ -190,7 +190,7 @@ p::feature MUST_ACS_FEATURE("otawa::dcache::MUST_ACS_FEATURE", new Maker<ACSBuil
  * @li @ref MUST_ACS_FEATURE
  * @ingroup dcache
  */
-Identifier<Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
+p::id<Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
 
 
 /**
@@ -199,7 +199,7 @@ Identifier<Vector<ACS *>* > MUST_ACS("otawa::dcache::MUST_ACS", 0);
  * at the entry of the task. If not defined, the T (top) value is assumed.
  * @ingroup dcache
  */
-Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
+p::id<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
 
 
 /**
@@ -208,7 +208,7 @@ Identifier<Vector<ACS *>* > ENTRY_MUST_ACS("otawa::dcache::ENTRY_MUST_ACS", 0);
  * results but induces more computation time.
  * @ingroup dcache
  */
-Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false);
+p::id<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false);
 
 
 /**
@@ -219,7 +219,7 @@ Identifier<bool> DATA_PSEUDO_UNROLLING("otawa::dcache::PSEUDO_UNROLLING", false)
  * @li DFML_NONE -- no first miss analysis.
  * @ingroup dcache
  */
-Identifier<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::DATA_FIRSTMISS_LEVEL", DFML_MULTI);
+p::id<data_fmlevel_t> DATA_FIRSTMISS_LEVEL("otawa::dcache::DATA_FIRSTMISS_LEVEL", DFML_MULTI);
 
 
 /**
@@ -791,6 +791,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 		}
 	}
 	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
+		cerr << "DEBUG: injecting (WT) " << access << io::endl;
 		if(access.kind() == BlockAccess::ANY) {
 			ageAll(s); // there may be an unknown block in the set whose age is larger then any block
 		}
@@ -811,6 +812,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 		}
 	}
 	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_BACK) { // currently it follows the same strategy as the LOAD
+		cerr << "DEBUG: injecting (WB) " << access << io::endl;
 		if(access.kind() == BlockAccess::ANY) {
 			ageAll(s);
 		}
@@ -1172,7 +1174,7 @@ p::feature PERS_ACS_FEATURE("otawa::dcache::PERS_ACS_FEATURE", new Maker<ACSBuil
  *
  * @ingroup dcache
  */
-Identifier<Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
+p::id<Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
 
 
 /**
@@ -1184,7 +1186,7 @@ Identifier<Vector<ACS *> *> PERS_ACS("otawa::dcache::PERS_ACS", 0);
  *
  * @ingroup dcache
  */
-Identifier<Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
+p::id<Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
 
 
 /**
@@ -1195,6 +1197,6 @@ Identifier<Vector<ACS *> *> ENTRY_PERS_ACS("otawa::dcache::ENTRY_PERS_ACS", 0);
  *
  * @ingroup dcache
  */
-Identifier<acs_stack_table_t *> LEVEL_PERS_ACS("otawa::dcache::LEVEL_PERS_ACS", 0);
+p::id<acs_stack_table_t *> LEVEL_PERS_ACS("otawa::dcache::LEVEL_PERS_ACS", 0);
 
 } }	// otawa::dcache

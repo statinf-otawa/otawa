@@ -24,6 +24,8 @@
 #include <elm/io.h>
 #include <elm/rtti.h>
 #include <elm/string.h>
+#include <elm/sys/Path.h>
+#include <elm/option/ValueOption.h>
 
 namespace otawa { namespace display {
 
@@ -154,7 +156,9 @@ typedef enum {
 	SUB = 5,
 	TABLE = 6,
 	ROW = 7,
-	CELL = 8
+	CELL = 8,
+	SMALL = 9,
+	BIG = 10
 } text_style_t;
 
 template <class T>
@@ -189,6 +193,12 @@ public:
 };
 extern const Tag br, left, center, right, hr;
 
+enum struct align {
+	center = 0,
+	left = 1,
+	right = 2
+};
+
 class Text {
 public:
 	virtual ~Text(void);
@@ -197,6 +207,7 @@ public:
 	virtual void color(const Color& color, bool end) = 0;
 	virtual void setURL(const string& url) = 0;
 	virtual void tag(const Tag& nl) = 0;
+	virtual void align(display::align align) = 0;
 };
 
 inline Text& operator<<(Text& out, const Begin<text_style_t>& s) { out.tag(s.value, false); return out; }
@@ -204,6 +215,7 @@ inline Text& operator<<(Text& out, const End<text_style_t>& s) { out.tag(s.value
 inline Text& operator<<(Text& out, const Begin<Color>& c) { out.color(c.value, false); return out; }
 inline Text& operator<<(Text& out, const End<Color>& c) { out.color(c.value, true); return out; }
 inline Text& operator<<(Text& out, const Tag& tag) { out.tag(tag); return out; }
+inline Text& operator<<(Text& out, display::align align) { out.align(align); return out; }
 template <class T>
 inline Text& operator<<(Text& out, const T& v) { out.out() << v; return out; }
 
@@ -221,6 +233,18 @@ typedef enum output_mode_t {
 	OUTPUT_VIEW
 } output_mode_t;
 typedef output_mode_t kind_t;		// deprecated
+
+class TypeOption: public option::ValueOption<output_mode_t> {
+public:
+	inline TypeOption(option::Manager *man): TypeOption(*man) { }
+	TypeOption(option::Manager& man);
+};
+
+class OutputOption: public option::ValueOption<sys::Path> {
+public:
+	inline OutputOption(option::Manager *man): OutputOption(*man) { }
+	OutputOption(option::Manager& man);
+};
 
 } } // otawa::display
 

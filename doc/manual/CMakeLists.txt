@@ -1,5 +1,22 @@
-FILE(GLOB MANUALS *.thot)
+set(MANUALS
+	manual-ai.thot
+	manual-appli.thot
+	manual-cfg.thot
+	manual-dfa.thot
+	manual-elm.thot
+	manual-features.thot
+	manual-formats.thot
+	manual-gloss.thot
+	manual-graph.thot
+	manual-install.thot
+	manual-procs.thot
+	manual-props.thot
+	manual-refs.thot
+	manual.thot
+	manual-wcet.thot)
+
 message(STATUS "MANUALS=${MANUALS}")
+
 add_custom_command(
 	OUTPUT manual.html
 	DEPENDS ${MANUALS}

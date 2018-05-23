@@ -28,8 +28,7 @@ using namespace elm;
 namespace otawa { namespace bpred {
 
 /// BBHGEdge
-BBHGEdge::BBHGEdge(BBHGNode *source, BBHGNode *target, bool taken, bool from_branch) :
-		otawa::ograph::GenGraph<BBHGNode, BBHGEdge>::GenEdge(source,target) {
+BBHGEdge::BBHGEdge(bool taken, bool from_branch) {
 	this->m_edge_taken = taken;
 	this->m_from_branch = from_branch;
 }
@@ -92,8 +91,8 @@ bool BBHGNode::exitsWithNT() {
 bool BBHGNode::isSuccessor(BBHGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(BBHG::OutIterator s(this); s ;s++) {
-		if(s->target()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
+	for(auto s = outs(); s ;s++) {
+		if(s->sink()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
 			withT = withT || s->isTaken();
 			withNT = withNT || !(s->isTaken());
 		}
@@ -123,9 +122,9 @@ BBHG::BBHG(int history_size) {
 	this->m_history_size = history_size;
 }
 
-void BBHG::add(BBHGNode *node) {
+void BBHG::add(graph::GenDiGraphBuilder<BBHGNode, BBHGEdge>& builder, BBHGNode *node) {
 	if(node->getHistory().size() == this->m_history_size) {
-		otawa::ograph::GenGraph<BBHGNode,BBHGEdge>::add(node);
+		builder.add(node);
 	}
 	else{
 		cerr << "BBHG::add => history sizes don't match";

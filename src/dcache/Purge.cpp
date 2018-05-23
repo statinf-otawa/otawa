@@ -251,6 +251,6 @@ p::declare PurgeAnalysis::reg = p::init("otawa::dcache::PurgeAnalysis", Version(
 
 p::feature PURGE_FEATURE("otawa::dcache::PURGE_FEATURE", new Maker<PurgeAnalysis>());
 
-Identifier<purge_t> PURGE("otawa::dcache::PURGE", INV_PURGE);
+p::id<purge_t> PURGE("otawa::dcache::PURGE", INV_PURGE);
 
 } }		// otawa::dcache
