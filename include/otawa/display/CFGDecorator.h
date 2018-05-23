@@ -26,7 +26,7 @@
 
 namespace otawa { namespace display {
 
-class CFGDecorator: public display::GenDecorator<CFG, Block, otawa::Edge> {
+class CFGDecorator: public display::GenDecorator<CFG> {
 public:
 
 	CFGDecorator(WorkSpace *ws);

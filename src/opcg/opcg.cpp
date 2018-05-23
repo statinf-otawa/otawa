@@ -157,7 +157,7 @@ p::declare StatBuilder::reg = p::init("StatBuilder", Version(1, 0, 0))
 
 
 // PCGDecorator class
-class PCGDecorator: public display::GenDecorator<PCG, PCGBlock, PCGEdge> {
+class PCGDecorator: public display::GenDecorator<PCG> {
 public:
 	PCGDecorator(bool stat): _stat(stat) { }
 

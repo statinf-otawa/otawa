@@ -202,6 +202,8 @@ public:
 template <class V, class E>
 class GenDiGraph: public DiGraph {
 public:
+	typedef V vertex_t;
+	typedef E edge_t;
 
 	class VertexIter: public PreIterator<VertexIter, V *> {
 		friend class GenDiGraph<V, E>;

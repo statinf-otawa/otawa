@@ -45,20 +45,22 @@ public:
 	virtual void decorate(graph::DiGraph *graph, graph::Edge *edge, Text& label, EdgeStyle& style) const;
 };
 
-template <class G, class V, class E>
+template <class G>
 class GenDecorator: public Decorator {
 public:
+	typedef typename G::vertex_t vertex_t;
+	typedef typename G::edge_t edge_t;
 
 	virtual void decorate(G *graph, Text& caption, GraphStyle& style) const { }
-	virtual void decorate(G *graph, V *vertex, Text& content, VertexStyle& style) const { }
-	virtual void decorate(G *graph, E *edge, Text& label, EdgeStyle& style) const { }
+	virtual void decorate(G *graph, vertex_t *vertex, Text& content, VertexStyle& style) const { }
+	virtual void decorate(G *graph, edge_t *edge, Text& label, EdgeStyle& style) const { }
 
 	void decorate(graph::DiGraph *graph, Text& caption, GraphStyle& style) const override
 		{ decorate(static_cast<G *>(graph), caption, style); }
 	void decorate(graph::DiGraph *graph, graph::Vertex *vertex, Text& content, VertexStyle& style) const override
-		{ decorate(static_cast<G *>(graph), static_cast<V *>(vertex), content, style); }
+		{ decorate(static_cast<G *>(graph), static_cast<vertex_t *>(vertex), content, style); }
 	void decorate(graph::DiGraph *graph, graph::Edge *edge, Text& label, EdgeStyle& style) const override
-		{ decorate(static_cast<G *>(graph), static_cast<E *>(edge), label, style); }
+		{ decorate(static_cast<G *>(graph), static_cast<edge_t *>(edge), label, style); }
 };
 
 class Displayer {
