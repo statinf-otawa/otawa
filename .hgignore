@@ -2,6 +2,7 @@ autodoc
 CMakeFiles
 install_manifest.txt
 .*\.cmake
+.*/\Testing
 config.h
 CMakeCache\..*
 doxygen.err
@@ -47,3 +48,5 @@ dist/otawa-install.py
 test/etime/xgraphs
 test/benchs/bs
 test/benchs/multi
+test/.*test_*
+test/.*/.*\.out

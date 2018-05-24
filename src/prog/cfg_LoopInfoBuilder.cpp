@@ -324,7 +324,7 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	LoopInfoProblem prob(*cfg, **otawa::DOM_INFO(fw));
 	if (prob.count() == 0)
 		return;
-	IterativeDFA<LoopInfoProblem, dfa::BitSet, Successor> dfa(prob, *cfg);
+	IterativeDFA<LoopInfoProblem, dfa::BitSet, CFG, Successor> dfa(prob, cfg, cfg->exit());
 	dfa.compute();
 
 	// compute enclosing loop header for each BB

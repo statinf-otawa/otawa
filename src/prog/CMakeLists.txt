@@ -50,6 +50,7 @@ set(libotawa_SOURCES
 	"BBRatioDisplayer.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
+	"app_Test.cpp"
 
 	"icache.cpp"
 

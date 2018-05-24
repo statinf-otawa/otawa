@@ -25,12 +25,15 @@
 using namespace elm;
 using namespace otawa;
 
-inline clp::Value val(clp::intn_t l, clp::intn_t d, clp::intn_t n) { return clp::Value(clp::VAL, l, d, n); }
 clp::Value none = clp::Value::none;
 clp::Value all = clp::Value::all;
 typedef clp::Value value;
 const clp::intn_t inf = clp::MAXn;
 const clp::intn_t ninf = clp::MINn;
+
+inline clp::Value val(clp::intn_t l, clp::intn_t d, clp::intn_t n) {
+	return clp::Value(clp::VAL, l, d, n);
+}
 
 inline bool test_le(value v, clp::intn_t k, value w) {
 	value b = v;
@@ -323,9 +326,7 @@ int main(void) {
 	{
 		CHECK_EQUAL(val(0, 0, 0).widening(val(0, 1, 0xffffffff)), val(0, 1, 0xffffffff));
 		CHECK_EQUAL(val(-1, -1, 0xffffffff).widening(val(0x0, -1, 0xffffffff)), clp::Value::all);
-		
 	}
 
-	CHECK_END
-	return 0;
+	CHECK_RETURN
 }

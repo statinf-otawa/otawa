@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	IterativeDFA class interface
  *
  *	This file is part of OTAWA
@@ -23,9 +22,9 @@
 #define OTAWA_UTIL_ITERATIVE_DFA_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/VectorQueue.h>
+#include <elm/data/VectorQueue.h>
 #include <elm/util/BitVector.h>
-#include <otawa/cfg.h>
+#include <otawa/graph/DiGraph.h>
 
 #ifdef OTAWA_IDFA_DEBUG
 #	define OTAWA_IDFA_TRACE(x)	cerr << x << io::endl
@@ -41,72 +40,73 @@ namespace otawa { namespace dfa {
 class Successor;
 
 // Predecessor
-class Predecessor: public PreIterator<Predecessor, Block *> {
+class Predecessor: public PreIterator<Predecessor, graph::Vertex *> {
 public:
 	typedef Successor Forward;
-	static inline Block *entry(CFG& cfg) { return cfg.entry(); }
-	inline Predecessor(Block *bb): iter(bb->ins()) { }
-	inline Block *item(void) const { return iter.item()->source(); }
+	inline Predecessor(graph::Vertex *v): iter(v->ins()) { }
+	inline graph::Vertex *item(void) const { return iter.item()->source(); }
 	inline bool ended(void) const { return iter.ended(); }
 	inline void next(void) { iter.next(); }
 private:
-	Block::EdgeIter iter;
+	typename graph::Vertex::EdgeIter iter;
 };
 
 
 // Successor
-class Successor: public PreIterator<Successor, Block *> {
+class Successor: public PreIterator<Successor, graph::Vertex *> {
 public:
 	typedef Predecessor Forward;
-	static inline Block *entry(CFG& cfg) { return cfg.exit(); }
-	inline Successor(Block *bb): iter(bb->outs()) { }
-	inline Block *item(void) const { return iter.item()->target(); }
+	inline Successor(graph::Vertex *v): iter(v->outs()) { }
+	inline graph::Vertex *item(void) const { return iter.item()->sink(); }
 	inline bool ended(void) const { return iter.ended(); }
 	inline void next(void) { iter.next(); }
 private:
-	Block::EdgeIter iter;
+	graph::Vertex::EdgeIter iter;
 };
 
 
 // DFAEngine class
-template <class Problem, class Set, class Iter = Predecessor>
+template <class Problem, class Set, class G, class Iter = Predecessor>
 class IterativeDFA {
-	Problem& prob;
-	CFG& _cfg;
-	int cnt;
-	Set **ins, **outs, **gens, **kills;
 public:
-	inline IterativeDFA(Problem& problem, CFG& cfg);
+	inline IterativeDFA(Problem& problem, G *g, typename G::vertex_t *entry);
 	inline ~IterativeDFA(void);
 	inline void compute(void);
-	inline Set *inSet(Block *bb);
-	inline Set *outSet(Block *bb);
-	inline Set *genSet(Block *bb);
-	inline Set *killSet(Block *bb);
+	inline Set *inSet(typename G::vertex_t *bb);
+	inline Set *outSet(typename G::vertex_t *bb);
+	inline Set *genSet(typename G::vertex_t *bb);
+	inline Set *killSet(typename G::vertex_t *bb);
+
+private:
+	Problem& prob;
+	G *_g;
+	int cnt;
+	Set **ins, **outs, **gens, **kills;
+	typename G::vertex_t *_entry;
 };
 
 
 // IterativeDFA::IterativeDFA inline
-template <class Problem, class Set, class Iter>
-inline IterativeDFA<Problem, Set, Iter>::IterativeDFA(Problem& problem, CFG& cfg)
-: prob(problem), _cfg(cfg), cnt(cfg.count()) {
+template <class Problem, class Set, class G, class Iter>
+inline IterativeDFA<Problem, Set, G, Iter>::IterativeDFA(Problem& problem, G *g, typename G::vertex_t *entry)
+: prob(problem), _g(g), cnt(g->count()), _entry(entry) {
 	ins = new Set *[cnt];
 	outs = new Set *[cnt];
 	gens = new Set *[cnt];
 	kills = new Set *[cnt];
-	for(CFG::VertexIter bb = _cfg.vertices(); bb; bb++) {
-		int idx = bb->index();
+	for(auto v: *_g) {
+		int idx = v->index();
 		ins[idx] = prob.empty();
 		outs[idx] = prob.empty();
-		gens[idx] = prob.gen(bb);
-		kills[idx] = prob.kill(bb);
+		gens[idx] = prob.gen(v);
+		kills[idx] = prob.kill(v);
 	}
 }
 
 
 // IterativeDFA::~IterativeDFA() inline
-template <class Problem, class Set, class Iter>
-inline IterativeDFA<Problem, Set, Iter>::~IterativeDFA(void) {
+template <class Problem, class Set, class G, class Iter>
+inline IterativeDFA<Problem, Set, G, Iter>::~IterativeDFA(void) {
 	for(int i = 0; i < cnt; i++) {
 		if(ins[i])
 			prob.free(ins[i]);
@@ -123,42 +123,42 @@ inline IterativeDFA<Problem, Set, Iter>::~IterativeDFA(void) {
 
 
 // IterativeDFA::inSet() inline
-template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::inSet(Block *bb) {
+template <class Problem, class Set, class G, class Iter>
+inline Set *IterativeDFA<Problem, Set, G, Iter>::inSet(typename G::vertex_t *bb) {
 	return ins[bb->index()];
 }
 
 
 // IterativeDFA::outSet() inline
-template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::outSet(Block *bb) {
+template <class Problem, class Set, class G, class Iter>
+inline Set *IterativeDFA<Problem, Set, G, Iter>::outSet(typename G::vertex_t *bb) {
 	return outs[bb->index()];
 }
 
 
 // IterativeDFA::genSet() inline
-template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::genSet(Block *bb) {
+template <class Problem, class Set, class G, class Iter>
+inline Set *IterativeDFA<Problem, Set, G, Iter>::genSet(typename G::vertex_t *bb) {
 	return gens[bb->index()];
 }
 
 
 // IterativeDFA::killSet() inline
-template <class Problem, class Set, class Iter>
-inline Set *IterativeDFA<Problem, Set, Iter>::killSet(Block *bb) {
+template <class Problem, class Set, class G, class Iter>
+inline Set *IterativeDFA<Problem, Set, G, Iter>::killSet(typename G::vertex_t *bb) {
 	return kills[bb->index()];
 }
 
 
 // IterativeDFA::compute() inline
-template <class Problem, class Set, class Iter>
-inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
+template <class Problem, class Set, class G, class Iter>
+inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 
 	// initialization
-	genstruct::VectorQueue<Block *> todo;
-	BitVector present(_cfg.count());
+	VectorQueue<typename G::vertex_t *> todo;
+	BitVector present(_g->count());
 	Set *comp = prob.empty(), *ex;
-	for(CFG::BlockIter bb = _cfg.vertices(); bb; bb++) {
+	for(auto bb: *_g) {
 			OTAWA_IDFA_TRACE("DFA: push BB" << bb->index());
 			todo.put(bb);
 			present.set(bb->index());
@@ -166,7 +166,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 
 	// perform until no change
 	while(todo) {
-		Block *bb = todo.get();
+		typename G::vertex_t *bb = todo.get();
 		int idx = bb->index();
 		ASSERT(idx >= 0);
 		present.clear(idx);
@@ -175,7 +175,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 		// IN = union OUT of predecessors
 		prob.reset(ins[idx]);
 		for(Iter pred(bb); pred; pred++) {
-			Block *bb_pred = pred;
+			typename G::vertex_t *bb_pred = static_cast<typename G::vertex_t *>(*pred);
 			int pred_idx = bb_pred->index();
 			ASSERT(pred_idx >= 0);
 			prob.merge(ins[idx], outs[pred_idx]);
@@ -202,7 +202,7 @@ inline void IterativeDFA<Problem, Set, Iter>::compute(void) {
 			for(typename Iter::Forward next(bb); next; next++)
 				if(!present.bit(next->index())) {
 					OTAWA_IDFA_TRACE("DFA: push BB" << next->index());
-					todo.put(next);
+					todo.put(static_cast<typename G::vertex_t *>(*next));
 					present.set(next->index());
 				}
 		}

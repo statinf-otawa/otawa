@@ -344,6 +344,7 @@ add_subdirectory(data)
 
 # testing
 if(OTAWA_TEST)
+	enable_testing()
 	add_subdirectory(test)
 endif()
 

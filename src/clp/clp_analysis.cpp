@@ -694,10 +694,28 @@ Value& Value::widening(const Value& val) {
 		_mtimes = clp::UMAXn;
 	}
 
-	if(isInf() && val.isInf()) {
-		if((_delta == val._delta) && (elm::abs(val._base - _base) % _delta == 0)) {
+	// widen((k, 0, 0), (k', d', n')) =
+	if(isConst()) {
+		// if d' > 0 /\ k < k' then (k, d', n' + (k' - k) / d')
+		// if d' < 0 /\ k' < k then (k, d', n' + (k' - k) / d')
+		if((val._delta > 0 and _base <= val._base)
+		or (val._delta < 0 and _base >= val._base))
+			return *this = Value(VAL, _base, val._delta, val.mtimes() +  (_base - val._base) / val._delta);
+		// else T
+		else
+			return *this = all;
+	}
+
+	// widen((k, d, n), (k', 0, 0)) = T
+	if(val.isConst())
+		return *this = all;
+
+	// if n = n' = ∞
+	if(isInf() and val.isInf()) {
+		// if d = d' /\ |k - k'| % d = 0 then (k, d, n)
+		if((_delta == val._delta) && (elm::abs(val._base - _base) % _delta == 0))
 			return *this;
-		}
+		// else T
 		else {
 			*this = all;
 			return *this;

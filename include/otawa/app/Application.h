@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Application class interface
  *
  *	This file is part of OTAWA

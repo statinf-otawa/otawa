@@ -128,7 +128,7 @@ public:
 void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
 	ASSERT(cfg);
 	PostDominanceProblem dp(cfg);
-	dfa::IterativeDFA<PostDominanceProblem, BitSet, Successor> engine(dp, *cfg);
+	dfa::IterativeDFA<PostDominanceProblem, BitSet, CFG, Successor> engine(dp, cfg, cfg->exit());
 	engine.compute();
 	for (CFG::BlockIter blocks = cfg->blocks(); blocks; blocks++) {
 	  BitSet *b = engine.outSet(blocks.item());

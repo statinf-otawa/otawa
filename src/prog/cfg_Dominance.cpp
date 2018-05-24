@@ -265,7 +265,7 @@ bool Dominance::dominates(Block *bb1, Block *bb2) {
 void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 	ASSERT(cfg);
 	DominanceProblem dp(cfg);
-	dfa::IterativeDFA<DominanceProblem, BitSet> engine(dp, *cfg);
+	dfa::IterativeDFA<DominanceProblem, BitSet, CFG> engine(dp, cfg, cfg->entry());
 	engine.compute();
 	for (CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
 	  BitSet *b = engine.outSet(*bb);
