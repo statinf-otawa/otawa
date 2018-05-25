@@ -94,13 +94,15 @@ public:
 
 	// Iter class
 	class Iter: public elm::PreIterator<Iter, Property *> {
-		Property *prop;
 	public:
+		inline Iter(void): prop(nullptr) { }
 		inline Iter(const PropList& list): prop(list.head) { }
 		inline Iter(const PropList *list): prop(list->head) { }
 		inline void next(void) { ASSERT(prop); prop = prop->next(); }
 		inline bool ended(void) const { return prop == 0; }
 		inline Property *item(void) const { ASSERT(prop); return prop; }
+		inline bool equals(const Iter& i) const { return prop == i.prop; }
+
 		inline bool operator==(const AbstractIdentifier *id) const
 			{ return item()->id() == id; }
 		inline bool operator!=(const AbstractIdentifier *id) const
@@ -109,24 +111,52 @@ public:
 			{ return item()->id() == &id; }
 		inline bool operator!=(const AbstractIdentifier& id) const
 			{ return item()->id() != &id; }
+	private:
+		Property *prop;
 	};
+
+	// PropRange class
+	class PropRange {
+	public:
+		inline PropRange(const PropList& props): _props(props) { }
+		inline Iter begin(void) const { return Iter(_props); }
+		inline Iter end(void) const { return Iter(); }
+	private:
+		const PropList& _props;
+	};
+	inline PropRange properties(void) const { return PropRange(*this); }
 
 	// Getter class
 	class Getter: public elm::PreIterator<Getter, Property *> {
 	public:
+		inline Getter(void): _id(nullptr) { }
 		inline Getter(const PropList *list, const AbstractIdentifier& id)
-			: iter(*list), _id(id) { look(); }
+			: iter(*list), _id(&id) { look(); }
 		inline Getter(const PropList& list, const AbstractIdentifier& id)
-			: iter(list), _id(id) { look(); }
+			: iter(list), _id(&id) { look(); }
 		inline bool ended(void) const { return iter.ended(); }
 		inline Property *item(void) const { return iter.item(); }
 		inline void next(void) { iter.next(); look(); }
+		inline bool equals(const Getter& g) const { return iter.equals(g.iter); }
 	private:
 		Iter iter;
-		const AbstractIdentifier& _id;
+		const AbstractIdentifier *_id;
 		inline void look(void)
-			{ for(; iter; iter++) if(iter->id() == &_id) return; }
+			{ for(; iter; iter++) if(iter->id() == _id) return; }
 	};
+
+	// GetterRange class
+	class GetterRange {
+	public:
+		inline GetterRange(const AbstractIdentifier& id, const PropList& props)
+			: _id(id), _props(props) { }
+		inline Getter begin(void) const { return Getter(_props, _id); }
+		inline Getter end(void) const { return Getter(); }
+	private:
+		const AbstractIdentifier& _id;
+		const PropList& _props;
+	};
+	inline GetterRange all(const AbstractIdentifier& id) const { return GetterRange(id, *this); }
 
 };
 

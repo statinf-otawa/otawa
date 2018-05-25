@@ -71,7 +71,9 @@ public:
 	// mutators
 	inline const Ref& add(const T& value) const { id().add(props(), value); return *this; }
 	inline void remove(void) const { props().removeProp(id()); }
+	inline void removeAll(void) const { props().removeAllProp(id()); }
 
+	// operators
 	inline T& operator*(void) const { return ref(); }
 	inline T *operator&(void) const { return addr(); }
 	inline const Ref<T, I>& operator=(const T& value) const { id().set(props(), value); return *this; }
@@ -91,16 +93,7 @@ public:
 	inline Ref<T, I>& operator++(int) { ref()++; return *this; }
 	inline Ref<T, I>& operator--(int) { ref()--; return *this; }
 
-	class Getter: public PreIterator<Getter, const T&> {
-	public:
-		inline Getter(Ref<T, I>& r): getter(r._prop, r._id) { }
-		inline const T& item(void) const { return ((GenericProperty<T> *)*getter)->value(); }
-		inline bool ended(void) const { return getter.ended(); }
-		inline void next(void) { getter.next(); }
-	private:
-		PropList::Getter getter;
-	};
-	inline Getter all(void) { return Getter(*this); }
+	inline typename I::GetterRange all(void) { return _id.all(_prop); }
 
 private:
 	PropList& _prop;

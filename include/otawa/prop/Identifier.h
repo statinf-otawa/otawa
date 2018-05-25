@@ -119,16 +119,30 @@ public:
 	// Getter class
 	class Getter: public PreIterator<Getter, const T&> {
 	public:
+		inline Getter(void) { }
 		inline Getter(const PropList *list, const Identifier<T>& id): getter(list, id) { }
 		inline Getter(const PropList& list, const Identifier<T>& id): getter(list, id) { }
 		inline const T& item(void) const { return ((GenericProperty<T> *)*getter)->value(); }
 		inline bool ended(void) const { return getter.ended(); }
 		inline void next(void) { getter.next(); }
+		inline bool equals(const Getter& g) const { return getter.equals(g.getter); }
 	private:
 		PropList::Getter getter;
 	};
-	inline Getter all(const PropList *l) const { return Getter(l, *this); }
-	inline Getter all(const PropList& l) const { return Getter(l, *this); }
+
+	// GetterRange class
+	class GetterRange {
+	public:
+		inline GetterRange(const PropList& props, const Identifier<T>& id)
+			: _props(props), _id(id) { }
+		inline Getter begin(void) const { return Getter(_props, _id); }
+		inline Getter end(void) const { return Getter(); }
+	private:
+		const PropList& _props;
+		const Identifier<T>& _id;
+	};
+	inline GetterRange all(const PropList& props) const { return GetterRange(props, *this); }
+	inline GetterRange all(const PropList *props) const { return GetterRange(*props, *this); }
 
 private:
 	T def;

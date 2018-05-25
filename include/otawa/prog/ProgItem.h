@@ -30,6 +30,11 @@ public:
 	inline address_t topAddress(void) const { return address() + size(); }
 	virtual Inst *toInst(void);
 
+	inline MemArea area(void) const { return MemArea(address(), size()); }
+	inline bool contains(Address a) const { return area().contains(a); }
+	inline bool overlap(const MemArea& a) const { return area().meet(a); }
+	inline bool overlap(ProgItem *pi) const { return overlap(pi->area()); }
+
 protected:
 	friend class Segment;
 	virtual ~ProgItem(void);

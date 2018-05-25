@@ -69,6 +69,7 @@ protected:
 	void require(const AbstractFeature&  feature);
 	virtual void process(string arg);
 	inline bool isVerbose(void) const { return verbose; }
+	void exit(int code = 0);
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s) throw(otawa::Exception);

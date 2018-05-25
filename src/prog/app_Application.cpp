@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Application class implementation
  *
  *	This file is part of OTAWA
@@ -20,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/sys/System.h>
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -506,4 +506,14 @@ void Application::process(string arg) {
 		_args.add(arg);
 }
 
+
+/**
+ * Stop the current application and return the given code to the OS.
+ * @param code	Code to return to OS (0 for success, != 0 for error).
+ */
+void Application::exit(int code) {
+	sys::System::exit(code);
+}
+
 }	// otawa
+

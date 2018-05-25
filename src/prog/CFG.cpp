@@ -498,6 +498,47 @@ int BasicBlock::size(void) const {
 }
 
 /**
+ * Test if the current BB contains the given instruction.
+ * Beware: as some instruction sets melt opcode of instructions,
+ * it is not enough to test containment with addresses.
+ * Hence, this function test really if the given instruction
+ * is member of the BB list of instructions.
+ * @param i		Instruction to look for.
+ * @return		True if the instruction is in the BB list, false else.
+ */
+bool BasicBlock::contains(Inst *i) {
+	for(auto mi: *this)
+		if(mi == i)
+			return true;
+	return false;
+}
+
+/**
+ * @fn bool BasicBlock::contains(Address addr);
+ * Test if the given address is in the area covered
+ * by the BB.
+ * @param addr	Address to test.
+ * @return		True of the address in the BB, false else.
+ */
+
+
+/**
+ * @fn bool BasicBlock::overlap(const MemArea& area) const;
+ * Test if the area of the current BB overlaps the given memory area.
+ * @param area	Memory area to test with.
+ * @return		True if both memory areas overlap, false else.
+ */
+
+
+/**
+ * @fn bool BasicBlock::overlap(BasicBlock *bb) const;
+ * Test if the area of the current BB overlaps the memory area of the given BB.
+ * @param bb	BB to test for overlapping.
+ * @return		True if both BB memory areas overlap, false else.
+ */
+
+
+/**
  * @fn Address BasicBlock::topAddress(void);
  * Get top address, that is, the address of the byte following the basic block.
  * @param	Block top address.
@@ -715,6 +756,17 @@ int CFG::callCount(void) const {
 	for(CallerIter i = callers(); i; i++)
 		c++;
 	return c;
+}
+
+
+/**
+ * Remove the provided identifier from all blocks
+ * in the CFG.
+ * @param id	Identifier to remove.
+ */
+void CFG::clean(const AbstractIdentifier& id) {
+	for(auto v: *this)
+		v->removeAllProp(&id);
 }
 
 

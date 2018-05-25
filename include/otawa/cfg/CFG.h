@@ -127,6 +127,11 @@ public:
 	inline Address address(void) const { return first()->address(); }
 	int size(void) const;
 	inline Address topAddress(void) const { return address() + size(); }
+	inline MemArea area(void) const { return MemArea(address(), size()); }
+	bool contains(Inst *i);
+	inline bool contains(Address addr) { return area().contains(addr); }
+	inline bool overlap(const MemArea& area) const { return area.meet(this->area()); }
+	inline bool overlap(BasicBlock *bb) const { return area().meet(bb->area()); }
 
 	inline Inst *first(void) const { return _insts[0]; }
 	Inst *control(void);
@@ -218,6 +223,7 @@ public:
 	inline type_t type(void) const { return _type; }
 	inline CallerIter callers(void) const { return CallerIter(_callers); }
 	int callCount(void) const;
+	void clean(const AbstractIdentifier& id);
 
 private:
 	CFG(Inst *first, type_t type = SUBPROG);
