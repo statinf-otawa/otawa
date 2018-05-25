@@ -33,8 +33,8 @@
 #include <otawa/ipet.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/instruction.h>
-#include <otawa/util/ContextTree.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
+#include "../../include/otawa/cfg/ContextTree.h"
 
 using namespace otawa::ilp;
 using namespace otawa;

@@ -24,7 +24,7 @@
 #ifndef CACHE_MAYPROBLEM_H_
 #define CACHE_MAYPROBLEM_H_
 
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 #include <elm/assert.h>
 #include <elm/io.h>
 #include <otawa/prog/WorkSpace.h>
@@ -223,11 +223,11 @@ class MAYProblem {
 	
 
 	void update(Domain& out, const Domain& in, Block* bb);
-	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 
 	}
 
-	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 
 	}		
 

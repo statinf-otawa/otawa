@@ -28,7 +28,7 @@
 #include <otawa/dcache/features.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 #include <otawa/dcache/ACSBuilder.h>
 #include <otawa/dcache/PERSProblem.h>
 
@@ -78,12 +78,12 @@ public:
 	inline void injectWriteThrough(Domain& d, const int id) const { d.pers.injectWriteThrough(&d.must, id); d.must.injectWriteThrough(id); }
 
 
-	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 	}
 
-	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 	}

@@ -7,7 +7,7 @@
 
 #include <otawa/proc/LBlockProcessor.h>
 #include <otawa/otawa.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/hard/CacheConfiguration.h>
 
 namespace otawa { namespace cache {

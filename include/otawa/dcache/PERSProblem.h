@@ -29,7 +29,7 @@
 #include <otawa/dcache/features.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 
 namespace otawa { namespace dcache {
@@ -124,16 +124,16 @@ public:
 	void purge(Item& item, const BlockAccess& acc);
 	void purge(Domain& domain, const BlockAccess& acc);
 
-	inline void enterContext(Domain& dom, otawa::Block *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain& dom, otawa::Block *header, dfa::hai::hai_context_t ctx) {
 #ifndef PERFTEST
-		if (ctx == util::CTX_LOOP)
+		if (ctx == dfa::hai::CTX_LOOP)
 			dom.enterContext();
 #endif
 	}
 
-	inline void leaveContext(Domain& dom, otawa::Block *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain& dom, otawa::Block *header, dfa::hai::hai_context_t ctx) {
 #ifndef PERFTEST
-		if (ctx == util::CTX_LOOP)
+		if (ctx == dfa::hai::CTX_LOOP)
 			dom.leaveContext();
 #endif
 	}

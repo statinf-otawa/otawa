@@ -35,14 +35,14 @@
 #include <otawa/stack/AccessedAddress.h>
 #include <otawa/stack/features.h>
 #include <otawa/stack/StackAnalysis.h>
-#include <otawa/util/HalfAbsInt.h>
-#include <otawa/util/DefaultFixPoint.h>
-#include <otawa/util/DefaultListener.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
+#include <otawa/dfa/hai/DefaultFixPoint.h>
+#include <otawa/dfa/hai/DefaultListener.h>
+#include <otawa/cfg/features.h>
 
 using namespace elm;
 using namespace otawa;
-using namespace otawa::util;
+using namespace otawa::dfa::hai;
 
 #define TRACEU(t)	//t
 #define TRACEI(t)	//t
@@ -646,8 +646,8 @@ public:
 	inline void lub(Domain &a, const Domain &b) const { a.join(b); }
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return a.equals(b); }
-	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
 
 	stack::Value get(const stack::State& state, int i) {
 		if(i <  0)

@@ -26,8 +26,8 @@
 #include <otawa/dfa/BitSet.h>
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/util/ContextTree.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
+#include "../../include/otawa/cfg/ContextTree.h"
 
 //#define TRACE(x) cerr << x << io::endl;
 #define TRACE(x)

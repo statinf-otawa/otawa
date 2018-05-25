@@ -23,7 +23,7 @@
 #define OTAWA_DCACHE_ACSBUILDER_H_
 
 #include "features.h"
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 namespace otawa {
 
@@ -132,8 +132,8 @@ public:
 	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
 	void purge(Domain& out, const BlockAccess& acc);
-	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
 
 private:
 	WorkSpace *fw;

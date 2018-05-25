@@ -5,7 +5,7 @@
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/ACSMayBuilder.h>
 #include <otawa/cache/FirstLastBuilder.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/cache/features.h>
 
 namespace otawa {

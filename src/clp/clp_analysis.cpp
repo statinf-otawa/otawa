@@ -27,7 +27,7 @@
 #include <otawa/prog/sem.h>
 #include <otawa/hard/Register.h>
 #include <otawa/proc/CFGProcessor.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/cfg/Virtualizer.h>
 #include <otawa/dfa/hai/HalfAbsInt.h>
 #include <otawa/dfa/hai/WideningListener.h>
@@ -2301,8 +2301,8 @@ public:
 		return a.equals(b);
 	}
 
-	inline void enterContext(Domain &dom, Block *header, hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, Block *header, hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
 
 
 	/**
@@ -2984,9 +2984,9 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	sys::StopWatch watchWorkSpace;
 	watchWorkSpace.start();
 
-	typedef WideningListener<ClpProblem> ClpListener;
-	typedef WideningFixPoint<ClpListener> ClpFP;
-	typedef HalfAbsInt<ClpFP> ClpAI;
+	typedef dfa::hai::WideningListener<ClpProblem> ClpListener;
+	typedef dfa::hai::WideningFixPoint<ClpListener> ClpFP;
+	typedef dfa::hai::HalfAbsInt<ClpFP> ClpAI;
 
 	// get the entry
 	const CFGCollection *coll = INVOLVED_CFGS(ws);

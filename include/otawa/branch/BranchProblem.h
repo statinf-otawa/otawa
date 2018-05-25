@@ -28,7 +28,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 using namespace otawa::cache;
 
@@ -107,8 +107,8 @@ public:
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, Block* bb);
-	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
 
 private:
 	int row;
@@ -192,8 +192,8 @@ public:
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
-	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
 
 private:
 	int row;
@@ -369,10 +369,10 @@ public:
 	inline void assign(Domain &a, const Domain &b) const { a = b; }
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, Block* bb);
-	inline void enterContext(Domain& dom, Block *header, util::hai_context_t ctx)
-		{ if (ctx == util::CTX_LOOP) dom.enterContext(); }
-	inline void leaveContext(Domain& dom, Block *header, util::hai_context_t ctx)
-		{ if (ctx == util::CTX_LOOP) dom.leaveContext(); }
+	inline void enterContext(Domain& dom, Block *header, dfa::hai::hai_context_t ctx)
+		{ if (ctx == dfa::hai::CTX_LOOP) dom.enterContext(); }
+	inline void leaveContext(Domain& dom, Block *header, dfa::hai::hai_context_t ctx)
+		{ if (ctx == dfa::hai::CTX_LOOP) dom.leaveContext(); }
 
 private:
 	int row;
@@ -448,13 +448,13 @@ public:
 	void update(Domain& out, const Domain& in, Block* bb);
 	void updateLBlock(Domain& acs, LBlock *lblock);
 	
-	inline void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) {
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 		mayProb.enterContext(dom.may, header, ctx);		
 	}
 
-	inline void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 		mayProb.leaveContext(dom.may, header, ctx);

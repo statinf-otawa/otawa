@@ -11,13 +11,15 @@
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/dcache/BlockBuilder.h>
-#include <otawa/util/UnrollingListener.h>
-#include <otawa/util/DefaultFixPoint.h>
-#include <otawa/util/DefaultListener.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
+#include <otawa/dfa/hai/DefaultFixPoint.h>
+#include <otawa/dfa/hai/DefaultListener.h>
 #include <otawa/dcache/ACSBuilder.h>
 #include <otawa/cfg/BasicBlock.h>
 
 namespace otawa { namespace dcache {
+
+using namespace otawa::dfa::hai;
 
 MAYProblem::MAYProblem(
 	const BlockCollection& collection,
@@ -210,7 +212,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 	if (unrolling) {
 		UnrollingListener<MAYProblem> mayList(fw, mayProb);
 		FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > mayFp(mayList);
-		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
+		HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
 		MAYProblem::Domain entry_dom(coll.count(), cache->wayCount());
 		if(may_entry)
 			entry_dom = *may_entry->get(line);
@@ -223,7 +225,7 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll,
 	else {
 		DefaultListener<MAYProblem> mayList(fw, mayProb);
 		DefaultFixPoint<DefaultListener<MAYProblem> > mayFp(mayList);
-		util::HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
+		HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
 		MAYProblem::Domain entry_dom(coll.count(), cache->wayCount());
 		if(may_entry)
 			entry_dom = *may_entry->get(line);

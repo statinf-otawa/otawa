@@ -175,9 +175,9 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
               size = COND_MAX(ws)[row];
 
 		BranchProblem prob(size, ws, hard::BHT_CONFIG(ws)->wayCount(), row);
-		UnrollingListener<BranchProblem> list( ws, prob);
-		FirstUnrollingFixPoint<UnrollingListener<BranchProblem> > fixp(list);
-		util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<BranchProblem> > > hai(fixp, *ws);
+		dfa::hai::UnrollingListener<BranchProblem> list( ws, prob);
+		dfa::hai::FirstUnrollingFixPoint<dfa::hai::UnrollingListener<BranchProblem> > fixp(list);
+		dfa::hai::HalfAbsInt<dfa::hai::FirstUnrollingFixPoint<dfa::hai::UnrollingListener<BranchProblem> > > hai(fixp, *ws);
 		hai.solve();
 
 		for (CFGCollection::Iter cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {

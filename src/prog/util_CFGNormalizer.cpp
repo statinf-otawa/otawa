@@ -25,7 +25,7 @@
 #include <otawa/cfg.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/ProcessorException.h>
-#include <otawa/util/CFGNormalizer.h>
+#include "../../include/otawa/cfg/CFGNormalizer.h"
 
 namespace otawa {
 

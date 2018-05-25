@@ -3,13 +3,13 @@
 #include <elm/genstruct/Vector.h>
 #include <elm/genstruct/Table.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
 #include <otawa/cfg/Dominance.h>
 
 #include <otawa/cfg.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 

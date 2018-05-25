@@ -34,7 +34,7 @@
 #include <otawa/cfg/LoopUnroller.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/util/FlowFactLoader.h>
 
 using namespace otawa;

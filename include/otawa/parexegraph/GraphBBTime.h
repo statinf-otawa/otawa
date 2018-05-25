@@ -25,7 +25,7 @@
 #include <otawa/ipet.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/cfg.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/parexegraph/ParExeGraph.h>
 #include <elm/io/OutFileStream.h>

@@ -26,7 +26,7 @@
 #include <elm/genstruct/Vector.h>
 
 #include <otawa/cache/features.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Memory.h>

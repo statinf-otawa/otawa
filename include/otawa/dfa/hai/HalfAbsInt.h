@@ -32,7 +32,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/Edge.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/prog/WorkSpace.h>
 #ifdef	HAI_JSON

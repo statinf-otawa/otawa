@@ -28,7 +28,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 
 namespace otawa {
@@ -96,13 +96,13 @@ public:
 	
 	void update(Domain& out, const Domain& in, Block* bb);
 	
-	inline void enterContext(Domain &dom, Block *header, hai_context_t ctx) {
+	inline void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.enterContext(dom.pers, header, ctx);
 		mustProb.enterContext(dom.must, header, ctx);
 		
 	}
 
-	inline void leaveContext(Domain &dom, Block *header, hai_context_t ctx) {
+	inline void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) {
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 

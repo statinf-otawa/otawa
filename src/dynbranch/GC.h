@@ -13,9 +13,9 @@ namespace otawa { namespace dynbranch {
 
 class MyGC: public elm::GroupedGC {
 public:
-	WideningListener<GlobalAnalysisProblem> *listener;
-	WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > *fixPoint;
-	HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > > *ai;
+	dfa::hai::WideningListener<GlobalAnalysisProblem> *listener;
+	dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> > *fixPoint;
+	dfa::hai::HalfAbsInt<dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> > > *ai;
 
 	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { } // 50MB per chuck
 	//MyGC(WorkSpace* _ws): elm::GroupedGC(2*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
@@ -32,9 +32,9 @@ public:
 		_pvs.clear();
 	}
 
-	void setListener(WideningListener<dynbranch::GlobalAnalysisProblem>& l) { listener = &l; }
-	void setFixPoint(WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> >& f) { fixPoint = &f; }
-	void setAbsInt(HalfAbsInt<WideningFixPoint<WideningListener<dynbranch::GlobalAnalysisProblem> > >& a) { ai = &a; }
+	void setListener(dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem>& l) { listener = &l; }
+	void setFixPoint(dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> >& f) { fixPoint = &f; }
+	void setAbsInt(dfa::hai::HalfAbsInt<dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> > >& a) { ai = &a; }
 	void setFastState(dfa::FastState<PotentialValue, MyGC>* _fs) { fs = _fs; }
 	void setTempRegs(Vector<PotentialValue>* vdp) { _tempRegs = vdp; }
 

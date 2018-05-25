@@ -51,8 +51,8 @@ public:
 	void updateEdge(Edge *edge, Domain& d);
 	bool equals(const Domain &a, const Domain &b) const;
 	void update(Domain& out, const Domain& in, Block *b);
-	void enterContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
-	void leaveContext(Domain &dom, Block *header, util::hai_context_t ctx) { }
+	void enterContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
+	void leaveContext(Domain &dom, Block *header, dfa::hai::hai_context_t ctx) { }
 	inline Vector<PotentialValue>* getTempRegs() { return _tempRegs; }
 
 	inline void printTempRegs(string begin = "", string end="") {

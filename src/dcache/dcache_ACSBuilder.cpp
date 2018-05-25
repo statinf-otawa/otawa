@@ -40,6 +40,7 @@
 namespace otawa { namespace dcache {
 
 using namespace otawa;
+using namespace dfa::hai;
 
 /**
  * @class MUSTProblem
@@ -278,9 +279,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 
 		// computation with unrolling
 		if (unrolling) {
-			UnrollingListener<MUSTProblem> mustList(fw, mustProb);
-			FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > mustFp(mustList);
-			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			dfa::hai::UnrollingListener<MUSTProblem> mustList(fw, mustProb);
+			dfa::hai::FirstUnrollingFixPoint<dfa::hai::UnrollingListener<MUSTProblem> > mustFp(mustList);
+			dfa::hai::HalfAbsInt<dfa::hai::FirstUnrollingFixPoint<dfa::hai::UnrollingListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			MUSTProblem::Domain entry_dom = mustProb.bottom();
 			if(must_entry)
 				entry_dom = *must_entry->get(line);
@@ -303,9 +304,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 
 		// computation without unrolling
 		else {
-			DefaultListener<MUSTProblem> mustList(fw, mustProb);
-			DefaultFixPoint<DefaultListener<MUSTProblem> > mustFp(mustList);
-			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
+			dfa::hai::DefaultListener<MUSTProblem> mustList(fw, mustProb);
+			dfa::hai::DefaultFixPoint<dfa::hai::DefaultListener<MUSTProblem> > mustFp(mustList);
+			dfa::hai::HalfAbsInt<dfa::hai::DefaultFixPoint<dfa::hai::DefaultListener<MUSTProblem> > > mustHai(mustFp, *fw);
 			MUSTProblem::Domain entry_dom  = mustProb.entry();
 			if(must_entry) {
 				entry_dom = *must_entry->get(line);
@@ -339,7 +340,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			MUSTPERS mustpers(&coll, fw, cache);
 			UnrollingListener<MUSTPERS> mustpersList( fw, mustpers);
 			FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > mustpersFp(mustpersList);
-			util::HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
+			HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			// Store.
@@ -368,7 +369,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			MUSTPERS mustpers(&coll, fw, cache);
 			DefaultListener<MUSTPERS> mustpersList( fw, mustpers);
 			DefaultFixPoint<DefaultListener<MUSTPERS> > mustpersFp(mustpersList);
-			util::HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
+			HalfAbsInt<DefaultFixPoint<DefaultListener<MUSTPERS> > > mustHai(mustpersFp, *fw);
 			mustHai.solve();
 
 			// Store.

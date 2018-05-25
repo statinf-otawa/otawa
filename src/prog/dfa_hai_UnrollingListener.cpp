@@ -17,7 +17,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/util/UnrollingListener.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
 
 namespace otawa { namespace dfa { namespace hai {
 

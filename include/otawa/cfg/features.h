@@ -197,6 +197,9 @@ extern p::id<location_t> LOCATION_START;
 extern p::id<location_t> LOCATION_STOP;
 io::Output& operator<<(io::Output& out, const location_t& loc);
 
+// CFG normalization
+extern p::feature NORMALIZED_CFGS_FEATURE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

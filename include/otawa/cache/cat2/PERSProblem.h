@@ -30,7 +30,7 @@
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/cfg/BasicBlock.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 
 namespace otawa {
@@ -433,16 +433,16 @@ class PERSProblem {
 	}
 	void update(Domain& out, const Domain& in, BasicBlock* bb);
 	
-	inline void enterContext(Domain& dom, Block *header, hai_context_t ctx) {
+	inline void enterContext(Domain& dom, Block *header, dfa::hai::hai_context_t ctx) {
 #ifndef PERFTEST
-		if (ctx == CTX_LOOP)
+		if (ctx == dfa::hai::CTX_LOOP)
 			dom.enterContext(); 
 #endif
 	}
 
-	inline void leaveContext(Domain& dom, Block *header, hai_context_t ctx) {
+	inline void leaveContext(Domain& dom, Block *header, dfa::hai::hai_context_t ctx) {
 #ifndef PERFTEST
-		if (ctx == CTX_LOOP)
+		if (ctx == dfa::hai::CTX_LOOP)
 			dom.leaveContext();
 #endif		
 	}	

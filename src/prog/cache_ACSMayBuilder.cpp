@@ -23,13 +23,13 @@
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/cache/LBlockSet.h>
-#include <otawa/util/LBlockBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
 #include <otawa/cfg/Dominance.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 #include <otawa/cfg.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cfg/features.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
 
@@ -37,13 +37,14 @@
 #include <otawa/cache/FirstLastBuilder.h>
 #include <otawa/cache/cat2/ACSBuilder.h>
 #include <otawa/cache/cat2/ACSMayBuilder.h>
-#include <otawa/util/UnrollingListener.h>
-#include <otawa/util/DefaultListener.h>
+#include <otawa/dfa/hai/UnrollingListener.h>
+#include <otawa/dfa/hai/DefaultListener.h>
 
 using namespace otawa;
 using namespace otawa::ilp;
 using namespace otawa::ipet;
 using namespace elm;
+using namespace dfa::hai;
 
 
 

@@ -21,9 +21,9 @@
 
 
 #include <otawa/otawa.h>
-#include <otawa/util/WideningListener.h>
-#include <otawa/util/WideningFixPoint.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/WideningListener.h>
+#include <otawa/dfa/hai/WideningFixPoint.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 #include <otawa/dfa/FastState.h>
 #include <otawa/dynbranch/features.h>
 #include <time.h>

@@ -28,8 +28,8 @@
 #include <otawa/hard/BHT.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
-#include <otawa/util/LBlockBuilder.h>
-#include <otawa/util/LoopInfoBuilder.h>
+#include <otawa/cache/LBlockBuilder.h>
+#include <otawa/cfg/features.h>
 
 
 namespace otawa {

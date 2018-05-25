@@ -27,10 +27,12 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/dcache/features.h>
-#include <otawa/util/DefaultListener.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/DefaultListener.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 
 namespace otawa { namespace dcache {
+
+using namespace otawa::dfa::hai;
 
 /*
  * ABSTRACT DOMAIN
@@ -309,8 +311,8 @@ public:
 		for(int i = 0; i < blocks.fst; i++)
 			man.update(out, blocks.snd[i]);
 	}
-	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
 private:
 	DirtyManager man;
 };
@@ -363,7 +365,7 @@ protected:
 		Problem prob(coll);
 		DefaultListener<Problem> listener(ws, prob);
 		DefaultFixPoint<DefaultListener<Problem> > fp(listener);
-		util::HalfAbsInt<DefaultFixPoint<DefaultListener<Problem> > > hai(fp, *ws);
+		HalfAbsInt<DefaultFixPoint<DefaultListener<Problem> > > hai(fp, *ws);
 		hai.solve();
 
 		// put the results

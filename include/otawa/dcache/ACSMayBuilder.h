@@ -25,7 +25,7 @@
 #include <elm/data/Vector.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/proc/Processor.h>
-#include <otawa/util/HalfAbsInt.h>
+#include <otawa/dfa/hai/HalfAbsInt.h>
 #include "features.h"
 
 namespace otawa {
@@ -131,8 +131,8 @@ public:
 	inline bool equals(const Domain &a, const Domain &b) const { return (a.equals(b)); }
 	void update(Domain& out, const Domain& in, otawa::Block* bb);
 	void update(Domain& s, const BlockAccess& access);
-	inline void enterContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
-	inline void leaveContext(Domain &dom, otawa::Block *header, util::hai_context_t ctx) { }
+	inline void enterContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
+	inline void leaveContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
 
 private:
 	const BlockCollection& coll;

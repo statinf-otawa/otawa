@@ -31,8 +31,8 @@
 
 namespace otawa { namespace dynbranch {
 
-using namespace otawa ;
-using namespace otawa::util ;
+using namespace otawa;
+using namespace dfa::hai;
 
 typedef FastStateWrapper State;
 typedef FastStateWrapper Domain;
