@@ -26,13 +26,13 @@
 #include <elm/xom.h>
 
 #include <config.h>
-#include <otawa/ast/ASTInfo.h>
 #include <otawa/ilp/System.h>
 #include <otawa/manager.h>
 #include <otawa/proc/FeatureDependency.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Registry.h>
 #include <otawa/prog/Loader.h>
+#include <otawa/prog/Symbol.h>
 #include <otawa/prog/WorkSpace.h>
 
 // Trace

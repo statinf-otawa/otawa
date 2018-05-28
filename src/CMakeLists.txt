@@ -78,8 +78,6 @@ add_subdirectory(owcet)
 
 # legacy code
 if(USE_LEGACY)
-	add_subdirectory(ast)
-	add_subdirectory(ets)
 	add_subdirectory(cat)
 	add_subdirectory(ccg)
 endif()
