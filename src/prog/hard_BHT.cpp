@@ -231,9 +231,11 @@ Identifier<elm::sys::Path> BHT_PATH("otawa::hard::BHT_PATH");
 } } // otawa::hard
 
 ENUM_BEGIN(otawa::hard::predict_t)
+	VALUE(otawa::hard::PREDICT_NONE),
 	VALUE(otawa::hard::PREDICT_TAKEN),
 	VALUE(otawa::hard::PREDICT_NOT_TAKEN),
-	VALUE(otawa::hard::PREDICT_DIRECT)
+	VALUE(otawa::hard::PREDICT_DIRECT),
+	VALUE(otawa::hard::PREDICT_UNKNOWN)
 ENUM_END
 
 // Serialization support
