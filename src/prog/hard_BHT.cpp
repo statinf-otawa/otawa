@@ -55,7 +55,6 @@ public:
 protected:
 
 	void lookupConfig(const PropList& props) {
-
 		// look for BHT descriptor
 		bht = BHT_CONFIG(props);
 		if(bht != nullptr)
@@ -68,7 +67,7 @@ protected:
 
 		// look for a path to load
 		path = BHT_PATH(props);
-		if(path.isEmpty())
+		if(!path.isEmpty())
 			return;
 
 		// look in general config
@@ -80,6 +79,7 @@ protected:
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
+		lookupConfig(props);
 	}
 
 	virtual void processWorkSpace(WorkSpace *ws) {
@@ -196,7 +196,7 @@ int BHT::actualDefaultPrediction(Address branch, Address target) {
  *
  * @ingroup hard
  */
-p::feature BHT_FEATURE("otawa::hard::BHT_FEATURE", new Maker<BHTGetter>());
+p::feature BHT_FEATURE("otawa::hard::BHT_FEATURE", p::make<BHTGetter>());
 
 
 /**
