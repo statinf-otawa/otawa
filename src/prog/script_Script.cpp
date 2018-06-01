@@ -494,6 +494,7 @@ void Script::work(WorkSpace *ws) {
 	// scan the platform
 	xom::Element *pf = script->getFirstChildElement("platform");
 	script::PLATFORM(props) = pf;
+	CONFIG_ELEMENT(props) = pf;
 	if(pf) {
 		if(logFor(LOG_DEPS))
 			log << "\tfound platform description.\n";

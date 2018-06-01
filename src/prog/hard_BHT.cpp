@@ -18,6 +18,8 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <otawa/prog/Manager.h>
 #include <otawa/prop/Identifier.h>
 #include <otawa/hard/BHT.h>
 #include <otawa/script/Script.h>
@@ -52,15 +54,32 @@ public:
 
 protected:
 
+	void lookupConfig(const PropList& props) {
+
+		// look for BHT descriptor
+		bht = BHT_CONFIG(props);
+		if(bht != nullptr)
+			return;
+
+		// look for XML element
+		element = BHT_ELEMENT(props);
+		if(element != nullptr)
+			return;
+
+		// look for a path to load
+		path = BHT_PATH(props);
+		if(path.isEmpty())
+			return;
+
+		// look in general config
+		xom::Element *e = otawa::CONFIG_ELEMENT(props);
+		if(e != nullptr) {
+			element = e->getFirstChildElement("bht");
+		}
+	}
+
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
-		bht = BHT_CONFIG(props);
-		if(!bht) {
-			element = BHT_ELEMENT(props);
-			if(!element) {
-				path = BHT_PATH(props);
-			}
-		}
 	}
 
 	virtual void processWorkSpace(WorkSpace *ws) {
@@ -71,12 +90,16 @@ protected:
 
 				// from XML element
 				if(element) {
+					if(logFor(LOG_FUN))
+						log << "\tgetting BHT configuration from XML element\n";
 					elm::serial2::XOMUnserializer unserializer(element);
 					unserializer >> *bht;
 				}
 
 				// from XML file
 				else if(path) {
+					if(logFor(LOG_FUN))
+						log << "\tgetting BHT configuration from file " << path << io::endl;
 					elm::serial2::XOMUnserializer unserializer(path);
 					unserializer >> *bht;
 				}
@@ -95,6 +118,8 @@ protected:
 				throw ProcessorException(*this, exn.message());
 			}
 		}
+		else if(logFor(LOG_FUN))
+			log << "\tstraight BHT description provided\n";
 		BHT_CONFIG(ws) = bht;
 		this->track(BHT_FEATURE, BHT_CONFIG(ws));
 	}
