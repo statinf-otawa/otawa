@@ -235,7 +235,7 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 	addCleaner(COLLECTED_CFG_FEATURE, new CollectorCleaner(ws, coll));
 
 	// install the view
-	view::Manager::add(ws, &ASSEMBLY_VIEW);
+	//view::Manager::add(ws, &ASSEMBLY_VIEW);
 
 	// cleanup all
 	AbstractCFGBuilder::cleanup(ws);
@@ -245,7 +245,7 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 /**
  */
 void CFGCollector::destroy(WorkSpace *ws) {
-	view::Manager::remove(ws, &ASSEMBLY_VIEW);
+	//view::Manager::remove(ws, &ASSEMBLY_VIEW);
 }
 
 
@@ -344,6 +344,7 @@ p::id<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
  */
 p::id<CString> ADDED_FUNCTION("otawa::ADDED_FUNCTION", 0);
 
+#if 0
 /**
  */
 class AssemblyView: public view::View {
@@ -471,6 +472,7 @@ private:
 };
 
 view::PropertyType& REGISTERS_PROPERTY = Single<RegistersProperty>::_;
+#endif
 
 } // otawa
 
