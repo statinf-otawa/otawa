@@ -43,7 +43,7 @@ namespace hard {
 }
 
 // Register usage
-typedef genstruct::Vector<t::uint16> RegSet;
+typedef Vector<t::uint16> RegSet;
 class RegIter: public PreIterator<RegIter, const hard::Register *> {
 public:
 	inline RegIter(const RegSet& s, hard::Platform *p): set(s), i(0), pf(p) { }

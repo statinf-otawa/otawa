@@ -28,6 +28,7 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/util/FlowFactLoader.h>
+#include <otawa/view/features.h>
 
 namespace otawa {
 
@@ -182,9 +183,10 @@ CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r) {
 /**
  * CFGCollector registration.
  */
-p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 0, 1))
+p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 1, 0))
 	.require(FLOW_FACTS_FEATURE)
 	.require(LABEL_FEATURE)
+	.require(view::FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)
 	.maker<CFGCollector>();
 
@@ -232,8 +234,18 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 	ENTRY_CFG(ws) = (*coll)[0];
 	addCleaner(COLLECTED_CFG_FEATURE, new CollectorCleaner(ws, coll));
 
+	// install the view
+	view::Manager::add(ws, &ASSEMBLY_VIEW);
+
 	// cleanup all
 	AbstractCFGBuilder::cleanup(ws);
+}
+
+
+/**
+ */
+void CFGCollector::destroy(WorkSpace *ws) {
+	view::Manager::remove(ws, &ASSEMBLY_VIEW);
 }
 
 
@@ -332,4 +344,133 @@ p::id<Address> ADDED_CFG("otawa::ADDED_CFG", 0);
  */
 p::id<CString> ADDED_FUNCTION("otawa::ADDED_FUNCTION", 0);
 
+/**
+ */
+class AssemblyView: public view::View {
+	friend class CFGCollector;
+public:
+	AssemblyView(void): view::View("assembly", "Assembly View") {
+	}
+
+	view::Viewer *explore(WorkSpace *ws, const Vector<view::PropertyType *>& types) override {
+		return new AssemblyViewer(ws, types);
+	}
+
+	class AssemblyViewer: public view::Viewer {
+	public:
+		AssemblyViewer(WorkSpace *ws, const Vector<view::PropertyType *>& props)
+			:	view::Viewer(ws, props) { }
+
+		void start(Block *b) override {
+			if(!b->isBasic())
+				_i = BasicBlock::InstIter();
+			else
+				_i = b->toBasic()->insts();
+		}
+
+		void start(Edge *e) override {
+			_i = BasicBlock::InstIter();
+		}
+
+		Address item(void) const override { return _i->address(); }
+		void next(void) override { _i.next(); }
+		bool ended(void) const override { return _i.ended(); }
+
+		void print(io::Output& out) override {
+			out << ot::address(_i->address()) << "  " << *_i << io::endl;
+		}
+
+	private:
+		BasicBlock::InstIter _i;
+	};
+
+};
+
+/**
+ * View to display the program in assembly.
+ * @ingroup view
+ */
+view::View& ASSEMBLY_VIEW = Single<AssemblyView>::_;
+
+class RegistersProperty: public view::PropertyType {
+public:
+	RegistersProperty(void): view::PropertyType(ASSEMBLY_VIEW, "registers", "Registers used by an instruction.") { }
+
+	bool isAvailable(WorkSpace *ws) override {
+		return ws->isProvided(otawa::REGISTER_USAGE_FEATURE);
+	}
+
+	class Viewer: public view::PropertyViewer {
+	public:
+		Viewer(void): view::PropertyViewer(&REGISTERS_PROPERTY), doit(false) { }
+
+		virtual void print(io::Output& out) override {
+
+			// display read registers
+			{
+				RegSet rs;
+				_i->readRegSet(rs);
+				if(!rs.isEmpty()) {
+					bool fst = true;
+					out << "read: ";
+					for(auto r: rs) {
+						if(fst)
+							fst = false;
+						else
+							out << ", ";
+						out << r;
+					}
+				}
+			}
+
+			// display written registers
+			{
+				RegSet rs;
+				_i->writeRegSet(rs);
+				if(!rs.isEmpty()) {
+					bool fst = true;
+					out << "write: ";
+					for(auto r: rs) {
+						if(fst)
+							fst = false;
+						else
+							out << ", ";
+						out << r;
+					}
+				}
+			}
+}
+
+	private:
+		virtual void start(Block *b) {
+			doit = b->isBasic();
+			if(doit)
+				_i = b->toBasic()->insts();
+			else
+				_i = BasicBlock::InstIter();
+		}
+
+		virtual void start(Edge *e) {
+			doit = false;
+			_i = BasicBlock::InstIter();
+		}
+
+		virtual void step(const Viewer& it) {
+			if(doit)
+				_i++;
+		}
+
+		bool doit;
+		BasicBlock::InstIter _i;
+	};
+
+private:
+	view::PropertyViewer *visit(void) override {
+		return nullptr;
+	}
+};
+
+view::PropertyType& REGISTERS_PROPERTY = Single<RegistersProperty>::_;
+
 } // otawa
+

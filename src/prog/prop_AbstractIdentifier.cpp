@@ -152,6 +152,24 @@ AbstractIdentifier::AbstractIdentifier(cstring name, const PropList& props)
 
 
 /**
+ */
+AbstractIdentifier::~AbstractIdentifier(void) {
+}
+
+
+/**
+ */
+const rtti::Type& AbstractIdentifier::getType(void) const {
+	return __type;
+}
+
+
+/**
+ */
+rtti::Class<AbstractIdentifier> AbstractIdentifier::__type("otawa::AbstractIdentifier");
+
+
+/**
  * Add the properties found in the arguments (list of
  * @ref Property * ended by null) to the identifier properties.
  * @param prop	First property.

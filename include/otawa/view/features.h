@@ -28,12 +28,19 @@
 #include <otawa/base.h>
 #include <otawa/proc/Feature.h>
 
-namespace otawa { namespace view {
+namespace otawa {
 
-using namespace elm;
 class Block;
 class Edge;
 class WorkSpace;
+
+namespace display {
+	class Text;
+};
+
+namespace view {
+
+using namespace elm;
 
 class View;
 class PropertyType;
@@ -60,14 +67,18 @@ public:
 	virtual void next(void) = 0;
 	virtual bool ended(void) const = 0;
 
-	virtual void print(io::Output& out) const = 0;
+	virtual void print(io::Output& out) = 0;
+	virtual void print(display::Text& out);
 	void print(PropertyType *type, io::Output& out) const;
+	void print(PropertyType *type, display::Text& out) const;
 	const PropertyViewer *property(PropertyType *type) const;
 
 protected:
-	Viewer(const Vector<PropertyViewer *>& props);
+	Viewer(WorkSpace *ws, const Vector<PropertyType *>& props);
+	inline WorkSpace *workspace(void) const { return _ws; }
 
 private:
+	WorkSpace *_ws;
 	Vector<PropertyViewer *> _props;
 };
 
@@ -78,45 +89,62 @@ public:
 	virtual ~PropertyViewer(void);
 
 	virtual void print(io::Output& out) = 0;
+	virtual void print(display::Text& out);
 
 protected:
 	PropertyViewer(PropertyType *type);
 private:
 	virtual void start(Block *b) = 0;
 	virtual void start(Edge *e) = 0;
-	virtual void step(const Viewer& it) const = 0;
+	virtual void step(const Viewer& it) = 0;
 	PropertyType *_type;
 };
 
 class PropertyType: public Named {
 	friend class View;
+	friend class Viewer;
 public:
+	//static rtti::Class<View, Named> __type;
+	//const rtti::Type& getType(void) const override;
+
 	PropertyType(View& view, cstring name, string label = "");
 	virtual ~PropertyType(void);
+	virtual bool isAvailable(WorkSpace *ws) = 0;
 private:
 	virtual PropertyViewer *visit(void) = 0;
 	View& _view;
 };
 
 class View: public Named {
+	friend class Manager;
 	friend class PropertyType;
 public:
-	View(Manager *man, cstring name, string label = "");
-	inline List<PropertyType *>::Iter types(void) const { return *_props; }
+	//static rtti::Class<View, Named, rtti::no_inst> __type;
+	//const rtti::Type& getType(void) const override;
 
-	virtual Viewer *explore( const Vector<PropertyType *>& types) = 0;
-private:
+	View(cstring name, string label = "");
+	inline const List<PropertyType *>& types(void) const { return _props; }
+
+	virtual Viewer *explore(WorkSpace *ws, const Vector<PropertyType *>& types);
+protected:
 	virtual ~View(void);
-	Manager *_man;
+private:
 	List<PropertyType *> _props;
 };
 
 class Manager {
+	friend class View;
 public:
+	Manager(WorkSpace *ws);
 	static Manager *get(WorkSpace *ws);
+	static void add(WorkSpace *ws, View *view);
+	static void remove(WorkSpace *ws, View *view);
+	static View *find(WorkSpace *ws, string name);
 	List<View *>::Iter views(void) const { return *_views; }
+	inline WorkSpace *workspace(void) const { return _ws; }
 private:
 	List<View *> _views;
+	WorkSpace *_ws;
 };
 
 inline List<View *>::Iter views(WorkSpace *ws) { return Manager::get(ws)->views(); }

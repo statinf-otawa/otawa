@@ -24,6 +24,7 @@
 
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/cfg/BasicBlock.h>
+#include <otawa/view/features.h>
 #include "CFGDecorator.h"
 
 namespace otawa {
@@ -46,6 +47,7 @@ public:
 	static Identifier<string> PATH;
 	static Identifier<string> PREFIX;
 	static Identifier<bool> RAW_BLOCK_INFO;
+	static Identifier<view::View *> VIEW;
 
 	virtual void genGraphLabel(CFG *graph, Text& caption, GraphStyle& style);
 	virtual void genBBLabel(CFG *graph, Block *block, Text& content, VertexStyle& style);
@@ -64,6 +66,7 @@ private:
 	sys::Path path;
 	bool rawInfo;
 	display::CFGDecorator *dec;
+	view::View *_view;
 };
 
 } }	// otawa::display

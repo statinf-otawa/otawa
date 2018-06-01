@@ -22,6 +22,7 @@
 #include <elm/assert.h>
 #include <elm/string.h>
 #include <elm/io.h>
+#include <elm/rtti.h>
 #include <elm/util/VarArg.h>
 #include <otawa/base.h>
 #include <otawa/prop/PropList.h>
@@ -29,16 +30,19 @@
 namespace otawa {
 
 // Identifier class
-class AbstractIdentifier: public PropList {
+class AbstractIdentifier: public PropList, public rtti::Object {
 	friend class elm::Initializer<AbstractIdentifier>;
 
 public:
+	static rtti::Class<AbstractIdentifier> __type;
+	const rtti::Type& getType(void) const override;
+
 	static AbstractIdentifier *find(const string& name);
 
 	AbstractIdentifier(void);
 	AbstractIdentifier(cstring name);
 	AbstractIdentifier(cstring name, const PropList& props);
-	virtual ~AbstractIdentifier(void) { }
+	virtual ~AbstractIdentifier(void);
 
 	inline const string name(void) const { return nam; }
 	void print(elm::io::Output& out) const;

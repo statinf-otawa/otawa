@@ -37,7 +37,8 @@ public:
 		out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--out").description("select output file").argDescription("PATH")),
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
 		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output")),
-		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output"))
+		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output")),
+		view(option::ValueOption<string>::Make(*this).cmd("-V").cmd("--view").description("display the given view").argDescription("view"))
 	{
 		info.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.");
 		info.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*");
@@ -104,6 +105,14 @@ protected:
 			else {
 				if(out)
 					display::CFGOutput::PATH(props) = *out;
+				if(view != "") {
+					otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
+					if(v == nullptr) {
+						cerr << "ERROR: cannot find view " << *view << io::endl;
+						return;
+					}
+					display::CFGOutput::VIEW(props) = v;
+				}
 				display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
 				display::CFGOutput output;
 				output.process(workspace(), props);
@@ -127,6 +136,7 @@ private:
 	option::ValueOption<string> out;
 	option::Switch no_insts;
 	option::Switch dot, phony;
+	option::ValueOption<string> view;
 };
 
 OTAWA_RUN(OPerform);

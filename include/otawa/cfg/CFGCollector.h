@@ -25,6 +25,7 @@
 #include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/AbstractCFGBuilder.h>
+#include <otawa/view/features.h>
 
 namespace otawa {
 
@@ -37,14 +38,19 @@ public:
 	virtual void configure(const PropList& props);
 
 protected:
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	void setup(WorkSpace *ws) override;
+	void cleanup(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
 
 private:
 	Vector<string> added_funs;
 	Vector<Address> added_cfgs;
 };
 
+extern view::View& ASSEMBLY_VIEW;
+extern view::PropertyType& REGISTERS_PROPERTY;
+
 } // otawa
 
 #endif // OTAWA_CFG_CFG_COLLECTOR_H
+

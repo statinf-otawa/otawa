@@ -31,6 +31,28 @@ namespace otawa { namespace display {
 using namespace display;
 
 /**
+ */
+class ViewDecorator: public CFGDecorator {
+public:
+
+	ViewDecorator(WorkSpace *ws, view::Viewer *viewer): CFGDecorator(ws),  _viewer(viewer) {
+	}
+
+	~ViewDecorator(void) {
+		delete _viewer;
+	}
+
+	void displayBody(CFG *graph, BasicBlock *block, Text& content) const override {
+		for(_viewer->start(block); *_viewer; (*_viewer)++)
+			_viewer->print(content);
+	}
+
+private:
+	view::Viewer *_viewer;
+};
+
+
+/**
  * @class CFGOutput
  * @author H. Cassé <casse@irit.fr>
  * This processor produces an output of the CFG of the current workspace
@@ -46,22 +68,6 @@ using namespace display;
  * @li @ref COLLECTED_CFG_FEATURE
  */
 
-
-// Data
-/*cstring exts[] = {
-	"",
-	"ps",
-	"pdf",
-	"png",
-	"gif",
-	"jpg",
-	"svg",
-	"dot",
-	"raw"
-};*/
-
-// backlink to the CFGOutput
-//static Identifier<CFGOutput *> OUT("", 0);
 
 // CFGOutputDecorator class
 class CFGOutputDecorator: public CFGDecorator {
@@ -102,7 +108,8 @@ CFGOutput::CFGOutput(AbstractRegistration& _reg):
 	CFGProcessor(_reg),
 	kind(OUTPUT_DOT),
 	rawInfo(false),
-	dec(nullptr)
+	dec(nullptr),
+	_view(nullptr)
 {
 }
 
@@ -116,7 +123,7 @@ Identifier<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", O
  * Configuration identifier of @ref CFGOutput for the directory path where to
  * create the output file.
  */
-Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH", ".");
+Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH");
 
 /**
  * Configuration identifier of @ref CFGOutput for the prefix file name
@@ -129,12 +136,19 @@ Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 Identifier<bool> CFGOutput::RAW_BLOCK_INFO("otawa::display::CFGOutput::RAW_BLOCK_INFO", false);
 
 /**
+ * Configuration identifier of @ref CFGOutput to decide which view to use.
+ */
+Identifier<view::View *> CFGOutput::VIEW("otawa::display::CFGOutput::VIEW", nullptr);
+
+
+/**
  */
 void CFGOutput::configure(const PropList &props) {
 	CFGProcessor::configure(props);
 	kind = KIND(props);
 	path = PATH(props);
 	rawInfo = RAW_BLOCK_INFO(props);
+	_view = VIEW(props);
 }
 
 /**
@@ -145,7 +159,7 @@ void CFGOutput::setup(WorkSpace *ws) {
 
 	// get a valid path
 	if(path.isEmpty())
-		path = sys::Path(ws->process()->program()->name()).setExtension(".cfg");
+		path = sys::Path(ws->process()->program()->name()).setExtension("cfg");
 
 	// remove existing one
 	if(path.exists()) {
@@ -181,13 +195,22 @@ void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
 	else
 		opath = path / string(_ << g->index());
 
+	// prepare the decorator
+	if(_view) {
+		Vector<view::PropertyType *> props;
+		dec = new ViewDecorator(ws, _view->explore(ws, props));
+	}
+	else
+		dec = new CFGOutputDecorator(*this, ws);
+
 	// perform the output
-	dec = new CFGOutputDecorator(*this, ws);
 	display::Displayer *disp = display::Provider::display(g, *dec, kind);
 	disp->setPath(opath);
 	if(logFor(LOG_PROC))
 		log << "\toutput CFG " << g << " to " << disp->path() << io::endl;
 	disp->process();
+
+	// release the decorator
 	delete dec;
 }
 

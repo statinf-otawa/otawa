@@ -20,6 +20,9 @@
  *	02110-1301  USA
  */
 
+#include <otawa/cfg/features.h>
+#include <otawa/display/display.h>
+#include <otawa/prog/WorkSpace.h>
 #include <otawa/view/features.h>
 
 namespace otawa { namespace view {
@@ -87,12 +90,16 @@ Named::Named(cstring name, string label): AbstractIdentifier(name), _label(label
 
 /**
  */
-Viewer::Viewer(const Vector<PropertyViewer *>& props): _props(props) {
+Viewer::Viewer(WorkSpace *ws, const Vector<PropertyType *>& types): _ws(ws), _props(types.count()) {
+	for(auto t: types)
+		_props.add(t->visit());
 }
 
 /**
  */
 Viewer::~Viewer(void) {
+	for(auto t: _props)
+		delete t;
 }
 
 /**
@@ -131,6 +138,15 @@ Viewer::~Viewer(void) {
  */
 
 /**
+ * Print the viewed element in a formatted style.
+ * Default implement call print(io::Output&) version.
+ * @param out	Formatetd output to display to.
+ */
+void Viewer::print(display::Text& out) {
+	print(out.out());
+}
+
+/**
  * Print the required property.
  * @param type	Type of property to display.
  * @param out	Stream to output to.
@@ -143,6 +159,18 @@ void Viewer::print(PropertyType *type, io::Output& out) const {
 		}
 }
 
+/**
+ * Print the required property on a formatted stream.
+ * @param type	Type of property to display.
+ * @param out	Formatted output to display to.
+ */
+void Viewer::print(PropertyType *type, display::Text& out) const {
+	for(auto pv = *_props; pv; pv++)
+		if(pv->type() == type) {
+			pv->print(out);
+			break;
+		}
+}
 
 /**
  * Get the property viewer corresponding to a property type.
@@ -182,6 +210,9 @@ PropertyViewer::~PropertyViewer(void) {
  * Print the current property value.
  * @param out	Stream to output to.
  */
+void PropertyViewer::print(display::Text& out) {
+
+}
 
 /**
  */
@@ -230,6 +261,14 @@ PropertyType::~PropertyType(void) {
 	_view._props.remove(this);
 }
 
+
+/**
+ * @fn bool PropertyType::isAvailable(WorkSpace *ws);
+ * Test if the property is available in the given workspace.
+ * @param ws	Workspace to test in.
+ * @return		True if the property is available, false else.
+ */
+
 /**
  * @fn PropertyViewer *PropertyType::visit(void);
  * This function is called to get a viewer on the values of this property.
@@ -240,34 +279,162 @@ PropertyType::~PropertyType(void) {
  * @class View
  * A view provides an aspect of the program to display. The analyzes applied in OTAWA
  * often based on abstract interpretation does not consider all aspects of the execution
- *  together but only survey one. For example, the cache analysis us only interested
- *  on memory accesses while the block time analysis is only interested on execution
- *  of instructions in the pipeline. This class provides such a view of the program.
- *  On a particular view, you can have one or several analysis providing dedicated
- *  properties that recorded in the view.
+ * together but only survey one. For example, the cache analysis us only interested
+ * on memory accesses while the block time analysis is only interested on execution
+ * of instructions in the pipeline. This class provides such a view of the program.
+ * On a particular view, you can have one or several analysis providing dedicated
+ * properties that recorded in the view.
  */
 
 /**
  * Build a view that records itself to the view manager (notice that the @ref FEATURE
  * must be required before creating a view).
  */
-View::View(Manager *man, cstring name, string label): Named(name, label), _man(man) {
+View::View(cstring name, string label): Named(name, label) {
 }
 
 /**
  */
 View::~View(void) {
-
 }
 
-/*inline List<PropertyType *>::Iter types(void) const { return *_props; }
+/**
+ */
+//rtti::Class<View, Named, rtti::no_inst> View::__type("otawa::view::View");
 
-	virtual Viewer *explore( const Vector<PropertyType *>& types) = 0;
-private:
-	virtual ~View(void);
-	Manager *_man;
-	List<PropertyType *> _props;
-};*/
+/**
+ */
+/*const rtti::Type& View::getType(void) const {
+	return __type;
+}*/
 
+
+/**
+ * @fn List<PropertyType *>::Iter View::types(void) const;
+ * Get the list of available properties in the current view.
+ * @return	Viewable properties.
+ */
+
+/**
+ * Get a re-startable view explorator for the given set of properties.
+ */
+Viewer *View::explore(WorkSpace *ws, const Vector<PropertyType *>& types) {
+	return nullptr;
+}
+
+
+/**
+ * @class Manager
+ * Manager of views. Provides mainly the sollection of available views.
+ */
+
+/**
+ * Get the manager for the given workspace.
+ * @param ws	Work space to get manager from.
+ * @return		Found manager or null pointer.
+ */
+Manager *Manager::get(WorkSpace *ws) {
+	return *MANAGER(ws);
+}
+
+
+/**
+ */
+Manager::Manager(WorkSpace *ws): _ws(ws) {
+}
+
+
+/**
+ * Add a view to the view manager of the given workspace.
+ * This only function can only be called once the otawa::view::FEATURE
+ * is provided.
+ *
+ * @param ws	Workspace to add view to.
+ * @param view	To add.
+ */
+void Manager::add(WorkSpace *ws, View *view) {
+	Manager *man = get(ws);
+	ASSERTP(man != nullptr, "Can only be called once the view::FEATURE is provided!\n");
+	man->_views.add(view);
+}
+
+
+/**
+ * Remove a view from the workspace.
+ * Notice this method quietly ignore if the view is not in the workspace.
+ * @param ws	Workspace to remove from.
+ * @param view	Removed view.
+ */
+void Manager::remove(WorkSpace *ws, View *view) {
+	Manager *man = get(ws);
+	ASSERTP(man != nullptr, "Can only be called once the view::FEATURE is provided!\n");
+	man->_views.remove(view);
+}
+
+
+/**
+ * Find a view b its name in a workspace.
+ * @param ws	Workspace to look in.
+ * @param name	Looked view name.
+ * @return		Found view or null pointer.
+ */
+View *Manager::find(WorkSpace *ws, string name) {
+	for(auto v: get(ws)->_views)
+		if(v->name() == name)
+			return v;
+	return nullptr;
+}
+
+
+/**
+ * @fn List<View *>::Iter Manager::views(void) const;
+ * Get the views available in the manager.
+ * @return	List of views.
+ */
+
+class Maker: public Processor {
+public:
+	static p::declare reg;
+	Maker(void): Processor(reg) { }
+
+protected:
+
+	void processWorkSpace(WorkSpace *ws) override {
+		MANAGER(ws) = new Manager(ws);
+	}
+
+	void destroy(WorkSpace *ws) override {
+		delete MANAGER(ws);
+		MANAGER(ws).remove();
+	}
+
+};
+
+/**
+ */
+p::declare Maker::reg = p::init("otawa::view::Maker", Version(1, 0, 0))
+	.provide(FEATURE)
+	.make<Maker>();
+
+
+/**
+ * Feature ensuring there is a view manager.
+ *
+ * @par Properties
+ *	* MANAGER
+ */
+p::feature FEATURE("otawa::view::FEATURE", p::make<Maker>());
+
+/**
+ * Property to set the manager of views.
+ *
+ * @par Feature
+ *	* FEATURE
+ *
+ * @par Hooks
+ *	* WorkSpace
+ */
+p::id<Manager *> MANAGER("otawa::view::MANAGER", nullptr);
 
 } }	// otawa::view
+

@@ -37,7 +37,8 @@ CFGDecorator::CFGDecorator(WorkSpace *workspace)
 	display_props(false),
 	source_color("darkgreen"),
 	label_color("blue"),
-	ws(workspace)
+	ws(workspace),
+	line(0)
 { }
 
 /**
@@ -102,6 +103,9 @@ void CFGDecorator::displayBasicBlock(CFG *g, BasicBlock *b, Text& content, Verte
 		content << display::begin(display::TABLE) << display::begin(display::ROW) << display::begin(display::CELL);
 	displayHeader(g, b, content);
 	if(table) {
+		content << display::end(display::CELL) << display::end(display::ROW)
+				<< display::hr << display::align::left
+				<< display::begin(display::ROW) << display::begin(display::CELL);
 		displayBody(g, b, content);
 		content << display::end(display::CELL) << display::end(display::ROW) << display::end(display::TABLE);
 	}
@@ -122,12 +126,8 @@ void CFGDecorator::displayHeader(CFG *graph, BasicBlock *block, Text& content) c
  * of the table.
  */
 void CFGDecorator::displayBody(CFG *g, BasicBlock *b, Text& content) const {
-	if(display_assembly) {
-		content << display::end(display::CELL) << display::end(display::ROW)
-				<< display::hr
-				<< display::begin(display::ROW) << display::begin(display::CELL);
+	if(display_assembly)
 		displayAssembly(g, b, content);
-	}
 	if(display_props) {
 		content << display::end(display::CELL) << display::end(display::ROW)
 				<< display::hr
@@ -140,31 +140,52 @@ void CFGDecorator::displayBody(CFG *g, BasicBlock *b, Text& content) const {
  * Called to perform the display of the assembly part.
  */
 void CFGDecorator::displayAssembly(CFG *graph, BasicBlock *block, Text& content) const {
-	cstring file;
-	int line = 0;
+	file = "";
+	line = 0;
 	for(BasicBlock::InstIter i = block->insts(); i; i++) {
 
 		// display source line
-		if(display_source_line) {
-			Option<Pair<cstring, int> > src = workspace()->process()->getSourceLine(i->address());
-			if(src && ((*src).fst != file || (*src).snd != line)) {
-				file = (*src).fst;
-				line = (*src).snd;
-					content << display::begin(source_color) << display::begin(display::ITALIC) << file << ":" << line << display::end(display::ITALIC) << display::end(source_color)
-							<< display::left;
-			}
-		}
+		if(display_source_line)
+			displaySourceLine(i->address(), content);
 
 		// display labels
-		for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++)
-			content << display::begin(label_color) << l->name() << ":" << display::end(label_color)
-					<< display::left;
+		displayLabels(i, content);
 
 		// display instruction
 		content << ot::address(i->address()) << "  " << *i
 				<< display::left;
 	}
 }
+
+
+/**
+ * Display source line information corresponding to the given instruction.
+ * @param addr	Current address.
+ * @param text	Formatted stream to display to.
+ */
+void CFGDecorator::displaySourceLine(Address addr, Text& content) const {
+	Option<Pair<cstring, int> > src = workspace()->process()->getSourceLine(addr);
+	if(src && ((*src).fst != file || (*src).snd != line)) {
+		file = (*src).fst;
+		line = (*src).snd;
+			content << display::begin(source_color) << display::begin(display::ITALIC)
+					<< file << ":" << line << display::end(display::ITALIC)
+					<< display::end(source_color) << display::left;
+	}
+}
+
+
+/**
+ * Display labels corresponding to the given instruction.
+ * @param i			Current instruction.
+ * @param content	Formatted stream to display to.
+ */
+void CFGDecorator::displayLabels(Inst *i, Text& content) const {
+	for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++)
+		content << display::begin(label_color) << l->name() << ":" << display::end(label_color)
+				<< display::left;
+}
+
 
 /**
  * Called to display the properties.

@@ -50,11 +50,15 @@ protected:
 	virtual void displayBody(CFG *graph, BasicBlock *block, Text& content) const;
 	virtual void displayAssembly(CFG *graph, BasicBlock *block, Text& content) const;
 	virtual void displayProps(CFG *graph, BasicBlock *block, Text& content) const;
+	virtual void displaySourceLine(Address addr, Text& content) const;
+	virtual void displayLabels(Inst *i, Text& content) const;
 
 	inline WorkSpace *workspace(void) const { return ws; }
 
 private:
 	WorkSpace *ws;
+	mutable cstring file;
+	mutable int line;
 };
 
 } }		// otawa::display

@@ -29,10 +29,12 @@ namespace otawa { namespace graphviz {
 
 using namespace otawa;
 
+class Text;
+
 // Filter for HTML characters
 class HTMLFilter: public io::OutStream {
 public:
-	HTMLFilter(io::OutStream& output): out(output) { }
+	HTMLFilter(io::OutStream& output, Text& text): out(output), _text(text) { }
 
 	virtual int write(const char *buffer, int size) {
 		for(const char *p = buffer; p < buffer + size; p++) {
@@ -44,6 +46,7 @@ public:
 			case '"':	r = out.write("&quot;", 6);	break;
 			case '{':	r = out.write("\\{", 2);	break;
 			case '}':	r = out.write("\\}", 2);	break;
+			case '\n':	newLine();					break;
 			default:	r = out.write(*p);			break;
 			}
 			if(r < 0)
@@ -53,16 +56,18 @@ public:
 	}
 
 	virtual int flush(void) { return out.flush(); }
+	inline void newLine(void);
 
 private:
 	io::OutStream& out;
+	Text& _text;
 };
 
 // Text builder with HTML tags
 class Text: public display::Text {
 public:
 
-	Text(void): filter(_buf.stream()), _out(filter) { reset(); }
+	Text(void): filter(_buf.stream(), *this), _out(filter) { reset(); }
 
 	void reset(void) {
 		accept_hr = false;
@@ -195,6 +200,14 @@ private:
 	bool accept_hr;
 	display::align _align;
 };
+
+
+
+void HTMLFilter::newLine(void) {
+	_text.tag(display::br);
+	flush();
+}
+
 
 class Displayer: public display::Displayer {
 public:
@@ -448,7 +461,6 @@ public:
 	/**
 	 */
 	virtual bool accepts(display::output_mode_t out) {
-		cerr << "DEBUG: accepts " << int(out) << io::endl;
 		switch(out) {
 		case display::OUTPUT_ANY:
 		case display::OUTPUT_PS:
