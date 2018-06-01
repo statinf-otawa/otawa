@@ -84,7 +84,7 @@ public:
 	Event(Inst *inst, place_t place);
 	virtual ~Event(void);
 	inline Inst *inst(void) const { return _inst; }
-	//inline place_t place(void) const { return _place; }
+	inline place_t place(void) const { return _place; }
 
 	// accessors
 	virtual kind_t kind(void) const = 0;
