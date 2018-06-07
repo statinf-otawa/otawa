@@ -330,9 +330,13 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				}
 
 				Block *header = cache::CATEGORY_HEADER(lblock);
-				ASSERT(header != NULL);
 
-				if (LINKED_BLOCKS(lblock) != NULL) {
+				if(header == NULL) { // when the loop header is outside the current CFG
+					Constraint *consN = system->newConstraint(fm_msg, Constraint::LE);
+					consN->addRight(1, VAR(lblock->bb()->cfg()->entry()->outs()->target())); // first basic block of the current CFG
+					consN->addLeft(1, miss);
+				}
+				else if (LINKED_BLOCKS(lblock) != NULL) {
 					/* linked l-blocks first-miss */
 					Vector<LBlock *> &linked = **LINKED_BLOCKS(lblock);
 					/* We add constraints only once per group */

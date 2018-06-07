@@ -932,7 +932,7 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 			for (ParExeInst::ProducingInstIterator prod(inst); prod; prod ++){
 
 				// create the edge
-				ParExeNode *producing_node;
+				ParExeNode *producing_node = nullptr;
 				if(!prod->inst()->isLoad())
 					producing_node = prod->lastFUNode();
 				else {
@@ -941,6 +941,7 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 						if(node->stage() == _microprocessor->memStage())
 							producing_node = node;
 				}
+				ASSERTP(producing_node, "Please check if <mem>true</mem> is set to one of the FUs if the last EX stage contains any FUs.");
 				new ParExeEdge(producing_node, node, ParExeEdge::SOLID, 0, comment(data));
 			}
 		}
