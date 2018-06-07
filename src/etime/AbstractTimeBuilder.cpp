@@ -370,6 +370,32 @@ void AbstractTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 /**
  * TODO
+ */
+void AbstractTimeBuilder::prepareEvents(Vector<EventCase>& events) {
+
+	// sort events
+	class EventCaseComparator {
+	public:
+		static inline int compare(const EventCase& c1, const EventCase& c2) {
+			if(c1.part() != c2.part())
+				return c1.part() - c2.part();
+			else
+				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+		}
+	};
+	elm::quicksort(events, EventCaseComparator());
+
+	// index the dynamic events
+	int di = 0;
+	for(int i = 0; i < events.length(); i++)
+		if(events[i].event()->occurrence() == etime::SOMETIMES) {
+			events[i].setIndex(di);
+			di++;
+		}
+}
+
+
+/**
  * Compute and record time for the given edge.
  * @param e		Edge to compute for.
  */
@@ -384,8 +410,7 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 		log << snk << io::endl;
 	}
 
-	// initialize the sequence
-	//bnode = 0;
+	// collect events
 	Vector<EventCase> all_events;
 	if(src != nullptr)
 		collectEvents(all_events, src, IN_PREFIX, EVENT);
@@ -394,18 +419,7 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 		collectEvents(all_events, e, IN_BLOCK, EVENT);
 	}
 	collectEvents(all_events, snk, IN_BLOCK, EVENT);
-
-	// sort events
-	class EventCaseComparator {
-	public:
-		static inline int compare(const EventCase& c1, const EventCase& c2) {
-			if(c1.part() != c2.part())
-				return c1.part() - c2.part();
-			else
-				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
-		}
-	};
-	elm::quicksort(all_events, EventCaseComparator());
+	prepareEvents(all_events);
 
 	// usual simple case: few events
 	if(countDynEvents(all_events) <= _event_th) {
@@ -434,8 +448,13 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 	// remove prefix case
 	if(logFor(LOG_BLOCK))
 		log << "\t\t\ttoo many dynamic events (" << countDynEvents(all_events) << "). Discarding prefix: overestimation increase\n";
+
+	// recollect events of block only
 	all_events.clear();
 	collectEvents(all_events, snk, IN_BLOCK, EVENT);
+	prepareEvents(all_events);
+
+	// check again
 	if(countDynEvents(all_events) <= _event_th) {
 		ParExeSequence *seq = new ParExeSequence();
 

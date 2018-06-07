@@ -249,6 +249,7 @@ namespace otawa {
 		inline ParExeProc *getMicroprocessor(void) const { return _microprocessor; }
 		inline ParExeNode * firstNode(){return _first_node;}
 		inline ParExeNode *lastNode(){return _last_node;}
+		inline ParExeNode *lastPrologueNode(){return _last_prologue_node;}
 		virtual ParExePipeline *pipeline(ParExeStage *stage, ParExeInst *inst);
 		inline int numResources() {return _resources.length();}
 		inline Resource *resource(int index){return _resources[index];}
