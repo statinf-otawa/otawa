@@ -42,7 +42,6 @@ public:
 	inline part_t part(void) const { return _p; }
 	inline int index(void) const { return _i; }
 	inline void setIndex(int i) { _i = i; }
-
 	inline Event *operator->(void) const { return _e; }
 
 private:
@@ -145,6 +144,7 @@ protected:
 	void cleanup(WorkSpace *ws) override;
 
 private:
+	void prepareEvents(Vector<EventCase>& events);
 	void processEdge(BasicBlock *src, Edge *e, BasicBlock *snk);
 	void buildResources(void);
 	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id);
