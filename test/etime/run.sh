@@ -3,6 +3,8 @@
 test -d xgraphs || mkdir xgraphs
 
 operform $1 -P -v \
+	require:otawa::ipet::FLOW_FACTS_FEATURE \
+	require:otawa::WEIGHT_FEATURE \
 	require:otawa::ICACHE_ONLY_CONSTRAINT2_FEATURE \
 	process:otawa::etime::AbstractTimeBuilder \
 	--add-prop otawa::PROCESSOR_PATH=op1.xml \

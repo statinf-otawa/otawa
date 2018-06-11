@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/data/quicksort.h>
 #include <otawa/ipet.h>
 #include <otawa/etime/AbstractTimeBuilder.h>
 
@@ -204,18 +205,37 @@ public:
 	/*
 	 */
 	void add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& all_events) override {
+		ASSERT(0 < times.count());
+
+		// mono-time case
+		if(times.count() == 1) {
+			genForOneCost(times[0]->time(), e, all_events);
+			return;
+		}
 
 		// count dynamic events
 		int dyn_cnt = 0;
 		for(auto e = *all_events; e; e++)
 			if((*e).event()->occurrence() == SOMETIMES)
 				dyn_cnt++;
-
+		ASSERTP(times.count() <= (1 << dyn_cnt), times.count() << " events");
 
 		// put all configurations in a vector
 		Vector<ConfigSet *> confs;
 		for(auto conf = *times; conf; conf++)
 			confs.add(conf);
+		class ConfigSetCompare {
+		public:
+			static int compare(const ConfigSet *cs1, const ConfigSet *cs2) {
+				if(cs1->time() == cs2->time())
+					return 0;
+				else if(cs1->time() < cs2->time())
+					return -1;
+				else
+					return +1;
+			}
+		};
+		quicksort(confs, ConfigSetCompare());
 
 		// initialization
 		int best_p = 0;
@@ -289,6 +309,37 @@ public:
 	}
 
 	/**
+	 * Generate the constraints when only one cost is considered for the edge.
+	 * @param cost		Edge cost.
+	 * @param edge		Current edge.
+	 * @param events	List of edge events.
+	 */
+	void genForOneCost(ot::time cost, Edge *edge, const Vector<EventCase>&  events) {
+		ilp::System *sys = system();
+		ilp::Var *var = ipet::VAR(edge);
+		ASSERT(var);
+
+		// logging
+		if(logFor(LOG_BB))
+			log << "\t\t\t\tcost = " << cost << io::endl;
+
+		// add to the objective function
+		sys->addObjectFunction(cost, var);
+		if(isRecording())
+			LTS_TIME(edge) = cost;
+
+		// generate constant contribution
+		contributeConst(edge, events);
+
+		// generate variable contribution
+		for(auto ev: events)
+			if(ev->occurrence() == SOMETIMES) {
+				get(ev.event())->contribute(make(ev.event(), ev.part(), true), 0);
+				get(ev.event())->contribute(make(ev.event(), ev.part(), false), 0);
+			}
+	}
+
+	/**
 	 * Build the set after split.
 	 * @param confs		Current configuration.
 	 * @param p			Split position.
@@ -333,8 +384,8 @@ public:
 			StringBuffer buf;
 			buf << "e_";
 			if(e->source()->isBasic())
-				buf << e->source()->toBasic()->index() << "_";
-			buf << e->sink()->toBasic()->index() << "_"
+				buf << e->source()->index() << "_";
+			buf << e->sink()->index() << "_"
 				<< e->sink()->cfg()->label() << "_hts";
 			hts_name = buf.toString();
 		}
