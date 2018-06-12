@@ -26,13 +26,22 @@
 namespace otawa { namespace etime {
 
 /**
- * @class Generator
- * TODO
+ * @class ILPGenerator
+ *
+ * This class is a part of time generation by the etime module.
+ * It is in charge of generating the objective function (for IPET approach)
+ * and of the constraints that links the occurrence of BB times and the
+ * corresponding events.
+ *
+ * Basically, this module accept 2 functions:
+ * * explicit -- to assign explicit names to generated ILP variables,
+ * * recording -- to add recording of times as properties (otawa::etime::LTS_TIME,
+ * otawa::etime::HTS_OFFSET and otawa::etime::HTS_VAR).
+ *
  * @ingroup etime
  */
 
 /**
- * TODO
  */
 ILPGenerator::ILPGenerator(const Monitor& mon):
 	Monitor(mon),
@@ -50,57 +59,70 @@ ILPGenerator::~ILPGenerator(void) {
 
 /**
  * @fn void ILPGenerator::add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& events);
- * TODO
+ * Called each time a set of BB times is produced to add these times to the generated ILP system.
+ * @param e			Current edge.
+ * @param times		Produced times (only one configuration is permitted for each time value).
+ * @param events	Events used to generate the time (static + dynamic events).
+ *
  */
 
 /**
  * @fn void ILPGenerator::complete(void);
- * TODO
+ * Called to complete the generation of ILP constraints in the current ILP system.
  */
 
 /**
  * @fn WorkSpace *ILPGenerator::workspace(void) const;
- * TODO
+ * Get the current work space.
+ * @return	Current workspace.
  */
 
 /**
  * @fn ilp::System *ILPGenerator::system(void) const;
- * TODO
+ * Get the current ILP system.
+ * @return	Current ILP system.
  */
 
 /**
  * @fn bool ILPGenerator::isExplicit(void) const;
- * TODO
+ * Test if the explicit option is set.
+ * @return	Value of explicit option.
  */
 
 /**
  * @fn bool ILPGenerator::isRecording(void) const;
- * TODO
+ * Test if the recording option is.
+ * @return	Value of recording option.
  */
 
 /**
  * @fn void ILPGenerator::setWorkspace(WorkSpace *ws);
- * TODO
+ * Set the current workspace.
+ * @param ws	Set workspace.
  */
 
 /**
  * @fn void ILPGenerator::setSystem(ilp::System *sys);
- * TODO
+ * Set the current ILP system.
+ * @param sys	Set ILP system.
  */
 
 /**
  * @fn void ILPGenerator::setExplicit(bool exp);
- * TODO
+ * Set the explicit option value.
+ * @param exp	Value of explicit option.
  */
 
 /**
  * @fn void ILPGenerator::setRecording(bool recording);
- * TODO
+ * Set the recording option value.
+ * @param exp	Value of recording option.
  */
 
 
 /**
- * TODO
+ * The default implementation of ILPGenerator.
+ * Apply the LTS/HTS method resulting in two times for each BB.
  */
 class StandardILPGenerator: public ILPGenerator {
 
@@ -304,8 +326,14 @@ public:
 
 	}
 
+	/**
+	 */
 	virtual void complete(void) override {
-
+		for(auto coll: colls) {
+			coll->make(system());
+			delete coll;
+		}
+		colls.clear();
 	}
 
 	/**
@@ -334,8 +362,8 @@ public:
 		// generate variable contribution
 		for(auto ev: events)
 			if(ev->occurrence() == SOMETIMES) {
-				get(ev.event())->contribute(make(ev.event(), ev.part(), true), 0);
-				get(ev.event())->contribute(make(ev.event(), ev.part(), false), 0);
+				get(ev.event())->contribute(make(ev.event(), ev.part(), true), nullptr);
+				get(ev.event())->contribute(make(ev.event(), ev.part(), false), nullptr);
 			}
 	}
 
@@ -431,18 +459,19 @@ public:
 		}
 
 		// generate constant contribution
-		// TODO
-		//contributeConst();
+		contributeConst(e, events);
 
-		// special contribution with com
-		// TODO
+		// special contribution with complex component
+		// TODO Can't understand how could we justify this?
 		/*if(split.com) {
 			// sum{e in com} x_e >= x_hts
 			static string msg = "complex constraint for times";
 			ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
-			for(int i = 0; i < events.length(); i++)
-				if((split.com & (1 << i)) && events[i].fst->isEstimating(true))
-					events[i].fst->estimate(c, true);
+			for(auto ev: events)
+				if(ev->kind() == etime::SOMETIMES
+				&& (split.com & (1 << ev.index()))
+				&& ev->isEstimating(true))
+					ev->estimate(c, true);
 			c->addRight(1, x_hts);
 		}*/
 	}
@@ -454,7 +483,7 @@ public:
 	 * @return			Matching collector (never null).
 	 */
 	EventCollector *get(Event *event) {
-		EventCollector *coll = colls.get(event, 0);
+		EventCollector *coll = colls.get(event, nullptr);
 		if(!coll) {
 			coll = new EventCollector(event);
 			colls.put(event, coll);
@@ -491,7 +520,7 @@ public:
 };
 
 /**
- * TODO
+ * Build the default ILP generator instance.
  */
 ILPGenerator *ILPGenerator::make(const Monitor& mon) {
 	return new StandardILPGenerator(mon);

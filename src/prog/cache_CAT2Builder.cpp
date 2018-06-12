@@ -48,8 +48,12 @@ using namespace cache;
 
 /**
  */
-CAT2Builder::CAT2Builder(AbstractRegistration& registration): CFGProcessor(registration) {
-}
+CAT2Builder::CAT2Builder(AbstractRegistration& registration)
+:	CFGProcessor(registration),
+	firstmiss_level(FML_NONE),
+	cstats(nullptr),
+	ah_cnt(0), am_cnt(0), pers_cnt(0), nc_cnt(0), total_cnt(0)
+{ }
 
 p::declare CAT2Builder::reg = p::init("otawa::CAT2Builder", Version(1, 0, 0))
 	.make<CAT2Builder>()
@@ -143,7 +147,7 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 						is_pers = pers->isPersistent(lblock->cacheblock(), pers->length() - 1);
 						break;
 					case FML_MULTI:
-						for (int k = pers->length() - 1 ; k >= 0; k--) {
+						for (int k = pers->length() - 1 ; header != nullptr && k >= 0; k--) {
 							if(pers->isPersistent(lblock->cacheblock(), k)) {
 								if (is_pers)
 									header = ENCLOSING_LOOP_HEADER(header);
@@ -160,6 +164,8 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 
 				if(is_pers) {
 					cache::CATEGORY(lblock) = cache::FIRST_MISS;
+					if(header == nullptr)
+						header = lblock->bb()->cfg()->entry();
 					cache::CATEGORY_HEADER(lblock) = header;
 				}
 				else
