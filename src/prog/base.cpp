@@ -370,8 +370,5 @@ io::Output& operator<<(io::Output& out, const MemArea& a) {
 	return out;
 }
 
-static rtti::Class<Address> __class(rtti::make("otawa::Address"));
-rtti::Type& Address::__type = __class;
-
 }	// otawa
 

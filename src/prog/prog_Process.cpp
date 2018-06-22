@@ -1370,9 +1370,4 @@ io::Output& operator<<(io::Output& out, const Condition& c) {
 }
 
 
-// RTTI
-static rtti::Class<Process, PropList, rtti::no_inst> __class(rtti::make("otawa::Process")
-	.op("program", &Process::program));
-rtti::Type& Process::__type = __class;
-
 } // otawa

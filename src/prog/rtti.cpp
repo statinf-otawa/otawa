@@ -23,24 +23,43 @@
 #include <elm/rtti/Class.h>
 #include <elm/rtti/type_of.h>
 
-#include "../../include/otawa/prop.h"
+#include <otawa/prop.h>
+#include <otawa/program.h>
 
 using namespace elm;
 
-#if 0
-namespace otawa {
-extern rtti::Class<PropList> prop_list_type;
-}
-
-namespace elm { namespace rtti {
-template <> inline const Type& _type<otawa::PropList>::_(void) { return otawa::prop_list_type; }
-} }
-
 namespace otawa {
 
-rtti::Class<PropList> prop_list_type(rtti::make("otawa::PropList")
+static rtti::Class<Address> address_class(rtti::make("otawa::Address"));
+rtti::Type& Address::__type = address_class;
+
+static rtti::Class<PropList> prop_list_class(rtti::make("otawa::PropList")
 	.construct<PropList>("construct"));
+rtti::Type& PropList::__type = prop_list_class;
+
+static rtti::Class<ProgItem, PropList, rtti::no_inst> prog_item_class(rtti::make("otawa::ProgItem")
+	.op("size", &ProgItem::size)
+	/*.op("address", &ProgItem::address)*/);
+rtti::Type& ProgItem::__type = prog_item_class;
+
+static rtti::Class<Inst, ProgItem, rtti::no_inst> inst_class(rtti::make("otawa::Inst"));
+rtti::Type& Inst::__type = inst_class;
+
+static rtti::Class<Segment, PropList, rtti::no_inst> segment_class(rtti::make("otawa::Segment")
+	.op("name", &Segment::name));
+rtti::Type& Segment::__type = segment_class;
+
+static rtti::Class<File, PropList, rtti::no_inst> file_class(rtti::make("otawa::File")
+	.op("name", &File::name));
+rtti::Type& File::__type = file_class;
+
+static rtti::Class<Process, PropList, rtti::no_inst> process_class(rtti::make("otawa::Process")
+	.op("program", &Process::program));
+rtti::Type& Process::__type = process_class;
+
+static rtti::Class<WorkSpace, PropList, rtti::no_inst> workspace_class(rtti::make("otawa::WorkSpace")
+	.op("process", &WorkSpace::process));
+rtti::Type& WorkSpace::__type = workspace_class;
 
 }	// otawa
-#endif
 

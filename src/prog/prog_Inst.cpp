@@ -758,8 +758,5 @@ io::Output& operator<<(io::Output& out, Inst::Kind kind) {
 	return out;
 }
 
-// RTTI
-static rtti::Class<Inst, ProgItem, rtti::no_inst> __class(rtti::make("otawa::Inst"));
-
 }	// otawa
 

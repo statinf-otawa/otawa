@@ -194,9 +194,4 @@ File::~File(void) {
 }
 
 
-// RTTI
-static rtti::Class<File, PropList, rtti::no_inst> __class(rtti::make("otawa::File")
-	.op("name", &File::name));
-rtti::Type& File::__type = __class;
-
 } // otawa
