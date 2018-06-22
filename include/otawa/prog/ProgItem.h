@@ -21,8 +21,9 @@ class Segment;
 
 // ProgItem class
 class ProgItem: public PropList, protected inhstruct::DLNode {
-
 public:
+	static rtti::Type& __type;
+
 	ProgItem *next(void) const;
 	ProgItem *previous(void) const;
 	virtual address_t address(void) const = 0;

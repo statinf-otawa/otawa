@@ -27,7 +27,7 @@
 
 namespace otawa {
 	
-extern Manager MANAGER;  
+extern Manager& MANAGER;
 	
 } // otawa
 

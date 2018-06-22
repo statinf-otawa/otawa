@@ -21,6 +21,7 @@
 
 #include <otawa/prog/File.h>
 #include <otawa/prog/Symbol.h>
+#include <otawa/prog/Process.h>
 #include <otawa/prop/info.h>
 
 namespace otawa {
@@ -191,5 +192,11 @@ File::~File(void) {
 	for(SymIter sym(this); sym; sym++)
 		delete sym;
 }
+
+
+// RTTI
+static rtti::Class<File, PropList, rtti::no_inst> __class(rtti::make("otawa::File")
+	.op("name", &File::name));
+rtti::Type& File::__type = __class;
 
 } // otawa

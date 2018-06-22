@@ -24,6 +24,7 @@
 #include <elm/utility.h>
 #include <elm/PreIterator.h>
 #include <elm/util/VarArg.h>
+#include <otawa/base.h>
 
 namespace elm { template <class T> class Initializer; }
 
@@ -66,6 +67,7 @@ private:
 class PropList {
 	mutable Property *head;
 public:
+	static rtti::Type& __type;
 	static const PropList EMPTY;
 	inline PropList(const PropList& props): head(0) { addProps(props); };
 	inline PropList(void): head(0) { };

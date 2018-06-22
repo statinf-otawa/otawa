@@ -31,10 +31,13 @@
 #include <elm/type_info.h>
 
 // ELM definitions
-namespace elm { namespace serial2 {
-	class Serializer;
-	class Unserializer;
-} } // elm::serial2
+namespace elm {
+	namespace rtti { class Type; }
+	namespace serial2 {
+		class Serializer;
+		class Unserializer;
+	}
+} // elm::serial2
 
 namespace otawa {
 using namespace elm;
@@ -52,6 +55,8 @@ class MemArea;
 // Address class
 class Address {
 public:
+	static rtti::Type& __type;
+
 	typedef t::uint32 page_t;
 	typedef t::uint32 offset_t;
 	static Address null;

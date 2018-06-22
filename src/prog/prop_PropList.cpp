@@ -845,5 +845,9 @@ void PropList::print(elm::io::Output& out) const {
  */
 
 
-} // otawa
+// RTTI
+static rtti::Class<PropList> __class(rtti::make("otawa::PropList")
+	.construct<PropList>("construct"));
+rtti::Type& PropList::__type = __class;
 
+} // otawa

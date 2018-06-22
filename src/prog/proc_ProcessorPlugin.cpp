@@ -118,7 +118,7 @@ elm::genstruct::Table<AbstractRegistration *>& ProcessorPlugin::processors(void)
 
 #define CSTR(x) #x
 
-extern Manager MANAGER;
+extern Manager& MANAGER;
 
 /**
  * Initialize the plugger.

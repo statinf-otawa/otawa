@@ -169,6 +169,8 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb, const ContextualPath
 	Vector<Pair<Address, Address> > addresses;
 	workspace()->process()->getAddresses((*res).fst, (*res).snd, addresses);
 	ASSERT(addresses);
+	cerr << "DEBUG: BB = " << bb << ", inst = " << inst->address() << io::endl;
+	cerr << "DEBUG: address = " << addresses[0].fst << io::endl;
 	Inst *line_inst = workspace()->findInstAt(addresses[0].fst);
 	ASSERT(line_inst);
 
@@ -215,8 +217,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const Co
 
 	// look in back edge in case of "while() ..." to "do ... while(...)" optimization
 	for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
-		if(Dominance::isBackEdge(edge)) {
-			ASSERT(edge->source()->isBasic());
+		if(Dominance::isBackEdge(edge) && edge->source()->isBasic()) {
 			for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
 				if(lookLineAt(inst, bb, path))
 					return;

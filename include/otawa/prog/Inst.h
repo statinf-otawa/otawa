@@ -61,6 +61,7 @@ private:
 class Inst: public ProgItem {
 	friend class CodeItem;
 public:
+	static rtti::Type& __type;
 
 	// Kind management
 	typedef elm::t::uint32 kind_t;

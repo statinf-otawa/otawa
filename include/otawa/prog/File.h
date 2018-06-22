@@ -44,6 +44,8 @@ class File: public PropList {
 
 
 public:
+	static rtti::Type& __type;
+
 	inline File(String name): _name(name) { }
 	inline CString name(void) { return _name.toCString(); }
 	Inst *findInstAt(address_t address);

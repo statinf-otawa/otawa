@@ -726,7 +726,19 @@ Identifier<hard::Memory *> MEMORY_OBJECT("otawa::MEMORY_OBJECT", 0);
 /**
  * Default manager. Avoid to declare one in the main.
  */
-Manager MANAGER;
+Manager Manager::_def;
+
+
+/**
+ * @fn Manager& Manager::def(void);
+ * Get the default manager.
+ */
+
+
+/**
+ * Default manager. Avoid to declare one in the main.
+ */
+Manager& MANAGER = *Manager::def();
 
 
 /**
@@ -739,5 +751,11 @@ const cstring Manager::COMPILATION_DATE = OTAWA_DATE;
  * Current version of sources OTAWA (VCS version).
  */
 const cstring Manager::VERSION = OTAWA_VERSION;
+
+
+// RTTI
+static rtti::Class<Manager> __class(rtti::make("otawa::Manager")
+	.op("def", Manager::def));
+rtti::Type& Manager::__type = __class;
 
 }	// otawa

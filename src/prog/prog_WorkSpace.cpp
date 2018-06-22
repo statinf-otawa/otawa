@@ -943,4 +943,9 @@ Inst *WorkSpace::findInstAt(address_t addr) {
 	return proc->findInstAt(addr);
 }
 
+// RTTI
+static rtti::Class<WorkSpace, PropList, rtti::no_inst> __class(rtti::make("otawa::WorkSpace")
+	.op("process", &WorkSpace::process));
+rtti::Type& WorkSpace::__type = __class;
+
 } // otawa

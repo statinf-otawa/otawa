@@ -39,6 +39,8 @@ class Data;
 // Segment class
 class Segment: public PropList {
 public:
+	static rtti::Type& __type;
+
 	typedef t::uint32 flags_t;
 	const static flags_t EXECUTABLE = 0x01;
 	const static flags_t WRITABLE = 0x02;

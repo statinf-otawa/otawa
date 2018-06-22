@@ -15,10 +15,8 @@ set(libotawa_SOURCES
 	"feature.h"
 	"base.cpp"
 	"manager.cpp"
-	"instruction.cpp"
 	"type.cpp"
 	"Loader.cpp"
-	"Process.cpp"
 
 	"dfa_MemorySet.cpp"
 
@@ -183,8 +181,10 @@ set(libotawa_SOURCES
 	"prog_Bundle.cpp"
 	"prog_File.cpp"
 	"prog_FixedTextDecoder.cpp"
+	"prog_Inst.cpp"
 	"prog_Label.cpp"
 	"prog_ProgItem.cpp"
+	"prog_Process.cpp"
 	"prog_Segment.cpp"
 	"prog_Symbol.cpp"
 	"prog_TextDecoder.cpp"

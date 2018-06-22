@@ -480,7 +480,7 @@ void AbstractTimeBuilder::processEdge(BasicBlock *src, Edge *e, BasicBlock *snk)
 				if((*e).event()->occurrence() == SOMETIMES)
 					log << "\t\t\t\t" << (*e).part() << ": " << (*e).event()->inst()->address() << " -> " << (*e).event()->name() << " (" << (*e).event()->detail() << ") " << io::endl;
 		}
-		ASSERTP(false, "too many events!")
+		throw ProcessorException(*this, _ << "too many events (" << countDynEvents(all_events) << ") in " << src << "!");
 	}
 }
 

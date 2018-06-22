@@ -131,6 +131,8 @@ private:
 // Process class
 class Process: public PropList, public Lock {
 public:
+	static rtti::Type& __type;
+
 	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
 	inline const List<AbstractFeature *>& features(void) const { return provided; }

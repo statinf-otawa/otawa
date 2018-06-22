@@ -253,4 +253,11 @@ void Segment::insert(ProgItem *item) {
 	ASSERT(!item->next() || item->address() < item->next()->address());
 }
 
+
+
+// RTTI
+static rtti::Class<Segment, PropList, rtti::no_inst> __class(rtti::make("otawa::Segment")
+	.op("name", &Segment::name));
+rtti::Type& Segment::__type = __class;
+
 }; // namespace otawa

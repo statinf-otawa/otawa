@@ -96,4 +96,10 @@ Inst *ProgItem::toInst(void) {
 	return 0;
 }
 
+// RTTI
+static rtti::Class<ProgItem, PropList, rtti::no_inst> __class(rtti::make("otawa::ProgItem")
+	.op("size", &ProgItem::size)
+	/*.op("address", &ProgItem::address)*/);
+rtti::Type& ProgItem::__type = __class;
+
 } // otawa

@@ -58,6 +58,7 @@ public:
 class Manager {
 	friend class WorkSpace;
 public:
+	static rtti::Type& __type;
 	static const cstring
 		OTAWA_NS,
 		OTAWA_NAME,
@@ -66,23 +67,28 @@ public:
 		MEMORY_NAME,
 		COMPILATION_DATE,
 		VERSION;
+	static CString copyright;
+
 	static elm::sys::Path prefixPath(void);
 	static String buildPaths(cstring kind, string paths = "");
+	static inline Manager *def(void) { return &_def; }
 
 	Manager(void);
 	~Manager(void);
 	Loader *findLoader(elm::CString name);
+	WorkSpace *load(const elm::sys::Path& path, const PropList& props = PropList::EMPTY);
+	ilp::System *newILPSystem(String plugin = "");
+
+	// deprecated
 	sim::Simulator *findSimulator(elm::CString name);
-	WorkSpace *load(const elm::sys::Path& path,
-		const PropList& props = PropList::EMPTY);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
 	WorkSpace *load(xom::Element *elem, const PropList& props = PropList::EMPTY);
-	ilp::System *newILPSystem(String plugin = "");
 	elm::sys::Path retrieveConfig(const elm::sys::Path& path);
 	Loader *findFileLoader(const elm::sys::Path& path);
-	static CString copyright;
 
 private:
+	static Manager _def;
+
 	WorkSpace *loadBin(const elm::sys::Path& path, const PropList& props);
 	WorkSpace *loadXML(const elm::sys::Path& path, const PropList& props);
 
@@ -130,7 +136,7 @@ extern Identifier<hard::Processor *> PROCESSOR;
 
 extern Identifier<string> LOAD_PARAM;
 
-extern Manager MANAGER;
+extern Manager& MANAGER;
 
 } // otawa
 

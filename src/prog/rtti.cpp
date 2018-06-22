@@ -27,6 +27,7 @@
 
 using namespace elm;
 
+#if 0
 namespace otawa {
 extern rtti::Class<PropList> prop_list_type;
 }
@@ -41,4 +42,5 @@ rtti::Class<PropList> prop_list_type(rtti::make("otawa::PropList")
 	.construct<PropList>("construct"));
 
 }	// otawa
+#endif
 
