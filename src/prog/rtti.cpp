@@ -46,15 +46,18 @@ static rtti::Class<Inst, ProgItem, rtti::no_inst> inst_class(rtti::make("otawa::
 rtti::Type& Inst::__type = inst_class;
 
 static rtti::Class<Segment, PropList, rtti::no_inst> segment_class(rtti::make("otawa::Segment")
-	.op("name", &Segment::name));
+	.op("name", &Segment::name)
+	.iter<ProgItem *, Segment::ItemIter, Segment>("items"));
 rtti::Type& Segment::__type = segment_class;
 
 static rtti::Class<File, PropList, rtti::no_inst> file_class(rtti::make("otawa::File")
-	.op("name", &File::name));
+	.op("name", &File::name)
+	.iter<Segment *, File::SegIter, File>("segments"));
 rtti::Type& File::__type = file_class;
 
 static rtti::Class<Process, PropList, rtti::no_inst> process_class(rtti::make("otawa::Process")
-	.op("program", &Process::program));
+	.op("program", &Process::program)
+	.iter<File *, Process::FileIter, Process>("files"));
 rtti::Type& Process::__type = process_class;
 
 static rtti::Class<WorkSpace, PropList, rtti::no_inst> workspace_class(rtti::make("otawa::WorkSpace")

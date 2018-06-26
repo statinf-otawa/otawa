@@ -66,9 +66,8 @@ public:
 	class ItemIter: public PreIterator<ItemIter, ProgItem *> {
 		ProgItem *cur;
 	public:
-		inline ItemIter(Segment *seg): cur((ProgItem *)seg->items.first())
+		inline ItemIter(const Segment *seg): cur((ProgItem *)seg->items.first())
 			{ if(seg->items.isEmpty()) cur = 0; }
-		inline ItemIter(const ItemIter& iter): cur(iter.cur) { }
 		inline ProgItem *item(void) const { return cur; }
 		inline bool ended(void) const { return cur == 0; }
 		inline void next(void) { cur = cur->next(); }
