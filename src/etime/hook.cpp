@@ -262,9 +262,8 @@ p::id<Event *> PREFIX_EVENT("otawa::etime::PREFIX_EVENT", 0);
 /**
  * Build an event.
  * @param inst	Instruction it applies to.
- * @param place	Place of the event (prefix or block itself).
  */
-Event::Event(Inst *inst, place_t place): _inst(inst), _place(place) {
+Event::Event(Inst *inst): _inst(inst) {
 }
 
 

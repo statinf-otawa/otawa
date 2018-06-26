@@ -169,8 +169,6 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb, const ContextualPath
 	Vector<Pair<Address, Address> > addresses;
 	workspace()->process()->getAddresses((*res).fst, (*res).snd, addresses);
 	ASSERT(addresses);
-	cerr << "DEBUG: BB = " << bb << ", inst = " << inst->address() << io::endl;
-	cerr << "DEBUG: address = " << addresses[0].fst << io::endl;
 	Inst *line_inst = workspace()->findInstAt(addresses[0].fst);
 	ASSERT(line_inst);
 

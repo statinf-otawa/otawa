@@ -227,7 +227,9 @@ Stage::~Stage(void)
  * @param inst	Instruction to look a functional unit for.
  * @return		Found functional unit or null.
  */
-FunctionalUnit *Stage::select(Inst *inst) const {
+const PipelineUnit *Stage::select(Inst *inst) const {
+	if(fus.isEmpty())
+		return this;
 	ASSERT(dispatch.count() > 0);
 	Inst::kind_t kind = inst->kind();
 	for(int i = 0; i < dispatch.count(); i++) {
@@ -575,13 +577,13 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) const {
 
 		// add first cycle and select unit
 		Step step;
-		PipelineUnit *unit;
+		const PipelineUnit *unit;
 		if(stage->getType() != Stage::EXEC) {
 			unit = stage;
 			step = Step(stage);
 		}
 		else {
-			FunctionalUnit *fu = stage->select(inst);
+			const PipelineUnit *fu = stage->select(inst);
 			unit = fu;
 			step = Step(fu);
 		}
@@ -875,9 +877,6 @@ Output& operator<<(Output& out, const Step& step) {
 	switch(step.kind()) {
 	case hard::Step::STAGE:
 		out << "\t" << step.stage()->getName();
-		break;
-	case hard::Step::FU:
-		out << "\t" << step.fu()->getName();
 		break;
 	case hard::Step::READ:
 		out << " r:" << step.getReg()->name();

@@ -169,7 +169,7 @@ public:
 	inline const genstruct::Table<FunctionalUnit *>& getFUs(void) const { return fus; }
 	inline const genstruct::Table<Dispatch *>& getDispatch(void) const { return dispatch; }
 	inline bool isOrdered(void) const { return ordered; }
-	FunctionalUnit *select(Inst *inst) const;
+	const PipelineUnit *select(Inst *inst) const;
 
 	// deprecated
 	template <class T> inline T select(Inst *inst, const T table[]) const; 
@@ -231,7 +231,6 @@ public:
 	typedef enum {
 		NONE,
 		STAGE,
-		FU,
 		READ,
 		WRITE,
 		USE,
@@ -243,23 +242,20 @@ public:
 	} kind_t;
 
 	inline Step(void): _kind(NONE) { }
-	inline Step(Stage *stage): _kind(STAGE) { arg.stage = stage; }
-	inline Step(FunctionalUnit *fu): _kind(FU) { arg.fu = fu; }
+	inline Step(const PipelineUnit *unit): _kind(STAGE) { arg.unit = unit; }
 	inline Step(kind_t kind, const hard::Register *reg): _kind(kind) { ASSERT(kind == READ || kind == WRITE); arg.reg = reg; }
 	inline Step(kind_t kind, hard::Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
 	inline Step(kind_t kind): _kind(kind) { ASSERT(kind >= BRANCH || kind <= MEM_WAIT ); }
 
 	inline kind_t kind(void) const { return _kind; }
-	inline Stage *stage(void) const { ASSERT(_kind == STAGE); return arg.stage; }
-	inline PipelineUnit *fu(void) const { ASSERT(_kind == FU); return arg.fu; }
+	inline const PipelineUnit *stage(void) const { ASSERT(_kind == STAGE); return arg.unit; }
 	inline const Register *getReg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
 	inline Queue *getQueue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
 
 private:
 	kind_t _kind;
 	union {
-		Stage *stage;
-		FunctionalUnit *fu;
+		const PipelineUnit *unit;
 		const Register *reg;
 		Queue *queue;
 		bool cached;

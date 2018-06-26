@@ -185,13 +185,10 @@ class StandardILPGenerator: public ILPGenerator {
 		 * @param sys	System to create constraints in.
 		 */
 		void make(ilp::System *sys) {
-			int s = PREFIX_OFF ;
-			if(evt->place() == BLOCK)
-				s = BLOCK_OFF;
-			for(int c = s; c < SIZE; ++c) {
+			for(int c = 0; c < SIZE; ++c) {
 				if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
 					ilp::Constraint *cons = sys->newConstraint(
-						/*"event constraint"*/evt->name() ,
+						evt->name() ,
 						/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 					evt->estimate(cons, isOn(case_t(c)));
 					for(List<ilp::Var *>::Iter v(vars[c]); v; v++)

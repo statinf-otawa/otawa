@@ -81,10 +81,9 @@ class Event: public PropList {
 public:
 	typedef Pair<Inst *, const hard::PipelineUnit *> rel_t;
 
-	Event(Inst *inst, place_t place);
+	Event(Inst *inst);
 	virtual ~Event(void);
 	inline Inst *inst(void) const { return _inst; }
-	inline place_t place(void) const { return _place; }
 
 	// accessors
 	virtual kind_t kind(void) const = 0;
@@ -112,7 +111,6 @@ public:
 
 private:
 	Inst *_inst;
-	place_t _place;
 };
 io::Output& operator<<(io::Output& out, place_t place);
 io::Output& operator<<(io::Output& out, Event *event);

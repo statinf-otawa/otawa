@@ -50,9 +50,9 @@ io::Output& operator<<(io::Output& out, category_t cat) {
  */
 class ICacheEvent: public etime::Event {
 public:
-	ICacheEvent(const icache::Access& acc, etime::place_t place, ot::time cost, category_t cat, const PropList *site, Block *head = 0,
+	ICacheEvent(const icache::Access& acc, ot::time cost, category_t cat, const PropList *site, Block *head = 0,
 			etime::type_t type = etime::LOCAL, rel_t rel = pair(null<Inst>(), null<const hard::PipelineUnit>()))
-		: Event(acc.instruction(), place), _cost(cost), _acc(acc), _site(site), _cat(cat), _head(head), _type(type), _rel(rel) {	}
+		: Event(acc.instruction()), _cost(cost), _acc(acc), _site(site), _cat(cat), _head(head), _type(type), _rel(rel) {	}
 
 	virtual etime::kind_t kind(void) const { return etime::FETCH; }
 	virtual ot::time cost(void) const { return _cost; }
@@ -240,7 +240,7 @@ protected:
 		}
 
 		// build the event
-		return new ICacheEvent(acc, place, t, cat, cv, ch);
+		return new ICacheEvent(acc, t, cat, cv, ch);
 	}
 
 	const LBlockCollection *coll;

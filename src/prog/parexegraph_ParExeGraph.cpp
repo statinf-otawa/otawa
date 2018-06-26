@@ -616,7 +616,8 @@ void ParExeGraph::createNodes() {
 		for(ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
 
 			// generic case
-			if(stage->category() != ParExeStage::EXECUTE) {
+			if(stage->category() != ParExeStage::EXECUTE
+			|| static_cast<const hard::Stage *>(stage->unit())->getFUs().isEmpty()) {
 				node = new ParExeNode(this, stage, inst);
 				// register the new node to the related instruction and pipeline stage
 				inst->addNode(node);
@@ -626,6 +627,8 @@ void ParExeGraph::createNodes() {
 
 			// EXECUTE stage => expand functional unit's pipeline
 			else {
+
+				// select the unit
 				ParExePipeline *fu = pipeline(stage, inst);
 				ParExeNode *first = nullptr, *last = nullptr;
 				ASSERTP(fu != nullptr,
