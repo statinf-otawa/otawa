@@ -42,9 +42,6 @@ endif()
 
 
 # loader plugins
-if(ARM_LIB)
-	add_subdirectory(arm2)
-endif()
 if(PPC_LIB)
 	add_subdirectory(ppc2)
 endif()

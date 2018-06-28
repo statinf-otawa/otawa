@@ -1,7 +1,0 @@
-extend B_thumb
-	otawa_target =
-		if cond == 0b1111 then 0
-		else target
-		endif
-
-

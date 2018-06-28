@@ -100,8 +100,8 @@ public:
 	ACSStack(int n, age_t d = BOT_AGE);
 	ACSStack(const ACS& a);
 	inline ACSStack(const ACSStack& a) { copy(a); }
-	inline const genstruct::Vector<ACS>& stack(void) const { return _stack; }
-	inline genstruct::Vector<ACS>& stack(void) { return _stack; }
+	inline const Vector<ACS>& stack(void) const { return _stack; }
+	inline Vector<ACS>& stack(void) { return _stack; }
 	inline const ACS& whole(void) const { return _whole; }
 	inline ACS& whole(void) { return _whole; }
 	inline bool isBottom(void) const { return _bot; }
@@ -118,7 +118,7 @@ public:
 private:
 	bool _bot;
 	ACS _whole;
-	genstruct::Vector<ACS> _stack;
+	Vector<ACS> _stack;
 };
 
 template <class T>

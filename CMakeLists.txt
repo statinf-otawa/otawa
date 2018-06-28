@@ -91,40 +91,6 @@ else()
 endif()
 
 
-# looking for ARM loader
-set(ARM5_PATH "${CMAKE_SOURCE_DIR}/../armv5t")
-set(ARM7_PATH "${CMAKE_SOURCE_DIR}/../armv7t")
-set(ARM_PATH "ARM_PATH-NOTFOUND" CACHE PATH "path to GLISS ARM path")
-set(ARM_LIB "ARM_LIB-NOTFOUND" CACHE PATH "path to ARM library")
-set(ARM_SIM OFF CACHE BOOL "Compile in the ARM functional simulator")
-
-if(EXISTS "${ARM7_PATH}")
-	set(ARM_PATH "${ARM7_PATH}")
-	set(ARM7 "ON")
-elseif(EXISTS "${ARM5_PATH}")
-    set(ARM_PATH "${ARM5_PATH}")
-endif()
-message(STATUS "ARM_PATH=${ARM_PATH}")
-
-if(ARM_PATH)
-	if(MINGW_LINUX)
-		set(path "${ARM_PATH}/src/libarm.a")
-		if(EXISTS ${path})
-			set(path "${path}")
-		endif()
-		set(ARM_LIB "${path}" CACHE PATH "path to ARM library")
-	else()
-		find_library(ARM_LIB arm PATHS "${ARM_PATH}/src" NO_DEFAULT_PATH)
-	endif()
-endif()
-
-if(ARM_LIB)
-	message(STATUS "ARM library found at ${ARM_LIB}")
-else()
-	message(STATUS "ARM library not found")
-endif()
-
-
 # looking for PPC loader
 set(PPC_PATH "${CMAKE_SOURCE_DIR}/../ppc2" CACHE PATH "path to GLISS PPC path")
 if(EXISTS "${PPC_PATH}")

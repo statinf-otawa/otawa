@@ -23,13 +23,15 @@
 #define OTAWA_CONTEXT_TREE_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/proc/CFGProcessor.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/cfg/CFG.h>
 #include "../prop.h"
 
 namespace otawa {
+
+using namespace elm;
 
 class BasicBlock;
 class CFG;
@@ -48,8 +50,8 @@ private:
 	kind_t _kind;
 	BasicBlock *_bb;
 	CFG *_cfg;
-	elm::genstruct::Vector<Block *> _bbs;
-	elm::genstruct::Vector<ContextTree *> _children;
+	elm::Vector<Block *> _bbs;
+	elm::Vector<ContextTree *> _children;
 	
 	ContextTree *_parent;
 	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
@@ -68,16 +70,16 @@ public:
 	ContextTree *enclosingFunction(void);
 	
 	// ChildrenIterator class
-	class ChildrenIterator: public elm::genstruct::Vector<ContextTree *>::Iterator {
+	class ChildrenIterator: public Vector<ContextTree *>::Iter {
 	public:
 		inline ChildrenIterator(ContextTree *tree);
 	};
 	
 	// BBIterator class
-	class BlockIterator: public elm::genstruct::Vector<Block *>::Iterator {
+	class BlockIterator: public Vector<Block *>::Iter {
 	public:
 		inline BlockIterator(ContextTree *tree):
-			elm::genstruct::Vector<Block *>::Iterator(tree->_bbs) { }
+			Vector<Block *>::Iter(tree->_bbs) { }
 	};
 };
 
@@ -140,7 +142,7 @@ inline CFG *ContextTree::cfg(void) const {
 
 // ContextTree::ChildrenIterator class
 inline ContextTree::ChildrenIterator::ChildrenIterator(ContextTree *tree)
-: elm::genstruct::Vector<ContextTree *>::Iterator(tree->_children) {
+: Vector<ContextTree *>::Iter(tree->_children) {
 	ASSERT(tree);
 };
 

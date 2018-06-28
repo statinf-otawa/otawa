@@ -215,7 +215,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				MemID rega = elm::Pair<Memtype,int>(REG,i.a());
 				PotentialValue potentialAddr = find(bb,rega,clpin,globalin,semantics);
 
-				if ( potentialAddr.length() > 0 && potentialAddr.get(0) == id.snd) { // if the address specified with register i.a(), i.e. [i.a()], is found, and matches address from id
+				if ( potentialAddr.length() > 0 && potentialAddr.get(0) == t::uint32(id.snd)) { // if the address specified with register i.a(), i.e. [i.a()], is found, and matches address from id
 					MemID valid = elm::Pair<Memtype,int>(REG,i.d());
 					PotentialValue r = find(bb,valid,clpin,globalin,semantics);
 					return r;
@@ -582,15 +582,13 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// obtain the filters (if there is any) in this BB.
 		// FIXME: assumption: ONLY ONE IF per BB!
-		elm::genstruct::Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
-		elm::genstruct::Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
+		elm::Vector<se::SECmp *> regFilters = se::REG_FILTERS(bb);
+		elm::Vector<se::SECmp *> addrFilters = se::ADDR_FILTERS(bb);
 
 
 		// to prepare the clpState, which is a Vector of CLP states. Each element of the vector is associated with a semantic instruction
 		clpState.clear();
 
-		int semInstIndex = 0;
-		Inst* inst = 0;
 		while(s) {
 			// check if the current semantic instruction is an IF
 			sem::inst si = clpManager->sem();

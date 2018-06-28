@@ -24,7 +24,7 @@
 #ifndef OTAWA_DATA_CLP_PACK_H_
 #define OTAWA_DATA_CLP_PACK_H_
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/data/clp/ClpState.h>
 #include <otawa/prog/Process.h>
 
@@ -45,7 +45,7 @@ class ClpProblem;
 class ClpStatePack{
 	friend class ClpProblem;
 public:
-	typedef genstruct::Vector<clp::State*>::Iterator StateIterator;
+	typedef Vector<clp::State*>::Iter StateIterator;
 	
 	/** A pack of CLP states inside a machine instruction.
 	*	Each state of this pack is the state after a semantic instruction, in
@@ -78,7 +78,7 @@ public:
 		void append(clp::State &state);
 	private:
 		address_t _inst_addr;
-		genstruct::Vector<clp::State*> _states;
+		Vector<clp::State*> _states;
 	};
 
 	class Context {
@@ -92,7 +92,7 @@ public:
 		bool to_free;
 	};
 	
-	typedef genstruct::Vector<InstPack*>::Iterator PackIterator;
+	typedef Vector<InstPack*>::Iter PackIterator;
 	
 	ClpStatePack(BasicBlock *bb, Process *process);
 	ClpStatePack(BasicBlock *bb, const Context& context);
@@ -112,7 +112,7 @@ public:
 	
 private:
 	BasicBlock *_bb;
-	genstruct::Vector<InstPack*> _packs;
+	Vector<InstPack*> _packs;
 };
 
 }	// clp

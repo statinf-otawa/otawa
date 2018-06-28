@@ -29,7 +29,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/prop/PropList.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 
 namespace otawa { namespace dfa { namespace hai {
@@ -79,7 +79,7 @@ public:
 	inline void assign(Domain &a, const Domain &b) const;
 	inline bool equals(const Domain &a, const Domain &b) const;
 	inline void update(Domain &out, const Domain &in, Block* bb);
-	inline void blockInterpreted(Block* bb, const Domain& in, const Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	inline void blockInterpreted(Block* bb, const Domain& in, const Domain& out, CFG *cur_cfg, Vector<Edge*> *callStack) const;
 	inline void fixPointReached(Block* bb) const;
 	inline void enterContext(Domain &dom, Block* bb, hai_context_t ctx) const;
 	inline void leaveContext(Domain &dom, Block* bb, hai_context_t ctx) const;
@@ -193,7 +193,7 @@ inline void FirstUnrollingFixPoint<Listener>::update(Domain &out, const typename
 }
 	
 template < class Listener >	
-inline void FirstUnrollingFixPoint<Listener>::blockInterpreted(Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+inline void FirstUnrollingFixPoint<Listener>::blockInterpreted(Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, Vector<Edge*> *callStack) const {
 		list.blockInterpreted(this, bb, in, out, cur_cfg, callStack);
 }
 

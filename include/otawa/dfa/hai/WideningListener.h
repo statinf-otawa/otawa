@@ -30,7 +30,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Edge.h>
 #include <otawa/prop/PropList.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 namespace otawa { namespace dfa { namespace hai {
 
@@ -88,7 +88,7 @@ class WideningListener {
 		  delete [] results_out;
 	}
 
-	void blockInterpreted(const WideningFixPoint< WideningListener >  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const;
+	void blockInterpreted(const WideningFixPoint< WideningListener >  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, Vector<Edge*> *callStack) const;
 	
 	void fixPointReached(const WideningFixPoint<WideningListener > *fp, Block*bb );
 	
@@ -113,7 +113,7 @@ template <class Problem >
 Identifier<typename Problem::Domain*> WideningListener<Problem>::BB_OUT_STATE("", 0);
 
 template <class Problem >
-void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<WideningListener>  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, elm::genstruct::Vector<Edge*> *callStack) const {
+void WideningListener<Problem>::blockInterpreted(const WideningFixPoint<WideningListener>  *fp, Block* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg, Vector<Edge*> *callStack) const {
 
 		int bbnumber = bb->index() ;
 		int cfgnumber = bb->cfg()->index();

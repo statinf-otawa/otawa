@@ -22,7 +22,7 @@
 #ifndef OTAWA_SCRIPT_NAMEDOBJECT_H_
 #define OTAWA_SCRIPT_NAMEDOBJECT_H_
 
-#include <elm/genstruct/AVLMap.h>
+#include <elm/avl/Map.h>
 #include <elm/serial2/macros.h>
 
 namespace otawa { namespace script {
@@ -44,7 +44,7 @@ public:
 		{ return T::__type->asClass().baseOf(this->__actual_class()); }
 
 private:
-	static genstruct::AVLMap<string, NamedObject *> objects;
+	static avl::Map<string, NamedObject *> objects;
 	string name;
 };
 

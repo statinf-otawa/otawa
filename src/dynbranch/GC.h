@@ -17,7 +17,7 @@ public:
 	dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> > *fixPoint;
 	dfa::hai::HalfAbsInt<dfa::hai::WideningFixPoint<dfa::hai::WideningListener<dynbranch::GlobalAnalysisProblem> > > *ai;
 
-	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { } // 50MB per chuck
+	MyGC(WorkSpace* _ws): elm::GroupedGC(50*1024*1024), listener(0), fixPoint(0), ai(0), total(0), _tempRegs(0), fs(0), ws(_ws) { } // 50MB per chuck
 	//MyGC(WorkSpace* _ws): elm::GroupedGC(2*1024), listener(0), fixPoint(0), ai(0), total(0), ws(_ws), fs(0), _tempRegs(0) { }
 
 	void add(const FastStateWrapper* d) {
@@ -99,7 +99,6 @@ protected:
 
 
 		int fpe = 0;
-		int fpe2 = 0;
 		const CFGCollection *col = INVOLVED_CFGS(ws);
 		for (int ci = 0; ci < col->count();  ci++) {
 			CFG *cfg = col->get(ci);
@@ -117,9 +116,9 @@ protected:
 
 	}
 private:
-	elm::genstruct::Vector<const FastStateWrapper*> vd;
+	Vector<const FastStateWrapper*> vd;
 	Vector<PotentialValue> *_tempRegs;
-	elm::genstruct::Vector<const PotentialValue*> _pvs;
+	Vector<const PotentialValue*> _pvs;
 	dfa::FastState<PotentialValue, MyGC>* fs;
 	WorkSpace* ws;
 

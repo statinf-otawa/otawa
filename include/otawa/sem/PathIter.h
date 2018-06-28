@@ -55,7 +55,7 @@ public:
 
 private:
 	sem::Block bb;
-	genstruct::Vector<int> todo;
+	Vector<int> todo;
 	int pc;
 };
 

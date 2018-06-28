@@ -44,7 +44,7 @@ public:
 protected:
 	virtual void processWorkSpace(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
-	genstruct::Vector<init_t> inits;
+	Vector<init_t> inits;
 };
 
 }	// otawa

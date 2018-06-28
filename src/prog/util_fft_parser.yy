@@ -26,7 +26,7 @@
 #include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
 #include <otawa/dfa/State.h>
-using namespace elm::genstruct;
+using namespace elm;
 int util_fft_lex(void);
 void util_fft_error(otawa::FlowFactLoader *loader, const char *msg);
 static Vector<otawa::Address> addresses;

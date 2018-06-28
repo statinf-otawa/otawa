@@ -114,15 +114,15 @@ ContextualLoopBound::ContextualLoopBound(int max, int total)
  * @param path	Path to look in.
  * @return		Matching subtree.
  */
-genstruct::Tree<ContextualLoopBound::data_t> *
+Tree<ContextualLoopBound::data_t> *
 ContextualLoopBound::look(const ContextPath<Address>& path) {
-	genstruct::Tree<data_t> *cur = &tree;
+	Tree<data_t> *cur = &tree;
 	
 	// Build the path
 	for(int i = 0; i < path.count(); i++) {
 		
 		// Look for the address
-		genstruct::Tree<data_t> *child;
+		Tree<data_t> *child;
 		for(child = cur->children(); child; child = child->sibling())
 			if(child->data().fun == path[i])
 				break;
@@ -132,7 +132,7 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
 		}
 		
 		// Create the subtree
-		child = new genstruct::Tree<data_t>(data_t(path[i]));
+		child = new Tree<data_t>(data_t(path[i]));
 		cur->add(child);
 		cur = child;
 	}
@@ -149,7 +149,7 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
  */
 void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max)
 throw(AmbiguousBoundException) {
-	genstruct::Tree<data_t> *cur = look(path);
+	Tree<data_t> *cur = look(path);
 	if(cur->data().max != -1 && cur->data().max != max) {
 		cur->data().max = elm::max(max, cur->data().max);
 		// !!FIX!!
@@ -169,7 +169,7 @@ throw(AmbiguousBoundException) {
  */
 void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total)
 throw(AmbiguousBoundException) {
-	genstruct::Tree<data_t> *cur = look(path);
+	Tree<data_t> *cur = look(path);
 	if(cur->data().total != -1 && cur->data().total != total) {
 		cur->data().total = elm::max(total, cur->data().total);
 		// !!FIX!!
@@ -185,12 +185,12 @@ throw(AmbiguousBoundException) {
  * @param cur		Tree to look in.
  * @return			Maximum.
  */
-int ContextualLoopBound::lookMax(genstruct::Tree<data_t> *cur) {
+int ContextualLoopBound::lookMax(Tree<data_t> *cur) {
 	ASSERT(cur);
 	if(cur->data().max != undefined)
 		return cur->data().max;
 	int tmax = undefined;
-	for(genstruct::Tree<data_t> *child = cur->children();
+	for(Tree<data_t> *child = cur->children();
 	child;
 	child = child->sibling()) {
 		int cmax = lookMax(child);
@@ -205,12 +205,12 @@ int ContextualLoopBound::lookMax(genstruct::Tree<data_t> *cur) {
  * @param cur		Tree to look in.
  * @return			Total.
  */
-int ContextualLoopBound::lookTotal(genstruct::Tree<data_t> *cur) {
+int ContextualLoopBound::lookTotal(Tree<data_t> *cur) {
 	ASSERT(cur);	
 	if(cur->isEmpty())
 		return undefined;
 	int ttotal = 0;
-	for(genstruct::Tree<data_t> *child = cur->children();
+	for(Tree<data_t> *child = cur->children();
 	child;
 	child = child->sibling()) {
 		int ctotal = lookTotal(child);
@@ -231,11 +231,11 @@ int ContextualLoopBound::lookTotal(genstruct::Tree<data_t> *cur) {
  */
 int ContextualLoopBound::findMax(const ContextPath<Address>& path) {
 	int cmax = undefined;
-	genstruct::Tree<data_t> *cur = &tree;
+	Tree<data_t> *cur = &tree;
 	
 	// Build the path
 	for(int i = 0; i < path.count(); i++) {
-		genstruct::Tree<data_t> *child;
+		Tree<data_t> *child;
 		for(child = cur->children(); child; child = child->sibling()) {
 			if(child->data().fun == path[i])
 				break;
@@ -262,11 +262,11 @@ int ContextualLoopBound::findMax(const ContextPath<Address>& path) {
  */
 int ContextualLoopBound::findTotal(const ContextPath<Address>& path) {
 	int ctotal = undefined;
-	genstruct::Tree<data_t> *cur = &tree;
+	Tree<data_t> *cur = &tree;
 	
 	// Build the path
 	for(int i = 0; i < path.count(); i++) {
-		genstruct::Tree<data_t> *child;
+		Tree<data_t> *child;
 		for(child = cur->children(); child; child = child->sibling())
 			if(child->data().fun == path[i])
 				break;

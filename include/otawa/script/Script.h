@@ -22,6 +22,7 @@
 #ifndef OTAWA_SCRIPT_SCRIPT_H_
 #define OTAWA_SCRIPT_SCRIPT_H_
 
+#include <elm/data/Vector.h>
 #include <elm/sys/Path.h>
 #include <otawa/proc/Processor.h>
 #include <elm/util/ErrorHandler.h>
@@ -75,10 +76,10 @@ public:
 
 	virtual void onError(error_level_t level, const string &message);
 
-	class ItemIter: public genstruct::Vector<ScriptItem *>::Iterator {
+	class ItemIter: public Vector<ScriptItem *>::Iter {
 	public:
 		inline ItemIter(Script& script)
-			: genstruct::Vector<ScriptItem *>::Iterator(script.items) { }
+			: Vector<ScriptItem *>::Iter(script.items) { }
 	};
 
 	inline int version(void) const { return _version; }
@@ -94,7 +95,7 @@ private:
 	void makeConfig(xom::Element *elem, PropList& props);
 	elm::sys::Path path;
 	PropList props;
-	genstruct::Vector<ScriptItem *> items;
+	Vector<ScriptItem *> items;
 	bool only_config, timed;
 	int _version;
 };

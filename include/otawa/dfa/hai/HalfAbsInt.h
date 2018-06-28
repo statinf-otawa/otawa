@@ -26,8 +26,8 @@
 
 
 #include <elm/assert.h>
-#include <elm/genstruct/VectorQueue.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/VectorQueue.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg/CFG.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
@@ -48,6 +48,8 @@
 #endif
 
 namespace otawa { namespace dfa { namespace hai {
+
+using namespace elm;
 
 #ifdef HAI_JSON
 #	ifndef HAI_JSON_LOG
@@ -92,9 +94,9 @@ private:
 	WorkSpace &ws;
 	CFG& entry_cfg;
 	CFG *cur_cfg;
-	elm::genstruct::Vector<Block*> *workList;
-	elm::genstruct::Vector<Edge*> *callStack;
-	elm::genstruct::Vector<CFG*> *cfgStack;
+	Vector<Block*> *workList;
+	Vector<Edge*> *callStack;
+	Vector<CFG*> *cfgStack;
 	Block *current;
 	typename FixPoint::Domain in,out;
 	Edge *next_edge;
@@ -104,7 +106,7 @@ private:
 	static Identifier<typename FixPoint::FixPointState*> FIXPOINT_STATE;
 	inline bool isEdgeDone(Edge *edge);
 	inline bool tryAddToWorkList(Block *bb);
-	Edge *detectCalls(bool &enter_call, elm::genstruct::Vector<Edge*> &call_edges, Block *bb);
+	Edge *detectCalls(bool &enter_call, Vector<Edge*> &call_edges, Block *bb);
 	void inputProcessing(typename FixPoint::Domain &entdom);
 	void outputProcessing(void);
 	void addSuccessors(void);
@@ -149,9 +151,9 @@ inline HalfAbsInt<FixPoint>::HalfAbsInt(FixPoint& _fp, WorkSpace& _fw)
  	fixpoint(0),
  	mainEntry(false)
 {
-	workList = new elm::genstruct::Vector<Block*>();
-	callStack = new elm::genstruct::Vector<Edge*>();
-	cfgStack = new elm::genstruct::Vector<CFG*>();
+	workList = new Vector<Block*>();
+	callStack = new Vector<Edge*>();
+	cfgStack = new Vector<CFG*>();
 	fp.init(this);
 }
 
@@ -165,8 +167,7 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 	delete cfgStack;
 
 	// clean remaining states
-	// genstruct::Vector<CFG *> cfgs;
-	genstruct::SLList<CFG* > cfgs;
+	List<CFG* > cfgs;
 	cfgs.add(&entry_cfg);
 	while(cfgs.count()) { // for(int i = 0; i < cfgs.count(); i++)
 		CFG* cfg = cfgs.pop();
@@ -319,7 +320,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 
 	// Fixpoint reached: activate the associated loop-exit-edges
 	if(LOOP_HEADER(current) && fixpoint) {
-		genstruct::Vector<Block*> alreadyAdded;
+		Vector<Block*> alreadyAdded;
 		if((!EXIT_LIST(current)) || EXIT_LIST(current)->isEmpty()) {
 			cerr << "WARNING: infinite loop found at CFG " << current->cfg()->index() << " BB " << current << io::endl;
 			HAI_INFINITE_LOOP(current) = true;
@@ -449,7 +450,7 @@ void HalfAbsInt<FixPoint>::addSuccessors() {
  * @return				Next call to process.
  */
 template <class FixPoint>
-Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, elm::genstruct::Vector<Edge*> &call_edges, Block *bb) {
+Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, Vector<Edge*> &call_edges, Block *bb) {
 	// TODO in CFGv1, even with a non-inlined graph, call computations are performed separately.
 	// In v2, input must accumulated and output propagated to all call site. To fix.
 	Edge *next_edge = 0;

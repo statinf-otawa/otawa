@@ -22,7 +22,7 @@
 #ifndef OTAWA_UTIL_FLOW_FACT_LOADER_H
 #define OTAWA_UTIL_FLOW_FACT_LOADER_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/io.h>
 #include <elm/string.h>
 #include <elm/sys/Path.h>
@@ -76,8 +76,8 @@ protected:
 	virtual void onNoInline(Address address, bool no_inline, const ContextualPath& path);
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);
-	virtual void onMultiBranch(Address control, const genstruct::Vector<Address>& target);
-	virtual void onMultiCall(Address control, const genstruct::Vector<Address>& target);
+	virtual void onMultiBranch(Address control, const Vector<Address>& target);
+	virtual void onMultiCall(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	virtual void onIgnoreEntry(string name);
 	virtual void onForceBranch(Address address);
@@ -99,8 +99,8 @@ protected:
 private:
 	WorkSpace *_fw;
 	bool checksummed;
-	genstruct::Vector<Path> paths;
-	genstruct::Vector<xom::Element *> nodes;
+	Vector<Path> paths;
+	Vector<xom::Element *> nodes;
 	Path current;
 	bool mandatory;
 	bool lines_available;

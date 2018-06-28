@@ -24,7 +24,7 @@
 #define OTAWA_SEM_INST_H_
 
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 namespace otawa {
 
@@ -200,13 +200,13 @@ inline inst _if		(uint_t c, reg_t s, uint_t j) 	{ ASSERT(c >= 0 && c < MAX_COND)
 
 
 // Block class
-class Block: public elm::genstruct::Vector<inst> {
-	typedef elm::genstruct::Vector<inst> S;
+class Block: public Vector<inst> {
+	typedef Vector<inst> S;
 public:
-	class InstIter: public S::Iterator {
+	class InstIter: public S::Iter {
 	public:
-		inline InstIter(const Block& block): S::Iterator(block) { }
-		inline InstIter(const InstIter& iter): S::Iterator(iter) { }
+		inline InstIter(const Block& block): S::Iter(block) { }
+		inline InstIter(const InstIter& iter): S::Iter(iter) { }
 		inline opcode op(void) const { return opcode(item().op); }
 		inline reg_t d(void) const { return item().d(); }
 		inline reg_t a(void) const { return item().a(); }

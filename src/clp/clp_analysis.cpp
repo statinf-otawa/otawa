@@ -20,7 +20,7 @@
 //#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/prog/File.h>
 #include <otawa/prog/Process.h>
 #include <otawa/prog/Segment.h>
@@ -41,7 +41,7 @@
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hard/Platform.h>
-#include <elm/genstruct/quicksort.h>
+#include <elm/data/quicksort.h>
 #include <otawa/ipet/features.h>
 #include <otawa/data/clp/features.h>
 #include <otawa/hard/Memory.h>
@@ -2210,8 +2210,8 @@ public:
 		if(!edge->isBoth() && se::REG_FILTERS.exists(source)) {
 			TRACEP(cerr << "\tApply filter on this edge!\n");
 
-			genstruct::Vector<se::SECmp *> reg_filters = se::REG_FILTERS(edge);
-			genstruct::Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(edge);
+			Vector<se::SECmp *> reg_filters = se::REG_FILTERS(edge);
+			Vector<se::SECmp *> addr_filters = se::ADDR_FILTERS(edge);
 
 			// filter registers
 			Domain all = Domain::EMPTY, init;
@@ -2842,7 +2842,7 @@ public:
 private:
 	clp::State _init;
 	sem::Block b;
-	genstruct::Vector<Pair<int, Domain *> > listOfIFsToDo; // when encountering an IF sem. inst., the analysis has to take care of both taken and non-taken cases with filters
+	Vector<Pair<int, Domain *> > listOfIFsToDo; // when encountering an IF sem. inst., the analysis has to take care of both taken and non-taken cases with filters
 	int pc;
 	bool has_if;
 	bool has_branch;
@@ -2872,7 +2872,7 @@ private:
 	clp::STAT_UINT _nb_clp_bb_count;
 
 	// store to T management
-	genstruct::SLList<Pair<Inst *, Block *> > top_stores;
+	List<Pair<Inst *, Block *> > top_stores;
 	void warnStoreToTop(void) {
 		if(!VERBOSE(_process))
 			return;
@@ -2899,15 +2899,15 @@ public:
 				clp::STATE_OUT(*bbi).remove();
 
 				if(se::REG_FILTERS(*bbi).exists()) {
-					genstruct::Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
-					for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iter vsei(vse); vsei; vsei++)
 						delete *vsei;
 					se::REG_FILTERS(*bbi).remove();
 				}
 
 				if(se::ADDR_FILTERS(*bbi).exists()) {
-					genstruct::Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
-					for(genstruct::Vector<se::SECmp *>::Iterator vsei(vse); vsei; vsei++)
+					Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
+					for(Vector<se::SECmp *>::Iter vsei(vse); vsei; vsei++)
 						delete *vsei;
 					se::ADDR_FILTERS(*bbi).remove();
 				}
@@ -3460,10 +3460,10 @@ Value Manager::getCurrentAccessAddress(void) {
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef elm::genstruct::Table<AbstractRegistration * > procs_t;
+	//typedef Array<AbstractRegistration * > procs_t;
 
 	Plugin(void): ProcessorPlugin("otawa::clp", Version(0, 1, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors (void) const { return procs_t::EMPTY; };
+	//virtual procs_t& processors (void) const { return procs_t::EMPTY; };
 };
 
 

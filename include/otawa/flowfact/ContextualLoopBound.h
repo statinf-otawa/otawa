@@ -24,8 +24,8 @@
 #define OTAWA_FLOWFACT_CONTEXTUALLOOPBOUND_H_
 
 #include <otawa/base.h>
-#include <elm/genstruct/Tree.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Tree.h>
+#include <elm/data/Vector.h>
 #include "../prop.h"
 
 namespace otawa {
@@ -47,7 +47,7 @@ public:
 	inline void clear(void) { stack.clear(); }
 	
 private:
-	genstruct::Vector<T> stack;
+	Vector<T> stack;
 };
 
 
@@ -83,12 +83,12 @@ private:
 		Address fun;
 		int max, total;
 	} data_t;
-	genstruct::Tree<data_t> tree;
+	Tree<data_t> tree;
 	
-	genstruct::Tree<data_t> *look(const ContextPath<Address>& path);
-	int lookMax(genstruct::Tree<data_t> *cur);
-	int lookTotal(genstruct::Tree<data_t> *cur);
-	void print(genstruct::Tree<data_t> *cur, int tab = 0);
+	Tree<data_t> *look(const ContextPath<Address>& path);
+	int lookMax(Tree<data_t> *cur);
+	int lookTotal(Tree<data_t> *cur);
+	void print(Tree<data_t> *cur, int tab = 0);
 };
 
 extern Identifier<ContextualLoopBound *> CONTEXTUAL_LOOP_BOUND;

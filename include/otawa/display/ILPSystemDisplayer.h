@@ -26,7 +26,7 @@
 #include <otawa/prop/Identifier.h>
 #include <elm/sys/Path.h>
 #include <elm/io.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 
 // Extern classes
 namespace otawa { namespace ilp {
@@ -70,7 +70,7 @@ protected:
 	virtual void setup (WorkSpace *fw);
 
 private:
-	elm::genstruct::HashTable<ilp::Var *, string> names;
+	HashMap<ilp::Var *, string> names;
 	int cnt;
 	ilp::System *system;
 	io::Output cout;

@@ -71,7 +71,7 @@ public:
 protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void processWorkSpace(WorkSpace *ws);
-	genstruct::Vector<init_t> inits;
+	Vector<init_t> inits;
 private:
 	const hard::Memory *mem;
 	clp::STAT_UINT _nb_inst, _nb_sem_inst;

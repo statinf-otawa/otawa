@@ -26,7 +26,7 @@
 
 #include <elm/io.h>
 #include <elm/io/Output.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/string/AutoString.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/data/clp/ClpValue.h>
@@ -187,13 +187,13 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of int.
 		*/
-		virtual genstruct::Vector<V> used_reg(void);
+		virtual Vector<V> used_reg(void);
 		/**
 		 * Return the list of memory addresses used
 		 * (recursively) in this expression.
 		 * @return a vector of int.
 		*/
-		virtual genstruct::Vector<V> used_addr(void);
+		virtual Vector<V> used_addr(void);
 
 		/** Setters */
 		/**
@@ -356,7 +356,7 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of memory addresses.
 		*/
-		virtual genstruct::Vector<V> used_addr(void);
+		virtual Vector<V> used_addr(void);
 
 		virtual SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
@@ -412,7 +412,7 @@ namespace se{
 		 * (recursively) in this expression.
 		 * @return a vector of int
 		*/
-		virtual genstruct::Vector<V> used_reg(void);
+		virtual Vector<V> used_reg(void);
 
 		SymbExpr* solidifyAddress(clp::State& clpState, bool dig);
 	};
@@ -598,8 +598,8 @@ namespace se{
 	};
 
 
-	extern Identifier<genstruct::Vector<SECmp *> > REG_FILTERS;
-	extern Identifier<genstruct::Vector<SECmp *> > ADDR_FILTERS;
+	extern Identifier<Vector<SECmp *> > REG_FILTERS;
+	extern Identifier<Vector<SECmp *> > ADDR_FILTERS;
 
 	class FilterBuilder {
 	public:
@@ -615,18 +615,18 @@ namespace se{
 
 		BasicBlock *bb;
 		// filters for the taken edge
-		genstruct::Vector<SECmp *> reg_filters;
-		genstruct::Vector<SECmp *> addr_filters;
+		Vector<SECmp *> reg_filters;
+		Vector<SECmp *> addr_filters;
 
 		// filters for the non-taken edge
-		genstruct::Vector<SECmp *> reg_filters_not;
-		genstruct::Vector<SECmp *> addr_filters_not;
+		Vector<SECmp *> reg_filters_not;
+		Vector<SECmp *> addr_filters_not;
 
 		// filters for the currently processing path
-		genstruct::Vector<SECmp *> curr_reg_filters;
-		genstruct::Vector<SECmp *> curr_addr_filters;
-		genstruct::Vector<V> curr_known_reg;
-		genstruct::Vector<V> curr_known_addr;
+		Vector<SECmp *> curr_reg_filters;
+		Vector<SECmp *> curr_addr_filters;
+		Vector<V> curr_known_reg;
+		Vector<V> curr_known_addr;
 
 		clp::ClpStatePack pack;
 	};

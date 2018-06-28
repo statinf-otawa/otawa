@@ -10,7 +10,7 @@
 #include <elm/assert.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <elm/genstruct/FragTable.h>
+#include <elm/data/FragTable.h>
 #include <otawa/dfa/XIterativeDFA.h>
 #include <elm/util/Pair.h>
 
@@ -30,7 +30,7 @@ class XCFGVisitor {
 	} node_t;
 	P& dom;
 	const CFGCollection& cfgs;
-	genstruct::FragTable<node_t> nodes;
+	FragTable<node_t> nodes;
 	int *offs;
 	Vector<int> *preds;
 

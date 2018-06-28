@@ -77,7 +77,7 @@ public:
 		return o;
 	}
 #define EVALUATIONx
-	inline FastStateWrapper(void) : _fastState(0), _state(0), _bottom(true) { // default constructor
+	inline FastStateWrapper(void) : _bottom(true), _state(0), _fastState(0) { // default constructor
 	}
 
 	inline FastStateWrapper(const FastStateWrapper& fsw){ // copy constructor

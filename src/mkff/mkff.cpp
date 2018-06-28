@@ -688,11 +688,11 @@ protected:
 		FlowFactLoader::onIgnoreControl(address);
 		record(address);
 	}
-	virtual void onMultiBranch(Address control, const genstruct::Vector< Address > &target) {
+	virtual void onMultiBranch(Address control, const Vector< Address > &target) {
 		FlowFactLoader::onMultiBranch(control, target);
 		record(control);
 	}
-	virtual void onMultiCall(Address control, const genstruct::Vector< Address > &target) {
+	virtual void onMultiCall(Address control, const Vector< Address > &target) {
 		FlowFactLoader::onMultiCall(control, target);
 		record(control);
 	}

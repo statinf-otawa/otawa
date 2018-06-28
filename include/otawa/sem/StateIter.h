@@ -80,7 +80,7 @@ private:
 	BBIter i;
 	S& man;
 	typename S::t s, es;
-	genstruct::Vector<typename S::t> ss;
+	Vector<typename S::t> ss;
 };
 
 } }	// otawa::sem

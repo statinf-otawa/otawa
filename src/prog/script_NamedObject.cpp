@@ -36,7 +36,7 @@ namespace otawa { namespace script {
 /**
  * Known named objects.
  */
-genstruct::AVLMap<string, NamedObject *> NamedObject::objects;
+avl::Map<string, NamedObject *> NamedObject::objects;
 
 
 /**

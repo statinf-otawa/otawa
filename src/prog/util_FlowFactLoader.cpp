@@ -1073,10 +1073,7 @@ void FlowFactLoader::onIgnoreSeq(Address address) {
  * @param control	Multi-branch instruction address.
  * @param target	List of targets.
  */
-void FlowFactLoader::onMultiBranch(
-	Address control,
-	const genstruct::Vector<Address>& targets
-) {
+void FlowFactLoader::onMultiBranch(Address control, const Vector<Address>& targets) {
 	if(control.isNull())
 		return;
 
@@ -1105,10 +1102,7 @@ void FlowFactLoader::onMultiBranch(
  * @param control	Multi-call instruction address.
  * @param target	List of targets.
  */
-void FlowFactLoader::onMultiCall(
-	Address control,
-	const genstruct::Vector<Address>& targets
-) {
+void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets) {
 	if(control.isNull())
 		return;
 
@@ -1332,7 +1326,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 		return;
 	}
 
-	genstruct::Vector<Address> targets;
+	Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
 	for(int i = 0; i < items->size(); i++) {
 		MemArea target_area = scanAddress(items->get(i), cpath);
@@ -1367,7 +1361,7 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 		return;
 	}
 
-	genstruct::Vector<Address> targets;
+	Vector<Address> targets;
 	xom::Elements *items = element->getChildElements("target");
 	for(int i = 0; i < items->size(); i++) {
 		MemArea target_area = scanAddress(items->get(i), cpath);

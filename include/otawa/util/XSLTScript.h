@@ -23,7 +23,7 @@
 #define OTAWA_XSLTSCRIPT_H_
 
 #include <elm/xom.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/sys/Path.h>
 #include <elm/io/Monitor.h>
 
@@ -58,7 +58,7 @@ private:
 		OPENED,
 		TRANSFORMED
 	} state;
-	genstruct::Vector<Pair<string, string> > params;
+	Vector<Pair<string, string> > params;
 	bool configured;
 	bool verbose;
 };

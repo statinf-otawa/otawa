@@ -24,7 +24,7 @@
 #ifndef OTAWA_DATA_CLP_STATE_H_
 #define OTAWA_DATA_CLP_STATE_H_
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/data/clp/ClpValue.h>
 
 namespace otawa {
@@ -104,8 +104,8 @@ namespace clp {
 
 	protected:
 		Node first;
-		genstruct::Vector<Value> registers;
-		genstruct::Vector<Value> tmpreg;
+		Vector<Value> registers;
+		Vector<Value> tmpreg;
 	};
 	
 }	// clp

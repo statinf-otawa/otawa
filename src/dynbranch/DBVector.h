@@ -67,7 +67,7 @@ public:
 		return already;
 	}
 
-	inline Vector(elm::DefaultAllocator* _g, int _cap): tab(0), cap(_cap), cnt(0), gc(_g) {
+	inline Vector(elm::DefaultAllocator* _g, int _cap): gc(_g), tab(0), cap(_cap), cnt(0) {
 		if(gc == 0) {
 			static int i = 0;
 			i++;
@@ -90,14 +90,14 @@ public:
 
 	}
 
-	inline Vector(DefaultAllocator* _g, const Vector<T>& vec): tab(0), cap(0), cnt(0), gc(_g) { // copy constructor with the uses of GC
+	inline Vector(DefaultAllocator* _g, const Vector<T>& vec): gc(_g), tab(0), cap(0), cnt(0) { // copy constructor with the uses of GC
 		countX++;
 		copy(vec);
 	}
 
-	inline Vector(int _cap = 8): tab(new T[_cap]), cap(_cap), cnt(0), gc(0) { 	}
+	inline Vector(int _cap = 8): gc(0), tab(new T[_cap]), cap(_cap), cnt(0) { 	}
 
-	inline Vector(const Vector<T>& vec): tab(0), cap(0), cnt(0), gc(vec.gc) { // copy constructor
+	inline Vector(const Vector<T>& vec): gc(vec.gc), tab(0), cap(0), cnt(0) { // copy constructor
 		if(gc != 0)
 			ASSERT(0);
 		copy(vec);
