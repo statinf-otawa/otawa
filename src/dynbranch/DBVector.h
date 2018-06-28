@@ -23,8 +23,8 @@
 #define DBVECTOR
 
 #include <elm/assert.h>
-#include <elm/genstruct/Table.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Array.h>
+#include <elm/data/Vector.h>
 #include <elm/PreIterator.h>
 #include <iostream>
 #include <typeinfo>
@@ -189,7 +189,7 @@ public:
 	inline void clear(void) { cnt = 0; }
 	void grow(int new_cap);
 	void setLength(int new_length);
-	inline table<T> detach(void);
+	inline Array<T> detach(void);
 	inline void copy(const Vector& vec);
 	inline Vector<T>& operator=(const Vector& vec) { copy(vec); return *this; };
 	inline void swallow(Vector<T>& v) { if(tab) delete [] tab; tab = v.tab; v.tab = 0; }
@@ -246,10 +246,10 @@ template <class T>
 unsigned long Vector<T>::totalUse = 0;
 
 template <class T>
-inline table<T> Vector<T>::detach(void) {
+inline Array<T> Vector<T>::detach(void) {
 	T *dtab = tab;
 	tab = 0;
-	return table<T>(dtab, cnt);
+	return Array<T>(dtab, cnt);
 }
 
 template <class T> int Vector<T>::capacity(void) const {
@@ -380,6 +380,6 @@ template <class T> inline void Vector<T>::copy(const Vector& vec) {
 		tab[i] = vec.tab[i];
 }
 
-} }	// elm::genstruct
+} }
 
 #endif	// ELM_GENSTRUCT_VECTOR_H

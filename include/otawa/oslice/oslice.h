@@ -55,7 +55,7 @@ typedef elm::avl::Set<clp::Value, elm::Comparator<clp::Value> > clp_value_set_t;
 
 // for OSlicer and LivenessChecker
 typedef otawa::Bag<MemoryAccessInformation> inst_clp_bag_t;
-typedef genstruct::Vector<MemoryAccessInformation> clp_vector_t;
+typedef Vector<MemoryAccessInformation> clp_vector_t;
 typedef otawa::Bag<otawa::clp::Value> clp_bag_t;
 
 // for OSlicer, and InstCollector

@@ -21,7 +21,7 @@
  */
 
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/rtti.h>
 
 #include <otawa/cache/cat2/ACSBuilder.h>

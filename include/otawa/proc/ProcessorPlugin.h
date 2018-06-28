@@ -22,7 +22,7 @@
 #ifndef OTAWA_PROC_PROCESSORPLUGIN_H_
 #define OTAWA_PROC_PROCESSORPLUGIN_H_
 
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
 #include <elm/sys/Plugin.h>
 #include <elm/sys/Path.h>
 #include <otawa/proc/Registration.h>
@@ -42,7 +42,7 @@ public:
 	ProcessorPlugin(make& make);
 	ProcessorPlugin(cstring name, const elm::Version& version, const elm::Version& plugger_version);
 	~ProcessorPlugin(void);
-	virtual elm::genstruct::Table<AbstractRegistration *>& processors(void) const;
+	virtual const Array<AbstractRegistration *>& processors(void) const;
 
 	static void addPath(const elm::sys::Path& path);
 	static void removePath(const elm::sys::Path& path);

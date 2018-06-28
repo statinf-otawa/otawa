@@ -38,8 +38,8 @@ namespace otawa {
     	// last value must be RES_TYPE_NUM
     typedef struct input_t {
     	hard::RegBank * reg_bank;
-    	elm::genstruct::AllocatedTable<bool> *_is_input;
-    	elm::genstruct::AllocatedTable<int> * _resource_index;
+    	AllocArray<bool> *_is_input;
+    	AllocArray<int> * _resource_index;
     } input_t;
   private:
     elm::String _name;

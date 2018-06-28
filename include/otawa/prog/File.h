@@ -27,8 +27,8 @@
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/Segment.h>
 
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/Vector.h>
+#include <elm/data/HashMap.h>
 
 namespace otawa {
 
@@ -38,8 +38,8 @@ class ProgItem;
 // File class
 class File: public PropList {
 	String _name;
-	genstruct::Vector<Segment *> segs;
-	typedef genstruct::HashTable<String, Symbol *> syms_t;
+	Vector<Segment *> segs;
+	typedef HashMap<String, Symbol *> syms_t;
 	syms_t syms;
 
 
@@ -54,10 +54,10 @@ public:
 	// Segment management
 	inline void addSegment(Segment *seg) { segs.add(seg); }
 	Segment *findSegmentAt(Address addr);
-	class SegIter: public genstruct::Vector<Segment *>::Iterator {
+	class SegIter: public Vector<Segment *>::Iter {
 	public:
-		inline SegIter(const File *file): genstruct::Vector<Segment *>::Iterator(file->segs) { }
-		inline SegIter(const SegIter& iter): genstruct::Vector<Segment *>::Iterator(iter) { }
+		inline SegIter(const File *file): Vector<Segment *>::Iter(file->segs) { }
+		inline SegIter(const SegIter& iter): Vector<Segment *>::Iter(iter) { }
 	};
 
 	// Symbol management
@@ -65,10 +65,10 @@ public:
 	inline void removeSymbol(Symbol *sym) { syms.remove(sym->name()); }
 	address_t findLabel(const String& label);
 	Symbol *findSymbol(String name);
-	class SymIter: public syms_t::Iterator {
+	class SymIter: public syms_t::Iter {
 	public:
-		inline SymIter(const File *file): syms_t::Iterator(file->syms) { }
-		inline SymIter(const SymIter& iter): syms_t::Iterator(iter) { }
+		inline SymIter(const File *file): syms_t::Iter(file->syms) { }
+		inline SymIter(const SymIter& iter): syms_t::Iter(iter) { }
 	};
 
 	// Deprecated

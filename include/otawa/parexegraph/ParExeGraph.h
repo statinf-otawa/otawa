@@ -25,6 +25,8 @@
 
 #include <elm/PreIterator.h>
 #include <elm/string/StringBuffer.h>
+#include <elm/genstruct/SLList.h>
+#include <elm/genstruct/DLList.h>
 #include <otawa/cache/cat2/CachePenalty.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
@@ -262,7 +264,7 @@ namespace otawa {
 		virtual void findDataDependencies(void);
 		virtual void addEdgesForPipelineOrder(void);
 		virtual void addEdgesForFetch(void);
-		virtual void addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages = NULL);
+		virtual void addEdgesForProgramOrder(List<ParExeStage *> *list_of_stages = NULL);
 		virtual void addEdgesForMemoryOrder(void);
 		virtual void addEdgesForDataDependencies(void);
 		virtual void addEdgesForQueues(void);
@@ -298,10 +300,10 @@ namespace otawa {
 			inline InstNodeIterator(const ParExeInst *inst)
 				: ParExeInst::NodeIterator(inst) {}
 		};
-		class StageIterator : public elm::genstruct::SLList<ParExeStage *>::Iterator {
+		class StageIterator : public List<ParExeStage *>::Iter {
 		public:
-			inline StageIterator(const genstruct::SLList<ParExeStage *>  *list)
-				: elm::genstruct::SLList<ParExeStage *>::Iterator(*list) {}
+			inline StageIterator(const List<ParExeStage *>  *list)
+				: List<ParExeStage *>::Iter(*list) {}
 		};
 
 		class StageNodeIterator : public ParExeStage::NodeIterator {
@@ -355,8 +357,8 @@ namespace otawa {
 		int _latency;												// latency of the node
 		int _default_latency;										// default latency of the node
 		elm::String _name;											// name of the node (for tracing)
-//		elm::genstruct::AllocatedTable<int> * _d;					// delays wrt availabilities of resources
-//		elm::genstruct::AllocatedTable<bool> * _e;					// dependence on availabilities of resources
+//		AllocArray<int> * _d;					// delays wrt availabilities of resources
+//		AllocArray<bool> * _e;					// dependence on availabilities of resources
 		elm::genstruct::Vector<int> * _delay;				// dependence and delays wrt availabilities of resources
 	protected:
 		elm::genstruct::Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)

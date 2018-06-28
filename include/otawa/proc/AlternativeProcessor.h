@@ -21,7 +21,7 @@
 #ifndef OTAWA_ALTERNATIVE_PROCESSOR_H
 #define OTAWA_ALTERNATIVE_PROCESSOR_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/proc/Processor.h>
 
 namespace otawa {
@@ -33,14 +33,14 @@ public:
 	public:
 		inline Alternative& require(const AbstractFeature& f) { feats.add(FeatureUsage(FeatureUsage::require, f)); return *this; }
 		inline Alternative& use(const AbstractFeature& f) { feats.add(FeatureUsage(FeatureUsage::use, f)); return *this; }
-		inline const genstruct::Vector<FeatureUsage> features(void) const { return feats; }
+		inline const Vector<FeatureUsage> features(void) const { return feats; }
 	private:
-		genstruct::Vector<FeatureUsage> feats;
+		Vector<FeatureUsage> feats;
 	};
 
-	class AlternativeSet: public genstruct::Vector<const Alternative *> {
+	class AlternativeSet: public Vector<const Alternative *> {
 	public:
-		inline AlternativeSet& add(const Alternative& alt) { genstruct::Vector<const Alternative *>::add(&alt); return *this; };
+		inline AlternativeSet& add(const Alternative& alt) { Vector<const Alternative *>::add(&alt); return *this; };
 	};
 
 	AlternativeProcessor(AlternativeSet& alts, AbstractRegistration& r);

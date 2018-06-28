@@ -857,7 +857,7 @@ private:
 	stack::Value tmp[16];
 	stack::State _init;
 	sem::Block b;
-	genstruct::Vector<Pair<int, Domain *> > todo;
+	Vector<Pair<int, Domain *> > todo;
 	Process *proc;
 };
 
@@ -1123,7 +1123,7 @@ protected:
 		Iter& i = *iter;
 
 		// collect addresses
-		genstruct::Vector<AccessedAddress *> addrs;
+		Vector<AccessedAddress *> addrs;
 		for(i.start(bb->toBasic()); i; i++)
 			if((*i).op == sem::LOAD || (*i).op == sem::STORE) {
 				bool is_store = (*i).op == sem::STORE;

@@ -23,7 +23,7 @@
 #define OTAWA_PROC_CFGPROCESSOR_H
 
 #include <otawa/proc/Processor.h>
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 
 namespace otawa {
 	

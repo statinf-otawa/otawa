@@ -22,7 +22,7 @@
 #include "BCGDrawer.h"
 #include <otawa/cfg.h>
 #include <otawa/display/Displayer.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 
 
 namespace otawa { namespace bpred {

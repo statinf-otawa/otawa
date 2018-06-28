@@ -19,8 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/AVLTree.h>
-#include <elm/genstruct/SortedSLList.h>
+#include <elm/avl/Set.h>
+#include <elm/data/SortedList.h>
 #include <elm/option/SwitchOption.h>
 
 #include <otawa/app/Application.h>
@@ -179,7 +179,7 @@ private:
 		cout << "# FUNCTION " << cfg->label() << io::endl;
 
 		// put BB in the right order
-		typedef elm::genstruct::AVLTree<BasicBlock *, BasicBlockComparator> avl_t;
+		typedef elm::avl::Set<BasicBlock *, BasicBlockComparator> avl_t;
 		avl_t avl;
 		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
 			if(bb->isBasic())
@@ -289,7 +289,7 @@ private:
 		if(regs) {
 
 			// display read registers
-			genstruct::SortedSLList<string> srr;
+			SortedList<string> srr;
 			RegSet rr;
 			inst->readRegSet(rr);
 			for(int i = 0; i < rr.count(); i++) {
@@ -298,12 +298,12 @@ private:
 				srr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
 			cout << "\t\tread regs = ";
-			for(genstruct::SortedSLList<string>::Iterator r(srr); r; r++)
+			for(SortedList<string>::Iter r(srr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
 
 			// display read registers
-			genstruct::SortedSLList<string> swr;
+			SortedList<string> swr;
 			RegSet wr;
 			inst->writeRegSet(wr);
 			for(int i = 0; i < wr.count(); i++) {
@@ -312,7 +312,7 @@ private:
 				swr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
 			cout << "\t\twritten regs = ";
-			for(genstruct::SortedSLList<string>::Iterator r(swr); r; r++)
+			for(SortedList<string>::Iter r(swr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
 		}

@@ -21,7 +21,7 @@
 #ifndef OTAWA_DYNBRANCH_MEMTYPE_H
 #define OTAWA_DYNBRANCH_MEMTYPE_H
 
-#include <elm/genstruct/SortedBinTree.h> //Pair
+#include <elm/data/SortedList.h> //Pair
 #include <elm/io/OutStream.h>
 using namespace elm::io ;
 

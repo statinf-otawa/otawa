@@ -24,7 +24,7 @@
 #include <elm/string.h>
 #include <elm/io.h>
 #include <elm/genstruct/Table.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/prog/ProgItem.h>
 #include <otawa/prog/features.h>
 #include <otawa/hard/Platform.h>

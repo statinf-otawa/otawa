@@ -21,7 +21,7 @@
  */
 
 //#define OTAWA_IDFA_DEBUG
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/data/SortedList.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/features.h>

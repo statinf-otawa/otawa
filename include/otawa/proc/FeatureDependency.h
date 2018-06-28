@@ -24,7 +24,7 @@
 
 #include <elm/string.h>
 #include <elm/util/Cleaner.h>
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 #include <otawa/proc/AbstractFeature.h>
 
 namespace otawa {
@@ -33,7 +33,7 @@ using namespace elm;
 
 // FeatureDependency class
 class FeatureDependency: public elm::CleanList {
-	typedef genstruct::SLList<FeatureDependency *> list_t;
+	typedef List<FeatureDependency *> list_t;
 public:
 	
 	// constructors
@@ -46,10 +46,10 @@ public:
 	inline const AbstractFeature *getFeature(void) const { return feature; }
 
 	// Iterator on dependencies
-	class Dependent: public list_t::Iterator {
+	class Dependent: public list_t::Iter {
 	public:
-		inline Dependent(FeatureDependency *d): list_t::Iterator(d->children) { }
-		inline Dependent(const Dependent& i): list_t::Iterator(i) { }
+		inline Dependent(FeatureDependency *d): list_t::Iter(d->children) { }
+		inline Dependent(const Dependent& i): list_t::Iter(i) { }
 	};
 
 private:

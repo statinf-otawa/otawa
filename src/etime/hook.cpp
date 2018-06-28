@@ -579,10 +579,7 @@ p::id<Unit *> TIME_UNIT("otawa::etime::TIME_UNIT", 0);
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::etime", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
 } }	// otawa::etime

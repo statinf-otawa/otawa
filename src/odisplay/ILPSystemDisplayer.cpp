@@ -134,8 +134,8 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	cout.setStream(*file);
 
 	// Build the hashtables
-	typedef genstruct::Vector<ilp::Constraint *> cons_list_t;
-	typedef genstruct::HashTable<ilp::Var *, cons_list_t *> vars_t;
+	typedef Vector<ilp::Constraint *> cons_list_t;
+	typedef HashMap<ilp::Var *, cons_list_t *> vars_t;
 	vars_t vars;
 	for(ilp::System::ConstIterator cons(system); cons; cons++)
 		for(ilp::Constraint::TermIterator term(cons); term; term++) {
@@ -202,12 +202,12 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// display variables
 	cout << "\t\t<h1><a name=\"__variables\">Variables</a></h1>\n";
-	for(vars_t::PairIterator var(vars); var; var++) {
+	for(vars_t::PairIter var(vars); var; var++) {
 		cout << "\t\t\t<h2><a name=\"" << nameOf((*var).fst) << "\">" << nameOf((*var).fst) << " variable</a></h2>\n";
 		cout << "\t\t\t\t<p>value = " << system->valueOf((*var).fst) << "</p>\n";
 		ASSERT((*var).snd);
 		for(int i = 0; i < (*var).snd->length(); i++)
-			displayCons((*var).snd->item(i), true);
+			displayCons((*var).snd->get(i), true);
 	}
 
 	// display content

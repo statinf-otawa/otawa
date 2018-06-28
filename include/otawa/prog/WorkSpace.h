@@ -24,8 +24,8 @@
 #define OTAWA_PROG_WORK_SPACE_H
 
 #include <elm/data/List.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Vector.h>
 #include <elm/sys/Path.h>
 #include <elm/sys/Thread.h>
 #include <elm/util/LockPtr.h>
@@ -126,7 +126,7 @@ private:
 		List<struct Dependency *> _users, _used;
 		bool _del_proc;
 	} Dependency ;
-	typedef genstruct::HashTable<const AbstractFeature *, Dependency *> dep_map_t;
+	typedef HashMap<const AbstractFeature *, Dependency *> dep_map_t;
 	dep_map_t dep_map;
 
 	void invalidate(Dependency *dep);

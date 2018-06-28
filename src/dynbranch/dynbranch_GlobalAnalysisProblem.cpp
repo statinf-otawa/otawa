@@ -45,7 +45,8 @@ namespace otawa { namespace dynbranch {
 
 Identifier<bool> DEBUG_INFO("otawa::dynbranch::DEBUG_INFO", false) ;
 
-GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry, MyGC* m) : verbose(v), ws(workspace), myGC(m), _nb_bb_count(0) {
+GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domain & entry, MyGC* m)
+: ws(workspace), verbose(v), myGC(m), _nb_bb_count(0) {
 	istate = dfa::INITIAL_STATE(workspace);
 
 	// initial the BOT state

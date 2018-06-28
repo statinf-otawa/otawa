@@ -111,9 +111,8 @@ ProcessorPlugin::~ProcessorPlugin(void) {
  * This method must return the table of all processor available in the plugin.
  * @return	Table of available processors.
  */
-elm::genstruct::Table<AbstractRegistration *>& ProcessorPlugin::processors(void) const {
-	static elm::genstruct::Table<AbstractRegistration *> empty;
-	return empty;
+const Array<AbstractRegistration *>& ProcessorPlugin::processors(void) const {
+	return Array<AbstractRegistration *>::null;
 }
 
 #define CSTR(x) #x

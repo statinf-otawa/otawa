@@ -207,7 +207,7 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 	CONTEXT(maker) = path;
 
 	// preparation
-	genstruct::HashTable<Block *, Block *> bmap;
+	HashMap<Block *, Block *> bmap;
 	call_t call = { stack, cfg, &maker };
 	if(logFor(LOG_CFG))
 		log << "\tbegin inlining " << cfg->label() << io::endl;

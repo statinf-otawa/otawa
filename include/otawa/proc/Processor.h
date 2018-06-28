@@ -26,8 +26,8 @@
 #include <elm/util/Cleaner.h>
 #include <elm/util/Version.h>
 #include <elm/sys/StopWatch.h>
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/Vector.h>
+#include <elm/data/HashMap.h>
 #include <elm/util/Cleaner.h>
 
 #include <otawa/proc/ProcessorException.h>

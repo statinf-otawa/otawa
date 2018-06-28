@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/Vector.h>
+#include <elm/data/Array.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/cache/LBlockBuilder.h>
 #include <otawa/ilp.h>

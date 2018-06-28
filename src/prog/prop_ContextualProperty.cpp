@@ -17,7 +17,7 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.package ojawa;
  */
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
 #include <otawa/prop/AbstractIdentifier.h>
 
@@ -183,7 +183,7 @@ const PropList& ContextualProperty::findProps(
 	const ContextualPath& path,
 	const AbstractIdentifier& id
 ) const {
-	genstruct::Vector<const PropList *> stack;
+	Vector<const PropList *> stack;
 
 	// fill the stack
 	stack.push(&props);

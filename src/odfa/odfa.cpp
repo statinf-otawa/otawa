@@ -263,7 +263,7 @@ public:
 			delete disps[i];
 	}
 
-	inline const genstruct::Vector<Displayer *>& displayers(void) const { return disps; }
+	inline const Vector<Displayer *>& displayers(void) const { return disps; }
 
 	void add(Displayer *d) {
 		disps.add(d);
@@ -317,7 +317,7 @@ public:
 	bool before, after, filter, sem, stats, insts, addrs;
 
 private:
-	genstruct::Vector<Displayer *> disps;
+	Vector<Displayer *> disps;
 	WorkSpace *_ws;
 	const PropList& _ps;
 };

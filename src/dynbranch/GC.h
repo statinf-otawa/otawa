@@ -2,7 +2,7 @@
 #define OTAWA_DYNBRANCH_GC_H
 #include <elm/alloc/GroupedGC.h>
 #include <otawa/dfa/hai/WideningListener.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 extern unsigned long processedSemInstCount;
 extern unsigned int gcIndex;

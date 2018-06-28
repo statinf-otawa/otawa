@@ -20,8 +20,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/Vector.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/Vector.h>
+#include <elm/data/HashMap.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/BasicBlock.h>
@@ -334,7 +334,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 			}
 		
 		/* Remove from set the backedges (including capping backedges) going to current bb */
-		genstruct::Vector<Edge*> todel;
+		Vector<Edge*> todel;
 		for (BracketSet::Iterator bracket(**PST_BSET(n)); bracket; bracket++) {
 			//cout << "Considering edge: " << bracket->source() << " to " << bracket->target() << " for deletion\n";
 			if (((bracket->source() == n) && (PST_DFSNUM(bracket->target()) > i)) ||
@@ -346,7 +346,7 @@ void PSTBuilder::assignClasses(CFG *cfg) {
 				//cout << " not deleting, target DFS = " << PST_DFSNUM(bracket->target()) << " and i = " <<  i << " \n";
 			}
 		}	
-		for (genstruct::Vector<Edge*>::Iterator iter(todel); iter; iter++) {
+		for (Vector<Edge*>::Iterator iter(todel); iter; iter++) {
 			Edge *edge = *iter;			
 			PST_BSET(n)->remove(edge);
 			if (PST_IS_CAPPING(*edge)) {
@@ -430,13 +430,13 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 	BasicBlock *entrySucc = 0, *exitPred = 0;
 	dfa::BitSet doneList(cfg->countBB());
 	dfa::BitSet thisregion(cfg->countBB());
-	genstruct::Vector<BasicBlock*> workList,mybbs;
+	Vector<BasicBlock*> workList,mybbs;
 
 		
 	doneList.empty();
 	thisregion.empty();
 
-	for (genstruct::Vector<BasicBlock*>::Iterator iter(region->getBBs()); iter; iter++) {
+	for (Vector<BasicBlock*>::Iterator iter(region->getBBs()); iter; iter++) {
 
 		thisregion.add(iter->number());
 	}
@@ -484,7 +484,7 @@ VirtualCFG *PSTBuilder::getVCFG(PSTree *tree, HashTable<BasicBlock*, BasicBlock*
 		Edge *newedge = new Edge(exitPred, vcfg->exit(), Edge::VIRTUAL_RETURN);
 		FROM_EDGE(newedge) = region->getExit();
 	}
-	for (genstruct::Vector<BasicBlock*>::Iterator bb(mybbs); bb; bb++) {
+	for (Vector<BasicBlock*>::Iterator bb(mybbs); bb; bb++) {
 		if (thisregion.contains(bb->number())) {
 			BasicBlock *vbb = map.get(bb, 0);
 			ASSERT(vbb);	

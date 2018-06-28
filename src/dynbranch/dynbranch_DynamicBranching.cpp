@@ -24,7 +24,7 @@
 
 #include <otawa/data/clp/features.h>
 #include <otawa/data/clp/SymbolicExpr.h>
-#include <elm/genstruct/quicksort.h>
+#include <elm/data/quicksort.h>
 #include <otawa/util/FlowFactLoader.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/dynbranch/features.h>

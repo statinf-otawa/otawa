@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 #include <otawa/cfg.h>
 #include <otawa/cfg/Dominance.h>

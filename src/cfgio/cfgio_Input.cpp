@@ -21,7 +21,7 @@
 
 #include <elm/avl/Map.h>
 #include <elm/io/BlockInStream.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/util/UniquePtr.h>
 #include <elm/xom.h>
 
@@ -91,7 +91,7 @@ private:
 		xom::Element *xelt;
 	} context_t;
 	context_t cur;
-	genstruct::Vector<context_t> stack;
+	Vector<context_t> stack;
 };
 
 
@@ -189,7 +189,7 @@ public:
 	private:
 		xom::String _name;
 		int _kind;
-		genstruct::Vector<Attribute *> attrs;
+		Vector<Attribute *> attrs;
 		Content *_content;
 	};
 
@@ -238,7 +238,7 @@ public:
 private:
 	xom::String _name;
 	int _kind;
-	genstruct::Vector<Attribute *> attrs;
+	Vector<Attribute *> attrs;
 	Content& _content;
 };
 
@@ -434,12 +434,12 @@ typedef Element::Make make;
 class GC {
 public:
 	~GC(void) {
-		for(genstruct::SLList<Content *>::Iterator con; con; con++)
+		for(List<Content *>::Iter con; con; con++)
 			delete *con;
 	}
 	inline Content& add(Content *c) { to_free.add(c); return *c; }
 private:
-	genstruct::SLList<Content *> to_free;
+	List<Content *> to_free;
 };
 GC _gc;
 
@@ -616,7 +616,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		if(bb_elts->size() == 0)
 			raiseError(celt, _ << "no BB in CFG " << *cfgID);
 
-		genstruct::Vector<Block*> basicBlocksInOrder;
+		Vector<Block*> basicBlocksInOrder;
 
 		Inst* firstInst = &otawa::Inst::null;
 		for(int j = 0; j < bb_elts->size(); j++) {
@@ -681,7 +681,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		// add basic block in order ...
 		// we don't add the Synth Blocks now because the id of the Synth Blocks are after the Basic Blocks
 		// to have the same fashion of id numbering of the original and reconstructed CFG, we add the BB first.
-		for(genstruct::Vector<Block*>::Iterator vbbi(basicBlocksInOrder); vbbi; vbbi++)
+		for(Vector<Block*>::Iter vbbi(basicBlocksInOrder); vbbi; vbbi++)
 			maker->add(*vbbi);
 
 		bb_map->put(*exitID, maker->exit()); // put the exit in the map

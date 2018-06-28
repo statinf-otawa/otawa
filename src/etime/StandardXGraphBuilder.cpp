@@ -262,7 +262,7 @@ private:
 		static string program_order("program order");
 
 		// select list of in-order stages
-		elm::genstruct::SLList<ParExeStage *> *list = _proc->listOfInorderStages();
+		List<ParExeStage *> *list = _proc->listOfInorderStages();
 
 		// create the edges
 		for(ParExeGraph::StageIterator stage(list) ; stage ; stage++) {

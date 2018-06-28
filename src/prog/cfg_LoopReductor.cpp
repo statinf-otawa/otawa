@@ -123,7 +123,7 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 
 		// duplicate graph
 		CFGMaker& maker = *vcfgvec.get(i);
-		genstruct::HashTable<Block *, Block *> map;
+		HashMap<Block *, Block *> map;
 		for(CFG::BlockIter v = g->blocks(); v; v++)
 			map.put(v, clone(maker, v));
 		for(CFG::BlockIter v = g->blocks(); v; v++)

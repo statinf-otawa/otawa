@@ -49,7 +49,7 @@ protected:
 
 private:
 
- 	void processWorkingList(elm::genstruct::Vector<WorkingElement*>& workingList);
+ 	void processWorkingList(Vector<WorkingElement*>& workingList);
  	void initIdentifiersForEachBB(const CFGCollection& coll);
 
  	void clearAddrs(BasicBlock* bb);

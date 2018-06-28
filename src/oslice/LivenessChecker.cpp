@@ -121,7 +121,7 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 			}
 
 			// define the working list of BB
-			elm::genstruct::Vector<WorkingElement*> workingList;
+			Vector<WorkingElement*> workingList;
 
 			// first we put the current BB in to the list
 			workingList.add(new WorkingElement(currentBB, currentInst, workingRegs, workingMems));
@@ -142,7 +142,7 @@ void LivenessChecker::processWorkSpace(WorkSpace *fw) {
 	// at the end of the program, no memory address will be used
 	dfa::MemorySet::t workingMems(0);
 	// define the working list of BB
-	elm::genstruct::Vector<WorkingElement*> workingList;
+	Vector<WorkingElement*> workingList;
 	// the first element of the list is the exit block
 	workingList.add(new WorkingElement(programExit, 0, workingRegs, workingMems));
 	// process the working list
@@ -180,7 +180,7 @@ void LivenessChecker::provideRegisters(Inst* inst, elm::BitVector& regsToModify,
 		regsToModify.set(currReg->platformNumber());
 }
 
-void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>& workingList) {
+void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 	// while the list is not empty
 	while(workingList.count())
 	{
@@ -272,7 +272,7 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 		// here reaches the beginning of the BB, now we need to list the list of incoming edges
 		// so we can keep trace back the previous BB
 		// first we find the predecessors of the BB to process
-		elm::genstruct::Vector<Block *> predecessors;
+		Vector<Block *> predecessors;
 
 		for (Block::EdgeIter e = currentBB_wl->ins(); e; e++) {
 			Block* b = e->source(); // find the source of the edge, the predecessor of current BB
@@ -333,7 +333,7 @@ void LivenessChecker::processWorkingList(elm::genstruct::Vector<WorkingElement*>
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
-		for(elm::genstruct::Vector<Block *>::Iterator predecessor(predecessors); predecessor; ++predecessor) {
+		for(Vector<Block *>::Iter predecessor(predecessors); predecessor; ++predecessor) {
 			BitVector bv = REG_BB_END_IN(predecessor);
 			if(!bv.size()) {
 				bv = BitVector(workspace()->platform()->regCount(), false);
@@ -653,7 +653,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 		}
 
 //		// add the current working mem into a vector then transfer that to the bag
-//		genstruct::Vector<otawa::clp::Value> tempCLPVector;
+//		Vector<otawa::clp::Value> tempCLPVector;
 //		//for(clp_value_set_t::Iterator currMem(*workingMem); currMem; ++currMem)
 //		for(dfa::MemorySet::Iter msi = workingMem->areas(); msi; msi++) {
 //			// tempCLPVector.add(*currMem); FIXME

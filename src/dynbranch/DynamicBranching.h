@@ -21,7 +21,7 @@
 #ifndef OTAWA_DYNAMIC_BRANCHING_ANALYSIS_H
 #define OTAWA_DYNAMIC_BRANCHING_ANALYSIS_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/sys/StopWatch.h>
 #include <otawa/otawa.h>
 #include <otawa/ipet.h>

@@ -24,9 +24,10 @@
 #define OTAWA_PAREXEPROC_H
 
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/string/String.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/BiDiList.h>
+#include <elm/data/List.h>
 #include <stdio.h>
 #include <otawa/otawa.h>
 #include <otawa/hard/Processor.h>
@@ -89,8 +90,8 @@ namespace otawa {
     elm::String _name;
     int _index;
     Vector<Pair<Inst::kind_t, ParExePipeline *> > _bindings;
-    elm::genstruct::Vector<ParExePipeline *> _fus;
-    elm::genstruct::Vector<ParExeNode *> _nodes;
+    Vector<ParExePipeline *> _fus;
+    Vector<ParExeNode *> _nodes;
   public:
     inline ParExeStage(pipeline_stage_category_t category, int latency, int width, order_t policy, ParExeQueue *sq, ParExeQueue *dq, elm::String name, int index=0, const hard::PipelineUnit *unit = 0);
 
@@ -130,10 +131,10 @@ namespace otawa {
 		return 0;
 	}
 
-    class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
+    class NodeIterator: public Vector<ParExeNode *>::Iter {
     public:
       inline NodeIterator(const ParExeStage *stage)
-	: elm::genstruct::Vector<ParExeNode *>::Iterator(stage->_nodes) {}
+	: Vector<ParExeNode *>::Iter(stage->_nodes) {}
     };
     
   };
@@ -153,16 +154,16 @@ namespace otawa {
     inline void addStage(ParExeStage *stage);
     inline int numStages() {return _stages.length();}
 
-    class StageIterator: public elm::genstruct::Vector<ParExeStage *>::Iterator {
+    class StageIterator: public Vector<ParExeStage *>::Iter {
     public:
       inline StageIterator(const ParExePipeline *pipeline)
-	: elm::genstruct::Vector<ParExeStage *>::Iterator(pipeline->_stages) {}
+	: Vector<ParExeStage *>::Iter(pipeline->_stages) {}
     };
 
     inline StageIterator stages(void) const { return StageIterator(this); }
 
     protected:
-      elm::genstruct::Vector<ParExeStage *> _stages;
+      Vector<ParExeStage *> _stages;
     private:
       ParExeStage * _first_stage;
       ParExeStage * _last_stage;
@@ -212,19 +213,19 @@ namespace otawa {
 	  inline ParExeStage *lastStage(void) {return _pipeline.lastStage() ;}
 	  inline bool isLastStage(ParExeStage *stage) {return (_pipeline.lastStage() == stage);}
 	  inline ParExePipeline *pipeline() {return &_pipeline;}
-	  inline elm::genstruct::SLList<ParExeStage *> *listOfInorderStages() {return &_inorder_stages;}
+	  inline List<ParExeStage *> *listOfInorderStages() {return &_inorder_stages;}
 
-	  class QueueIterator: public elm::genstruct::Vector<ParExeQueue *>::Iterator {
+	  class QueueIterator: public Vector<ParExeQueue *>::Iter {
 	  public:
 		  inline QueueIterator(const ParExeProc *processor)
-		  : elm::genstruct::Vector<ParExeQueue *>::Iterator(processor->_queues) {}
+		  : Vector<ParExeQueue *>::Iter(processor->_queues) {}
 	  };
 
 	  private:
 	  	  const hard::Processor *_proc;
-		  elm::genstruct::Vector<ParExeQueue *> _queues;
+		  Vector<ParExeQueue *> _queues;
 		  ParExePipeline _pipeline;
-		  elm::genstruct::SLList<ParExeStage *> _inorder_stages;
+		  List<ParExeStage *> _inorder_stages;
 		  ParExeStage * _fetch_stage;
 		  ParExeStage * _exec_stage;
 		  ParExeStage *_branch_stage;

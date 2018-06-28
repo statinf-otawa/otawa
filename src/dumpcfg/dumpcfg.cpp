@@ -20,9 +20,8 @@
  */
 
 #include <elm/io.h>
-#include <elm/genstruct/DLList.h>
-#include <elm/genstruct/SortedBinMap.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/BiDiList.h>
+#include <elm/data/SortedList.h>
 #include <elm/options.h>
 
 #include <otawa/app/Application.h>

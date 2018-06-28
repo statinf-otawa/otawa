@@ -283,7 +283,7 @@ WorkSpace::~WorkSpace(void) {
 
 	// collect root dependencies
 	Vector<Dependency *> roots;
-	for(dep_map_t::Iterator i(dep_map); i; i++)
+	for(dep_map_t::Iter i(dep_map); i; i++)
 		if((*i)->_used.isEmpty() && !roots.contains(*i)) {
 			TRACE("ROOT: " << *i << " -> " << i->_proc << " for " << i.key()->name());
 			roots.add(*i);
@@ -806,7 +806,7 @@ void WorkSpace::unserialize(elm::serial2::Unserializer& unserializer) {
 			CONC_DEBUG("DEBUG: " << c << " threads available (" << core_count << ").\n");
 
 			// run available threads
-			genstruct::Vector<sys::Thread *> to_wait;
+			Vector<sys::Thread *> to_wait;
 			for(int i = 0; i < c; i++) {
 				to_wait.add(run(runnable));
 				CONC_DEBUG("DEBUG: launched thread " << (void *)to_wait.top() << io::endl);

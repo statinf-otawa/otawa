@@ -21,7 +21,7 @@
 #ifndef OTAWA_ILP_ABSTRACTSYSTEM_H_
 #define OTAWA_ILP_ABSTRACTSYSTEM_H_
 
-#include <elm/genstruct/FragTable.h>
+#include <elm/data/FragTable.h>
 #include <otawa/ilp/Expression.h>
 #include <otawa/ilp/System.h>
 
@@ -93,24 +93,24 @@ public:
 protected:
 	int index(ilp::Var *var);
 
-	class ConstIter: public genstruct::FragTable<AbstractConstraint *>::Iterator {
+	class ConstIter: public FragTable<AbstractConstraint *>::Iter {
 	public:
 		inline ConstIter(AbstractSystem *sys)
-			: genstruct::FragTable<AbstractConstraint *>::Iterator(sys->conss) { }
+			: FragTable<AbstractConstraint *>::Iter(sys->conss) { }
 		inline void next(void) {
 			do {
-				genstruct::FragTable<AbstractConstraint *>::Iterator::next();
+				FragTable<AbstractConstraint *>::Iter::next();
 			} while(!ended() && !item());
 		}
 	};
 
-	class VarIter: public genstruct::FragTable<AbstractVar *>::Iterator {
+	class VarIter: public FragTable<AbstractVar *>::Iter {
 	public:
 		inline VarIter(AbstractSystem *sys)
-			: genstruct::FragTable<AbstractVar *>::Iterator(sys->vars) { }
+			: FragTable<AbstractVar *>::Iter(sys->vars) { }
 		inline void next(void) {
 			do {
-				genstruct::FragTable<AbstractVar *>::Iterator::next();
+				FragTable<AbstractVar *>::Iter::next();
 			} while(!ended() && !item());
 		}
 	};
@@ -122,8 +122,8 @@ private:
 	friend class AbstractVar;
 	void remove(AbstractVar *var);
 
-	genstruct::FragTable<AbstractVar *> vars;
-	genstruct::FragTable<AbstractConstraint *> conss;
+	FragTable<AbstractVar *> vars;
+	FragTable<AbstractConstraint *> conss;
 	Expression obj;
 	bool cleaning;
 };

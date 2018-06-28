@@ -299,10 +299,7 @@ void Output::processProps(xom::Element *parent, const PropList& props) {
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::cfgio", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
 } }	// otawa::cfgio

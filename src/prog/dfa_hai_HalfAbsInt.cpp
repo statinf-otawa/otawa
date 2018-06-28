@@ -18,7 +18,7 @@
  */
 
 #include <otawa/dfa/hai/HalfAbsInt.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 
 namespace otawa { namespace dfa { namespace hai {
 

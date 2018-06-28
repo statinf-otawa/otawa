@@ -331,7 +331,7 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
  */
 void Slicer::make(CFG *cfg, CFGMaker& maker) {
 	ASSERT(cfg);
-	genstruct::HashTable<Block *, Block *> bmap;
+	HashMap<Block *, Block *> bmap;
 	Vector<Block*> workingList;
 	Vector<Block*> blocksToRemove;
 

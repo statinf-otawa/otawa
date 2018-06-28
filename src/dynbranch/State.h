@@ -30,7 +30,6 @@ using namespace elm;
 namespace otawa { namespace dynbranch {
 
 using namespace elm::io ;
-using namespace elm::genstruct ;
 
 
 class MyGC;

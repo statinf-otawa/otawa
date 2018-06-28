@@ -102,7 +102,7 @@ namespace otawa {
  */
 
 /**
- * @fn const genstruct::Vector<FeatureUsage> AlternativeProcessor::Alternative::features(void) const;
+ * @fn const Vector<FeatureUsage> AlternativeProcessor::Alternative::features(void) const;
  * Get the list of requirements of this alternative.
  * @return		List of requirements.
  */
@@ -131,7 +131,7 @@ AlternativeProcessor::AlternativeProcessor(AlternativeSet& alts, AbstractRegistr
 	set = alts;
 	for(int i = 0; i < set.length(); i++) {
 		const Alternative& alt = *set[i];
-		for(genstruct::Vector<FeatureUsage>::Iterator a(alt.features()); a; a++) {
+		for(Vector<FeatureUsage>::Iter a(alt.features()); a; a++) {
 			const AbstractFeature& f = (*a).feature();
 			ASSERTP(!r.requires(f) || !r.requires(f), "feature " << f.name() << " required in registration and in alternative");
 		}

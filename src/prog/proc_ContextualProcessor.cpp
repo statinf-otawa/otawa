@@ -23,7 +23,7 @@
 #include <elm/data/ListQueue.h>
 #include <elm/util/LockPtr.h>
 #include <elm/util/BitVector.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/proc/ContextualProcessor.h>
 

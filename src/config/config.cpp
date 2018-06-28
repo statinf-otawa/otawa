@@ -22,7 +22,7 @@
 
 #include <elm/options.h>
 #include <elm/string/StringBuffer.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/sys/Plugger.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>

@@ -20,16 +20,14 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/genstruct/Table.h>
 #include <otawa/proc/ProcessorPlugin.h>
 
 namespace otawa { namespace oslice {
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef elm::genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::oslice", Version(1, 12, 1517), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors (void) const { return procs_t::EMPTY; };
 };
 
 } }		// otawa::oslice

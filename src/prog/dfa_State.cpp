@@ -363,7 +363,7 @@ private:
 		return s;
 	}
 
-	void split(string s, genstruct::Vector<string>& parts) {
+	void split(string s, Vector<string>& parts) {
 		int p = s.indexOf(' ');
 		while(p >= 0) {
 			if(p > 0)
@@ -375,8 +375,8 @@ private:
 			parts.add(s);
 	}
 
-	genstruct::Vector<Pair<const hard::Register *, Value> > reg_inits;
-	genstruct::Vector<MemCell> mem_inits;
+	Vector<Pair<const hard::Register *, Value> > reg_inits;
+	Vector<MemCell> mem_inits;
 };
 
 p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder", Version(1, 0, 0))

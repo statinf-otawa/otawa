@@ -20,7 +20,7 @@
  */
 
 #include <elm/io.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/options.h>
 
 #include <otawa/cfg/features.h>

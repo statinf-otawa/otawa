@@ -102,7 +102,7 @@ CHECK_BEGIN("otawa_props")
 
 		// Proplist in collection
 		{
-			genstruct::Vector<PropList> props;
+			Vector<PropList> props;
 			for(int i = 0; i < 256; i++) {
 				//cout << "-> " << i << io::endl;
 				PropList propl;

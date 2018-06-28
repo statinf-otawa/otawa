@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/cache/LBlockSet.h>
 #include <otawa/util/LBlockBuilder.h>
 #include <otawa/ilp.h>
@@ -234,9 +234,9 @@ void EdgeACSBuilder::processWorkSpace(WorkSpace *fw) {
 			AllocatedTable<LBlock*> &lblocks = *BB_LBLOCKS(bb);
 			if (BB_LBLOCKS(bb) != NULL) {
 				for (int i = 0; i < lblocks.count(); i++) {
-					CACHE_ACS_MUST(bb) = new genstruct::Vector<MUSTProblem::Domain*>;
+					CACHE_ACS_MUST(bb) = new Vector<MUSTProblem::Domain*>;
 					if (level != FML_NONE)
-						CACHE_ACS_PERS(bb) = new genstruct::Vector<PERSProblem::Domain*>;
+						CACHE_ACS_PERS(bb) = new Vector<PERSProblem::Domain*>;
 				}
 			}
 		}

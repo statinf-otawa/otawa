@@ -1011,7 +1011,7 @@ void BPredProcessor::processCFG__Global1B(WorkSpace *ws,CFG* cfg) {
 	
 	// P_1b
 	nbPI=0;
-	elm::genstruct::HashTable<String,void*> ht;
+	HashMap<String,void*> ht;
 	for(BBHG::NodeIterator node(&bbhg);node;node++)
 		if(!ht.exists(BitSet_to_String(node->getHistory()))) {
 			nbPI++;

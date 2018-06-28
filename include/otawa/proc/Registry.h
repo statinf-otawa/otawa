@@ -22,7 +22,7 @@
 #ifndef OTAWA_PROC_PROC_REGISTRY_H
 #define OTAWA_PROC_PROC_REGISTRY_H
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/PreIterator.h>
 #include <otawa/proc/Registration.h>
 
@@ -31,15 +31,15 @@ namespace otawa {
 // Registry class
 class Registry: public Initializer<AbstractRegistration> {
 	friend class AbstractRegistration;
-	typedef genstruct::HashTable<String, const AbstractRegistration *> htab_t; 
+	typedef HashMap<String, const AbstractRegistration *> htab_t;
 
 public:
 	static const AbstractRegistration *find(string name);
 
 	// Iter class
-	class Iter: public htab_t::Iterator {
+	class Iter: public htab_t::Iter {
 	public:
-		inline Iter(void): htab_t::Iterator(_.procs) { }
+		inline Iter(void): htab_t::Iter(_.procs) { }
 	};
 
 private:

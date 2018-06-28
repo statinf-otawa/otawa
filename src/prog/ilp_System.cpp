@@ -1,11 +1,24 @@
 /*
- *	$Id$
- *	Copyright (c) 2005, IRIT UPS.
+ *	System class implementation
  *
- *	src/ilp_System.h -- documentation of the system interface.
+ *	This file is part of OTAWA
+ *	Copyright (c) 2005-15, IRIT UPS.
+ *
+ *	OTAWA is free software; you can redistribute it and/or modify
+ *	it under the terms of the GNU General Public License as published by
+ *	the Free Software Foundation; either version 2 of the License, or
+ *	(at your option) any later version.
+ *
+ *	OTAWA is distributed in the hope that it will be useful,
+ *	but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *	GNU General Public License for more details.
+ *
+ *	You should have received a copy of the GNU General Public License
+ *	along with OTAWA; if not, write to the Free Software
+ *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-//#include <otawa/otawa.h>
 #include <elm/avl/Set.h>
 #include <otawa/ilp/System.h>
 #include <math.h>
@@ -34,7 +47,7 @@ public:
 
 private:
 	int vcnt;
-	genstruct::HashTable<Var *, string> map;
+	HashMap<Var *, string> map;
 };
 
 
@@ -323,7 +336,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
  */
 void System::dumpMOSEK(OutStream& _out) {
 	io::Output out(_out);
-	genstruct::HashTable<Var*, String*> rename;
+	HashMap<Var*, String*> rename;
 	int idx = 0;
 
 	// dump the objective function
@@ -416,7 +429,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[variables]\n";
-	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -428,7 +441,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[integer]\n";
-	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -447,7 +460,7 @@ void System::dumpMOSEK(OutStream& _out) {
  */
 void System::dumpCPlex(OutStream& _out) {
 	io::Output out(_out);
-	genstruct::HashTable<Var*, String*> rename;
+	HashMap<Var*, String*> rename;
 	int idx = 0;
 	/* Rename the variables for cplex */
 
@@ -586,7 +599,7 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the integer variable definition
 	out << "\\* Integer definitions *\\\n";
 	out << "Integer\n";
-	for(genstruct::HashTable<Var*, String*>::Iterator item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;

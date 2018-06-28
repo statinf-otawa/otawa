@@ -23,10 +23,7 @@ namespace otawa { namespace icat3 {
 
 class Plugin: public ProcessorPlugin {
 public:
-	typedef elm::genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::icat3", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors (void) const { return procs_t::EMPTY; };
 };
 
 

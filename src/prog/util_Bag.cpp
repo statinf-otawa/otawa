@@ -36,7 +36,7 @@ namespace otawa {
  * but the responsibility for releasing the array is transferred to the Bag),
  * the array must be passed through a small @ref Give object. @ref Give objects
  * may be built from a pair (array count, array pointer) but also from
- * a @ref elm::genstruct::Vector (in this case, the array is detached).
+ * a @ref elm::Vector (in this case, the array is detached).
  *
  * @ingroup props
  */
@@ -67,7 +67,7 @@ namespace otawa {
  */
 
 /**
- * @fn Bag::Bag(const genstruct::Vector<T>& v);
+ * @fn Bag::Bag(const Vector<T>& v);
  * Constructor from a vector.
  * @param v		Vector to copy items from.
  */

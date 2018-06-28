@@ -21,7 +21,7 @@
 
 #include <elm/assert.h>
 #include <elm/data/ListQueue.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/cfg.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/ProcessorException.h>

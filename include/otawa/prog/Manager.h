@@ -23,7 +23,7 @@
 #define OTAWA_MANAGER_H
 
 #include <elm/sys/Path.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/util/MessageException.h>
 #include <elm/xom.h>
 #include <elm/sys/Plugger.h>
@@ -92,7 +92,7 @@ private:
 	WorkSpace *loadBin(const elm::sys::Path& path, const PropList& props);
 	WorkSpace *loadXML(const elm::sys::Path& path, const PropList& props);
 
-	genstruct::Vector<hard::Platform *> platforms;
+	Vector<hard::Platform *> platforms;
 	elm::sys::Plugger ilp_plugger;
 	elm::sys::Plugger loader_plugger;
 	elm::sys::Plugger sim_plugger;

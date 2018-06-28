@@ -196,7 +196,7 @@ FeatureDependency::FeatureDependency(const AbstractFeature *_feature)
  */
 FeatureDependency::~FeatureDependency(void) {
 	ASSERT(children.isEmpty());
-	for(list_t::Iterator parent(parents); parent; parent++)
+	for(list_t::Iter parent(parents); parent; parent++)
 		parent->children.remove(this);
 }
 

@@ -758,11 +758,11 @@ void ParExeGraph::addEdgesForFetch(void) {
   * @param list_of_stages	List of stages that process nodes in order
  * 							(if an empty pointer is passed, one is created containing the in-order-scheduled stages).
  */
-void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages){
+void ParExeGraph::addEdgesForProgramOrder(List<ParExeStage *> *list_of_stages){
 	static string program_order("program order");
 
 	// select list of in-order stages
-	elm::genstruct::SLList<ParExeStage *> *list;
+	List<ParExeStage *> *list;
 	if(list_of_stages != NULL)
 		list = list_of_stages;
 	else

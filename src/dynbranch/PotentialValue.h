@@ -23,7 +23,7 @@
 
 #include "Set.h"
 #include <elm/io/OutStream.h>
-#include <elm/genstruct/SLList.h>
+#include <elm/data/List.h>
 #include <otawa/prop/Identifier.h>
 
 using namespace elm;
@@ -40,7 +40,7 @@ class PotentialValueMem;
 typedef SLList<PotentialValueMem*> potential_value_list_t;
 #else
 class PotentialValue;
-typedef genstruct::SLList<PotentialValue*> potential_value_list_t;
+typedef List<PotentialValue*> potential_value_list_t;
 #endif
 
 typedef t::uint32 potential_value_type ;

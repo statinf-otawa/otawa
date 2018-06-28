@@ -19,7 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/VectorQueue.h>
+#include <elm/data/VectorQueue.h>
 #include <otawa/app/Application.h>
 #include <otawa/program.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -208,7 +208,7 @@ private:
 		ASSERT(!address.isNull());
 
 		// Initialize the queue
-		genstruct::VectorQueue<Inst *> todo(1024);
+		VectorQueue<Inst *> todo(1024);
 		Inst *inst = getInst(workspace(), address);
 		if(!inst) {
 			cerr << "ERROR: bad function entry at " << address << io::endl;

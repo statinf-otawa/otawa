@@ -21,9 +21,9 @@
  */
 
 #include <elm/assert.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Table.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Array.h>
+#include <elm/data/Vector.h>
 
 #include <otawa/cache/features.h>
 #include <otawa/cache/LBlockBuilder.h>

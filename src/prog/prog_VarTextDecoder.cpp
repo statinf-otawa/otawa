@@ -24,7 +24,7 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/VarTextDecoder.h>
 #include <otawa/proc/Registry.h>
-#include <elm/genstruct/VectorQueue.h>
+#include <elm/data/VectorQueue.h>
 #include <otawa/program.h>
 #include <otawa/util/FlowFactLoader.h>
 
@@ -171,7 +171,7 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 	TRACE("otawa::VarTextDecoder::processEntry("  << address << ")");
 
 	// Initialize the queue
-	genstruct::VectorQueue<Inst *> todo(QUEUE_SIZE);
+	VectorQueue<Inst *> todo(QUEUE_SIZE);
 	Inst *inst = getInst(workspace(), address);
 	if(!inst) {
 		log << "WARNING: bad function entry at " << address << io::endl;

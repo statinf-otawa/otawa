@@ -19,7 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/SortedBinMap.h>
+#include <elm/data/SortedList.h>
+#include <elm/data/ListMap.h>
 #include <elm/rtti/Enum.h>
 #include <elm/serial2/XOMUnserializer.h>
 
@@ -172,7 +173,7 @@ Stage::Stage(const Make& maker)
 Stage::Stage(const Stage *stage)
 : PipelineUnit(stage), type(stage->type), ordered(stage->ordered) {
 	if(stage->fus.count()) {
-		genstruct::SortedBinMap<FunctionalUnit *, FunctionalUnit *> map;
+		elm::ListMap<FunctionalUnit *, FunctionalUnit *> map;
 		fus.allocate(stage->fus.count());
 		for(int i = 0; i < fus.count(); i++) {
 			fus[i] = new FunctionalUnit(stage->fus[i]);
@@ -475,7 +476,7 @@ Processor::Processor(const Processor& proc, cstring name)
 	if(proc.stages.count()) {
 
 		// clone stages
-		genstruct::SortedBinMap<Stage *, Stage *> map;
+		ListMap<Stage *, Stage *> map;
 		stages.allocate(proc.stages.count());
 		for(int i = 0; i < stages.count(); i++) {
 			stages[i] = new Stage(proc.stages[i]);

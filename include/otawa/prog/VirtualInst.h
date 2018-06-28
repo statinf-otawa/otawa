@@ -22,7 +22,7 @@
 #ifndef OTAWA_PROG_VIRTUALINST_H_
 #define OTAWA_PROG_VIRTUALINST_H_
 
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/proc/AbstractFeature.h>
 

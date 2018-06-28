@@ -277,7 +277,7 @@ using namespace elm;
  * is pushed when an @p if is found and a state is popped when an execution path ends. The different states
  * obtained at each end of an execution path can be joined:
  * @code
- * 	genstruct::Vector<State> stack;
+ * 	Vector<State> stack;
  * 	State s = initial_state, result = bottom_state;
  * 	stack.push(s);
  * 	for(sem::PathIter i(machine_instruction); i; i++) {

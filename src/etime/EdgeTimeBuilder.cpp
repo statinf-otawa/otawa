@@ -410,9 +410,9 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 #if 0
 	// process each primary edge
 	for(Block::EdgeIter in = bb->ins(); in; in++) {
-		typedef genstruct::Vector<Pair<BasicBlock *, Edge *> > comps_t;
+		typedef Vector<Pair<BasicBlock *, Edge *> > comps_t;
 		comps_t comps;
-		genstruct::Vector<Edge *> todo;
+		Vector<Edge *> todo;
 
 		// close all predecessor BB
 		todo.add(in);
@@ -556,7 +556,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	// find bounds in event list
 	event_list_t events = all_events;
 	all_events.clear();
-	genstruct::Vector<Inst *> bnds;
+	Vector<Inst *> bnds;
 	int ecnt = 0, instp = 0;
 	Inst *inst = 0;
 	for(int i = 0; i < events.length(); i++) {

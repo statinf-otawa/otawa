@@ -336,10 +336,7 @@ String BPredProcessor::bin_to_str(int i) {
 // Plugin declaration
 class Plugin: public ProcessorPlugin {
 public:
-	typedef genstruct::Table<AbstractRegistration * > procs_t;
-
 	Plugin(void): ProcessorPlugin("otawa::bpred", Version(1, 1, 0), OTAWA_PROC_VERSION) { }
-	virtual procs_t& processors(void) const { return procs_t::EMPTY; };
 };
 
 } } // otawa::bpred

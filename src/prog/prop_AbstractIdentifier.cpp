@@ -18,7 +18,7 @@
  */
 
 #include <elm/io.h>
-#include <elm/genstruct/HashTable.h>
+#include <elm/data/HashMap.h>
 #include <elm/util/Initializer.h>
 
 #include <otawa/prop/info.h>
@@ -54,7 +54,7 @@ public:
 		init.startup();
 	}
 
-	genstruct::HashTable<String, AbstractIdentifier *> map;
+	HashMap<String, AbstractIdentifier *> map;
 	Initializer<AbstractIdentifier> init;
 } ids;
 
