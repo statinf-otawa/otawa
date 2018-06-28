@@ -94,7 +94,7 @@ namespace otawa{
 				StringBuffer buffer;
 				buffer << queue->name() << "[" << i << "]";
 				StageResource * upper_bound;
-				for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+				for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
 					if (resource->type() == Resource::STAGE) {
 						if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
 							if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {

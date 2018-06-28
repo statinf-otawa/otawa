@@ -25,8 +25,8 @@
 
 #include <elm/PreIterator.h>
 #include <elm/string/StringBuffer.h>
-#include <elm/genstruct/SLList.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/List.h>
+#include <elm/data/BiDiList.h>
 #include <otawa/cache/cat2/CachePenalty.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
@@ -68,12 +68,12 @@ namespace otawa {
 		BasicBlock *_bb;								// pointer to the basic block the instruction belongs to
 		code_part_t _part;								// position of the instruction in a sequence: PROLOGUE, BLOCK under analysis, or EPILOGUE
 		int _index;										// index of the instruction in the sequence
-		elm::genstruct::Vector<ParExeNode *> _nodes;	// nodes in the execution graph that are related to this instruction
+		Vector<ParExeNode *> _nodes;	// nodes in the execution graph that are related to this instruction
 		ParExeNode * _fetch_node;						// fetch node related to this instruction
 		ParExeNode *_exec_node;							// execution node related to this instruction
 		ParExeNode *_first_fu_node;
 		ParExeNode *_last_fu_node;
-		elm::genstruct::Vector<ParExeInst *> _producing_insts; // list of instructions this one depends on (some of its operands are produced by those instructions)
+		Vector<ParExeInst *> _producing_insts; // list of instructions this one depends on (some of its operands are produced by those instructions)
 
 	public:
 		inline ParExeInst(Inst * inst, BasicBlock *bb, code_part_t part, int index)
@@ -105,16 +105,16 @@ namespace otawa {
 		}
 
 		// iterator on nodes related to the instruction
-		class NodeIterator: public elm::genstruct::Vector<ParExeNode *>::Iterator {
+		class NodeIterator: public Vector<ParExeNode *>::Iter {
 		public:
-			inline NodeIterator(const ParExeInst *inst) : elm::genstruct::Vector<ParExeNode *>::Iterator(inst->_nodes) {}
+			inline NodeIterator(const ParExeInst *inst) : Vector<ParExeNode *>::Iter(inst->_nodes) {}
 		};
 		inline NodeIterator nodes(void) const { return NodeIterator(this); }
 
 		// iterator on nodes related to the instruction
-		class ProducingInstIterator: public elm::genstruct::Vector<ParExeInst *>::Iterator {
+		class ProducingInstIterator: public Vector<ParExeInst *>::Iter {
 		public:
-			inline ProducingInstIterator(const ParExeInst *inst) : elm::genstruct::Vector<ParExeInst *>::Iterator(inst->_producing_insts) {}
+			inline ProducingInstIterator(const ParExeInst *inst) : Vector<ParExeInst *>::Iter(inst->_producing_insts) {}
 		};
 
 	};
@@ -125,15 +125,15 @@ namespace otawa {
 	 */
 
 	// a sequence (double-linked list) of ParExeInst
-	class ParExeSequence : public elm::genstruct::DLList<ParExeInst *> {
+	class ParExeSequence : public BiDiList<ParExeInst *> {
 	public:
 		// iterator in the instructions in the sequence
-		class InstIterator: public elm::genstruct::DLList<ParExeInst *>::Iterator {
+		class InstIterator: public BiDiList<ParExeInst *>::Iter {
 		public:
-			inline InstIterator(const ParExeSequence *seq) : elm::genstruct::DLList<ParExeInst *>::Iterator(*seq) {}
+			inline InstIterator(const ParExeSequence *seq) : BiDiList<ParExeInst *>::Iter(*seq) {}
 		};
 		// number of instructions in the sequence
-		inline int length() {return elm::genstruct::DLList<ParExeInst *>::count();}
+		inline int length() {return BiDiList<ParExeInst *>::count();}
 	};
 
 
@@ -156,7 +156,7 @@ namespace otawa {
 
 	class TimingContext {
 	private:
-		elm::genstruct::SLList<NodeLatency *> _node_latencies_list;
+		List<NodeLatency *> _node_latencies_list;
 		Block *_header[2];
 		CachePenalty::cache_penalty_type_t _type;
 	public:
@@ -169,10 +169,10 @@ namespace otawa {
 			_header[1] = h1;
 		}
 
-		class NodeLatencyIterator: public elm::genstruct::SLList<NodeLatency *>::Iterator {
+		class NodeLatencyIterator: public List<NodeLatency *>::Iter {
 		public:
 			inline NodeLatencyIterator(const TimingContext& tctxt)
-				: elm::genstruct::SLList<NodeLatency *>::Iterator(tctxt._node_latencies_list) {}
+				: List<NodeLatency *>::Iter(tctxt._node_latencies_list) {}
 		};
 
 		TimingContext(TimingContext *ctxt){
@@ -223,9 +223,9 @@ namespace otawa {
 		ParExeProc * _microprocessor;
 		typedef struct rename_table_t {								// used in ParExeGraph.cpp
 			hard::RegBank * reg_bank;
-			elm::genstruct::AllocatedTable<ParExeNode *> *table;
+			AllocArray<ParExeNode *> *table;
 		} rename_table_t;
-		elm::genstruct::Vector<Resource *> _resources;				// resources used by the sequence of instructions
+		Vector<Resource *> _resources;				// resources used by the sequence of instructions
 
 		ParExeNode *_first_node;									// first node in the graph
 		ParExeNode *_last_prologue_node;																					// ====== REALLY USEFUL? (used in analyze())
@@ -241,7 +241,7 @@ namespace otawa {
 			{ if(_explicit) return com; else return ""; }
 
 	public:
-		ParExeGraph(WorkSpace * ws, ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
+		ParExeGraph(WorkSpace * ws, ParExeProc *proc,  Vector<Resource *> *hw_resources, ParExeSequence *seq, const PropList& props = PropList::EMPTY);
 		virtual ~ParExeGraph(void);
 		inline void setExplicit(bool ex) { _explicit = ex; }
 		inline bool getExplicit(void) const { return _explicit; }
@@ -359,12 +359,12 @@ namespace otawa {
 		elm::String _name;											// name of the node (for tracing)
 //		AllocArray<int> * _d;					// delays wrt availabilities of resources
 //		AllocArray<bool> * _e;					// dependence on availabilities of resources
-		elm::genstruct::Vector<int> * _delay;				// dependence and delays wrt availabilities of resources
+		Vector<int> * _delay;				// dependence and delays wrt availabilities of resources
 	protected:
-		elm::genstruct::Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)
-		elm::genstruct::Vector<ParExeNode *> _contenders;																	// ==== STILL USEFUL?
-		elm::BitVector * _possible_contenders;																				// ==== STILL USEFUL?
-		elm::genstruct::DLList<elm::BitVector *> _contenders_masks_list;													// ==== STILL USEFUL?
+		Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)
+		Vector<ParExeNode *> _contenders;																	// ==== STILL USEFUL?
+		BitVector * _possible_contenders;																				// ==== STILL USEFUL?
+		BiDiList<elm::BitVector *> _contenders_masks_list;													// ==== STILL USEFUL?
 		int _late_contenders;																								// ==== STILL USEFUL?
 
 	public:
@@ -372,7 +372,7 @@ namespace otawa {
 			: ParExeGraph::GenNode(graph),
 			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
 			int num = graph->numResources();
-			_delay = new elm::genstruct::Vector<int>(num);
+			_delay = new Vector<int>(num);
 			StringBuffer _buffer;
 			_buffer << stage->name() << "(I" << inst->index() << ")";
 			_name = _buffer.toString();
@@ -392,7 +392,7 @@ namespace otawa {
 		inline int numProducers(void) { return _producers.length(); }
 		inline ParExeNode *producer(int index) { return _producers[index]; }
 		inline void addContender(ParExeNode *cont) { _contenders.add(cont); }
-		inline elm::genstruct::DLList<elm::BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
+		inline BiDiList<BitVector *>* contendersMasksList() {return &_contenders_masks_list;}
 		inline elm::String name(void) { return _name; }
 		inline int delay(int index) {return (*_delay)[index];}
 		inline int delayLength() { return _delay->length(); }

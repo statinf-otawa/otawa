@@ -53,7 +53,7 @@ namespace otawa {
  * @li void ParExeGraph::createNodes(void) -- creates the nodes of the graph,
  * @li void ParExeGraph::addEdgesForPipelineOrder(void) -- add edges to follow stage pipeline order,
  * @li void ParExeGraph::addEdgesForFetch(void) -- add edges to support fetching effects (according to the instruction cache as a default),
- * @li void ParExeGraph::addEdgesForProgramOrder(elm::genstruct::SLList<ParExeStage *> *list_of_stages) -- add edges to represent program order,
+ * @li void ParExeGraph::addEdgesForProgramOrder(List<ParExeStage *> *list_of_stages) -- add edges to represent program order,
  * @li void ParExeGraph::addEdgesForMemoryOrder(void) -- add edges to support memory access order,
  * @li void ParExeGraph::addEdgesForDataDependencies(void) -- add edges for data dependencies,
  * @li void ParExeGraph::addEdgesForQueues(void) -- add edges to represent access to queues.
@@ -118,7 +118,7 @@ int ParExeGraph::analyze() {
 
 int ParExeGraph::cost() {
 	int wcc = delta(_last_node, _resources[0]);
-	for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
+	for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
 		if (res->type() != Resource::BLOCK_START){
 			//		if (res->type() != Resource::INTERNAL_CONFLICT) {											// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 			int r_id = res->index();
@@ -179,7 +179,7 @@ int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 		delta = node->delay(r_id) - upper_bound_on_res_avail;
 	}
 
-//	for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources); resource; resource++) {											// ======= DISABLED UNTIL OOO IS SUPPORTED AGAIN
+//	for (Vector<Resource *>::Iterator resource(_resources); resource; resource++) {											// ======= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 //		if (resource->type() == Resource::INTERNAL_CONFLICT) {
 //			int s = resource->index();
 //			ParExeNode * S = ((InternalConflictResource *)*resource)->node();
@@ -191,7 +191,7 @@ int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 //				} // end: is lp depends on S
 //
 //				else { //lp does not depend on S
-//					for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())); mask; mask++) {
+//					for (BiDiList<elm::BitVector *>::Iterator mask(*(S->contendersMasksList())); mask; mask++) {
 //						int tmp = a->d(s);
 //						tmp += (((mask->countBits() + S->lateContenders()) / S->stage()->width()) * S->latency());
 //						int tmp2 = 0;
@@ -214,7 +214,7 @@ int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 //							for(elm::BitVector::OneIterator one(**mask); one; one++) {
 //								ParExeNode *C = S->stage()->node(one.item());
 //								int c = -1;
-//								for (elm::genstruct::Vector<Resource *>::Iterator ic(_resources); ic; ic++)
+//								for (Vector<Resource *>::Iterator ic(_resources); ic; ic++)
 //									if(ic->type() == Resource::INTERNAL_CONFLICT
 //									&& ((InternalConflictResource *) *ic)->node() == C)
 //										c = ((InternalConflictResource *) *ic)->index();
@@ -331,7 +331,7 @@ void ParExeGraph::analyzeContentions() {
 
 void ParExeGraph::initDelays() {
     int index = 0;
-    for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
+    for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
 		switch ( res->type() ) {
 		case Resource::BLOCK_START: {
 			ParExeNode * node = _first_node;
@@ -405,7 +405,7 @@ void ParExeGraph::initDelays() {
 
 void ParExeGraph::clearDelays() {
     for (PreorderIterator node(this); node; node++) {
-		for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+		for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
 			int index = resource->index();
 			node->setDelay(index,-1);
 		}
@@ -421,7 +421,7 @@ void ParExeGraph::propagate() {
 			if (succ.edge()->type() == ParExeEdge::SOLID) {
 				latency = node->latency() + succ.edge()->latency();
 			}
-			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+			for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
 				int r_id = resource->index();
 				if (node->delay(r_id) != -1) {
 					int delay = node->delay(r_id) + latency;
@@ -475,8 +475,8 @@ void ParExeNode::buildContendersMasks(){
 			_contenders_masks_list.addLast(mask);
 		}
 		else {
-			elm::genstruct::DLList<elm::BitVector *> new_masks;
-			for (elm::genstruct::DLList<elm::BitVector *>::Iterator mask(_contenders_masks_list) ;
+			BiDiList<elm::BitVector *> new_masks;
+			for (BiDiList<elm::BitVector *>::Iter mask(_contenders_masks_list) ;
 				 mask ; mask++) {
 				ASSERT(mask->size() == _possible_contenders->size());
 				elm::BitVector *new_mask = new elm::BitVector(**mask);
@@ -484,7 +484,7 @@ void ParExeNode::buildContendersMasks(){
 				new_mask->set(one.item());
 				new_masks.addLast(new_mask);
 			}
-			for (elm::genstruct::DLList<elm::BitVector *>::Iterator new_mask(new_masks) ;
+			for (BiDiList<elm::BitVector *>::Iter new_mask(new_masks) ;
 				 new_mask ; new_mask++)
 				_contenders_masks_list.addLast(new_mask);
 		}
@@ -500,9 +500,9 @@ void ParExeGraph::createSequenceResources(){
     int reg_num = _microprocessor->processor()->platform()->regCount();
 
     // prepare table of registers
-    genstruct::AllocatedTable<bool> is_input(reg_num);
-    genstruct::AllocatedTable<ParExeInst *> is_produced_by(reg_num);
-    genstruct::AllocatedTable<ParExeInst *> is_input_for(reg_num);
+    AllocArray<bool> is_input(reg_num);
+    AllocArray<ParExeInst *> is_produced_by(reg_num);
+    AllocArray<ParExeInst *> is_input_for(reg_num);
     for (int j=0 ; j<reg_num ; j++){
     	is_input[j] = false;
     	is_produced_by[j] = nullptr;
@@ -1115,7 +1115,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
 
     // display ressources
     dotFile << "\"legend\" [shape=record, label= \"{ ";
-    for (elm::genstruct::Vector<Resource *>::Iterator res(_resources) ; res ; res++) {
+    for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
 		if (i == 0) {
 			if (!first_line)
 				dotFile << " | ";
@@ -1416,7 +1416,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
 ParExeGraph::ParExeGraph(
 	WorkSpace *ws,
 	ParExeProc *proc,
-	elm::genstruct::Vector<Resource *> *hw_resources,
+	Vector<Resource *> *hw_resources,
 	ParExeSequence *seq,
 	const PropList& props
 )
@@ -1443,7 +1443,7 @@ ParExeGraph::ParExeGraph(
 	}
 	_props = props;
 	ASSERT(!hw_resources->isEmpty());
-	for (elm::genstruct::Vector<Resource *>::Iterator res(*hw_resources) ; res ; res++) {
+	for (Vector<Resource *>::Iter res(*hw_resources) ; res ; res++) {
 		_resources.add(res);
 	}
 }

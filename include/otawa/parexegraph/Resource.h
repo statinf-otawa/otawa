@@ -89,7 +89,7 @@ namespace otawa {
 
   class RegResource : public Resource {
   private:
-    elm::genstruct::Vector<ParExeInst *> _using_instructions;
+    Vector<ParExeInst *> _using_instructions;
     otawa::hard::RegBank * _reg_bank;
     int _reg_index;
   public:
@@ -101,10 +101,10 @@ namespace otawa {
       if (! _using_instructions.contains(inst) )
     	  _using_instructions.add(inst);
     }
-    class UsingInstIterator : public elm::genstruct::Vector<ParExeInst *>::Iterator {
+    class UsingInstIterator : public Vector<ParExeInst *>::Iter {
     public:
       UsingInstIterator(const RegResource * res)
-	: elm::genstruct::Vector<ParExeInst *>::Iterator(res->_using_instructions) {}
+	: Vector<ParExeInst *>::Iter(res->_using_instructions) {}
     };
   };
 
@@ -136,13 +136,13 @@ namespace otawa {
 
   class ResourceList{
   private:
-		elm::genstruct::Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
+		Vector<Resource *> _resources;				// resources available in the processor: pipeline stages, queue slots, registers, etc.
   public:
 		ResourceList(WorkSpace *ws, ParExeProc *proc);
 		inline int numResources() {return _resources.length();}
-		class ResourceIterator: public elm::genstruct::Vector<Resource *>::Iterator {
+		class ResourceIterator: public Vector<Resource *>::Iter {
 		public:
-			inline ResourceIterator(const ResourceList *list) : elm::genstruct::Vector<Resource *>::Iterator(list->_resources) {}
+			inline ResourceIterator(const ResourceList *list) : Vector<Resource *>::Iter(list->_resources) {}
 		};
   };
 

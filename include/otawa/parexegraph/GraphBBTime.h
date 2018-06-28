@@ -77,7 +77,7 @@ namespace otawa {
     // -- class PathContext --------------------------------------------------------------------------------
     class PathContext{
     private:
-		elm::genstruct::SLList<BasicBlock *> _bb_list;
+		List<BasicBlock *> _bb_list;
 		int _num_insts;
 		int _num_bbs;
 		BasicBlock * _bb;
@@ -91,7 +91,7 @@ namespace otawa {
 			_edge = NULL;
 		}
 		PathContext(const PathContext& ctxt){
-			for (elm::genstruct::SLList<BasicBlock *>::Iterator block(ctxt._bb_list) ; block ; block++)
+			for (List<BasicBlock *>::Iter block(ctxt._bb_list) ; block ; block++)
 				_bb_list.addLast(block);
 			_num_insts = ctxt._num_insts;
 			_num_bbs = ctxt._num_bbs;
@@ -121,15 +121,15 @@ namespace otawa {
 		inline Edge * edge     ()
 		{ return _edge;}
 		void dump(io::Output& output) {
-			for (elm::genstruct::SLList<BasicBlock *>::Iterator bb(_bb_list) ; bb ; bb++){
+			for (List<BasicBlock *>::Iter bb(_bb_list) ; bb ; bb++){
 				output << "b" << bb->index() << "-";
 			}
 		}
 
-		class BasicBlockIterator: public elm::genstruct::SLList<BasicBlock *>::Iterator {
+		class BasicBlockIterator: public List<BasicBlock *>::Iter {
 		public:
 			inline BasicBlockIterator(const PathContext& ctxt)
-				: elm::genstruct::SLList<BasicBlock *>::Iterator(ctxt._bb_list) {}
+				: List<BasicBlock *>::Iter(ctxt._bb_list) {}
 		};
 
     };
@@ -153,12 +153,12 @@ namespace otawa {
 		const hard::Memory *mem;
 		const hard::Cache *icache;
 		ParExeProc *_microprocessor;
-		elm::genstruct::Vector<Resource *> _hw_resources;
+		Vector<Resource *> _hw_resources;
 
 		virtual int cacheMissPenalty(Address addr) const;
 		virtual int memoryLatency(Address addr) const;
-		virtual void buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
-		virtual void buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> *list, ParExeSequence *seq);
+		virtual void buildNCTimingContextListForICache(List<TimingContext *> *list, ParExeSequence *seq);
+		virtual void buildFMTimingContextListForICache(List<TimingContext *> *list, ParExeSequence *seq);
 		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
 		virtual void BuildVectorOfHwResources();
 		virtual void configureMem(WorkSpace *ws) {
@@ -175,9 +175,9 @@ namespace otawa {
 
 		void processWorkSpace(WorkSpace *ws);
 		void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
-		elm::genstruct::SLList<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
+		List<PathContext *> * buildListOfPathContexts(BasicBlock *bb, int depth = 1);
 		void FillSequence(PathContext *ctxt,
-						  elm::genstruct::SLList<PathContext *> *context_list, 		       
+						  List<PathContext *> *context_list,
 						  int depth);
 		ParExeSequence * buildSequence(PathContext *ctxt);
 		void analyzePathContext(PathContext *ctxt, int context_index);
@@ -319,7 +319,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
 			StageResource * upper_bound;
-			for (elm::genstruct::Vector<Resource *>::Iterator resource(_hw_resources) ; resource ; resource++) {
+			for (Vector<Resource *>::Iter resource(_hw_resources) ; resource ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
 						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
@@ -362,7 +362,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
  
 	template <class G>
 		void GraphBBTime<G>::FillSequence(PathContext *ctxt,
-										  elm::genstruct::SLList<PathContext *> *context_list, 		       
+										  List<PathContext *> *context_list,
 										  int depth){
 
 		BasicBlock *bb = ctxt->lastBlock();
@@ -394,9 +394,9 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	// -- buildListOfPathContexts ---------------------------------------------------------------------------------------
  
 	template <class G>
-		elm::genstruct::SLList<PathContext *> * GraphBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
+		List<PathContext *> * GraphBBTime<G>::buildListOfPathContexts(BasicBlock *bb, int depth){
 		ASSERT(depth > 0);
-		elm::genstruct::SLList<PathContext *> * context_list = new elm::genstruct::SLList<PathContext *>();
+		List<PathContext *> * context_list = new List<PathContext *>();
 		PathContext * ctxt = new PathContext(bb);
   
 		FillSequence(ctxt, context_list, depth);
@@ -438,9 +438,9 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	// -- buildNCTimingContextListForICache ---------------------------------------------------------------------------
 
 	template <class G>
-		void GraphBBTime<G>::buildNCTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
+		void GraphBBTime<G>::buildNCTimingContextListForICache(List<TimingContext *> * list, ParExeSequence *seq){
  
-		elm::genstruct::SLList<TimingContext *> * to_add = new elm::genstruct::SLList<TimingContext *>();
+		List<TimingContext *> * to_add = new List<TimingContext *>();
 
 		// process NOT_CLASSIFIED lblocks
 		LBlockManager lbm;
@@ -455,13 +455,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						list->addLast(tctxt);
 					}
 					else {
-						for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(*list) ; tctxt ; tctxt++){
+						for (List<TimingContext *>::Iter tctxt(*list) ; tctxt ; tctxt++){
 							TimingContext *new_tctxt = new TimingContext(tctxt.item());
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							new_tctxt->addNodeLatency(nl);
 							to_add->addLast(new_tctxt);
 						}
-						for (elm::genstruct::SLList<TimingContext *>::Iterator tctxt(*to_add) ; tctxt ; tctxt++){
+						for (List<TimingContext *>::Iter tctxt(*to_add) ; tctxt ; tctxt++){
 							list->addLast(tctxt.item());
 						}
 						to_add->clear();
@@ -479,7 +479,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	// -- buildFMTimingContextListForICache ---------------------------------------------------------------------------
 
 	template <class G>
-		void GraphBBTime<G>::buildFMTimingContextListForICache(elm::genstruct::SLList<TimingContext *> * list, ParExeSequence *seq){
+		void GraphBBTime<G>::buildFMTimingContextListForICache(List<TimingContext *> * list, ParExeSequence *seq){
  
 		Block *header0 = NULL;
 		Block *header1 = NULL;
@@ -702,8 +702,8 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			}
 	    
 			// consider variable latencies (FIRST_MISS, NOT_CLASSIFIED)
-			elm::genstruct::SLList<TimingContext *> NC_timing_context_list;
-			elm::genstruct::SLList<TimingContext *> FM_timing_context_list;
+			List<TimingContext *> NC_timing_context_list;
+			List<TimingContext *> FM_timing_context_list;
 			buildNCTimingContextListForICache(&NC_timing_context_list, sequence);	
 			buildFMTimingContextListForICache(&FM_timing_context_list, sequence);
 
@@ -712,14 +712,14 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 			bool first = true;
 			if (!FM_timing_context_list.isEmpty()){
-				for (elm::genstruct::SLList<TimingContext *>::Iterator FM_tctxt(FM_timing_context_list) ; FM_tctxt ; FM_tctxt++){
+				for (List<TimingContext *>::Iter FM_tctxt(FM_timing_context_list) ; FM_tctxt ; FM_tctxt++){
 					if (first) {
 						cache_penalty->setHeader(0, FM_tctxt->header(0));
 						cache_penalty->setHeader(1, FM_tctxt->header(1));
 						first = false;
 					}
 					if (!NC_timing_context_list.isEmpty()){
-						for (elm::genstruct::SLList<TimingContext *>::Iterator NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+						for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
 							int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
 							if (NC_cost > reference_cost)
 								reference_cost = NC_cost;
@@ -790,7 +790,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	    
 			}
 			else { // no FM context
-				for (elm::genstruct::SLList<TimingContext *>::Iterator NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+				for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
 					int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
 					if(isVerbose()) {
 						log << "\t\tcontext " << index << ": ";
@@ -862,9 +862,9 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		int context_index = 0;
 
-		elm::genstruct::SLList<PathContext *> *path_context_list = buildListOfPathContexts(bb);
+		List<PathContext *> *path_context_list = buildListOfPathContexts(bb);
 
-		for (elm::genstruct::SLList<PathContext *>::Iterator ctxt(*path_context_list) ; ctxt ; ctxt++){
+		for (List<PathContext *>::Iter ctxt(*path_context_list) ; ctxt ; ctxt++){
 			if(isVerbose()) {
 				log << "\n\t\t----- Considering context: ";
 				ctxt->dump(log);

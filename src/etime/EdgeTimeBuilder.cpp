@@ -50,7 +50,7 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 EdgeTimeGraph::EdgeTimeGraph(
 	WorkSpace * ws,
 	ParExeProc *proc,
-	elm::genstruct::Vector<Resource *> *hw_resources,
+	Vector<Resource *> *hw_resources,
 	ParExeSequence *seq,const PropList& props)
 : ParExeGraph(ws, proc, hw_resources, seq, props), builder(0) {
 }
@@ -910,7 +910,7 @@ ParExeNode *EdgeTimeBuilder::getBranchNode(void) {
 	ASSERT(source);
 	if(!bnode) {
 		Inst *binst = source->control();
-		for(ParExeSequence::Iterator pinst(*seq); pinst; pinst++)
+		for(ParExeSequence::Iter pinst(*seq); pinst; pinst++)
 			if(pinst->inst() == binst) {
 				for(ParExeInst::NodeIterator node(*pinst); node; node++)
 					if(node->stage()->unit()->isBranch()) {
@@ -950,7 +950,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeInst
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it)
+			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it)
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1002,7 +1002,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		if(!found && event->related().fst) {
 			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it) {
+			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it) {
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1073,7 +1073,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeInst
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it)
+			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it)
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1124,7 +1124,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 		if(!found && event->related().fst) {
 			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iterator inst_it(*seq); inst_it; ++inst_it) {
+			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it) {
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;

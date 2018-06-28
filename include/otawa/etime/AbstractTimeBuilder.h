@@ -29,7 +29,7 @@
 
 namespace otawa { namespace etime {
 
-typedef elm::genstruct::Vector<Resource *> resources_t;
+typedef Vector<Resource *> resources_t;
 typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } part_t;
 io::Output& operator<<(io::Output& out, part_t p);
 
@@ -55,7 +55,7 @@ io::Output& operator<<(io::Output& out, const EventCase& e);
 class Factory {
 public:
 	virtual ~Factory(void);
-	virtual ParExeGraph *make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq) = 0;
+	virtual ParExeGraph *make(ParExeProc *proc, Vector<Resource *> *hw_resources, ParExeSequence *seq) = 0;
 	virtual ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) = 0;
 	virtual ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "") = 0;
 	static Factory *make(void);

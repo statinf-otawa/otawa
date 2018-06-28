@@ -115,7 +115,7 @@ Factory::~Factory(void) {
 class StandardFactory: public Factory {
 public:
 
-	ParExeGraph *make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *resources, ParExeSequence *seq) override {
+	ParExeGraph *make(ParExeProc *proc,  Vector<Resource *> *resources, ParExeSequence *seq) override {
 		PropList props;
 		return new ParExeGraph(nullptr, proc, resources, seq);
 	}
@@ -262,7 +262,7 @@ void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
 	delete _builder;
 	delete _solver;
 	delete _proc;
-	for(auto res = resources_t::Iterator(_resources); res; res++)
+	for(auto res = resources_t::Iter(_resources); res; res++)
 		delete *res;
 	_resources.clear();
 }
@@ -319,7 +319,7 @@ void AbstractTimeBuilder::buildResources(void) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
 			StageResource * upper_bound;
-			for (elm::genstruct::Vector<Resource *>::Iterator resource(_resources) ; resource ; resource++) {
+			for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
 						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {

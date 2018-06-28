@@ -240,7 +240,7 @@ public:
 
 				// Find the related ParExeInst
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iterator inst_it(*g->getSequence()); inst_it; ++inst_it)
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it)
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -292,7 +292,7 @@ public:
 			if(!found && event->related().fst) {
 				ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iterator inst_it(*g->getSequence()); inst_it; ++inst_it) {
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it) {
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -347,7 +347,7 @@ public:
 	 * @return		Node of resolution.
 	 */
 	ParExeNode *getBranchNode(ParExeGraph *g) {
-		for(ParExeSequence::Iterator pinst(*g->getSequence()); pinst && pinst->codePart() == PROLOGUE; pinst++)
+		for(ParExeSequence::Iter pinst(*g->getSequence()); pinst && pinst->codePart() == PROLOGUE; pinst++)
 			if(pinst->inst()->isControl()) {
 				for(ParExeInst::NodeIterator node(*pinst); node; node++)
 					if(node->stage()->unit()->isBranch())
@@ -383,7 +383,7 @@ public:
 
 				// Find the related ParExeInst
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iterator inst_it(*g->getSequence()); inst_it; ++inst_it)
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it)
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -434,7 +434,7 @@ public:
 			if(!found && event->related().fst) {
 				ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iterator inst_it(*g->getSequence()); inst_it; ++inst_it) {
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it) {
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
