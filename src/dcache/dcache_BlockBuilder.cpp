@@ -144,7 +144,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 		bool cached = false;
 		const hard::Bank *bank = mem->get(addr);
 		if(!bank) {
-			const genstruct::Table<const hard::Bank *>& banks = mem->banks();
+			const Array<const hard::Bank *>& banks = mem->banks();
 			for(int i = 0; i < banks.count(); i++)
 				log << "INFO: " << banks[i]->address() << " " << banks[i]->size() << io::endl;
 			throw otawa::Exception(_ << "no memory bank for address " << addr

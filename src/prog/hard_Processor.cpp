@@ -154,11 +154,11 @@ Stage::Stage(const Make& maker)
 	ordered(maker._ordered)
 {
 	if(maker.fus) {
-		fus.allocate(maker.fus.count());
+		fus = AllocArray<FunctionalUnit *>(maker.fus.count());
 		for(int i = 0; i < fus.count(); i++)
 			fus[i] = maker.fus[i];
 		if(maker.dispatches) {
-			dispatch.allocate(maker.dispatches.count());
+			dispatch = AllocArray<Dispatch *>(maker.dispatches.count());
 			for(int i = 0; i < dispatch.count(); i++)
 				dispatch[i] = maker.dispatches[i];
 		}
@@ -174,13 +174,13 @@ Stage::Stage(const Stage *stage)
 : PipelineUnit(stage), type(stage->type), ordered(stage->ordered) {
 	if(stage->fus.count()) {
 		elm::ListMap<FunctionalUnit *, FunctionalUnit *> map;
-		fus.allocate(stage->fus.count());
+		fus = AllocArray<FunctionalUnit *>(stage->fus.count());
 		for(int i = 0; i < fus.count(); i++) {
 			fus[i] = new FunctionalUnit(stage->fus[i]);
 			map.put(stage->fus[i], fus[i]);
 		}
 		if(stage->dispatch.count()) {
-			dispatch.allocate(stage->dispatch.count());
+			dispatch = AllocArray<Dispatch *>(stage->dispatch.count());
 			for(int i = 0; i < dispatch.count(); i++)
 				dispatch[i] = new Dispatch(stage->dispatch[i]->getType(), map.get(stage->dispatch[i]->getFU(), 0));
 		}
@@ -269,7 +269,7 @@ Queue::Queue(const Make& make)
 	output(make._output)
 {
 	if(make._intern) {
-		intern.allocate(make._intern.count());
+		intern = AllocArray<Stage *>(make._intern.count());
 		for(int i = 0; i < intern.count(); i++)
 			intern[i] = make._intern[i];
 	}
@@ -447,11 +447,11 @@ Processor::Processor(const Make& m, cstring name)
   _pf(m.pf)
 {
 	if(m.stages) {
-		stages.allocate(m.stages.length());
+		stages = AllocArray<Stage *>(m.stages.length());
 		for(int i = 0; i < m.stages.length(); i++)
 			stages[i] = m.stages[i];
 		if(queues) {
-			queues.allocate(m.queues.length());
+			queues = AllocArray<Queue *>(m.queues.length());
 			for(int i = 0; i < m.queues.length(); i++)
 				queues[i] = m.queues[i];
 		}
@@ -477,7 +477,7 @@ Processor::Processor(const Processor& proc, cstring name)
 
 		// clone stages
 		ListMap<Stage *, Stage *> map;
-		stages.allocate(proc.stages.count());
+		stages = AllocArray<Stage *>(proc.stages.count());
 		for(int i = 0; i < stages.count(); i++) {
 			stages[i] = new Stage(proc.stages[i]);
 			map.put(proc.stages[i], stages[i]);
@@ -485,7 +485,7 @@ Processor::Processor(const Processor& proc, cstring name)
 
 		// clone queues
 		if(proc.queues.count()) {
-			queues.allocate(proc.queues.count());
+			queues = AllocArray<Queue *>(proc.queues.count());
 
 		}
 	}
@@ -571,10 +571,10 @@ hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
  * @param inst	Instruction (or bundle) to generate execution for.
  * @param steps	Vector to receive the steps of the instructions.
  */
-void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) const {
+void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 	RegSet regs;
 	steps.clear();
-	for(table<Stage *>::Iterator stage(stages); stage; stage++) {
+	for(Array<Stage *>::Iter stage(stages); stage; stage++) {
 
 		// add first cycle and select unit
 		Step step;
@@ -591,7 +591,7 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) const {
 		steps.add(step);
 
 		// left queues
-		for(table<Queue *>::Iterator queue(queues); queue; queue++)
+		for(Array<Queue *>::Iter queue(queues); queue; queue++)
 			if(queue->getOutput() == *stage)
 				steps.add(Step(Step::RELEASE, *queue));
 
@@ -605,7 +605,7 @@ void Processor::execute(Inst *inst, genstruct::Vector<Step>& steps) const {
 			steps.add(step);
 
 		// entered queues
-		for(table<Queue *>::Iterator queue(queues); queue; queue++)
+		for(Array<Queue *>::Iter queue(queues); queue; queue++)
 			if(queue->getInput() == *stage)
 				steps.add(Step(Step::RELEASE, *queue));
 

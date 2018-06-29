@@ -10,7 +10,7 @@
 #include <elm/assert.h>
 #include <elm/io.h>
 #include <elm/serial2/macros.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <otawa/base.h>
 
 namespace otawa { namespace hard {

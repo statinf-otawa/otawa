@@ -330,12 +330,12 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 	ASSERT(proc);
 
 	// Create queues
-	const genstruct::Table<hard::Queue *>& oqueues = proc->getQueues();
+	const Array<hard::Queue *>& oqueues = proc->getQueues();
 	for(int i = 0; i < oqueues.count(); i++)
 		addQueue(oqueues[i]->getName(),1 << oqueues[i]->getSize());
 
 	// Create stages
-	const genstruct::Table<hard::Stage *>& ostages = proc->getStages();
+	const Array<hard::Stage *>& ostages = proc->getStages();
 	for(int i = 0; i < ostages.count(); i++) {
 		hard::Stage * hstage = ostages[i];
 
@@ -389,7 +389,7 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 			// build FU for pipeline
 			if(category == ParExeStage::EXECUTE) {
 				setExecStage(stage);
-				const genstruct::Table<hard::FunctionalUnit *>& fus = hstage->getFUs();
+				const Array<hard::FunctionalUnit *>& fus = hstage->getFUs();
 
 				// create the FU
 				for(int j = 0; j < fus.count(); j++) {
@@ -402,7 +402,7 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 				}
 
 				// create the dispatches
-				const genstruct::Table<hard::Dispatch *>& dispatch = hstage->getDispatch();
+				const Array<hard::Dispatch *>& dispatch = hstage->getDispatch();
 				for(int j = 0; j < dispatch.count(); j++) {
 					bool found = false;
 					for(int k = 0; k < fus.count(); k++)

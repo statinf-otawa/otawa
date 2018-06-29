@@ -24,7 +24,7 @@
 #include <elm/sys/Path.h>
 #include <otawa/hard/Register.h>
 #include <otawa/prog/Manager.h>
-#include "../prop.h"
+#include <otawa/prop.h>
 
 // External classes
 namespace elm {
@@ -34,6 +34,8 @@ namespace elm {
 }
 
 namespace otawa {
+
+using namespace elm;
 
 class Manager;
 
@@ -47,35 +49,13 @@ class Processor;
 // Platform class
 class Platform: public AbstractIdentifier {
 public:
-	typedef elm::genstruct::Table<const hard::RegBank *> banks_t;
-
-	static const elm::String ANY;
-
-	// Architecture
-	static const elm::String POWERPC;
-
-	// ABI
-	static const elm::String ELF;
-	static const elm::String EABI;
-	static const elm::String LINUX;
-	static const elm::String LINUX_2_4;
-	static const elm::String LINUX_2_6;
-
-	// Platform
-	static const elm::String MAC;
-	static const elm::String SIM;
+	typedef Array<const hard::RegBank *> banks_t;
 
 	// Platform identification
 	class Identification {
-		elm::String _name;
-		elm::String _arch;
-		elm::String _abi;
-		elm::String _mach;
-		void split(void);
 	public:
 		Identification(const elm::String& name);
-		Identification(const elm::String& arch, const elm::String& abi,
-			const elm::String& mach = ANY);
+		Identification(const elm::String& arch, const elm::String& abi, const elm::String& mach = "");
 		inline const elm::String& name(void) const { return _name; }
 		inline const elm::String& architecture(void) const { return _arch; }
 		inline const elm::String& abi(void) const { return _abi; }
@@ -83,6 +63,13 @@ public:
 		bool matches(const Identification& id);
 		Identification& operator=(const Identification& id);
 		void print(io::Output& out) const;
+
+	private:
+		string _name;
+		string _arch;
+		string _abi;
+		string _mach;
+		void split(void);
 	};
 
 	// Constructors

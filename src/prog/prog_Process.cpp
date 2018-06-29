@@ -30,7 +30,6 @@
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/FixedTextDecoder.h>
-//#include <elm/genstruct/DAGNode.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/File.h>
 

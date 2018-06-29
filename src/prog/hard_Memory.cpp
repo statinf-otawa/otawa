@@ -151,7 +151,8 @@ namespace otawa { namespace hard {
  * @ingroup hard
  */
 
-
+/**
+ */
 Bank::Bank(void):
 	_name("no name"),
 	_size(0),
@@ -167,6 +168,9 @@ Bank::Bank(void):
 	_bus(0)
 { }
 
+
+/**
+ */
 Bank::Bank(cstring name, Address address, size_t size):
 	_name(name),
 	_address(address),
@@ -182,6 +186,12 @@ Bank::Bank(cstring name, Address address, size_t size):
 	_port_num(1),
 	_bus(0)
 { }
+
+
+/**
+ */
+Bank::~Bank(void) {
+}
 
 
 /**
@@ -314,7 +324,6 @@ static Bank full("RAM", 0, 0);
  * @return	Number of ports.
  */
 
-
 /**
  * @fn const Bus *Bank::bus(void) const;
  * Get the bus of the bank.
@@ -428,7 +437,7 @@ Memory *Memory::load(const elm::sys::Path& path) throw(LoadException) {
  */
 Memory::Memory(bool full): _waccess(0), _wread(0), _wwrite(0) {
 	if(full) {
-		_banks.allocate(1);
+		_banks = AllocArray<const Bank *>(1);
 		_banks[0] = &Bank::full;
 	}
 }
@@ -582,6 +591,27 @@ private:
 	Path path;
 };
 
+
+/**
+ */
+Bus::~Bus(void) {
+}
+
+
+/**
+ */
+Mode::~Mode(void) {
+}
+
+
+/**
+ */
+ModeTransition::~ModeTransition(void) {
+}
+
+
+/**
+ */
 p::declare MemoryProcessor::reg = p::init("otawa::MemoryProcessor", Version(1, 0, 0))
 	.provide(MEMORY_FEATURE)
 	.maker<MemoryProcessor>();

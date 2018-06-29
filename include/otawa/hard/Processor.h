@@ -24,7 +24,7 @@
 #include <elm/string.h>
 #include <elm/serial2/macros.h>
 #include <elm/serial2/collections.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
 #include <otawa/prog/Inst.h>
 #include <elm/util/strong_type.h>
 #include <elm/sys/Path.h>
@@ -156,8 +156,8 @@ public:
 	private:
 		type_t _type;
 		bool _ordered;
-		genstruct::Vector<FunctionalUnit *> fus;
-		genstruct::Vector<Dispatch *> dispatches;
+		Vector<FunctionalUnit *> fus;
+		Vector<Dispatch *> dispatches;
 	};
 
 	Stage(type_t _type = NONE);
@@ -166,8 +166,8 @@ public:
 	virtual ~Stage(void);
 
 	inline type_t getType(void) const { return type; };
-	inline const genstruct::Table<FunctionalUnit *>& getFUs(void) const { return fus; }
-	inline const genstruct::Table<Dispatch *>& getDispatch(void) const { return dispatch; }
+	inline const Array<FunctionalUnit *>& getFUs(void) const { return fus; }
+	inline const Array<Dispatch *>& getDispatch(void) const { return dispatch; }
 	inline bool isOrdered(void) const { return ordered; }
 	const PipelineUnit *select(Inst *inst) const;
 
@@ -177,8 +177,8 @@ public:
 
 private:
 	type_t type;
-	genstruct::AllocatedTable<FunctionalUnit *> fus;
-	genstruct::AllocatedTable<Dispatch *> dispatch;
+	AllocArray<FunctionalUnit *> fus;
+	AllocArray<Dispatch *> dispatch;
 	bool ordered;
 };
 
@@ -205,7 +205,7 @@ public:
 		string _name;
 		int _size;
 		Stage *_input, *_output;
-		genstruct::Vector<Stage *> _intern;
+		Vector<Stage *> _intern;
 	};
 
 	Queue(void);
@@ -215,13 +215,13 @@ public:
 	inline int getSize(void) const { return size; }
 	inline Stage *getInput(void) const { return input; }
 	inline Stage *getOutput(void) const { return output; }
-	inline const genstruct::AllocatedTable<Stage *>& getIntern(void) const { return intern; }
+	inline const AllocArray<Stage *>& getIntern(void) const { return intern; }
 
 private:
 	elm::String name;
 	int size;
 	Stage *input, *output;
-	genstruct::AllocatedTable<Stage *> intern;
+	AllocArray<Stage *> intern;
 };
 
 
@@ -290,8 +290,8 @@ public:
 	private:
 		string _arch, _model, _builder;
 		t::uint64 _frequency;
-		genstruct::Vector<Stage *> stages;
-		genstruct::Vector<Queue *> queues;
+		Vector<Stage *> stages;
+		Vector<Queue *> queues;
 		hard::Platform *pf;
 	};
 
@@ -303,8 +303,8 @@ public:
 	inline elm::String getArch(void) const { return arch; };
 	inline elm::String getModel(void) const { return model; };
 	inline elm::String getBuilder(void) const { return builder; };
-	inline const elm::genstruct::Table<Stage *>& getStages(void) const { return stages; };
-	inline const elm::genstruct::Table<Queue *>& getQueues(void) const { return queues; };
+	inline const Array<Stage *>& getStages(void) const { return stages; };
+	inline const Array<Queue *>& getQueues(void) const { return queues; };
 	inline t::uint64 getFrequency(void) const { return frequency; }
 
 	inline hard::Platform *platform(void) const { return _pf; }
@@ -313,7 +313,7 @@ public:
 	static Processor *load(const elm::sys::Path& path) throw(LoadException);
 	static Processor *load(xom::Element *element) throw(LoadException);
 
-	typedef elm::genstruct::Vector<Step> steps_t;
+	typedef Vector<Step> steps_t;
 	virtual void execute(Inst *inst, steps_t& steps) const;
 	virtual Processor *clone(cstring name = "") const;
 	virtual Processor *instantiate(Process *process, cstring name = "") const;
@@ -325,8 +325,8 @@ private:
 	string arch;
 	string model;
 	string builder;
-	elm::genstruct::AllocatedTable<Stage *> stages;
-	elm::genstruct::AllocatedTable<Queue *> queues;
+	AllocArray<Stage *> stages;
+	AllocArray<Queue *> queues;
 	t::uint64 frequency;
 	Process *_process;
 	hard::Platform *_pf;

@@ -24,7 +24,7 @@
 
 #include <elm/assert.h>
 #include <elm/string.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
 #include <elm/data/Array.h>
 #include <elm/data/List.h>
 #include <elm/io.h>

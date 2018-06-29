@@ -20,7 +20,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <elm/genstruct/Table.h>
+#include <elm/data/Array.h>
 #include <elm/serial2/XOMUnserializer.h>
 #include <elm/xom.h>
 
@@ -145,7 +145,7 @@ p::id<bool> Platform::MAGIC("");
 /**
  * Empty register bank table.
  */
-const elm::genstruct::Table<const hard::RegBank *> Platform::null_banks(0, 0);
+const Array<const hard::RegBank *> Platform::null_banks(0, 0);
 
 
 /**
@@ -253,66 +253,6 @@ bool Platform::accept(const Identification& _id) {
 
 
 /**
- * Represents any architecture, platform, machine.
- */
-const elm::String Platform::ANY("*");
-
-
-/**
- * Represents the PowerPC architecture.
- */
-const elm::String Platform::POWERPC("powerpc");
-
-
-/**
- * Represents the ELF ABI.
- */	
-const elm::String Platform::ELF("elf");
-
-
-/**
- * Represents the EABI ABI.
- */
-const elm::String Platform::EABI("eabi");
-
-
-/**
- * Represents the Linux ABI.
- */
-const elm::String Platform::LINUX("linux");
-
-
-/**
- * Represents the Linux 2.4 ABI.
- */
-const elm::String Platform::LINUX_2_4("linux/2.4");
-
-
-/**
- * Represents the Linux 2.6 ABI.
- */
-const elm::String Platform::LINUX_2_6("linux/2.5");
-
-
-/**
- * Represents a Macintosh machine (seems to be too wide, must be refined).
- */
-const elm::String Platform::MAC("mac");
-
-
-/**
- * Represents a simulator machine.
- */
-const elm::String Platform::SIM("sim");
-
-
-/**
- * Represents any platform.
- */
-const Platform::Identification Platform::ANY_PLATFORM(ANY);
-
-
-/**
  * @class Platform::Identification
  * @ingroup hard
  * <p>This class represents a platform identification that is composed by:</p>
@@ -346,7 +286,7 @@ void Platform::Identification::split(void) {
 		_abi = _name.substring(start, pos >= 0 ? pos - start : _name.length() - start);
 	}
 	else
-		_abi = ANY;
+		_abi = "*";
 	
 	// Find the machine
 	if(pos >= 0) {
@@ -355,7 +295,7 @@ void Platform::Identification::split(void) {
 		_mach = _name.substring(start, pos >= 0 ? pos - start : _name.length() - start);
 	}
 	else
-		_mach = ANY;
+		_mach = "*";
 }
 
 
@@ -428,21 +368,21 @@ const Platform::Identification& id) {
 bool Platform::Identification::matches(const Identification& id) {
 	
 	// Check architecture
-	if(_arch != ANY) {
+	if(_arch != "*") {
 		if(!id._arch.startsWith(_arch)
 		|| (id._arch.length() != _arch.length() && id._arch[_arch.length()] != '/'))
 			return false;
 	}
 	
 	// Check ABI
-	if(_abi != ANY) {
+	if(_abi != "*") {
 		if(!id._abi.startsWith(_abi)
 		|| (id._abi.length() != _abi.length() && id._abi[_abi.length()] != '/'))
 			return false;
 	}
 	
 	// Check machine
-	if(_mach != ANY) {
+	if(_mach != "*") {
 		if(!id._mach.startsWith(_arch)
 		|| (id._mach.length() != _mach.length() && id._mach[_mach.length()] != '/'))
 			return false;

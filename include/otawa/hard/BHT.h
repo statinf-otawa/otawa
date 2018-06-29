@@ -21,7 +21,7 @@
 #ifndef OTAWA_HARD_BHT_H
 #define OTAWA_HARD_BHT_H
 
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/io.h>
 #include <elm/serial2/macros.h>
 #include <elm/sys/Path.h>

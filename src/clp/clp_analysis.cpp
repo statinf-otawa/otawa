@@ -3031,7 +3031,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 			if(mem) {
 				warn("no initial for stack pointer: looking in memory.");
 				Address addr;
-				const genstruct::Table< const hard::Bank * > &banks = mem->banks();
+				const Array< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
 					if(banks[i]->isWritable() && (addr.isNull() || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();

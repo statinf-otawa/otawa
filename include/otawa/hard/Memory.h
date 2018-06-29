@@ -23,8 +23,8 @@
 #define OTAWA_HARD_MEMORY_H
 
 #include <elm/assert.h>
-#include <elm/genstruct/HashTable.h>
-#include <elm/genstruct/Table.h>
+#include <elm/data/HashMap.h>
+#include <elm/data/Array.h>
 #include <elm/string.h>
 #include <elm/serial2/collections.h>
 #include <elm/serial2/macros.h>
@@ -46,6 +46,7 @@ class ModeTransition {
 		field("latency", _latency) & field("power", _power) & field("dest", _dest));
 public:
 	inline ModeTransition(void): _latency(1), _power(0), _dest(0) { }
+	virtual ~ModeTransition(void);
 	inline int latency(void) const { return _latency; }
 	inline int power(void) const { return _power; }
 	inline const Mode *dest(void) const { return _dest; }
@@ -67,17 +68,18 @@ class Mode {
 		& field("transitions", _transitions));
 public:
 	inline Mode(void): _name("no name"), _latency(1), _static_power(0), _dynamic_power(0) { }
+	virtual ~Mode(void);
 	inline const string& name(void) const { return _name; }
 	inline int latency(void) const { return _latency; }
 	inline int staticPower(void) const { return _static_power; }
 	inline int dynamicPower(void) const { return _dynamic_power; }
-	inline const genstruct::Table<ModeTransition>& transitions(void) const { return _transitions; }
+	inline const Array<ModeTransition>& transitions(void) const { return _transitions; }
 
 private:
 	string _name;
 	int _latency;
 	int _static_power, _dynamic_power;
-	genstruct::AllocatedTable<ModeTransition> _transitions;
+	AllocArray<ModeTransition> _transitions;
 };
 
 // Bank class
@@ -111,6 +113,7 @@ public:
 	static Bank full;
 	Bank(void);
 	Bank(cstring name, Address address, size_t size);
+	virtual ~Bank(void);
 
 	inline const string& name(void) const { return _name; }
 	inline const Address& address(void) const { return _address; }
@@ -121,7 +124,7 @@ public:
 	inline int power(void) const { return _power; }
 	inline int blockBits(void) const { return _block_bits; }
 	inline int blockSize(void) const { return 1 << _block_bits; }
-	inline const genstruct::Table<const Mode *>& modes(void) const { return _modes; }
+	inline const Array<const Mode *>& modes(void) const { return _modes; }
 	inline bool isCached(void) const { return _cached; }
 	inline bool isOnChip(void) const { return _on_chip; }
 	inline bool isWritable(void) const { return _writable; }
@@ -142,7 +145,7 @@ private:
 	type_t _type;
 	time_t _latency, _power, _write_latency;
 	int _block_bits;
-	genstruct::AllocatedTable<const Mode *> _modes;
+	AllocArray<const Mode *> _modes;
 	bool _cached;
 	bool _on_chip;
 	bool _writable;
@@ -162,6 +165,7 @@ private:
 	SERIALIZABLE(Bus, field("name", _name) & field("type", _type));
 public:
 	inline Bus(void): _name("no name"), _type(LOCAL) { }
+	virtual ~Bus(void);
 	inline const string& name(void) const { return _name; }
 	inline type_t type(void) const { return _type; }
 
@@ -180,8 +184,8 @@ public:
 	Memory(bool full = false);
 	virtual ~Memory(void);
 
-	inline const genstruct::Table<const Bank *>& banks(void) const { return _banks; }
-	inline const genstruct::Table<const Bus *>& buses(void) const  { return _buses; }
+	inline const AllocArray<const Bank *>& banks(void) const { return _banks; }
+	inline const AllocArray<const Bus *>& buses(void) const  { return _buses; }
 	static Memory *load(const elm::sys::Path& path) throw(LoadException);
 	static Memory *load(xom::Element *element) throw(LoadException);
 	const Bank *get(Address address) const;
@@ -200,8 +204,8 @@ public:
 	inline time_t worstWriteAccess(void) const { return worstWriteTime(); }
 
 private:
-	genstruct::AllocatedTable<const Bank *> _banks;
-	genstruct::AllocatedTable<const Bus *> _buses;
+	AllocArray<const Bank *> _banks;
+	AllocArray<const Bus *> _buses;
 	mutable time_t _waccess, _wread, _wwrite;
 };
 
