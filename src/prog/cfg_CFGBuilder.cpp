@@ -24,7 +24,6 @@
 #include <otawa/program.h>
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/loader/new_gliss/BranchInst.h>
 #include <otawa/util/FlowFactLoader.h>
 
 namespace otawa {
