@@ -41,12 +41,6 @@ if(DOT)
 endif()
 
 
-# loader plugins
-if(PPC_LIB)
-	add_subdirectory(ppc2)
-endif()
-
-
 # ILP plugins
 if(HAS_LP_SOLVE)
 	add_subdirectory(lp_solve)

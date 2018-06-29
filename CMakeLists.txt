@@ -91,26 +91,6 @@ else()
 endif()
 
 
-# looking for PPC loader
-set(PPC_PATH "${CMAKE_SOURCE_DIR}/../ppc2" CACHE PATH "path to GLISS PPC path")
-if(EXISTS "${PPC_PATH}")
-	if(MINGW_LINUX)
-		set(path "${PPC_PATH}/src/libppc.a")
-		if(NOT EXISTS ${path})
-			set(path PPC_LIB-NOTFOUND)
-		endif()
-		set(PPC_LIB "${path}" CACHE PATH "path to PPC library")
-	else()
-		find_library(PPC_LIB ppc PATHS "${PPC_PATH}/src" NO_DEFAULT_PATH)
-	endif()
-endif()
-if(PPC_LIB)
-	message(STATUS "PPC library found at ${PPC_LIB}")
-else()
-	message(STATUS "PPC library not found")
-endif()
-
-
 # looking for CPLEX
 if(CPLEX_ROOT)
     string(REPLACE "_" "-" x "${CMAKE_SYSTEM_PROCESSOR}")
