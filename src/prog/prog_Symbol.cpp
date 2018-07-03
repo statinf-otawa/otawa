@@ -110,7 +110,7 @@ Symbol::Symbol(
  * @return	Pointed instruction if any, null else.
  */
 Inst *Symbol::findInst(void) const {
-	return _file.findByAddress(_address);
+	return _file.findInstAt(_address);
 }
 
 

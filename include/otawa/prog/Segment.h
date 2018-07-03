@@ -64,14 +64,28 @@ public:
 
 	// ItemIter class	
 	class ItemIter: public PreIterator<ItemIter, ProgItem *> {
-		ProgItem *cur;
 	public:
-		inline ItemIter(const Segment *seg): cur((ProgItem *)seg->items.first())
-			{ if(seg->items.isEmpty()) cur = 0; }
+		inline ItemIter(void): cur(nullptr) { }
+		inline ItemIter(const Segment *seg): cur((ProgItem *)seg->_items.first())
+			{ if(seg->_items.isEmpty()) cur = 0; }
 		inline ProgItem *item(void) const { return cur; }
-		inline bool ended(void) const { return cur == 0; }
+		inline bool ended(void) const { return cur == nullptr; }
 		inline void next(void) { cur = cur->next(); }
+		inline bool equals(const ItemIter& i) { return cur == i.cur; }
+	private:
+		ProgItem *cur;
 	};
+
+	// ItemRange class
+	class ItemRange {
+	public:
+		inline ItemRange(const Segment *seg): _seg(seg) { }
+		inline ItemIter begin(void) const { return ItemIter(_seg); }
+		inline ItemIter end(void) const { return ItemIter(); }
+	private:
+		const Segment *_seg;
+	};
+	inline ItemRange items(void) const { return ItemRange(this); }
 
 protected:
 	friend class File;
@@ -84,7 +98,7 @@ private:
 	CString _name;
 	Address _address;
 	ot::size _size;
-	inhstruct::DLList items;
+	inhstruct::DLList _items;
 	ProgItem **map;
 };
 

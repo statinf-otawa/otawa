@@ -65,7 +65,7 @@ Segment::Segment(
 	// Removed : segment with 0 size seems to be normal
 	// ASSERTP(size, "zero size segment");
 	for(ot::size i = 0; i < MAP_SIZE(size); i++)
-		map[i] = 0; 
+		map[i] = 0;
 }
 
 
@@ -73,9 +73,9 @@ Segment::Segment(
  * Protected destructor for avoiding implementation unexpected deletion.
  */
 Segment::~Segment(void) {
-	while(!items.isEmpty()) {
-		ProgItem *item = (ProgItem *)items.first();
-		items.removeFirst();
+	while(!_items.isEmpty()) {
+		ProgItem *item = (ProgItem *)_items.first();
+		_items.removeFirst();
 		delete item;
 	}
 	delete [] map;
@@ -225,9 +225,9 @@ void Segment::insert(ProgItem *item) {
 	// end reached: add last
 	if(!cur) {
 		if(!map[index])
-			items.addFirst(item);
+			_items.addFirst(item);
 		else
-			items.addLast(item);
+			_items.addLast(item);
 	}
 
 	// perform insertion at this position

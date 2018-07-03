@@ -37,12 +37,7 @@ class ProgItem;
 
 // File class
 class File: public PropList {
-	String _name;
-	Vector<Segment *> segs;
 	typedef HashMap<String, Symbol *> syms_t;
-	syms_t syms;
-
-
 public:
 	static rtti::Type& __type;
 
@@ -50,6 +45,8 @@ public:
 	inline CString name(void) { return _name.toCString(); }
 	Inst *findInstAt(address_t address);
 	ProgItem *findItemAt(address_t address);
+	inline const Vector<Segment *>& segments(void) const { return segs; }
+	inline const syms_t& symbols(void) const { return syms; }
 
 	// Segment management
 	inline void addSegment(Segment *seg) { segs.add(seg); }
@@ -71,12 +68,14 @@ public:
 		inline SymIter(const SymIter& iter): syms_t::Iter(iter) { }
 	};
 
-	// Deprecated
-	inline Inst *findByAddress(address_t address) { return findInstAt(address); }
-
 protected:
 	friend class Process;
 	~File(void);
+
+private:
+	String _name;
+	Vector<Segment *> segs;
+	syms_t syms;
 };
 
 }	// otawa

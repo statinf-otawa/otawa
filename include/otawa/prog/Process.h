@@ -136,6 +136,7 @@ public:
 	Process(Manager *manager, const PropList& props = EMPTY, File *program = 0);
 	virtual ~Process(void);
 	inline const List<AbstractFeature *>& features(void) const { return provided; }
+	inline const Vector<File *>& files(void) const { return _files; }
 
 	// Accessors
 	virtual hard::Platform *platform(void) = 0;
@@ -192,7 +193,7 @@ public:
 	// FileIterator
 	class FileIter: public Vector<File *>::Iter {
 	public:
-		inline FileIter(const Process *process): Vector<File *>::Iter(process->files) { }
+		inline FileIter(const Process *process): Vector<File *>::Iter(process->_files) { }
 	};
 
 protected:
@@ -201,7 +202,7 @@ protected:
 	void provide(AbstractFeature& feature);
 
 private:
-	Vector<File *> files;
+	Vector<File *> _files;
 	List<AbstractFeature *> provided;
 	File *prog;
 	Manager *man;

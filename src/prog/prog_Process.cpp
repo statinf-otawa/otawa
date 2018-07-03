@@ -333,9 +333,9 @@ sim::Simulator *Process::simulator(void) {
  */
 void Process::addFile(File *file) {
 	ASSERT(file);
-	if(!files)
+	if(!_files)
 		prog = file;
-	files.add(file);
+	_files.add(file);
 }
 
 
@@ -356,7 +356,7 @@ Process::~Process(void) {
  */
 Inst *Process::findInstAt(address_t addr) {
 	for(FileIter file(this); file; file++) {
-		Inst *result = file->findByAddress(addr);
+		Inst *result = file->findInstAt(addr);
 		if(result != nullptr)
 			return result;
 	}
