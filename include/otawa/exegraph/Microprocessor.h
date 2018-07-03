@@ -23,9 +23,9 @@
 #define OTAWA_MICROPROCESSOR_H
 
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include <elm/string/String.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/BiDiList.h>
 #include <stdio.h>
 #include <otawa/otawa.h>
 #include <otawa/hard/Processor.h>
@@ -125,7 +125,7 @@ class PipelineStage {
       } fu_info_t;
   private:
     fu_info_t _info;
-    elm::genstruct::Vector<PipelineStage<N> *> _pipeline;
+    Vector<PipelineStage<N> *> _pipeline;
     Microprocessor<N> * _processor;
   public:
     inline FunctionalUnit(fu_info_t& info, PipelineStage<N> *user_stage, Microprocessor<N> *proc);
@@ -145,10 +145,10 @@ class PipelineStage {
       {return _info.width;}
     inline PipelineStage<N> * firstStage()
       {return _pipeline.get(0);}
-    class PipelineIterator: public elm::genstruct::Vector<PipelineStage<N> *>::Iterator {
+    class PipelineIterator: public Vector<PipelineStage<N> *>::Iter {
     public:
       inline PipelineIterator(const FunctionalUnit *fu)
-	: elm::genstruct::Vector<PipelineStage<N> *>::Iterator(fu->_pipeline) {}
+	: Vector<PipelineStage<N> *>::Iterator(fu->_pipeline) {}
     };
   };
 
@@ -168,10 +168,10 @@ class PipelineStage {
   pipeline_info_t _info;
   bool _uses_fus;
   Vector<Pair<Inst::kind_t, FunctionalUnit *> > bindings;
-  elm::genstruct::Vector<FunctionalUnit *> fus;
+  Vector<FunctionalUnit *> fus;
   int _index;
   Microprocessor<N> * _processor;
-  elm::genstruct::Vector<N *> _nodes;
+  Vector<N *> _nodes;
   StringBuffer _category_name[NUMBER_OF_CATEGORIES];
   StringBuffer _order_name[NUMBER_OF_POLICIES];
  public:
@@ -214,7 +214,7 @@ class PipelineStage {
       return NULL;
     return _nodes[index];
   }
-  elm::genstruct::Vector<FunctionalUnit *>& getFUs(void)
+  Vector<FunctionalUnit *>& getFUs(void)
     {return fus;}
   inline void addBinding(Inst::kind_t kind, FunctionalUnit *fu)
     {bindings.add(pair(kind, fu));}
@@ -229,10 +229,10 @@ class PipelineStage {
     ASSERT(0);
     return 0;
   }
-  class ExeNodeIterator: public elm::genstruct::Vector<N *>::Iterator {
+  class ExeNodeIterator: public Vector<N *>::Iter {
   public:
     inline ExeNodeIterator(const PipelineStage<N> *stage)
-      : elm::genstruct::Vector<N *>::Iterator(stage->_nodes) {}
+      : Vector<N *>::Iter(stage->_nodes) {}
   };
 };
 
@@ -290,8 +290,8 @@ inline PipelineStage<N>::FunctionalUnit::FunctionalUnit(fu_info_t& fu_info, Pipe
 template <class N>
 class Microprocessor {
  private:
-  elm::genstruct::Vector<Queue<N> *> _queues;
-  elm::genstruct::Vector<PipelineStage<N> *> _pipeline;
+  Vector<Queue<N> *> _queues;
+  Vector<PipelineStage<N> *> _pipeline;
   int _pipeline_stage_index;
   PipelineStage<N> * _operand_reading_stage;
   PipelineStage<N> * _operand_producing_stage;
@@ -315,16 +315,16 @@ class Microprocessor {
   inline bool isLastStage(PipelineStage<N> *stage)
     {return (_pipeline.get(_pipeline.length()-1) == stage);}
 
-  class PipelineIterator: public elm::genstruct::Vector<PipelineStage<N> *>::Iterator {
+  class PipelineIterator: public Vector<PipelineStage<N> *>::Iter {
   public:
     inline PipelineIterator(const Microprocessor<N> *processor)
-      : elm::genstruct::Vector<PipelineStage<N> *>::Iterator(processor->_pipeline) {}
+      : Vector<PipelineStage<N> *>::Iter(processor->_pipeline) {}
   };
 
-  class QueueIterator: public elm::genstruct::Vector<Queue<N> *>::Iterator {
+  class QueueIterator: public Vector<Queue<N> *>::Iter {
   public:
     inline QueueIterator(const Microprocessor<N> *processor)
-      : elm::genstruct::Vector<Queue<N> *>::Iterator(processor->_queues) {}
+      : Vector<Queue<N> *>::Iter(processor->_queues) {}
   };
 
 };

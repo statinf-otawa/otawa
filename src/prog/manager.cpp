@@ -31,8 +31,8 @@
 #include <otawa/platform.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/util/XSLTScript.h>
 #include <otawa/sim/Simulator.h>
+#include <otawa/util/XSLTScript.h>
 
 using namespace elm;
 

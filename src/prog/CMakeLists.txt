@@ -5,7 +5,6 @@ set(CMAKE_CXX_FLAGS "-Wall" )
 # TODO
 #	"cfg_PSTBuilder.cpp"
 #	"dfa_FastState.cpp"
-#	"ipet_TreePath.cpp"
 #	"ai.cpp"
 
 # sources
@@ -204,8 +203,23 @@ set(libotawa_SOURCES
     "sgraph_DiGraph.cpp"
     "sgraph_LoopIdentifier.cpp"
 
+#	sim module
+	"sim_Simulator.cpp"
+	"sim_State.cpp"
+	"sim_AbstractCacheDriver.cpp"
+	"sim_CacheDriver.cpp"
+	"sim_TrivialSimulator.cpp"
+	"sim_Driver.cpp"
+	"sim_BasicBlockDriver.cpp"
+	
+#	tsim module
+	"BBTimeSimulator.cpp"
+
 	"loader_arm.cpp"
+
 )
+
+
 
 include_directories(".")
 
@@ -239,16 +253,4 @@ install(TARGETS otawa DESTINATION ${LIBDIR})
 #	"exegraph_Microprocessor.cpp"
 #	"exegraph_ParamExeGraph.cpp"
 #	"exegraph_ParamExeGraphBBTime.cpp"
-#	"sim_AbstractCacheDriver.cpp"
-#	"sim_CacheDriver.cpp"
-#	"sim_Simulator.cpp"
-#	"sim_State.cpp"
-#	"sim_TrivialSimulator.cpp"
-#	"sim_Driver.cpp"
-#	"sim_BasicBlockDriver.cpp"
-#	"sim_BBPathDriver.cpp"
-#	"BBTimeSimulator.cpp"
-#	"BBPath.cpp"
-#	"tsim_Delta.cpp"
-#	"tsim_TimeDeltaObjectFunctionModifier.cpp"
 

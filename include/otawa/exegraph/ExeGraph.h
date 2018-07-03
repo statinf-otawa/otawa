@@ -23,10 +23,10 @@
 #define __EXEGRAPH_H__
 
 #include <elm/assert.h>
-#include <elm/genstruct/Vector.h>
+#include <elm/data/Vector.h>
 #include "Microprocessor.h"
 #include <otawa/instruction.h>
-#include <elm/genstruct/DLList.h>
+#include <elm/data/BiDiList.h>
 #include <otawa/otawa.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/cfg.h>
@@ -75,10 +75,10 @@ class ExeInst {
   {return _nodes.last();}
   inline BasicBlock * basicBlock() 
   {return _bb;}
-  class NodeIterator: public elm::genstruct::DLList<N *>::Iterator {
+  class NodeIterator: public BiDiList<N *>::Iter {
   public:
     inline NodeIterator(const ExeInst *inst)
-      : elm::genstruct::DLList<N *>::Iterator(inst->_nodes) {}
+      : BiDiList<N *>::Iter(inst->_nodes) {}
   };
  };
 
@@ -88,15 +88,15 @@ class ExeInst {
  */
 
  template <class N>
-   class ExeSequence : public elm::genstruct::DLList<ExeInst<N> *> {
+   class ExeSequence : public BidiList<ExeInst<N> *> {
  public:
-  class InstIterator: public elm::genstruct::DLList<ExeInst<N> *>::Iterator {
+  class InstIterator: public BiDiList<ExeInst<N> *>::Iter {
   public:
     inline InstIterator(const ExeSequence *seq)
-      : elm::genstruct::DLList<ExeInst<N> *>::Iterator(*seq) {}
+      : BiDiList<ExeInst<N> *>::Iter(*seq) {}
   };
   inline int length()
-  {return elm::genstruct::DLList<ExeInst<N> *>::count();}
+  {return BiDiList<ExeInst<N> *>::count();}
  };
 
 
@@ -151,7 +151,7 @@ class ExeInst {
      bool _produces_operands;
      elm::String _name;
    protected:
-     elm::genstruct::Vector<N *> _contenders;
+     Vector<N *> _contenders;
    public:
      inline ExeNode(ExeGraph<N> *graph, PipelineStage<N> *stage, ExeInst<N> *inst)
        :   GenGraph<N,ExeEdge>::GenNode((otawa::ograph::Graph *)graph->graph()),
@@ -184,14 +184,14 @@ class ExeInst {
      {_produces_operands = val;}
      inline void addContender(N *cont) 
      {_contenders.add(cont);}
-     elm::genstruct::Vector<N *> * contenders()
+     Vector<N *> * contenders()
        {return &_contenders;}
      inline elm::String name()
      {return _name;}
-     class ContenderIterator: public elm::genstruct::Vector<N *>::Iterator {
+     class ContenderIterator: public Vector<N *>::Iterator {
      public:
        inline ContenderIterator(const ExeGraph<N>::ExeNode *node)
-	 : elm::genstruct::Vector<N *>::Iterator(node->_contenders) {}
+	 : Vector<N *>::Iterator(node->_contenders) {}
      };
    };
 
@@ -204,7 +204,7 @@ class ExeInst {
    elm::String _part_name[CODE_PARTS_NUMBER];
    typedef struct rename_table_t {
      hard::RegBank * reg_bank;
-     elm::genstruct::AllocatedTable<N *> *table;
+     AllocArray<N *> *table;
    } rename_table_t;
    GenGraph<N, ExeEdge> _graph;
  public:
@@ -246,10 +246,10 @@ class ExeInst {
        :  Microprocessor<N>::PipelineIterator(processor) {}
    };
    class FunctionalUnitIterator: 
-   public elm::genstruct::Vector<typename PipelineStage<N>::FunctionalUnit *>::Iterator {
+   public Vector<typename PipelineStage<N>::FunctionalUnit *>::Iterator {
    public:
      inline FunctionalUnitIterator(PipelineStage<N> *stage)
-       : elm::genstruct::Vector<typename PipelineStage<N>::FunctionalUnit *>::Iterator(stage->getFUs()) {}
+       : Vector<typename PipelineStage<N>::FunctionalUnit *>::Iterator(stage->getFUs()) {}
    };
    class FunctionalUnitPipelineIterator : public PipelineStage<N>::FunctionalUnit::PipelineIterator {
    public:
@@ -497,7 +497,7 @@ class ExeInst {
 	 } // end FETCH
 	 else { // superscalar, other than FETCH
 	   if (!stage->usesFunctionalUnits())  {
-	     elm::genstruct::DLList<N *> previous_nodes;
+	     BiDiList<N *> previous_nodes;
 	     N * previous = NULL;
 	     for (StageNodeIterator node(stage) ; node ; node++) {			
 	       // superscalar => draw a slashed edge between adjacent instructions	    
@@ -520,7 +520,7 @@ class ExeInst {
 	   else { //uses FUs
 	     for(FunctionalUnitIterator fu(stage); fu; fu++) {
 	       PipelineStage<N> *fu_stage = fu->firstStage();
-	       elm::genstruct::DLList<N *> previous_nodes;
+	       BiDiList<N *> previous_nodes;
 	       N * previous = NULL;
 	       for (StageNodeIterator node(fu_stage) ; node ; node++) {
 		 if(previous) {

@@ -1,9 +1,8 @@
 /*
- *	$Id$
  *	BBTimeSimulator class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2006-09, IRIT UPS.
+ *	Copyright (c) 2006-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -19,11 +18,12 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <otawa/prog/Process.h>
 #include <otawa/tsim/BBTimeSimulator.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/sim.h>
 #include <otawa/sim/BasicBlockDriver.h>
-#include <otawa/ipet/TrivialBBTime.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/proc/ProcessorException.h>
 
@@ -31,14 +31,14 @@ using namespace otawa::sim;
 
 namespace otawa { namespace tsim {
 
-Registration<BBTimeSimulator> BBTimeSimulator::reg(
-	"otawa::tsim::BBTimeSimulator",
-	Version(1, 0, 0),
-	p::base, &BBProcessor::reg,
-	p::provide, &ipet::BB_TIME_FEATURE,
-	p::require, &REGISTER_USAGE_FEATURE,
-	p::end
-);
+/**
+ */
+p::declare BBTimeSimulator::reg = p::init("otawa::tsim::BBTimeSimulator", Version(2, 0, 0))
+	.extend<BBProcessor>()
+	.make<BBTimeSimulator>()
+	.provide(ipet::BB_TIME_FEATURE)
+	.require(REGISTER_USAGE_FEATURE);
+
 
 /**
  * This processor compute the execution time of each basic block using the
@@ -50,24 +50,27 @@ Registration<BBTimeSimulator> BBTimeSimulator::reg(
  * @par Required Feature
  * @li @ref otawa::REGISTER_USAGE_FEATURE
  */
-BBTimeSimulator::BBTimeSimulator(void): BBProcessor(reg) {
+BBTimeSimulator::BBTimeSimulator(p::declare& r): BBProcessor(r), state(nullptr) {
 }
+
 
 /**
  */
-void BBTimeSimulator::processBB(WorkSpace *fw, CFG *cfg, BasicBlock *bb){
-	BasicBlockDriver driver(bb);
+void BBTimeSimulator::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
+	if(!b->isBasic())
+		return;
+	BasicBlock *bb = b->toBasic();
+	sim::BasicBlockDriver driver(bb);
 	state->reset();
 	state->run(driver);
 	ipet::TIME(bb) = state->cycle();
-	//elm::cout << "BB " << INDEX(bb) << ": " << state->cycle() << io::endl;
 }
 
 
 /**
  */
 void BBTimeSimulator::setup(WorkSpace *ws) {
-	Simulator *simulator = ws->process()->simulator();
+	sim::Simulator *simulator = ws->process()->simulator();
 	if(!simulator)
 		throw ProcessorException(*this, "no simulator available");
 	PropList props;
@@ -79,7 +82,7 @@ void BBTimeSimulator::setup(WorkSpace *ws) {
 /**
  */
 void BBTimeSimulator::cleanup(WorkSpace *ws) {
-	// delete state; !!TODO!!
+	// TODO delete state;
 	state = 0;
 }
 

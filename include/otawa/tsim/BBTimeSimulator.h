@@ -1,9 +1,8 @@
 /*
- *	$Id$
- *	Plug-in hook for oslice
+ *	BBTimeSimulator class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2011, IRIT UPS.
+ *	Copyright (c) 2006-18, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -19,17 +18,28 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef OTAWA_TSIM_BBTIMESIMULATOR_H_
+#define OTAWA_TSIM_BBTIMESIMULATOR_H_
 
-#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/proc/BBProcessor.h>
+#include <otawa/sim/State.h>
 
-namespace otawa { namespace oslice {
+namespace otawa { namespace tsim {
 
-class Plugin: public ProcessorPlugin {
+class BBTimeSimulator: public BBProcessor {
 public:
-	Plugin(void): ProcessorPlugin("otawa::oslice", Version(1, 12, 1517), OTAWA_PROC_VERSION) { }
+	static p::declare reg;
+	BBTimeSimulator(p::declare& r = reg);
+
+protected:
+	void setup(WorkSpace *ws) override;
+	void processBB(WorkSpace *fw, CFG *cfg, Block *bb) override;
+	void cleanup(WorkSpace *ws) override;
+
+private:
+	sim::State *state;
 };
 
-} }		// otawa::oslice
+} }		//otawa::tsim
 
-otawa::oslice::Plugin otawa_oslice_plugin;
-ELM_PLUGIN(otawa_oslice_plugin, OTAWA_PROC_HOOK);
+#endif /* OTAWA_TSIM_BBTIMESIMULATOR_H_ */

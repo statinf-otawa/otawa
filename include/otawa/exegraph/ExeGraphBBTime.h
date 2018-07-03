@@ -26,7 +26,6 @@
 #include <elm/assert.h>
 #include <otawa/proc/BBProcessor.h>
 #include "ExeGraph.h"
-#include <elm/genstruct/DLList.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/ipet.h>
 
