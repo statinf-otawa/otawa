@@ -383,8 +383,8 @@ static void printArg(const hard::Platform *pf, io::Output& out, signed short arg
  * Output the current instruction to the given output.
  * @param out	Output to print to.
  */
-void inst::print(io::Output& out) const {
-	Printer printer;
+void inst::print(io::Output& out, const hard::Platform *pf) const {
+	Printer printer(pf);
 	printer.print(out, *this);
 }
 
@@ -398,8 +398,8 @@ void inst::print(io::Output& out) const {
  * Print the current block.
  * @param out	Output to print to.
  */
-void Block::print(elm::io::Output& out) const {
-	Printer printer;
+void Block::print(elm::io::Output& out, const hard::Platform *pf) const {
+	Printer printer(pf);
 	printer.print(out, *this);
 }
 
@@ -423,9 +423,9 @@ void Block::print(elm::io::Output& out) const {
  * @param out	Output stream to use.
  * @param block	Block to output.
  */
-void Printer::print(elm::io::Output& out, const Block& block) const {
+void Printer::print(elm::io::Output& out, const Block& block, const hard::Platform *plf) const {
 	for(Block::InstIter inst(block); inst; inst++) {
-		print(out, inst);
+		print(out, inst, plf);
 		out << io::endl;
 	}
 }
@@ -436,11 +436,16 @@ void Printer::print(elm::io::Output& out, const Block& block) const {
  * @param out	Output stream to use.
  * @param inst	Semantics instruction to output.
  */
-void Printer::print(elm::io::Output& out, const inst& inst) const {
+void Printer::print(elm::io::Output& out, const inst& inst, const hard::Platform *plf) const {
+	const hard::Platform *pf2;
+	if(!pf)
+		pf2 = plf;
+	else
+		pf2 = pf;
 	out << inst_names[inst.op];
 	switch(inst.op) {
 	case BRANCH:
-		out << ' '; printArg(pf, out, inst.d());
+		out << ' '; printArg(pf2, out, inst.d());
 		break;
 	case TRAP:
 		break;
@@ -448,34 +453,34 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 		break;
 	case LOAD:
 	case STORE:
-		out << ' '; printArg(pf, out, inst.d());
-		out << ", "; printArg(pf, out, inst.a());
+		out << ' '; printArg(pf2, out, inst.d());
+		out << ", "; printArg(pf2, out, inst.a());
 		out << ", " << inst.type();
 		break;
 	case SCRATCH:
-		out << ' '; printArg(pf, out, inst.d());
+		out << ' '; printArg(pf2, out, inst.d());
 		break;
 	case SET:
 	case NEG:
 	case NOT:
-		out << ' '; printArg(pf, out, inst.d());
-		out << ", "; printArg(pf, out, inst.a());
+		out << ' '; printArg(pf2, out, inst.d());
+		out << ", "; printArg(pf2, out, inst.a());
 		break;
 	case SETI:
 	case SETP:
-		out << ' '; printArg(pf, out, inst.d());
+		out << ' '; printArg(pf2, out, inst.d());
 		out << ", 0x" << io::hex(inst.cst()) << " (" << inst.cst() << ")";
 		if (inst.cst() > type_info<t::int32>::max)
 			out << " (" << (t::int32)inst.cst() << ")";
 		break;
 	case IF:
 		out << ' ' << inst.cond();
-		out << ", "; printArg(pf, out, inst.sr());
+		out << ", "; printArg(pf2, out, inst.sr());
 		out << ", " << inst.jump();
 		break;
 	case ASSUME:
 		out << ' ' << inst.cond();
-		out << ", "; printArg(pf, out, inst.sr());
+		out << ", "; printArg(pf2, out, inst.sr());
 		break;
 	case FORK:
 		out << ' ' << inst.jump();
@@ -497,9 +502,9 @@ void Printer::print(elm::io::Output& out, const inst& inst) const {
 	case MOD:
 	case MODU:
 	case XOR:
-		out << ' '; printArg(pf, out, inst.d());
-		out << ", "; printArg(pf, out, inst.a()); out << ", ";
-		printArg(pf, out, inst.b());
+		out << ' '; printArg(pf2, out, inst.d());
+		out << ", "; printArg(pf2, out, inst.a()); out << ", ";
+		printArg(pf2, out, inst.b());
 		break;
 	case SPEC:
 		out << ' ' << inst.d() << ", " << inst.cst();

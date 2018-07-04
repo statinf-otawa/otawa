@@ -154,7 +154,7 @@ typedef struct inst {
 	inline reg_t sr(void) const { return a(); }
 	inline uint_t jump(void) const { return b(); }
 
-	void print(elm::io::Output& out) const;
+	void print(elm::io::Output& out, const hard::Platform *pf = 0) const;
 } inst;
 inline elm::io::Output& operator<<(elm::io::Output& out, inst i) { i.print(out); return out; }
 
@@ -213,7 +213,7 @@ public:
 		inline reg_t b(void) const { return item().b(); }
 		inline uint_t cst(void) const { return item().cst(); }
 	};
-	void print(elm::io::Output& out) const;
+	void print(elm::io::Output& out, const hard::Platform *pf = 0) const;
 };
 inline elm::io::Output& operator<<(elm::io::Output& out, const Block& b) { b.print(out); return out; }
 
@@ -222,8 +222,8 @@ class Printer {
 public:
 	inline Printer(const hard::Platform *platform = 0): pf(platform) { }
 
-	void print(elm::io::Output& out, const Block& block) const;
-	void print(elm::io::Output& out, const inst& inst) const;
+	void print(elm::io::Output& out, const Block& block, const hard::Platform *pf = 0) const;
+	void print(elm::io::Output& out, const inst& inst, const hard::Platform *pf = 0) const;
 private:
 	const hard::Platform *pf;
 };

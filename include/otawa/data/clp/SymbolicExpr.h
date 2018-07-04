@@ -668,5 +668,4 @@ public:
 };
 
 
-
 #endif /* OTAWA_DATA_CLP_SYMBOLICEXPR_H_ */

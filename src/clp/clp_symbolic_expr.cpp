@@ -57,6 +57,10 @@
 // Debug output for get filters
 #define TRACEGF(t)	//t
 
+namespace otawa{ namespace se{
+	elm::Vector<otawa::se::SECmp *> NOT_USED;
+}}
+
 namespace otawa{
 
 namespace se{
