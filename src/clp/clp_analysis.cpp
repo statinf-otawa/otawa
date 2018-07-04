@@ -3399,6 +3399,16 @@ Manager::step_t Manager::next(void) {
 	}
 	i = p->getPC();
 	p->update(cs);
+
+	// Merge the state so that it can be used right away.
+	// If there are further path to take, the following call of this function will re-assign the cs (current state).
+	if(p->isPathEnded()) {
+		if(cs != &s) {
+			p->lub(s, *cs);
+			delete cs;
+			cs = &s;
+		}
+	}
 	return r;
 }
 
