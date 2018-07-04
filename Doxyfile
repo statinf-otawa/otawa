@@ -785,8 +785,6 @@ INPUT                  = include/otawa/ \
                          src/dcache/ \
                          src/config/config.cpp \
                          src/odec/odec.cpp \
-                         src/ast/ \
-                         src/ets/ \
                          src/etime \
                          src/cfgio \
                          src/ccg \

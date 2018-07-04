@@ -243,14 +243,3 @@ target_link_libraries(otawa "${LIBGEL_DWARF}")
 
 # installation
 install(TARGETS otawa DESTINATION ${LIBDIR})
-
-
-# deprecated sources
-#	"exegraph_ExeGraphBBTime.cpp"
-#	"exegraph_ExeGraph.cpp"
-#	"exegraph_LiExeGraphBBTime.cpp"
-#	"exegraph_LiExeGraph.cpp"
-#	"exegraph_Microprocessor.cpp"
-#	"exegraph_ParamExeGraph.cpp"
-#	"exegraph_ParamExeGraphBBTime.cpp"
-
