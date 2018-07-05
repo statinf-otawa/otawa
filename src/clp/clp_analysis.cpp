@@ -3056,6 +3056,13 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	ClpAI cai(fp, *ws);
 	cai.solve(cfg);
 
+	// the states actually stored in the listener!
+	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
+		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+			STATE_IN(bb) = *(list.results[cfg->index()][bb->index()]);
+		}
+	}
+
 	// process stats
 	_nb_inst = prob.get_nb_inst();
 	_nb_sem_inst = prob.get_nb_sem_inst();
