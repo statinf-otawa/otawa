@@ -264,6 +264,8 @@ template <class T> void from_string(const string& s, T& v)
 	{ StringInput in(s); in >> v; }
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
 	{ T v; from_string(str, v); set(props, v); }
+/*template <class T> inline void Identifier<T *>::fromString(PropList& props, const string& str) const
+	{ ASSERTP(false, "cannot read pointer from string"); }*/
 
 template <> void from_string(const string& str, bool& v);
 template <> void from_string(const string& str, int& v);
