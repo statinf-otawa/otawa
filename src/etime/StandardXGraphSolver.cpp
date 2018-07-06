@@ -51,7 +51,7 @@ Factory *XGraphSolver::getFactory(void) {
 }
 
 /**
- * @fn void XGraphSolver::compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events, ilp::Var *counter);
+ * @fn void XGraphSolver::compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events, const PropList& props);
  * TODO
  */
 
@@ -90,7 +90,7 @@ public:
 
 	/**
 	 */
-	void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& all_events, ilp::Var *counter) override {
+	void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& all_events, const PropList& code) override {
 		Vector<EventCase> events;
 		Vector<EventCase> always_events;
 

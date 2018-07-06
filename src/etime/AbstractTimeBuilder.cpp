@@ -536,7 +536,7 @@ void AbstractTimeBuilder::processSequence(Edge *e, ParExeSequence *seq, Vector<E
 
 	// compute the times
 	List<ConfigSet *> times;
-	_solver->compute(g, times, events, ipet::VAR(e));
+	_solver->compute(g, times, events, *e);
 	if(logFor(LOG_BB))
 		displayTimes(times, events);
 

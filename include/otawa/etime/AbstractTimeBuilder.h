@@ -93,7 +93,7 @@ public:
 	XGraphSolver(const Monitor& mon);
 	virtual ~XGraphSolver(void);
 	Factory *getFactory(void);
-	virtual void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& events, ilp::Var *counter) = 0;
+	virtual void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& events, const PropList& code) = 0;
 	inline sys::Path dumpDir(void) const { return _dir; }
 	inline void setDumpDir(sys::Path dir) { _dir = dir; }
 	static XGraphSolver *make(const Monitor& mon);
