@@ -238,7 +238,7 @@ public:
 /**
  * Null abstract registration.
  */
-AbstractRegistration& AbstractRegistration::null = Single<NullRegistration>::_;
+AbstractRegistration& AbstractRegistration::null = single<NullRegistration>();
 
 
 /**

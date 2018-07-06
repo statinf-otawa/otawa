@@ -85,7 +85,7 @@ void BlockBuilder::setup(WorkSpace *ws) {
 	if(!mem) {
 		if(isVerbose())
 			log << "INFO: no workspace memory. Using default memory.\n";
-		mem = &Single<hard::Memory>::_;
+		mem = &single<hard::Memory>();
 	}
 	if(sp.isNull())
 		sp = ws->process()->defaultStack();

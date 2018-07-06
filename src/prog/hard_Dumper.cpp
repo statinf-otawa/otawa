@@ -49,7 +49,7 @@ void Dumper::processWorkSpace(WorkSpace *ws) {
 	out << "MEMORY\n";
 	const hard::Memory *mem = hard::MEMORY(ws);
 	if(!mem)
-		mem = &Single<hard::Memory>::_;
+		mem = &single<hard::Memory>();
 	for(int i = 0; i < mem->banks().count(); i++) {
 		const Bank& bank = *mem->banks()[i];
 		out << "\tBANK " << bank.name() << io::endl;
