@@ -41,7 +41,7 @@ public:
 	typedef typename graph_t::vertex_t vertex_t;
 	typedef typename A::store_t store_t;
 
-	RankingAI(A& adapter, R& rank = Single<R>::_):
+	RankingAI(A& adapter, R& rank = single<R>()):
 		_adapter(adapter),
 		_rank(rank),
 		_cmp(*this),
