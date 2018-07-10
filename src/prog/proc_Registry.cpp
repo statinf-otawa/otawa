@@ -227,20 +227,6 @@ bool AbstractRegistration::isNull(void) const {
 }
 
 
-class NullRegistration: public AbstractRegistration {
-public:
-	NullRegistration(void): AbstractRegistration(this) { }
-	virtual Processor *make(void) const { return 0; }
-	virtual bool isNull(void) const { return true; }
-};
-
-
-/**
- * Null abstract registration.
- */
-AbstractRegistration& AbstractRegistration::null = single<NullRegistration>();
-
-
 /**
  * @class ConfigIter
  * Iterator on the configurations of a processor.

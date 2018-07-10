@@ -204,9 +204,29 @@ public:
 	virtual Processor *make(void) const { return 0; }
 };
 
+static AbstractRegistration& trackit(AbstractRegistration& reg) {
+	return reg;
+}
+
+// null registration
+class NullRegistration: public AbstractRegistration {
+public:
+	NullRegistration(void): AbstractRegistration(this) { }
+	virtual Processor *make(void) const { return 0; }
+	virtual bool isNull(void) const { return true; }
+};
+
+
+/**
+ * Null abstract registration.
+ */
+AbstractRegistration& AbstractRegistration::null = single<NullRegistration>();
+
+
+
 // Registration
 p::declare Processor::reg = p::init("otawa::Processor", Version(1, 2, 0))
-	.base(AbstractRegistration::null)
+	.base(trackit(AbstractRegistration::null))
 	.config(OUTPUT)
 	.config(LOG)
 	.config(VERBOSE)
