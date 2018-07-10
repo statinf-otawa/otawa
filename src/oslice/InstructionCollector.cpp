@@ -79,7 +79,7 @@ void InstCollector::processWorkSpace(WorkSpace *fw) {
 	}
 	collectInterestedInstructions(coll, interestedInstructions);
 
-	interested_instructions_t* p = INTERESTED_INSTRUCTIONS(fw);
+	IN_ASSERT(interested_instructions_t* p = INTERESTED_INSTRUCTIONS(fw));
 	ASSERT(p);
 
 } // end of function InstCollector::work

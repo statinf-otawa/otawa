@@ -209,7 +209,7 @@ public:
 		stateAlloc1 = 0;
 		regsAlloc = 0;
 		regRowAlloc[0] = 0;
-		for(int i = 0; i < rblock_size; i++)
+		for(t::size i = 0; i < rblock_size; i++)
 			regEachAlloc[i] = 0;
 
 		if(dom->equals(v, dom->top) && equals(res, top)) // if the resulted state is T
@@ -822,7 +822,7 @@ public:
 		stateAlloc1 = 0;
 		stateAlloc2 = 0;
 		regsAlloc = 0;
-		for(int i = 0; i < nrblock; i++) {
+		for(t::size i = 0; i < nrblock; i++) {
 			if(regRowAlloc[i]) {
 				regRowAlloc[i] = 0;
 				int maxj = (i << rblock_shift) + rblock_size;

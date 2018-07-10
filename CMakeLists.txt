@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project("otawa")
 set(PACKAGE "otawa")
-add_definitions(-g3 -O2)
+
 # C++ flags
 if(CMAKE_BUILD_TYPE MATCHES Release)
 	add_definitions(-DNDEBUG)
@@ -9,10 +9,8 @@ endif()
 add_compile_options(-Wall)
 if(CMAKE_VERSION LESS "3.1")
 	add_compile_options(--std=c++11)
-	message(STATUS "C++11 set using cflags")
 else()
 	set(CMAKE_CXX_STANDARD 11)
-	message(STATUS "C++ set using CMAKE_CXX_STANDARD")
 endif()
 
 # get version

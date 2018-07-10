@@ -316,8 +316,6 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 #if P1_1b>0
 	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
 		if(!BB_classes.exists(bb)) {
-			Var *Xb=ipet::VAR(bb);
-			ASSERT(Xb);
 			elm::Vector<BBHGNode*> v = BB_classes_BBHG.get(bb);
 			for(int i=0;i<v.length();i++) {
 				for(Block::EdgeIter edge = bb->outs();edge;edge++) {
@@ -580,9 +578,6 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 				}
 				for(auto p: v[i]->inEdges()) {
 
-					Var *Xp=ipet::VAR(p->source()->getCorrespondingBB());
-					ASSERT(Xp);
-					
 					Var *XpApi;
 					NEW_VAR_FROM_BUFF(XpApi,"e" << p->source()->getCorrespondingBB()->index() << "_" << bb->index() << "A" << BitSet_to_String(p->source()->getHistory()));
 //					if(!hist_done.exists(XpApi)) {
@@ -618,9 +613,6 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 					H42->addRight(1,XpApi);
 				}
 				for(auto s: v[i]->outEdges()) {
-					Var *Xs=ipet::VAR(s->sink()->getCorrespondingBB());
-					ASSERT(Xs);
-					
 					Var *XsApi;
 					NEW_VAR_FROM_BUFF(XsApi,"e" << bb->index() << "_" << s->sink()->getCorrespondingBB()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
 					H42->addRight(1,XsApi);

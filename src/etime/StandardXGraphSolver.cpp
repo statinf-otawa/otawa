@@ -305,11 +305,11 @@ public:
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
-						bool edge_found = false;
+						IN_ASSERT(bool edge_found = false);
 						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
 							if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() + event->cost());
-								edge_found = true;
+								IN_ASSERT(edge_found = true);
 								break;
 							}
 						}
@@ -447,11 +447,11 @@ public:
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
-						bool edge_found = false;
+						IN_ASSERT(bool edge_found = false);
 						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
 							if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() - event->cost());
-								edge_found = true;
+								IN_ASSERT(edge_found = true);
 								break;
 							}
 						}

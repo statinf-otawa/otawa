@@ -1393,7 +1393,7 @@ Value& Value::_and(const Value& val) {
 	// n           m
 
 	// first find the m and n for the constant k
-	int n_k, m_k;
+	int n_k = 0, m_k = 0;
 	int mode = 0;
 	intn_t temp = k;
 	for (int i = 0; i < 32; i++) {

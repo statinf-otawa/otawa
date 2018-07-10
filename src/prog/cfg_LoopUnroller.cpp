@@ -136,7 +136,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 	typedef Vector<Pair<Block *, Edge *> > BackEdgePairVector;
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
-	Block *unrolled_from;
+	Block *unrolled_from = nullptr;
 	int start;
 
 	// avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop

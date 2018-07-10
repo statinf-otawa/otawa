@@ -318,7 +318,7 @@ void AbstractTimeBuilder::buildResources(void) {
 		for (int i=0 ; i<num ; i++) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
-			StageResource * upper_bound;
+			StageResource * upper_bound = nullptr;
 			for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {

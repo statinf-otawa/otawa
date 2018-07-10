@@ -572,7 +572,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 			{
 				NEW_SPECIAL_CONSTRAINT(M_T,EQ,0);
 				NEW_SPECIAL_CONSTRAINT(M_NT,EQ,0);
-				Var *m0, *m1;
+				Var *m0 = nullptr, *m1 = nullptr;
 				for(BasicBlock::EdgeIter edge = bb->outs(); edge ; edge++ ) {
 					if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 						NEW_VAR_FROM_BUFF(m1,	"m" << bb->index() << "_" << edge->target()->index())

@@ -102,12 +102,12 @@ void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domai
 
 	// initialization
 	bool done = false;
-	bool alwaysHit = false;
+	IN_ASSERT(bool alwaysHit = false);
 	CATEGORY(b) = cache::NOT_CLASSIFIED;
 
 	if(dom.getMust().contains(b.block().index())) {
 		CATEGORY(b) = cache::ALWAYS_HIT;
-		alwaysHit = true;
+		IN_ASSERT(alwaysHit = true);
 	}
 
 	else if(has_pers) { // persistent

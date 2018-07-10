@@ -1129,7 +1129,7 @@ protected:
 				bool is_store = (*i).op == sem::STORE;
 				int r = (*i).addr();
 				Value a = i.getReg(r);
-				AccessedAddress *aa;
+				AccessedAddress *aa = nullptr;
 				switch(a.kind()) {
 				case NONE:
 				case ALL:	aa = new AccessedAddress(i.instruction(), is_store, AccessedAddress::ANY); ss.all++; break;

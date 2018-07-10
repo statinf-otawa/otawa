@@ -21,6 +21,7 @@
 #ifndef OTAWA_PROP_IDENTIFIER_H
 #define OTAWA_PROP_IDENTIFIER_H
 
+#include <elm/meta.h>
 #include <otawa/type.h>
 #include <otawa/prop/Property.h>
 #include <otawa/prop/PropList.h>
@@ -261,9 +262,10 @@ inline void Identifier<T>::__simple::scan(const Identifier<T>& id, PropList& pro
 // GenericIdentifier<T>::fromString
 template <class T> void from_string(const string& s, T& v)
 	{ StringInput in(s); in >> v; }
-#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"		// So ugly! Must be removed in future!
+template <class T> struct scalar_init { T _ = T(0); };
+template <class T> struct object_init { T _; };
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
-	{ T v; from_string(str, v); set(props, v); }
+	{ typename _if<type_info<T>::is_scalar, scalar_init<T>, object_init<T> >::_ v; from_string(str, v._); set(props, v._); }
 
 template <> void from_string(const string& str, bool& v);
 template <> void from_string(const string& str, int& v);

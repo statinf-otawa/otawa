@@ -116,8 +116,6 @@ protected:
 		AllocArray<LBlock *>* lbs = BB_LBLOCKS(bb);
 		ASSERT(lbs);
 		for(int i = 0; i < lbs->count(); i++) {
-			ilp::Var *bb_var = VAR(bb);
-			ASSERT(bb_var);
 			ilp::Var *var = MISS_VAR(lbs->get(i));
 			ASSERT(var);
 			sum +=  int(system->valueOf(var));
@@ -277,7 +275,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 
 			// create x_miss variable
 			StringBuffer buf1;
-			ilp::Var *miss;
+			ilp::Var *miss = nullptr;
 			if(!_explicit)
 				miss = system->newVar();
 			else

@@ -88,7 +88,7 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 
 		// compute latency
 		const hard::Bank *bank;
-		ot::time lat;
+		ot::time lat = 0;
 		switch(blocks.snd[i].kind()) {
 		case BlockAccess::ANY:
 			lat = write ? worst_write : worst_read;

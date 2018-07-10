@@ -109,8 +109,6 @@ protected:
 		int sum = 0;
 		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
 		for(int i = 0; i < dbs.fst; i++) {
-			ilp::Var *bb_var = ipet::VAR(bb);
-			ASSERT(bb_var);
 			ilp::Var *var = MISS_VAR(dbs.snd[i]);
 			ASSERT(var);
 			sum +=  int(system->valueOf(var));
@@ -237,7 +235,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 
                 // Create x_miss variable
 				StringBuffer buf;
-                ilp::Var *miss;
+                ilp::Var *miss = nullptr;
                 if(!_explicit)
                         miss = system->newVar();
                 else

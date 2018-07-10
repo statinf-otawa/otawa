@@ -849,8 +849,6 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 			H42->addLeft(1,XbApi);
 			
 			for(auto s: node->outEdges()) {
-				Var *Xj = ipet::VAR( s->sink()->getCorrespondingBB());
-				ASSERT(Xj);
 				int d = (s->isTaken())?1:0;
 				
 				Var* XsbApi;

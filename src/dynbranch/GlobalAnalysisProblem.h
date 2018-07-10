@@ -103,6 +103,7 @@ private:
 // need to implement when necessary
 inline bool operator==(const GlobalAnalysisProblem::Domain& a, const GlobalAnalysisProblem::Domain& b) {
 	ASSERT(0);
+	return false;
 }
 
 }} // otawa::dynbranch

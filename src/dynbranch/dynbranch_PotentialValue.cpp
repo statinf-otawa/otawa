@@ -51,7 +51,7 @@ SLList<PotentialValueMem*> PotentialValue::potentialValueCollector;
 
 //#define SHOWSHOW
 //PotentialValue::PotentialValue(bool _top): bTop(_top), Set<elm::t::uint32>(pvgc) {
-PotentialValue::PotentialValue(bool _top): bTop(_top), Vector<elm::t::uint32>(pvgc, 0) {
+PotentialValue::PotentialValue(bool _top): Vector<elm::t::uint32>(pvgc, 0), bTop(_top) {
 	//magic = MAGIC;
 /*
 #ifdef SHOWSHOW
@@ -388,7 +388,7 @@ PotentialValue merge(const PotentialValue& a, const PotentialValue& b) { // resu
 }
 
 bool PotentialValue::collect(const MyGC*  gc, bool show) const {
-	bool already = Vector<unsigned int>::collect();
+	return Vector<unsigned int>::collect();
 }
 
 bool operator==(const PotentialValue& a, const PotentialValue& b) {

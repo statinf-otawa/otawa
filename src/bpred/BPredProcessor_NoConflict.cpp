@@ -97,8 +97,8 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 		*XiCYYstart,	*XiCYYend, 
 		*XiCYYd0end,
 		*XiCYYd1end, 
-		*EdgeT,			*EdgeNT,
-		*WrongT,		*WrongNT;
+		*EdgeT = nullptr,		*EdgeNT = nullptr,
+		*WrongT = nullptr,		*WrongNT = nullptr;
 
 	
 
