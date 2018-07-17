@@ -674,7 +674,6 @@ Value& Value::join(const Value& val) {
  * @param val the value of the next iteration state
 */
 Value& Value::widening(const Value& val) {
-
 	/* widen(NONE, NONE) = NONE */
 	if (_kind == NONE && val._kind == NONE)
 		return *this;
@@ -1408,6 +1407,12 @@ Value& Value::_and(const Value& val) {
 		temp = temp >> 1;
 	}
 
+#ifndef COMPLEX_AND
+	// The delta is the lowest possible 1, i.e. the m bit. Because any value below the m bit will be 0.
+	*this = Value(VAL, 0, (1 << m_k), (1 << (n_k - m_k + 1))-1);
+	return *this;
+
+#else
 	// T & v = v & T = T
 	if(v == all) {
 		STAT_UINT x = 1;
@@ -1501,6 +1506,7 @@ Value& Value::_and(const Value& val) {
 		*this = Value(VAL, 0, (1 << m), max_possible_value);
 
 	return *this;
+#endif
 
 #else	
 
@@ -1876,17 +1882,24 @@ void State::widening(const State& state, int loopBound) {
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
 		if (loopBound >= 0)
 			registers[i].ffwidening(state.registers[i], loopBound);
-		else
+		else {
 			registers[i].widening(state.registers[i]);
+		}
+
 	if (registers.length() < state.registers.length())
-		for(int i=registers.length(); i < state.registers.length(); i++)
-			registers.add(state.registers[i]);
+		for(int i=registers.length(); i < state.registers.length(); i++) {
+			//registers.add(state.registers[i]);
+			registers.add(clp::Value::top);
+		}
+
 	// tmp registers
 	for(int i=0; i<tmpreg.length() && i<state.tmpreg.length() ; i++)
 		if (loopBound >= 0)
 			tmpreg[i].ffwidening(state.tmpreg[i], loopBound);
-		else
+		else {
 			tmpreg[i].widening(state.tmpreg[i]);
+		}
+
 	if (tmpreg.length() < state.tmpreg.length())
 		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
 			tmpreg.add(state.tmpreg[i]);
@@ -1979,6 +1992,18 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 			out << CLP_START << Address(cur->addr);
 			out << " = " << cur->val;
 		}
+		// temp register, not in state
+		for(int i = 0; i < tmpreg.length(); i++){
+			Value val = tmpreg[i];
+			if (val.kind() == VAL) {
+				if(!fst)
+					out << ", ";
+				else
+					fst = false;
+				out << "t" << i;
+				out << " = " << val;
+			}
+		}
 		#ifndef STATE_MULTILINE
 		out << "}";
 		#endif
@@ -2042,6 +2067,7 @@ public:
 		bBuildFilters(false),
 		_process(proc),
 		istate(0),
+		hasStoreToTop(false),
 		currentClpStatePack(0),
 		currentAccessAddress(0),
 	 	_nb_inst(0),
@@ -2397,8 +2423,9 @@ public:
 			if(get(*state, i.d()) == Value::all) {
 				Value val = Value::none;
 				// need to make sure the starting address to load is within the READ_ONLY_AREA
+				// hasStoreToTop - if there is a store to top previously, the memory might be poluted.
 				bool addressInInitMem = false;
-				if(istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
+				if(/*(!hasStoreToTop) && */ istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
 					addressInInitMem = true;
 
 				bool warningFlag = true;
@@ -2409,6 +2436,7 @@ public:
 					}
 					Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
 					if(istate && istate->isInitialized((uintn_t)addr.start())) {
+						elm::cout << "Accessing memory address 0x" << hex(addr.lower()) << " as initialized memory" << endl;
 						Value r = readFromMem(addr.lower(), i.type());
 						val.join(r);
 						set(*state, i.d(), val);
@@ -2430,6 +2458,7 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
+					hasStoreToTop = true;
 					ALARM_STORE_TOP(warnStoreToTop());
 #ifdef CATCH_STT
 					assert(0);
@@ -2459,6 +2488,7 @@ public:
 						else
 							state->clear(sym->address().offset(), sym->size());
 					}
+					hasStoreToTop = true;
 				}
 
 				// simple store
@@ -2566,6 +2596,16 @@ public:
 					_nb_top_set++;
 				TRACESI(cerr << ") = " << v << io::endl);
 				set(*state, i.d(), v);
+		} break;
+		case sem::MUL: {
+			Value va = get(*state, i.a());
+			Value vb = get(*state, i.b());
+			if(va.isTop() || vb.isTop())
+				set(*state, i.d(), Value::all);
+			else if(va.isConst() && vb.isConst())
+				set(*state, i.d(), Value(va.lower()*vb.lower()));
+			else
+				set(*state, i.d(), Value::all);
 		} break;
 //		case sem::MUL: {
 //				Value v = get(*state, i.a());
@@ -2853,6 +2893,7 @@ private:
 	bool bBuildFilters; // currently only set to true when building filters
 	Process* _process;
 	dfa::State *istate;
+	bool hasStoreToTop;
 	clp::ClpStatePack *currentClpStatePack;
 	clp::Value currentAccessAddress;
 

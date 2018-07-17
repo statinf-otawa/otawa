@@ -382,7 +382,11 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			fp.markEdge(return_edge, out);
 			workList->push(return_edge->sink());
 		}
-
+		else if(current->toSynth()->callee()->exit()->ins() == 0) { // the CFG contains an endless loop such that it never returns
+			fp.assign(out, fp.bottom());
+			fp.markEdge(return_edge, out);
+			tryAddToWorkList(return_edge->target());
+		}
 		// push call context
 		else {
 			// push call context
