@@ -265,6 +265,19 @@ Inst *Process::findInstAt(const string& label) {
 
 
 /**
+ * Find the segment at the given address.
+ * @param addr
+ */
+Segment *Process::findSegmentAt(Address addr) const {
+	for(auto f: files())
+		for(auto s: f->segments())
+			if(s->contains(addr))
+				return s;
+	return nullptr;
+}
+
+
+/**
  * @fn File *Process::program(void) const;
  * Get the program file, that is, the startup executable of the process.
  * @return	Program file.

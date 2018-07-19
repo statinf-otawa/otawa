@@ -155,6 +155,7 @@ public:
 	virtual Inst *newNOp(Address addr = Address::null);
 	virtual void deleteNop(Inst *inst);
 	virtual int maxTemp(void) const;
+	Segment *findSegmentAt(Address addr) const;
 
 	// Memory access
 	virtual void get(Address at, t::int8& val);
