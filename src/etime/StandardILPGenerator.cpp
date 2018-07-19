@@ -33,23 +33,18 @@ namespace otawa { namespace etime {
  * and of the constraints that links the occurrence of BB times and the
  * corresponding events.
  *
- * Basically, this module accept 2 functions:
+ * This class may use configuration of @ref AbstractTimeBuilder:
  * * explicit -- to assign explicit names to generated ILP variables,
  * * recording -- to add recording of times as properties (otawa::etime::LTS_TIME,
- * otawa::etime::HTS_OFFSET and otawa::etime::HTS_VAR).
+ * and otawa::etime::HTS_CONFIG).
  *
  * @ingroup etime
  */
 
 /**
  */
-ILPGenerator::ILPGenerator(const Monitor& mon):
-	Monitor(mon),
-	_ws(nullptr),
-	_sys(nullptr),
-	_explicit(false),
-	_recording(false)
-{ }
+ILPGenerator::ILPGenerator(const Monitor& mon): Monitor(mon), _atb(nullptr) {
+}
 
 
 /**
@@ -57,25 +52,40 @@ ILPGenerator::ILPGenerator(const Monitor& mon):
 ILPGenerator::~ILPGenerator(void) {
 }
 
-/**
- * @fn void ILPGenerator::add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& events);
- * Called each time a set of BB times is produced to add these times to the generated ILP system.
- * @param e			Current edge.
- * @param times		Produced times (only one configuration is permitted for each time value).
- * @param events	Events used to generate the time (static + dynamic events).
- *
- */
+
 
 /**
- * @fn void ILPGenerator::complete(void);
- * Called to complete the generation of ILP constraints in the current ILP system.
+ * Get the current ILP system.
+ * @return	Current ILP system.
  */
+ilp::System *ILPGenerator::system(void) const {
+	return _atb->_sys;
+}
+
 
 /**
- * @fn WorkSpace *ILPGenerator::workspace(void) const;
- * Get the current work space.
- * @return	Current workspace.
+ * Test if explicit variable naming is requiring.
+ * @return	True if it is required, false else.
  */
+bool ILPGenerator::isExplicit(void) const {
+	return _atb->_explicit;
+}
+
+/**
+ * Test if the time needs to be recorded.
+ * @return	True if times needs to be recorded, false else.
+ */
+bool ILPGenerator::isRecording(void) const {
+	return _atb->_record;
+}
+
+/**
+ * Called by the AbstractTimeBuilder to let the component
+ * configure itself.
+ * @param props		Configuration to read from.
+ */
+void ILPGenerator::configure(const PropList& props) {
+}
 
 /**
  * @fn ilp::System *ILPGenerator::system(void) const;
@@ -96,66 +106,168 @@ ILPGenerator::~ILPGenerator(void) {
  */
 
 /**
- * @fn void ILPGenerator::setWorkspace(WorkSpace *ws);
- * Set the current workspace.
- * @param ws	Set workspace.
+ * @fn void ILPGenerator::process(WorkSpace *ws);
+ * This function is called by AbstractTimeBuilder to let the ILPGenerator
+ * drives the ILP building for the given workspace.
+ * @param ws	Workspace to work with.
  */
 
 /**
- * @fn void ILPGenerator::setSystem(ilp::System *sys);
- * Set the current ILP system.
- * @param sys	Set ILP system.
+ * @fn void ILPGenerator::contributeBase(ot::time time);
+ * Function called by the solver to record a basic time for the current
+ * code sequence.
+ *
+ * @warning This is the first function called after an execution graph
+ * resolution.
+ *
+ * @param time	Basic time.
  */
 
 /**
- * @fn void ILPGenerator::setExplicit(bool exp);
- * Set the explicit option value.
- * @param exp	Value of explicit option.
+ * @fn void ILPGenerator::contributeTime(ot::time time);
+ * Function called by the solver to record an alternative time for
+ * the current code sequence.
+ *
+ * @warning This call only happens after a former call to contributeBase().
+ *
+ * @param time	Alternative time.
  */
 
 /**
- * @fn void ILPGenerator::setRecording(bool recording);
- * Set the recording option value.
- * @param exp	Value of recording option.
+ * @fn void ILPGenerator::contributePositive(EventCase event, bool prec);
+ * This call applies to the last contributeTime() and record that the time
+ * occurrence is bound by the given event activation.
+ * @param event	Bounding event.
+ * @param prec	If true, the bound is precise else it is an overestimation.
  */
+
+/**
+ * @fn void ILPGenerator::contributeNegative(EventCase event, bool prec);
+ * This call applies to the last contributeTime() and record that the time
+ * occurrence is bound by the given event non-activation.
+ * @param event	Bounding event.
+ * @param prec	If true, the bound is precise else it is an overestimation.
+ */
+
+/**
+ * Convenient function used to build the execution graph for the given
+ * sequence.
+ * @param seq	Sequence to build graph for.
+ * @return		Built execution graph.
+ */
+ParExeGraph *ILPGenerator::build(ParExeSequence *seq) {
+	return builder()->builder()->build(seq);
+}
+
+/**
+ * Convenient function used to solve the graph.
+ * During the resolution, the solver may call the functions:
+ * * contributeBase()
+ * * contributeTime()
+ * * contributePositive()
+ * * contributeNegative()
+ * @param g			Graph to solve.
+ * @param events	Ordered list of events (according to instruction address  and postion).
+ */
+void ILPGenerator::solve(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events) {
+	builder()->solver()->compute(entity, g, events);
+}
+
+/**
+ * Collect the events stored in the given property list.
+ * @param events	Where to store the found events.
+ * @param props		Property list to look in.
+ * @param part		Part of the sequence the events are contained.
+ * @param id		Identifier of the events to collect.
+ */
+void ILPGenerator::collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id) {
+	for(auto e: id.all(props))
+		events.add(EventCase(e, part));
+}
+
+/**
+ * Convenient function used to collect events of prologue block.
+ * @param events
+ * @param v	Block to look in.
+ */
+void ILPGenerator::collectPrologue(Vector<EventCase>& events, Block *v) {
+	collectEvents(events, v, IN_PREFIX, EVENT);
+}
+
+/**
+ * Convenient function used to collect events of the block itself.
+ * @param events
+ * @param v	Block to look in.
+ */
+void ILPGenerator::collectBlock(Vector<EventCase>& events, Block *v) {
+	collectEvents(events, v, IN_BLOCK, EVENT);
+}
+
+/**
+ * Convenient function used to collect events in an edge.
+ * @param events
+ * @param v	Block to look in.
+ */
+void ILPGenerator::collectEdge(Vector<EventCase>& events, Edge *e) {
+	collectEvents(events, e->source(), IN_PREFIX, PREFIX_EVENT);
+	collectEvents(events, e->source(), IN_BLOCK, EVENT);
+}
+
+/**
+ * Sort the events according to their position in the sequence.
+ */
+void ILPGenerator::sortEvents(Vector<EventCase>& events) {
+
+	// sort events
+	class EventCaseComparator {
+	public:
+		static inline int compare(const EventCase& c1, const EventCase& c2) {
+			if(c1.part() != c2.part())
+				return c1.part() - c2.part();
+			else
+				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+		}
+	};
+	elm::quicksort(events, EventCaseComparator());
+
+	// index the dynamic events
+	int di = 0;
+	for(int i = 0; i < events.length(); i++)
+		if(events[i].event()->occurrence() == etime::SOMETIMES) {
+			events[i].setIndex(di);
+			di++;
+		}
+
+}
+
+/**
+ * Count the number of dynamic events in the given event collection.
+ * @param events	Event collection to count in.
+ * @return			Number of dynamic events in the event collection.
+ */
+int ILPGenerator::countDyn(const Vector<EventCase>& events) {
+	int cnt = 0;
+	for(auto e: events)
+		if(e->occurrence() == SOMETIMES)
+			cnt++;
+	return cnt;
+}
+
 
 
 /**
  * The default implementation of ILPGenerator.
  * Apply the LTS/HTS method resulting in two times for each BB.
+ * @ingroup etime
  */
 class StandardILPGenerator: public ILPGenerator {
 
 	typedef t::uint32 mask_t;
 
-	class Split {
-	public:
-		inline Split(int c):
-			cnt(c),
-			pos(0),
-			neg(0),
-			com(0),
-			unu(0),
-			lts_time(0),
-			hts_time(0)
-		{ }
-
-		int cnt;
-		mask_t pos;
-		mask_t neg;
-		mask_t com;
-		mask_t unu;
-		ot::time lts_time;
-		ot::time hts_time;
-	};
-
 	/**
 	 * Collects variables linking events with blocks in ILP.
 	 */
 	class EventCollector {
-	public:
-
-		EventCollector(Event *event): imprec(0), evt(event) { }
 		typedef enum {
 			PREFIX_OFF = 0,
 			PREFIX_ON = 1,
@@ -164,18 +276,54 @@ class StandardILPGenerator: public ILPGenerator {
 			SIZE = 4
 		} case_t;
 
+	public:
+
+		EventCollector(Event *event): imprec(0), evt(event) { }
 		inline Event *event(void) const { return evt; }
 
 		/**
-		 * Add a variable contribution.
-		 * @param c		Case of contribution.
-		 * @param var	Variable of contribution (null for blurred contribution driving to estimation).
+		 * Add an imprecise contribution.
+		 * @param c		Event case.
 		 */
-		void contribute(case_t c, ilp::Var *var) {
-			if(!var)
-				imprec |= 1 << c;
+		void boundImprecise(EventCase c) {
+			if(c.part() == IN_PREFIX)
+				imprec |= (1 << PREFIX_OFF) | (1 << PREFIX_ON);
 			else
-				vars[c].add(var);
+				imprec |= (1 << BLOCK_OFF) | (1 << BLOCK_ON);
+		}
+
+		/**
+		 * Add a code sequence variable to an activation of the event.
+		 * @param c		Event case.
+		 * @param x		Occurrence count variable.
+		 * @param prec 	True if the bound is precise.
+		 */
+		void boundPositive(EventCase c, ilp::Var *x, bool prec) {
+			case_t cc;
+			if(c.part() == IN_PREFIX)
+				cc = PREFIX_ON;
+			else
+				cc = BLOCK_ON;
+			if(!prec)
+				imprec |= 1 << cc;
+			vars[cc].add(x);
+		}
+
+		/**
+		 * Add a code sequence variable to an non-activation of the event.
+		 * @param c		Event case.
+		 * @param x		Occurrence count variable.
+		 * @param prec 	True if the bound is precise.
+		 */
+		void boundNegative(EventCase c, ilp::Var *x, bool prec) {
+			case_t cc;
+			if(c.part() == IN_PREFIX)
+				cc = PREFIX_OFF;
+			else
+				cc = BLOCK_OFF;
+			if(!prec)
+				imprec |= 1 << cc;
+			vars[cc].add(x);
 		}
 
 		/**
@@ -218,114 +366,27 @@ public:
 
 	/**
 	 */
-	StandardILPGenerator(const Monitor& mon): ILPGenerator(mon) {
-	}
+	StandardILPGenerator(const Monitor& mon):
+		ILPGenerator(mon),
+		_edge(nullptr),
+		_t_lts(-1),
+		_x_e(nullptr),
+		_x_hts(nullptr),
+		_t_lts_set(false)
+	{ }
 
-	/*
-	 */
-	void add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& all_events) override {
-		ASSERT(0 < times.count());
+	void process(WorkSpace *ws) override {
 
-		// mono-time case
-		if(times.count() == 1) {
-			genForOneCost(times[0]->time(), e, all_events);
-			return;
-		}
+		// process each edge
+		const CFGCollection *coll = INVOLVED_CFGS(ws);
+		ASSERT(coll);
+		for(auto g: *coll)
+			for(auto v: *g)
+				if(v->isBasic())
+					for(auto e: v->inEdges())
+						process(e);
 
-		// count dynamic events
-		int dyn_cnt = 0;
-		for(auto e = *all_events; e; e++)
-			if((*e).event()->occurrence() == SOMETIMES)
-				dyn_cnt++;
-		ASSERTP(times.count() <= (1 << dyn_cnt), times.count() << " events");
-
-		// put all configurations in a vector
-		Vector<ConfigSet *> confs;
-		for(auto conf = *times; conf; conf++)
-			confs.add(conf);
-		class ConfigSetCompare {
-		public:
-			static int compare(const ConfigSet *cs1, const ConfigSet *cs2) {
-				if(cs1->time() == cs2->time())
-					return 0;
-				else if(cs1->time() < cs2->time())
-					return -1;
-				else
-					return +1;
-			}
-		};
-		quicksort(confs, ConfigSetCompare());
-
-		// initialization
-		int best_p = 0;
-		ot::time best_cost = type_info<ot::time>::max;
-
-		// set of configurations
-		ConfigSet set;
-		for(int i = confs.length() - 1; i >= 0; i--)
-			set.push(*confs[i]);
-
-		// computation
-		for(int p = 1; p < confs.length(); p++) {
-
-			// update set and values
-			set.pop(*confs[p - 1]);
-
-			// scan the set of values
-			Split split(dyn_cnt);
-			set.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
-
-			// x^c_hts = sum{e in E_i /\ (\E c in HTS /\ e in c) /\ (\E c in HTS /\ e not in c)} w_e
-			ot::time x_hts = 0;
-			for(auto ev = *all_events; ev; ev++)
-			//for(int i= 0; i < split.cnt; i++)
-				if((*ev).index() >= 0 && (split.com & (1 << (*ev).index())) != 0)
-					x_hts += (*ev).event()->weight();
-
-			// x^p_hts = max{e in E_i /\ (\A c in HTS -> e in c)} w_e
-			for(auto ev = *all_events; ev; ev++)
-				if((*ev).index() >= 0 && (split.pos & (1 << (*ev).index())) != 0)
-					x_hts = max(x_hts, ot::time((*ev).event()->weight()));
-			// x_hts = max(x^c_hts, x^p_hts)
-
-			// cost = x_hts t_hts + (x_i - x_hts) t_lts
-			int weight = WEIGHT(e->sink());
-			if(x_hts > weight)
-				x_hts = weight;
-			ot::time cost = x_hts * confs.top()->time() + (weight - x_hts) * confs[p - 1]->time();
-			if (isVerbose())
-				log << "\t\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
-
-			// look for best cost
-			if(cost < best_cost) {
-				best_p = p;
-				best_cost = cost;
-			}
-		}
-		if (logFor(LOG_BB))
-			log << "\t\t\t\tbest HTS [" << best_p << " - " << (confs.length() - 1) << "]\n";
-
-		// look in the split
-		ConfigSet hts;
-		Split split(dyn_cnt);
-		makeSplit(confs, best_p, hts, split);
-		hts.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
-		if(isVerbose())
-			log << "\t\t\t\t"
-				<<   "pos = " 		<< Config(split.pos).toString(split.cnt)
-				<< ", neg = " 		<< Config(split.neg).toString(split.cnt)
-				<< ", unused = " 	<< Config(split.unu).toString(split.cnt)
-				<< ", complex = "	<< Config(split.com).toString(split.cnt)
-				<< io::endl;
-
-		// contribute
-		contributeSplit(e, all_events, split);
-
-	}
-
-	/**
-	 */
-	virtual void complete(void) override {
+		// generate the bounding constraints of the events
 		for(auto coll: colls) {
 			coll->make(system());
 			delete coll;
@@ -333,144 +394,143 @@ public:
 		colls.clear();
 	}
 
-	/**
-	 * Generate the constraints when only one cost is considered for the edge.
-	 * @param cost		Edge cost.
-	 * @param edge		Current edge.
-	 * @param events	List of edge events.
-	 */
-	void genForOneCost(ot::time cost, Edge *edge, const Vector<EventCase>&  events) {
-		ilp::System *sys = system();
-		ilp::Var *var = ipet::VAR(edge);
-		ASSERT(var);
+protected:
+
+	void contributeBase(ot::time time) override {
+		ASSERTP(!_t_lts_set, "several contributeBase() performed");
+		_t_lts_set = true;
+		_t_lts = time;
 
 		// logging
 		if(logFor(LOG_BB))
-			log << "\t\t\t\tcost = " << cost << io::endl;
+			log << "\t\t\t\tcost = " << time << io::endl;
 
 		// add to the objective function
-		sys->addObjectFunction(cost, var);
+		system()->addObjectFunction(time, _x_e);
 		if(isRecording())
-			LTS_TIME(edge) = cost;
-
-		// generate constant contribution
-		contributeConst(edge, events);
-
-		// generate variable contribution
-		for(auto ev: events)
-			if(ev->occurrence() == SOMETIMES) {
-				get(ev.event())->contribute(make(ev.event(), ev.part(), true), nullptr);
-				get(ev.event())->contribute(make(ev.event(), ev.part(), false), nullptr);
-			}
+			LTS_TIME(_edge) = time;
 	}
 
-	/**
-	 * Build the set after split.
-	 * @param confs		Current configuration.
-	 * @param p			Split position.
-	 * @param hts		HTS result set.
-	 * @param lts_time	LTS time.
-	 * @param hts_time	HTS time.
-	 * @param cnt		Count of dynamic events.
-	 */
-	void makeSplit(const Vector<ConfigSet *>& confs, int p, ConfigSet& hts, Split& split) {
-		split.lts_time = confs[p - 1]->time();
-		split.hts_time = confs.top()->time();
-		hts = ConfigSet(split.hts_time);
-		for(int i = p; i < confs.length(); i++)
-			hts.add(*confs[i]);
-		if(logFor(LOG_BLOCK)) {
-			log << "\t\t\t\t" << "LTS time = " << split.lts_time << ", HTS time = " << split.hts_time << " for { ";
-			bool fst = true;
-			for(ConfigSet::Iter conf(hts); conf; conf++) {
-				if(fst)
-					fst = false;
-				else
-					log << ", ";
-				log << (*conf).toString(split.cnt);
-			}
-			log << " }\n";
-		}
-	}
-
-	/**
-	 * Contribute to WCET estimation in split way, x_HTS and x_LTS,
-	 * with two sets of times.
-	 * @param e			Evaluated edge.
-	 * @param events	Dynamic event list.
-	 * @param split		Split result.
-	 */
-	void contributeSplit(Edge *e, const Vector<EventCase>& events, const Split& split) {
-		ilp::System *sys = system();
+	void contributeTime(ot::time t_hts) override {
+		ASSERTP(_t_lts_set, "perform contributeBase() first");
 
 		// new HTS variable
 		string hts_name;
 		if(isExplicit()) {
 			StringBuffer buf;
 			buf << "e_";
-			if(e->source()->isBasic())
-				buf << e->source()->index() << "_";
-			buf << e->sink()->index() << "_"
-				<< e->sink()->cfg()->label() << "_hts";
+			buf << _edge->source()->index() << "_";
+			buf << _edge->sink()->index() << "_"
+				<< _edge->sink()->cfg()->label() << "_hts";
 			hts_name = buf.toString();
 		}
-		ilp::Var *x_hts = sys->newVar(hts_name);
+		_x_hts = system()->newVar(hts_name);
 
 		// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
-		ilp::Var *x_edge = ipet::VAR(e);
-		sys->addObjectFunction(split.lts_time, x_edge);
-		sys->addObjectFunction(split.hts_time - split.lts_time, x_hts);
-		if(isRecording()) {
-			LTS_TIME(e) = split.lts_time;
-			HTS_OFFSET(e) = split.hts_time - split.lts_time;
-		}
+		system()->addObjectFunction(t_hts - _t_lts, _x_hts);
+		if(isRecording())
+			HTS_CONFIG(_edge).add(pair(t_hts - _t_lts, _x_hts));
 
 		// 0 <= x_hts <= x_edge
-		ilp::Constraint *cons = sys->newConstraint("0 <= x_hts", ilp::Constraint::LE);
-		cons->addRight(1, x_hts);
-		cons = sys->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
-		cons->addLeft(1, x_hts);
-		cons->addRight(1, x_edge);
+		ilp::Constraint *cons = system()->newConstraint("0 <= x_hts", ilp::Constraint::LE);
+		cons->addRight(1, _x_hts);
+		cons = system()->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
+		cons->addLeft(1, _x_hts);
+		cons->addRight(1, _x_e);
+	}
 
-		// NOTATION
-		// C^e_p -- constraint of event e for position p (p in {prefix, block})
-		// unprecise(C^e_p) in B (T if C^e_p unprecise e.g. use of <=, _ else and as a default)
+	void contributePositive(EventCase event, bool prec) override {
+		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
+		get(event.event())->boundPositive(event, _x_hts, prec);
+		_done |= 1 << event.index();
+	}
 
-		// foreach e in events do
-		for(auto ev = *events; ev; ev++)
-			if((*ev).event()->occurrence() == SOMETIMES) {
+	void contributeNegative(EventCase event, bool prec) override {
+		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
+		get(event.event())->boundNegative(event, _x_hts, prec);
+		_done |= 1 << event.index();
+	}
 
-			// if e in pos_events then C^e_p += x_hts / p = prefix if e in prefix, block
-			if((split.pos & (1 << (*ev).index())) != 0)
-				get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), true), x_hts);
+private:
 
-			// else if e in neg_events then C^e_p += x_edge - x_hts / p = prefix if e in prefix, block
-			else if((split.neg & (1 << (*ev).index())) != 0)
-				get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), false), x_hts);
+	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt) {
+		_edge = e;
+		_t_lts = -1;
+		_x_e = ipet::VAR(e);
+		_x_hts = nullptr;
+		_done = BitVector(dyn_cnt);
+	}
 
-			// else unprecise(C^e_p) = T / p = prefix if e in prefix, block
-			else {
-				get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), true), 0);
-				get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), false), 0);
+	void finish(const Vector<EventCase>& events) {
+
+		// bound for non-variable events
+		// foreach e in always(e) do C^e_p += x_edge
+		for(auto e: events)
+			switch(e->occurrence()) {
+			case ALWAYS:	get(e.event())->boundPositive(e, _x_e, true); break;
+			case NEVER:		get(e.event())->boundNegative(e, _x_e, true); break;
+			default:		break;
 			}
+
+		// all non-processed dynamic causes imprecision
+		for(auto e: events)
+			if(e->occurrence() == SOMETIMES
+			&& !_done.bit(e.index()))
+				get(e.event())->boundImprecise(e);
+	}
+
+	void process(Edge *e) {
+		BasicBlock *w = nullptr;
+		if(e->source()->isBasic())
+			w = e->source()->toBasic();
+		BasicBlock *v = e->sink()->toBasic();
+
+		if(logFor(Processor::LOG_BLOCK)) {
+			log << "\t\t\t";
+			if(w)
+				log << w << ", ";
+			if(e)
+				log << e << ", ";
+			log << v << io::endl;
 		}
 
-		// generate constant contribution
-		contributeConst(e, events);
+		// collect events
+		Vector<EventCase> events;
+		if(v != nullptr)
+			collectPrologue(events, w);
+		collectEdge(events, e);
+		collectBlock(events, v);
+		sortEvents(events);
+		if(logFor(LOG_BB))
+			for(auto e: events)
+				log << "\t\t\t\t" << e << io::endl;
 
-		// special contribution with complex component
-		// TODO Can't understand how could we justify this?
-		/*if(split.com) {
-			// sum{e in com} x_e >= x_hts
-			static string msg = "complex constraint for times";
-			ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
-			for(auto ev: events)
-				if(ev->kind() == etime::SOMETIMES
-				&& (split.com & (1 << ev.index()))
-				&& ev->isEstimating(true))
-					ev->estimate(c, true);
-			c->addRight(1, x_hts);
-		}*/
+		// build the sequence
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+		if(w)
+			for(auto i: *w)
+				seq->addLast(new ParExeInst(i, w, PROLOGUE, index++));
+		for(auto i: *v)
+			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
+
+		// numbers the dynamic events
+		int cnt = 0;
+		for(int i = 0; i < events.count(); i++)
+			if(events[i].event()->occurrence() == SOMETIMES)
+				events[i].setIndex(cnt++);
+
+		// build the graph
+		prepare(e, events, countDyn(events));
+		ParExeGraph *g = build(seq);
+		solve(e, g, events);
+		finish(events);
+		//if(logFor(LOG_BB))
+		//	displayTimes(times, events);
+
+		// clean all
+		delete g;
+		delete seq;
 	}
 
 	/**
@@ -488,32 +548,12 @@ public:
 		return coll;
 	}
 
-	/**
-	 * Build an event selector case.
-	 */
-	EventCollector::case_t make(const Event *e, part_t part, bool on) {
-		switch(part) {
-		case IN_PREFIX:	return on ? EventCollector::PREFIX_ON : EventCollector::PREFIX_OFF;
-		case IN_BLOCK:	return on ? EventCollector::BLOCK_ON : EventCollector::BLOCK_OFF;
-		default:		ASSERT(false); return EventCollector::PREFIX_ON;
-		}
-	}
-
-	/**
-	 * Generate contribution for constant events.
-	 */
-	void contributeConst(Edge *e, const Vector<EventCase>& all_events) {
-
-		// foreach e in always(e) do C^e_p += x_edge
-		for(auto ev = *all_events; ev; ev++)
-			switch((*ev).event()->occurrence()) {
-			case ALWAYS:	get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), true), ipet::VAR(e)); break;
-			case NEVER:		get((*ev).event())->contribute(make((*ev).event(), (*ev).part(), false), ipet::VAR(e)); break;
-			default:		break;
-			}
-	}
-
 	HashMap<Event *, EventCollector *> colls;
+	Edge *_edge;
+	ot::time _t_lts;
+	ilp::Var *_x_e, *_x_hts;
+	bool _t_lts_set;
+	BitVector _done;
 };
 
 /**
