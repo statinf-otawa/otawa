@@ -247,8 +247,8 @@ Value State::get(const hard::Register *reg) const {
 
 
 /**
- * @fn bool State::isInitialized(Address addr) const;
- * Test if the current state contains initialized data.
+ * @fn bool State::isReadOnly(Address addr) const;
+ * Test if the current state contains read-only initialized data.
  * @param addr	Address to test.
  * @return		True if the data is initialized, false else.
  */

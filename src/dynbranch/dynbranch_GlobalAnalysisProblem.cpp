@@ -326,7 +326,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 
 					// If we couldn't find the memory info from the Global State, lets try to see if this info exists in the Read Only Region
 					if(data.length() == 0) {
-						if(istate && istate->isInitialized(addressToLoad)) {
+						if(istate && istate->isReadOnly(addressToLoad)) {
 							t::uint32 dataFromMemDirectory;
 							ws->process()->get(addressToLoad, dataFromMemDirectory);
 							PotentialValue pv;
@@ -358,7 +358,7 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 						elm::t::uint32 addressToLoad = address[currAddr];
 						const PotentialValue& data = out.loadMemory(addressToLoad); // try to load the value from the Global analysis
 						if((data.length() == 0) && (GLOBAL_MEMORY_LOADER)) {	// if the value is empty, try to read from the initialized memory
-							if(istate && istate->isInitialized(addressToLoad)) {
+							if(istate && istate->isReadOnly(addressToLoad)) {
 								t::uint32 dataFromMemDirectory;
 								ws->process()->get(addressToLoad, dataFromMemDirectory);
 								DEBUG_MEM(elm::cout << Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "    " << IGre << "dataFromMemDirectory = " << hex(dataFromMemDirectory) << RCol << io::endl;)

@@ -1459,7 +1459,7 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 	sys->addObjectFunction(hts_time - lts_time, x_hts);
 	if(record) {
 		LTS_TIME(edge) = lts_time;
-		HTS_OFFSET(edge) = hts_time - lts_time;
+		HTS_CONFIG(edge) = pair(hts_time - lts_time, x_hts);
 	}
 
 	// 0 <= x_hts <= x_edge
@@ -1505,9 +1505,6 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 		c->addRight(1, x_hts);
 	}
 
-	// record the HTS variable
-	if(record)
-		HTS_VAR(edge) = x_hts;
 }
 
 
@@ -1557,24 +1554,21 @@ p::id<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
 
 /**
  * Produced only if the RECORD_TIME configuration is set,
- * record for each edge the difference between maximum time of low-time-set
- * and the maximum time of high-time-set (in cycles).
+ * record for each edge a pair(t, x) where (a) t the difference between maximum time
+ * of low-time-set and the maximum time of high-time-set (in cycles)
+ * (b) x is an ILP variable that represents the occurrences of this time.
+ *
+ * If an instruction sequence s with occurrence x_s has too many events, it will split in
+ * subsequence and each subsequence will have its own HTS_CONFIG accumulated on the
+ * sequence.
  *
  * @par Hooks
  * @li @ref Edge
- */
-p::id<ot::time> HTS_OFFSET("otawa::etime::HTS_OFFSET", 0);
-
-
-/**
- * Produced only if the RECORD_TIME configuration is set,
- * record for each edge the variable corresponding to the
- * occurrences of the HTS.
  *
- * @par Hooks
- * @li @ref Edge
+ * @ingroup etime
  */
-p::id<ilp::Var *> HTS_VAR("otawa::etime::HTS_VAR", nullptr);
+p::id<Pair<ot::time, ilp::Var *> > HTS_CONFIG("otawa::etime::HTS_CONFIG", pair<ot::time, ilp::Var *>(0, nullptr));
+
 
 /**
  * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated

@@ -110,7 +110,7 @@ public:
 	};
 
 	// accessing initialized memory
-	inline bool isInitialized(Address addr) const { return mem.get(addr.offset(), false); }
+	inline bool isReadOnly(Address addr) const { return mem.contains(addr.offset()); }
 	inline void get(const Address& a, t::uint8 &v) const { proc.get(a, v); }
 	inline void get(const Address& a, t::uint16 &v) const { proc.get(a, v); }
 	inline void get(const Address& a, t::uint32 &v) const { proc.get(a, v); }

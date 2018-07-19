@@ -148,7 +148,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 		if (id.fst == MEM) {
 			// Priority of memory reading: RO MEM -> Global Analysis -> CLP
 			// the value is available in the READ ONLY REGION, then read from it
-			if(istate && istate->isInitialized(id.snd)) {
+			if(istate && istate->isReadOnly(id.snd)) {
 				PotentialValue r;
 				t::uint64 val = 0;
 				workspace()->process()->get(id.snd,val);
@@ -271,7 +271,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 
 					// Get the value in memory from each possible addresses
 					for(PotentialValue::Iterator it(toget); it; it++) {
-						if(istate && istate->isInitialized(*it)) { // if this specific address is initialized (in the binary)
+						if(istate && istate->isReadOnly(*it)) { // if this specific address is initialized (in the binary)
 							potential_value_type val = readFromMem(*it, i.type());// workspace()->process()->get(*it,val);
 							r.insert(val);
 						}

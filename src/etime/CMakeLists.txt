@@ -5,12 +5,12 @@ set(CMAKE_CXX_FLAGS "-Wall" )
 set(PLUGIN etime)
 set(SOURCES
 	"AbstractTimeBuilder.cpp"
+    "StandardXGraphBuilder.cpp"
+    "StandardXGraphSolver.cpp"
+    "StandardILPGenerator.cpp"
     "EdgeTimeBuilder.cpp"
 	"hook.cpp"
     "StandardEventBuilder.cpp"
-    "StandardILPGenerator.cpp"
-    "StandardXGraphBuilder.cpp"
-    "StandardXGraphSolver.cpp"
 )
 
 include_directories(".")

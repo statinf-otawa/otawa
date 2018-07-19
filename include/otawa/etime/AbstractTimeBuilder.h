@@ -23,7 +23,7 @@
 
 #include <elm/data/List.h>
 #include <otawa/parexegraph/ParExeGraph.h>
-#include <otawa/proc/BBProcessor.h>
+#include <otawa/proc/Processor.h>
 #include "features.h"
 #include "Config.h"
 
@@ -32,6 +32,8 @@ namespace otawa { namespace etime {
 typedef Vector<Resource *> resources_t;
 typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } part_t;
 io::Output& operator<<(io::Output& out, part_t p);
+class AbstractTimeBuilder;
+class ILPGenerator;
 
 class EventCase {
 public:
@@ -53,78 +55,98 @@ io::Output& operator<<(io::Output& out, const EventCase& e);
 
 
 class Factory {
+	friend class AbstractTimeBuilder;
 public:
+	static Factory& def;
 	virtual ~Factory(void);
 	virtual ParExeGraph *make(ParExeProc *proc, Vector<Resource *> *hw_resources, ParExeSequence *seq) = 0;
 	virtual ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) = 0;
 	virtual ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "") = 0;
-	static Factory *make(void);
 };
 
 class XGraphBuilder: public Monitor {
+	friend class AbstractTimeBuilder;
 public:
+	static XGraphBuilder *make(const Monitor& mon);
 	XGraphBuilder(const Monitor& mon);
 	virtual ~XGraphBuilder(void);
+
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
-	inline WorkSpace *workspace(void)  const { return _ws; }
-	inline ParExeProc *processor(void) const { return _processor; }
-	inline resources_t *resources(void) const { return _resources; }
-	inline Factory *factory(void) const { return _factory; }
-	inline bool isExplicit(void) const { return _explicit; }
-	inline void setWorkSpace(WorkSpace *ws) { _ws = ws; }
-	inline void setProcessor(ParExeProc *processor) { _processor = processor; }
-	inline void setResources(resources_t *resources) { _resources = resources; }
-	inline void setFactory(Factory *factory) { _factory = factory; }
-	inline void setExplicit(bool is_explicit) { _explicit = is_explicit; }
+protected:
+	virtual void configure(const PropList& props);
 
-	static XGraphBuilder *make(const Monitor& mon);
+	ParExeProc *processor(void) const;
+	resources_t& resources(void) const;
+	Factory *factory(void) const;
+	bool isExplicit(void) const;
 
 private:
-	WorkSpace *_ws;
-	ParExeProc *_processor;
-	resources_t *_resources;
-	Factory *_factory;
-	bool _explicit;
+	AbstractTimeBuilder *_atb;
 };
+
 
 class XGraphSolver: public Monitor {
+	friend class AbstractTimeBuilder;
 public:
+	static XGraphSolver *make(const Monitor& mon);
 	XGraphSolver(const Monitor& mon);
 	virtual ~XGraphSolver(void);
-	Factory *getFactory(void);
-	virtual void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& events, const PropList& code) = 0;
-	inline sys::Path dumpDir(void) const { return _dir; }
-	inline void setDumpDir(sys::Path dir) { _dir = dir; }
-	static XGraphSolver *make(const Monitor& mon);
+	sys::Path dumpDir(void) const;
+
+	virtual Factory *getFactory(void);
+	virtual void compute(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events) = 0;
+
+protected:
+	virtual void configure(const PropList& props);
+
+	void contributeBase(ot::time time);
+	void contributeTime(ot::time time);
+	void contributePositive(EventCase event, bool prec);
+	void contributeNegative(EventCase event, bool prec);
+
 private:
-	sys::Path _dir;
+	AbstractTimeBuilder *_atb;
 };
+
 
 class ILPGenerator: public Monitor {
+	friend class AbstractTimeBuilder;
+	friend class XGraphSolver;
 public:
+	static ILPGenerator *make(const Monitor& mon);
 	ILPGenerator(const Monitor& mon);
 	virtual ~ILPGenerator(void);
-	virtual void add(Edge *e, List<ConfigSet *> times, const Vector<EventCase>& events) = 0;
-	virtual void complete(void) = 0;
-	inline WorkSpace *workspace(void) const { return _ws; }
-	inline ilp::System *system(void) const { return _sys; }
-	inline bool isExplicit(void) const { return _explicit; }
-	inline bool isRecording(void) const { return _recording; }
-	inline void setWorkspace(WorkSpace *ws) { _ws = ws; }
-	inline void setSystem(ilp::System *sys) { _sys = sys; }
-	inline void setExplicit(bool exp) { _explicit = exp; }
-	inline void setRecording(bool recording) { _recording = recording; }
 
-	static ILPGenerator *make(const Monitor& mon);
+	virtual void process(WorkSpace *ws) = 0;
+
+protected:
+	virtual void configure(const PropList& props);
+	virtual void contributeBase(ot::time time) = 0;
+	virtual void contributeTime(ot::time time) = 0;
+	virtual void contributePositive(EventCase event, bool prec) = 0;
+	virtual void contributeNegative(EventCase event, bool prec) = 0;
+
+	inline AbstractTimeBuilder *builder(void) const { return _atb; }
+	bool isExplicit(void) const;
+	bool isRecording(void) const;
+	ilp::System *system(void) const;
+	ParExeGraph *build(ParExeSequence *seq);
+	void solve(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events);
+	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id);
+	void collectPrologue(Vector<EventCase>& events, Block *v);
+	void collectBlock(Vector<EventCase>& events, Block *v);
+	void collectEdge(Vector<EventCase>& events, Edge *e);
+	void sortEvents(Vector<EventCase>& events);
+	int countDyn(const Vector<EventCase>& events);
+
 private:
-	WorkSpace *_ws;
-	ilp::System *_sys;
-	bool _explicit;
-	bool _recording;
+	AbstractTimeBuilder *_atb;
 };
 
-class AbstractTimeBuilder: public BBProcessor {
+class AbstractTimeBuilder: public Processor {
+	friend class XGraphBuilder;
+	friend class ILPGenerator;
 public:
 	static p::declare reg;
 	AbstractTimeBuilder(p::declare& r = reg);
@@ -132,25 +154,21 @@ public:
 	inline XGraphSolver *solver(void) const { return _solver; }
 	inline ILPGenerator *generator(void) const { return _generator; }
 	inline XGraphBuilder *builder(void) const { return _builder; }
-	inline void setBuilder(XGraphBuilder *builder) { _builder = builder; }
-	inline void setSolver(XGraphSolver *solver) { _solver = solver; }
-	inline void setGenerator(ILPGenerator *generator) { _generator = generator; }
+	void setBuilder(XGraphBuilder *builder);
+	void setSolver(XGraphSolver *solver);
+	void setGenerator(ILPGenerator *generator);
 
 	void configure(const PropList& props) override;
 
 protected:
 	void setup(WorkSpace *ws) override;
-	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override;
+	void processWorkSpace(WorkSpace *ws) override;
 	void cleanup(WorkSpace *ws) override;
 
 private:
 	void prepareEvents(Vector<EventCase>& events);
 	void processEdge(BasicBlock *src, Edge *e, BasicBlock *snk);
 	void buildResources(void);
-	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id);
-	int countDynEvents(const Vector<EventCase>& events);
-	void processSequence(Edge *e, ParExeSequence *seq, Vector<EventCase>& events);
-	void displayTimes(const List<ConfigSet *>& confs, const Vector<EventCase>& events);
 
 	XGraphBuilder *_builder;
 	XGraphSolver *_solver;
@@ -163,6 +181,7 @@ private:
 	int _event_th;
 	bool _record;
 	sys::Path _dir;
+	ilp::System *_sys;
 };
 
 } }	// otawa::etime

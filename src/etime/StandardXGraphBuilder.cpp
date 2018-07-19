@@ -30,15 +30,9 @@ namespace otawa { namespace etime {
  */
 
 
-XGraphBuilder::XGraphBuilder(const Monitor& mon)
-:	Monitor(mon),
-	_ws(nullptr),
-	_processor(nullptr),
-	_resources(nullptr),
-	_factory(nullptr),
-	_explicit(false)
-{
+XGraphBuilder::XGraphBuilder(const Monitor& mon): Monitor(mon), _atb(nullptr) {
 }
+
 
 /**
  */
@@ -46,44 +40,70 @@ XGraphBuilder::~XGraphBuilder(void) {
 }
 
 /**
+ * Get the current processor description.
+ * @return	Processor description.
+ */
+ParExeProc *XGraphBuilder::processor(void) const {
+	return _atb->_proc;
+}
+
+/**
+ * Get the resources for the current processor.
+ * @return	Processor resources.
+ */
+resources_t& XGraphBuilder::resources(void) const {
+	return _atb->_resources;
+}
+
+/**
+ * Get the current factory to build the graph.
+ * @return	Current factory.
+ */
+Factory *XGraphBuilder::factory(void) const {
+	return _atb->_builder->factory();
+}
+
+/**
+ * Test if explicit node and edge naming is required.
+ * @return	True if explicit naming is required, false else.
+ */
+bool XGraphBuilder::isExplicit(void) const {
+	return _atb->_explicit;
+}
+
+
+/**
+ * Called with the same configuration properties passed
+ * to AbstractTimebuilder to let the builder configure
+ * itself. Override this function to customize the
+ * configuration.
+ * @param props	Configuration properties.
+ */
+void XGraphBuilder::configure(const PropList& props) {
+}
+
+
+
+/**
  * @fn ParExeGraph *XGraphBuilder::build(ParExeSequence *seq);
- * TODO
- */
-
-/**
- * @fn ParExeProc *XGraphBuilder::processor(void) const;
- * TODO
- */
-
-/**
- * @fn resources_t *XGraphBuilder::resources(void) const;
- * TODO
- */
-
-/**
- * @fn Factory *XGraphBuilder::factory(void) const;
- * TODO
- */
-
-/**
- * @fn void XGraphBuilder::setProcessor(ParExeProc *processor);
- * TODO
- */
-
-/**
- * @fn void XGraphBuilder::setResources(resources_t *resources);
- * TODO
- */
-
-/**
- * @fn void XGraphBuilder::setFactory(Factory *factory);
- * TODO
+ * This function is used to build a ParExeGraph from a sequence of
+ * instructions. It will use fhe factory provided by XGraphSolver from
+ * AbstractTimeBuilder it is used with.
+ *
+ * This function is usually overridden to specialize the way ParExeGraph
+ * are built. Although there is now way to enforce this in C++, it is
+ * advised to use the provided factory.
+ *
+ * @param seq	Sequence to build graph for.
  */
 
 
 /**
  * @class StandardBuilder
- * TODO
+ * ParExeGraph builder using the standard resources and microprocessor
+ * description to build the graph.
+ *
+ * @ingroup etime
  */
 class StandardXGraphBuilder: public XGraphBuilder {
 public:
@@ -92,14 +112,14 @@ public:
 	}
 
 	ParExeGraph *build(ParExeSequence *seq) override {
-		ASSERT(workspace() != nullptr);
+		/*ASSERT(workspace() != nullptr);
 		ASSERT(processor() != nullptr);
 		ASSERT(resources() != nullptr);
-		ASSERT(factory() != nullptr);
+		ASSERT(factory() != nullptr);*/
 
 		// build the graph
 		PropList props;
-		ParExeGraph *g = factory()->make(processor(), resources(), seq);
+		ParExeGraph *g = factory()->make(processor(), &resources(), seq);
 
 		// populate it
 		init();

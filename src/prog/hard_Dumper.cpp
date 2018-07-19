@@ -45,16 +45,26 @@ Dumper::Dumper(void): Processor(reg) {
  */
 void Dumper::processWorkSpace(WorkSpace *ws) {
 
-	// display memory
-	out << "MEMORY\n";
+	// retrieve memory
 	const hard::Memory *mem = hard::MEMORY(ws);
 	if(!mem)
 		mem = &single<hard::Memory>();
-	for(int i = 0; i < mem->banks().count(); i++) {
-		const Bank& bank = *mem->banks()[i];
-		out << "\tBANK " << bank.name() << io::endl;
+
+	// display memory
+	out << "MEMORY\n";
+	for(auto bank: mem->banks()) {
+		out << "\tBANK " << bank->name() << " (";
+		if(bank->isCached())
+			out << "cached";
+		else
+			out << "not cached";
+		if(bank->isWritable())
+			out << ", writable";
+		else
+			out << ", read only";
+		out << ")" << io::endl;
 		out << "\t\ttype = ";
-		switch(bank.type()) {
+		switch(bank->type()) {
 		case hard::Bank::NONE: out << "none"; break;
 		case hard::Bank::ROM: out << "ROM"; break;
 		case hard::Bank::SPM: out << "SPM"; break;
@@ -63,10 +73,11 @@ void Dumper::processWorkSpace(WorkSpace *ws) {
 		default: out << "unknown"; break;
 		}
 		out << io::endl;
-		out << "\t\trange = " << bank.address() << "-" << bank.topAddress() << io::endl;
-		out << "\t\tlatency = " << bank.latency() << " cycles\n";
-		if(bank.writeLatency())
-			out << "\t\twrite latency = " << bank.writeLatency() << " cycles\n";
+		out << "\t\trange = " << bank->address() << "-" << bank->topAddress() << io::endl;
+		out << "\t\tlatency = " << bank->latency() << " cycles\n";
+		if(bank->writeLatency())
+			out << "\t\twrite latency = " << bank->writeLatency() << " cycles\n";
+
 	}
 }
 

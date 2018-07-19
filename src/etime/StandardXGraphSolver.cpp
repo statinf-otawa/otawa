@@ -19,6 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/data/HashSet.h>
+#include <elm/data/quicksort.h>
 #include <elm/sys/System.h>
 #include <otawa/etime/AbstractTimeBuilder.h>
 
@@ -26,13 +28,30 @@ namespace otawa { namespace etime {
 
 /**
  * @class XGraphSolver
- * TODO
+ *
+ * The XGraphSolver is in charge to compute the execution times of a ParExeGraph
+ * taking into account the possible events.
+ *
+ * Basically, the function XGraphSolver::solve() is called for each possible
+ * ParExeGraph. After the resolution, the XGraphSolver has to provide the found
+ * time and bounds on the occurrence of this time to the ILPGenerator. This is
+ * done by internal functions, called contribute().
+ *
+ * XGraphSolver provides also convenient functions to enrich the ILP system with
+ * the computed times:
+ * * contributeBase() provides a base time for the processed code sequence,
+ * * contributeTime() provides an alternative time (depending on events),
+ * * contributePositive(), applied on a former call to contributeTime(), bounds its
+ * occurrences with the activation of an event,
+ * * contributeNegative(), applied on a former call to contributeTime(), bounds its
+ * occurrences with the inactivation of an event.
+ *
  * @ingroup etime
  */
 
 /**
  */
-XGraphSolver::XGraphSolver(const Monitor& mon): Monitor(mon) {
+XGraphSolver::XGraphSolver(const Monitor& mon): Monitor(mon), _atb(nullptr) {
 
 }
 
@@ -47,27 +66,53 @@ XGraphSolver::~XGraphSolver(void) {
  * @return	Engine factory for execution graph.
  */
 Factory *XGraphSolver::getFactory(void) {
-	return Factory::make();
+	return &Factory::def;
 }
 
 /**
- * @fn void XGraphSolver::compute(ParExeGraph *g, List<ConfigSet *> times, const Vector<EventCase>& events, const PropList& props);
- * TODO
+ * @fn void XGraphSolver::compute(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events);
+ * Compute the times of the given ParExeGraph taking into account the given events.
+ * The obtained times are then dumped to the ILPGenerator using XGraphSolver::contribute()
+ * functions.
+ *
+ * @param entity	Entity (block, edge, sequence, etc) for which the time is computed.
+ * @param g			ParExeGraph to compute.
+ * @param events	Events arising during the ParExeGraph execution.
  */
 
 /**
  * @fn sys::Path XGraphSolver::dumpDir(void) const;
- * TODO
+ * Get the directory used to dump the resolved execution graphs.
+ * As the default, this value is empty meaning there is no dump.
+ * @return	Execution graph dump directory.
  */
 
 /**
  * @fn void XGraphSolver::setDumpDir(sys::Path dir);
- * TODO
+ * Set the directory used to dump the execution graphs.
+ * Pass an empty string to disable dumping.
+ * @param dir	Directory used to dump execution graphs.
  */
+
+/**
+ * Called with the same configuration properties passed
+ * to AbstractTimebuilder to let the builder configure
+ * itself. Override this function to customize the
+ * configuration.
+ * @param props	Configuration properties.
+ */
+void XGraphSolver::configure(const PropList& props) {
+}
 
 
 /**
- * TODO
+ * Simple implementation of an execution graph based on:
+ * * topological traversal of the graph to extract maximum time for
+ * instruction and resources,
+ * * each event configuration is tested in turn,
+ * * LTS/HTS scheme of time production.
+ *
+ * @ingroup etime
  */
 class StandardXGraphSolver: public XGraphSolver {
 public:
@@ -90,9 +135,10 @@ public:
 
 	/**
 	 */
-	void compute(ParExeGraph *g, List<ConfigSet *>& times, const Vector<EventCase>& all_events, const PropList& code) override {
+	void compute(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& all_events) override {
 		Vector<EventCase> events;
 		Vector<EventCase> always_events;
+		List<ConfigSet *> times;
 
 		// applying static events (always, never)
 		Vector<ParExeInst *> insts;
@@ -146,7 +192,7 @@ public:
 			prev = event_mask;
 
 			// predump implementation
-			// TODO
+			// re-enable at some later time
 			/*if(_do_output_graphs && predump)
 				outputGraph(graph, 666, 666, 666, _ << source << " -> " << target);*/
 
@@ -197,7 +243,7 @@ public:
 			else {
 				bool done = false;
 				List<ConfigSet *>::Iter prev;
-				for(auto cur = *times; cur; prev = cur, cur++) {
+				for(auto cur: times) {
 					if(cur->time() == cost) {
 						cur->add(Config(event_mask));
 						done = true;
@@ -213,6 +259,34 @@ public:
 				}
 			}
 		}
+
+		// process the times
+		split(entity, all_events, times);
+	}
+
+	/**
+	 * Apply the latency to a node.
+	 * @param node		Node to add latency to.
+	 * @param latency	Latency to add.
+	 */
+	inline void addLatency(ParExeNode *node, int latency) {
+		if(node->latency() == 1)
+			node->setLatency(latency);
+		else
+			node->setLatency(node->latency() + latency);
+	}
+
+	/**
+	 * Remove latency from a node.
+	 * @param node		Node to remove latency from.
+	 * @param latency	Latency to remove.
+	 */
+	inline void removeLatency(ParExeNode *node, int latency) {
+		ASSERT(node->latency() >= latency);
+		if(node->latency() == latency)
+			node->setLatency(1);
+		else
+			node->setLatency(node->latency() - latency);
 	}
 
 	/**
@@ -229,7 +303,7 @@ public:
 		case FETCH: {
 			switch (event->type()) {
 			case LOCAL:
-				inst->fetchNode()->setLatency(inst->fetchNode()->latency() + event->cost());
+				addLatency(inst->fetchNode(), event->cost());
 				break;
 
 			case AFTER:
@@ -284,7 +358,7 @@ public:
 			bool found = false;
 			for(ParExeInst::NodeIterator node(inst); node; node++)
 				if(node->stage()->unit()->isMem()) {
-					node->setLatency(node->latency() + event->cost() - 1);
+					addLatency(node, event->cost());
 					found = true;
 					break;
 				}
@@ -319,7 +393,7 @@ public:
 			}
 
 			if(!found && inst->execNode()) {
-				inst->execNode()->setLatency(inst->execNode()->latency() + event->cost() - 1);
+				addLatency(inst->execNode(), event->cost());
 				found = true;
 			}
 
@@ -329,8 +403,7 @@ public:
 		}
 
 		case BRANCH:
-			// TODO fix to use factory
-			bedge =  new ParExeEdge(getBranchNode(g), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
+			bedge =  getFactory()->makeEdge(getBranchNode(g), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
 			bedge->setLatency(event->cost());
 			break;
 
@@ -372,7 +445,7 @@ public:
 		case FETCH: {
 			switch (event->type()) {
 			case LOCAL:
-				inst->fetchNode()->setLatency(inst->fetchNode()->latency() - event->cost());
+				removeLatency(inst->fetchNode(), event->cost());
 				break;
 
 			case AFTER:
@@ -426,7 +499,7 @@ public:
 			bool found = false;
 			for(ParExeInst::NodeIterator node(inst); node; node++)
 				if(node->stage()->unit()->isMem()) {
-					node->setLatency(node->latency() - event->cost() + 1);
+					removeLatency(node, event->cost());
 					found = true;
 					break;
 				}
@@ -461,7 +534,7 @@ public:
 			}
 
 			if(!found && inst->execNode()) {
-				inst->execNode()->setLatency(inst->execNode()->latency() - event->cost() + 1);
+				removeLatency(inst->execNode(), event->cost());
 				found = true;
 			}
 			break;
@@ -482,7 +555,9 @@ public:
 	}
 
 	/**
-	 * TODO
+	 * Display the list variable events according to the given event mask.
+	 * @param all_events	All events.
+	 * @param mask			Activation mask.
 	 */
 	string dumpEvents(const Vector<EventCase>& all_events, mask_t mask) {
 		StringBuffer out;
@@ -518,12 +593,282 @@ public:
 		return out.toString();
 	}
 
+	class Split {
+	public:
+		inline Split(int c):
+			cnt(c),
+			pos(0),
+			neg(0),
+			com(0),
+			unu(0),
+			lts_time(0),
+			hts_time(0)
+		{ }
+
+		int cnt;
+		mask_t pos;
+		mask_t neg;
+		mask_t com;
+		mask_t unu;
+		ot::time lts_time;
+		ot::time hts_time;
+	};
+
+	/**
+	 * Apply an algorithm of splits or the found time for the current sequence.
+	 * The times are divided in 2 sets, Low Time Set (LTS) and High time Set (HTS)
+	 * producing a LTS time and an HTS time.
+	 *
+	 * @param entity		Computed entity.
+	 * @param all_events	Event of the sequence.
+	 * @param times			Found times.
+	 */
+	void split(const PropList *entity, const Vector<EventCase>& all_events, const List<ConfigSet *>& times) {
+		ASSERT(0 < times.count());
+
+		// mono-time case
+		if(times.count() == 1) {
+			genForOneCost(times.first()->time(), all_events);
+			return;
+		}
+
+		// count dynamic events
+		int dyn_cnt = 0;
+		for(auto e = *all_events; e; e++)
+			if((*e).event()->occurrence() == SOMETIMES)
+				dyn_cnt++;
+		ASSERTP(times.count() <= (1 << dyn_cnt), times.count() << " events");
+
+		// put all configurations in a vector
+		Vector<ConfigSet *> confs;
+		for(auto conf = *times; conf; conf++)
+			confs.add(conf);
+		class ConfigSetCompare {
+		public:
+			static int compare(const ConfigSet *cs1, const ConfigSet *cs2) {
+				if(cs1->time() == cs2->time())
+					return 0;
+				else if(cs1->time() < cs2->time())
+					return -1;
+				else
+					return +1;
+			}
+		};
+		quicksort(confs, ConfigSetCompare());
+
+		// initialization
+		int best_p = 0;
+		ot::time best_cost = type_info<ot::time>::max;
+
+		// set of configurations
+		ConfigSet set;
+		for(int i = confs.length() - 1; i >= 0; i--)
+			set.push(*confs[i]);
+
+		// computation
+		for(int p = 1; p < confs.length(); p++) {
+
+			// update set and values
+			set.pop(*confs[p - 1]);
+
+			// scan the set of values
+			Split split(dyn_cnt);
+			set.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
+
+			// x^c_hts = sum{e in E_i /\ (\E c in HTS /\ e in c) /\ (\E c in HTS /\ e not in c)} w_e
+			ot::time x_hts = 0;
+			for(auto ev = *all_events; ev; ev++)
+				if((*ev).index() >= 0 && (split.com & (1 << (*ev).index())) != 0)
+					x_hts += (*ev).event()->weight();
+
+			// x^p_hts = max{e in E_i /\ (\A c in HTS -> e in c)} w_e
+			for(auto ev = *all_events; ev; ev++)
+				if((*ev).index() >= 0 && (split.pos & (1 << (*ev).index())) != 0)
+					x_hts = max(x_hts, ot::time((*ev).event()->weight()));
+			// x_hts = max(x^c_hts, x^p_hts)
+
+			// cost = x_hts t_hts + (x_i - x_hts) t_lts
+			int weight = WEIGHT(entity);
+			if(x_hts > weight)
+				x_hts = weight;
+			ot::time cost = x_hts * confs.top()->time() + (weight - x_hts) * confs[p - 1]->time();
+			if (isVerbose())
+				log << "\t\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
+
+			// look for best cost
+			if(cost < best_cost) {
+				best_p = p;
+				best_cost = cost;
+			}
+		}
+		if (logFor(LOG_BB))
+			log << "\t\t\t\tbest HTS [" << best_p << " - " << (confs.length() - 1) << "]\n";
+
+		// look in the split
+		ConfigSet hts;
+		Split split(dyn_cnt);
+		makeSplit(confs, best_p, hts, split);
+		hts.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
+		if(isVerbose())
+			log << "\t\t\t\t"
+				<<   "pos = " 		<< Config(split.pos).toString(split.cnt)
+				<< ", neg = " 		<< Config(split.neg).toString(split.cnt)
+				<< ", unused = " 	<< Config(split.unu).toString(split.cnt)
+				<< ", complex = "	<< Config(split.com).toString(split.cnt)
+				<< io::endl;
+
+		// contribute
+		displayTimes(times, all_events);
+		contributeSplit(entity, all_events, split);
+	}
+
+	/**
+	 * Generate the constraints when only one cost is considered for the edge.
+	 * @param edge		Current edge.
+	 * @param events	List of edge events.
+	 */
+	void genForOneCost(ot::time cost, const Vector<EventCase>&  events) {
+
+		// logging
+		if(logFor(LOG_BB))
+			log << "\t\t\t\tcost = " << cost << io::endl;
+
+		// record the time
+		contributeBase(cost);
+
+	}
+
+	/**
+	 * Build the set after split.
+	 * @param confs		Current configuration.
+	 * @param p			Split position.
+	 * @param hts		HTS result set.
+	 * @param lts_time	LTS time.
+	 * @param hts_time	HTS time.
+	 * @param cnt		Count of dynamic events.
+	 */
+	void makeSplit(const Vector<ConfigSet *>& confs, int p, ConfigSet& hts, Split& split) {
+		split.lts_time = confs[p - 1]->time();
+		split.hts_time = confs.top()->time();
+		hts = ConfigSet(split.hts_time);
+		for(int i = p; i < confs.length(); i++)
+			hts.add(*confs[i]);
+		if(logFor(LOG_BLOCK)) {
+			log << "\t\t\t\t" << "LTS time = " << split.lts_time << ", HTS time = " << split.hts_time << " for { ";
+			bool fst = true;
+			for(ConfigSet::Iter conf(hts); conf; conf++) {
+				if(fst)
+					fst = false;
+				else
+					log << ", ";
+				log << (*conf).toString(split.cnt);
+			}
+			log << " }\n";
+		}
+	}
+
+	/**
+	 * Contribute to WCET estimation in split way, x_HTS and x_LTS,
+	 * with two sets of times.
+	 * @param e			Evaluated edge.
+	 * @param events	Dynamic event list.
+	 * @param split		Split result.
+	 */
+	void contributeSplit(const PropList *entity, const Vector<EventCase>& events, const Split& split) {
+		Vector<EventCase> exact, imprec;
+
+		// contribute LTS
+		contributeBase(split.lts_time);
+
+		// contribute HTS
+		contributeTime(split.hts_time - split.lts_time);
+
+		// build effects of events
+		for(auto ev = *events; ev; ev++)
+			if((*ev).event()->occurrence() == SOMETIMES) {
+
+			// positive contribution
+			if((split.pos & (1 << ev.index())) != 0)
+				contributePositive(ev, false);
+
+			// else if e in neg_events then C^e_p += x_edge - x_hts / p = prefix if e in prefix, block
+			else if((split.neg & (1 << ev.index())) != 0)
+				contributeNegative(ev, false);
+		}
+
+	}
+
+	/**
+	 * Display the list of configuration sorted by cost.
+	 * @param times		List of times to display.
+	 * @param events	Events producing the times.
+	 */
+	void displayTimes(const List<ConfigSet *>& times, const Vector<EventCase>& events) {
+		if(times) {
+			int i = 0;
+			for(auto t = *times; t; t++, i++) {
+				log << "\t\t\t\t[" << i << "] cost = " << t->time() << " -> ";
+				for(ConfigSet::Iter conf(**t); conf; conf++)
+					log << " " << (*conf).toString(events.length());
+				log << io::endl;
+			}
+		}
+	}
+
 	// TODO so ugly
 	ParExeEdge *bedge;
 };
 
 /**
- * TODO
+ * Record a base time for the current code sequence.
+ *
+ * @warning This function must be
+ * called before contributeTime().
+ *
+ * @param time	Base time of the code sequence.
+ */
+void XGraphSolver::contributeBase(ot::time time) {
+	_atb->generator()->contributeBase(time);
+}
+
+/**
+ * Record a new non-base time for the current code sequence.
+ * Calles to contributePositive() and contributeNegative() applies
+ * to the occurrences of this time.
+ *
+ * @warning This function must be called after a call to contributeBase().
+ *
+ * @param time	New time to record.
+ */
+void XGraphSolver::contributeTime(ot::time time) {
+	_atb->generator()->contributeTime(time);
+}
+
+/**
+ * Record that the given event bounds the current code sequence
+ * when it is activated.
+ * @param event		Bounding event.
+ * @param prec		If true, the bound is exact, else it is just an overestimation.
+ */
+void XGraphSolver::contributePositive(EventCase event, bool prec) {
+	_atb->generator()->contributePositive(event, prec);
+}
+
+/**
+ * Record that the given event bounds the current code sequence
+ * when it is inactivated.
+ * @param event		Bounding event.
+ * @param prec		If true, the bound is exact, else it is just an overestimation.
+ */
+void XGraphSolver::contributeNegative(EventCase event, bool prec) {
+	_atb->generator()->contributeNegative(event, prec);
+}
+
+
+/**
+ * Build a default graph solver.
+ * @param mon	Monitor to use.
+ * @return		Default graph solver.
  */
 XGraphSolver *XGraphSolver::make(const Monitor& mon) {
 	return new StandardXGraphSolver(mon);

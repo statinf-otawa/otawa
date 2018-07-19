@@ -2425,7 +2425,7 @@ public:
 				// need to make sure the starting address to load is within the READ_ONLY_AREA
 				// hasStoreToTop - if there is a store to top previously, the memory might be poluted.
 				bool addressInInitMem = false;
-				if(/*(!hasStoreToTop) && */ istate && istate->isInitialized(Address((uintn_t)addrclp.start())))
+				if(istate && istate->isReadOnly(Address((uintn_t)addrclp.start())))
 					addressInInitMem = true;
 
 				bool warningFlag = true;
@@ -2435,7 +2435,7 @@ public:
 						warningFlag = false;
 					}
 					Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-					if(istate && istate->isInitialized((uintn_t)addr.start())) {
+					if(istate && istate->isReadOnly((uintn_t)addr.start())) {
 						elm::cout << "Accessing memory address 0x" << hex(addr.lower()) << " as initialized memory" << endl;
 						Value r = readFromMem(addr.lower(), i.type());
 						val.join(r);
