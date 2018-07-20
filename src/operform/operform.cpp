@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/util/Cleaner.h>
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/Output.h>
@@ -76,7 +77,7 @@ protected:
 					throw otawa::Exception(_ << "cannot find feature " << n);
 				else {
 					p->process(workspace(), props);
-					delete p;
+					clean.add(new Deletor<Processor>(p));
 				}
 			}
 			else if(!setTask(props, a))
@@ -87,8 +88,10 @@ protected:
 	}
 
 	void complete(PropList& props) throw(elm::Exception) {
-		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
+		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE)) {
+			cerr << "DEBUG: COLLECTED_CFG_FEATURE not provided!\n";
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
+		}
 
 		// if enabled, perform output
 		if(!phony) {
@@ -137,6 +140,7 @@ private:
 	option::Switch no_insts;
 	option::Switch dot, phony;
 	option::ValueOption<string> view;
+	CleanList clean;
 };
 
 OTAWA_RUN(OPerform);
