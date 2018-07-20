@@ -72,13 +72,11 @@ protected:
 			else if(a.startsWith("process:")) {
 				setTask(props, "main");
 				string n = a.substring(8);
-				Processor *p = ProcessorPlugin::getProcessor(&n);
+				Processor *p = clean(ProcessorPlugin::getProcessor(&n));
 				if(!p)
 					throw otawa::Exception(_ << "cannot find feature " << n);
-				else {
+				else
 					p->process(workspace(), props);
-					clean.add(new Deletor<Processor>(p));
-				}
 			}
 			else if(!setTask(props, a))
 				cerr << "WARNING: don't know what to do with: " << a << ". Ignoring it.\n";
