@@ -2550,18 +2550,23 @@ public:
 					_nb_store++;
 					if (get(*state, i.d()) == Value::all)
 						_nb_top_store++;
-					for(unsigned int m = 0; m <= addrclp.mtimes(); m++){ // store to the list of addresses
-						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-						// opt1: store the value to all the addresses
-						//state->set(addr, get(*state, i.d()));
-						// opt2: since not sure which address to store, but all these address are possible to change to a non-determined value
-						//state->set(addr, Value::all);
-						// opt3: get the original value and join together
-						Value val = get(*state, i.d());
-						val.join(state->get(addr));
-						state->set(addr, val);
-
-
+					if(addrclp.mtimes())
+					{
+						for(unsigned int m = 0; m <= addrclp.mtimes(); m++){ // store to the list of addresses
+							Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
+							// opt1: store the value to all the addresses
+							//state->set(addr, get(*state, i.d()));
+							// opt2: since not sure which address to store, but all these address are possible to change to a non-determined value
+							//state->set(addr, Value::all);
+							// opt3: get the original value and join together
+							Value val = get(*state, i.d());
+							val.join(state->get(addr));
+							state->set(addr, val);
+						}
+					}
+					else {
+						Value addr(addrclp.lower());
+						state->set(addr, get(*state, i.d()));
 					}
 				}
 			} break;
