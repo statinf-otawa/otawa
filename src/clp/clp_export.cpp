@@ -178,6 +178,19 @@ void CLPExport::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			string size = _ << bb->size();
 			bb_node->addAttribute(new xom::Attribute("address", &addr));
 			bb_node->addAttribute(new xom::Attribute("size", &size));
+
+			// now for each instruction
+			for(BasicBlock::InstIter bbii(bb); bbii; bbii++) {
+				xom::Element *instNode = new xom::Element("inst");
+				bb_node->appendChild(instNode);
+				string addr = _ << "0x" << bbii->address();
+				string size = _ << bbii->size();
+				instNode->addAttribute(new xom::Attribute("address", &addr));
+				instNode->addAttribute(new xom::Attribute("size", &size));
+				processProps(instNode, **bbii);
+			}
+
+
 		}
 		else if(b->isSynth()) {
 			CFG *cfg = b->toSynth()->callee();
@@ -255,17 +268,17 @@ void CLPExport::processState(xom::Element *parent, const clp::State& clpState) {
 				parent->appendChild(nodeReg);
 
 				buf.reset();
-				buf << (*clpsi).lower();
+				buf << "0x" << hex((*clpsi).lower());
 				str = buf.toString();
 				nodeReg->addAttribute(new xom::Attribute("base", &str));
 
 				buf.reset();
-				buf << (*clpsi).delta();
+				buf << "0x" << hex((*clpsi).delta());
 				str = buf.toString();
 				nodeReg->addAttribute(new xom::Attribute("delta", &str));
 
 				buf.reset();
-				buf << (*clpsi).mtimes();
+				buf << "0x" << hex((*clpsi).mtimes());
 				str = buf.toString();
 				nodeReg->addAttribute(new xom::Attribute("mtimes", &str));
 			}
@@ -280,17 +293,17 @@ void CLPExport::processState(xom::Element *parent, const clp::State& clpState) {
 				parent->appendChild(nodeMem);
 
 				buf.reset();
-				buf << (*clpsi).lower();
+				buf << "0x" << hex((*clpsi).lower());
 				str = buf.toString();
 				nodeMem->addAttribute(new xom::Attribute("base", &str));
 
 				buf.reset();
-				buf << (*clpsi).delta();
+				buf << "0x" << hex((*clpsi).delta());
 				str = buf.toString();
 				nodeMem->addAttribute(new xom::Attribute("delta", &str));
 
 				buf.reset();
-				buf << (*clpsi).mtimes();
+				buf << "0x" << hex((*clpsi).mtimes());
 				str = buf.toString();
 				nodeMem->addAttribute(new xom::Attribute("mtimes", &str));
 			}

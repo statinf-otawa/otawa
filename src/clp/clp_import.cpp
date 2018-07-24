@@ -622,22 +622,23 @@ void CLPImport::processState(xom::Element *parent, clp::State& clpState) {
 			xom::Element *reg_elt = reg_elts->get(j);
 			Option<xom::String> regIDXOM = reg_elt->getAttributeValue("id");
 			if(!regIDXOM) raiseError(reg_elt, "no 'ID' attribute");
-			int regID = 0;
+			long regID = 0;
 			*regIDXOM >> regID;
 
 			Option<xom::String> regBaseXOM = reg_elt->getAttributeValue("base");
 			if(!regBaseXOM) raiseError(reg_elt, "no 'base' attribute");
 			long regBase = 0; // <bb id="_0-4" number="4" address="0x80002174" size="22"> r15 = (-0x80000000, 0x1, inf)
+			elm::cout << *regBaseXOM << endl;
 			*regBaseXOM >> regBase;
 
 			Option<xom::String> regDeltaXOM = reg_elt->getAttributeValue("delta");
 			if(!regDeltaXOM) raiseError(reg_elt, "no 'delta' attribute");
-			clp::intn_t regDelta = 0;
+			long regDelta = 0;
 			*regDeltaXOM >> regDelta;
 
 			Option<xom::String> regMtimesXOM = reg_elt->getAttributeValue("mtimes");
 			if(!regMtimesXOM) raiseError(reg_elt, "no 'mtimes' attribute");
-			clp::uintn_t regMtimes = 0;
+			long regMtimes = 0;
 			*regMtimesXOM >> regMtimes;
 
 			clp::Value addr(clp::REG, regID);
@@ -661,12 +662,12 @@ void CLPImport::processState(xom::Element *parent, clp::State& clpState) {
 
 			Option<xom::String> memoryDeltaXOM = memory_elt->getAttributeValue("delta");
 			if(!memoryDeltaXOM) raiseError(memory_elt, "no 'delta' attribute");
-			clp::intn_t memoryDelta = 0;
+			long memoryDelta = 0;
 			*memoryDeltaXOM >> memoryDelta;
 
 			Option<xom::String> memoryMtimesXOM = memory_elt->getAttributeValue("mtimes");
 			if(!memoryMtimesXOM) raiseError(memory_elt, "no 'mtimes' attribute");
-			clp::uintn_t memoryMtimes = 0;
+			long memoryMtimes = 0;\
 			*memoryMtimesXOM >> memoryMtimes;
 
 			clp::Value addr(clp::VAL, memoryID);

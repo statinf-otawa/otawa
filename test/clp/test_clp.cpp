@@ -294,6 +294,9 @@ int main(void) {
 		CHECK_EQUAL(val(2,-1,-1).inter(val(2,0,0)), val(2, 0, 0));
 		CHECK_EQUAL(val(2,0,-0).inter(val(2,-1,-1)), val(2, 0, 0));
 		CHECK_EQUAL(val(3,0,0).inter(val(2,2,1000)), clp::Value::none);		
+		
+		CHECK_EQUAL(val(0x800004ac,0,0).inter(val(-0x7ffffb54, -0x1ffffee4, 0x1)), val(0x800004ac,0,0));
+		CHECK_EQUAL(val(0x6784a1ea,0,0).inter(val(-0x29d12fb8, 0x2, 0x48aae8d1)), val(0x6784a1ea,0,0));	
 	}
 	
 	// checking join
@@ -320,6 +323,7 @@ int main(void) {
 		CHECK_EQUAL(val(0xa7, -1, 0x63)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
 		CHECK_EQUAL(val(7, -1, 3)._and(val(0xc0000, 0, 0)), val(0, 0, 0));
 		CHECK_EQUAL(val(0x0, 0x1, 0x2)._and(val(0xa0000002, 0, 0)), val(0, 2, 1));
+		CHECK_EQUAL(val(0xff, 0, 0)._and(val(-0xff, 0x1, 0x1fe)), val(0, 1, 0xff));
 	}
 	
 	// checking widening

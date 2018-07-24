@@ -548,8 +548,12 @@ Value& Value::join(const Value& val) {
 		set(VAL, val._base, val._delta, val._mtimes);
 	else if (val._kind == NONE)					/* A U NONE = A (nothing to do) */
 		return *this;
-	else if(isConst() && val.isConst()) /* k1 U k2 */
-		set(VAL, min(_base, val._base), elm::abs(_base - val._base), 1);
+	else if(isConst() && val.isConst()) {/* k1 U k2 */
+		if(val._base > _base)
+			set(VAL, _base, val._base - _base, 1);
+		else
+			set(VAL, val._base, _base - val._base, 1);
+	}
 	else {										/* other cases */
 		if(isConst() || val.isConst()) {
 			// k is the constant value
@@ -831,13 +835,19 @@ Value& Value::inter(const Value& val) {
 		Value temp(val);
 		if(!temp.direction())
 			temp.reverse();
+
+		long diff;
+		if((temp.upper() > temp.lower()) || (_base > temp._base)) // normal case
+			diff = (long)_base - (long)temp._base;
+		else
+			diff = (uintn_t)(_base) - (long)temp._base;
+
 		// if the difference of the values is not a multiple of the delta, then the value does not fall on the interval
-		if((_base - temp._base) % temp._delta) {
+		if((diff % temp._delta) != 0) {
 			*this = Value::none;
 			return *this;
 		}
-
-		if((uintn_t)((_base - temp._base) / temp._delta) > temp._mtimes)
+		if((uintn_t)(diff / temp._delta) > temp._mtimes)
 			*this = Value::none;
 		else
 			set(VAL, _base, 0, 0);
@@ -848,13 +858,20 @@ Value& Value::inter(const Value& val) {
 		Value temp(*this);
 		if(!temp.direction())
 			temp.reverse();
+
+		long diff;
+		if((temp.upper() > temp.lower()) || (_base > temp._base)) // normal case
+			diff = (long)val._base - (long)temp._base;
+		else
+			diff = (uintn_t)(val._base) - (long)temp._base;
+
 		// if the difference of the values is not a multiple of the delta, then the value does not fall on the interval
-		if((val._base - temp._base) % temp._delta) {
+		if((diff % temp._delta) != 0) {
 			*this = Value::none;
 			return *this;
 		}
 
-		if((uintn_t)((val._base - temp._base) / temp._delta) > temp._mtimes) {
+		if((uintn_t)(diff / temp._delta) > temp._mtimes) {
 			*this = Value::none;
 			return *this;
 		}
@@ -1407,9 +1424,51 @@ Value& Value::_and(const Value& val) {
 		temp = temp >> 1;
 	}
 
+	// find the maximum bit for the v.upper() unsigned
+	uintn_t vu = v.upper();
+	int n_vu = 0;
+	temp = 1 << 31;
+	for (int i = 31; i >=0 ; i--) {
+		if(vu & temp) {
+			n_vu = i;
+			break;
+		}
+		temp = temp >> 1;
+	}
+
+	// find the maximum bit for the v.lower() unsigned
+	uintn_t vl = v.lower();
+	int n_vl = 0;
+	temp = 1 << 31;
+	for (int i = 31; i >=0 ; i--) {
+		if(vl & temp) {
+			n_vl = i;
+			break;
+		}
+		temp = temp >> 1;
+	}
+
+	// n_v is the possible significant bit of the v
+	int n_v = 0;
+	if(n_vl > n_vu)
+		n_v = n_vl;
+	else
+		n_v = n_vu;
+
+	// narrow down the effective range to lower n of v and k
+	int n = 0;
+	if(n_v > n_k)
+		n = n_k;
+	else
+		n = n_v;
+
 #ifndef COMPLEX_AND
-	// The delta is the lowest possible 1, i.e. the m bit. Because any value below the m bit will be 0.
-	*this = Value(VAL, 0, (1 << m_k), (1 << (n_k - m_k + 1))-1);
+
+	if(m_k > n_v) // none of the bit can be masked
+		*this = Value(0);
+	else // The delta is the lowest possible 1, i.e. the m bit. Because any value below the m bit will be 0.
+		*this = Value(VAL, 0, (1 << m_k), (1 << (n - m_k + 1))-1);
+
 	return *this;
 
 #else
@@ -2067,7 +2126,6 @@ public:
 		bBuildFilters(false),
 		_process(proc),
 		istate(0),
-		hasStoreToTop(false),
 		currentClpStatePack(0),
 		currentAccessAddress(0),
 	 	_nb_inst(0),
@@ -2423,7 +2481,6 @@ public:
 			if(get(*state, i.d()) == Value::all) {
 				Value val = Value::none;
 				// need to make sure the starting address to load is within the READ_ONLY_AREA
-				// hasStoreToTop - if there is a store to top previously, the memory might be poluted.
 				bool addressInInitMem = false;
 				if(istate && istate->isReadOnly(Address((uintn_t)addrclp.start())))
 					addressInInitMem = true;
@@ -2436,7 +2493,6 @@ public:
 					}
 					Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
 					if(istate && istate->isReadOnly((uintn_t)addr.start())) {
-						elm::cout << "Accessing memory address 0x" << hex(addr.lower()) << " as initialized memory" << endl;
 						Value r = readFromMem(addr.lower(), i.type());
 						val.join(r);
 						set(*state, i.d(), val);
@@ -2444,8 +2500,8 @@ public:
 				} // for each address
 			}
 
-			if(get(*state, i.d()) == Value::all)
-					_nb_top_load++;
+			if((i.d() >= 0) && (get(*state, i.d()) == Value::all))
+				_nb_top_load++;
 			} break;
 
 		case sem::STORE: {
@@ -2458,7 +2514,6 @@ public:
 					state->set(addrclp, get(*state, i.d()));
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
-					hasStoreToTop = true;
 					ALARM_STORE_TOP(warnStoreToTop());
 #ifdef CATCH_STT
 					assert(0);
@@ -2488,7 +2543,6 @@ public:
 						else
 							state->clear(sym->address().offset(), sym->size());
 					}
-					hasStoreToTop = true;
 				}
 
 				// simple store
@@ -2496,9 +2550,18 @@ public:
 					_nb_store++;
 					if (get(*state, i.d()) == Value::all)
 						_nb_top_store++;
-					for(unsigned int m = 0; m <= addrclp.mtimes(); m++){
+					for(unsigned int m = 0; m <= addrclp.mtimes(); m++){ // store to the list of addresses
 						Value addr(VAL, addrclp.lower() + addrclp.delta() * m);
-						state->set(addr, get(*state, i.d()));
+						// opt1: store the value to all the addresses
+						//state->set(addr, get(*state, i.d()));
+						// opt2: since not sure which address to store, but all these address are possible to change to a non-determined value
+						//state->set(addr, Value::all);
+						// opt3: get the original value and join together
+						Value val = get(*state, i.d());
+						val.join(state->get(addr));
+						state->set(addr, val);
+
+
 					}
 				}
 			} break;
@@ -2893,7 +2956,6 @@ private:
 	bool bBuildFilters; // currently only set to true when building filters
 	Process* _process;
 	dfa::State *istate;
-	bool hasStoreToTop;
 	clp::ClpStatePack *currentClpStatePack;
 	clp::Value currentAccessAddress;
 
