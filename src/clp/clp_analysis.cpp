@@ -1752,8 +1752,8 @@ void State::set(const Value& addr, const Value& val) {
 		return;
 	}
 
-	// we assume that addr is a constant... (or T)
-	ASSERT(addr.isConst() || addr == Value::all);
+	// we assume that addr is a constant... (or T) - not anymore, a non-constant is a memory range to wipe
+	// ASSERT(addr.isConst() || addr == Value::all);
 
 	// == Register ==
 	if(addr.kind() == REG) {
@@ -1794,10 +1794,24 @@ void State::set(const Value& addr, const Value& val) {
 		return;
 	}
 
+	else if(!addr.isConst()) {
+		prev = &first;
+		cur = first.next;
+		for(prev = &first, cur = first.next; cur && cur->addr < uintn_t(addr.lower()); prev = cur, cur = cur->next);
+
+
+		for( ; cur && cur->addr <= uintn_t(addr.upper()); ) {
+			prev->next = cur->next;
+			Node* toDelte = cur;
+			cur = cur->next;
+			delete toDelte;
+		}
+	}
+
 	// find a value
 	else {
 		for(prev = &first, cur = first.next; cur && cur->addr < uintn_t(addr.lower()); prev = cur, cur = cur->next);
-		if(cur && cur->addr == uintn_t(addr.lower())) {
+		if(cur && cur->addr == uintn_t(addr.lower())) { // find the exact match
 			if(val.kind() != ALL)
 				cur->val = val;
 			else {
@@ -1805,7 +1819,7 @@ void State::set(const Value& addr, const Value& val) {
 				delete cur;
 			}
 		}
-		else if(val.kind() != ALL) {
+		else if(val.kind() != ALL) { // if not, insert the memory node
 			next = new Node(addr.lower(), val);
 			prev->next = next;
 			prev->next->next = cur;
@@ -1947,21 +1961,9 @@ void State::widening(const State& state, int loopBound) {
 
 	if (registers.length() < state.registers.length())
 		for(int i=registers.length(); i < state.registers.length(); i++) {
-			//registers.add(state.registers[i]);
-			registers.add(clp::Value::top);
+			registers.add(state.registers[i]);
+			//registers.add(clp::Value::top);
 		}
-
-	// tmp registers
-	for(int i=0; i<tmpreg.length() && i<state.tmpreg.length() ; i++)
-		if (loopBound >= 0)
-			tmpreg[i].ffwidening(state.tmpreg[i], loopBound);
-		else {
-			tmpreg[i].widening(state.tmpreg[i]);
-		}
-
-	if (tmpreg.length() < state.tmpreg.length())
-		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
-			tmpreg.add(state.tmpreg[i]);
 
 	// memory
 	Node *prev = &first, *cur = first.next, *cur2 = state.first.next, *next;
@@ -2003,6 +2005,68 @@ void State::widening(const State& state, int loopBound) {
 	}
 	TRACED(print(cerr); cerr << io::endl;);
 }
+
+
+void State::augment(const State& state) {
+	TRACEJ(cerr << "augment(\n\t"; print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
+
+	// nothing to augment
+	if(state.first.val == Value::none)
+		return;
+	// nothing for *this, hence take all from the augment
+	if(first.val == Value::none) {
+		copy(state);
+		TRACED(print(cerr); cerr << io::endl;);
+		return;
+	}
+
+	// registers
+	for(int i=0; i<registers.length() && i<state.registers.length() ; i++) {
+		if((registers[i] != clp::Value::all) && (state.registers[i] != clp::Value::all))
+			registers[i].join(state.registers[i]);
+		else if (registers[i] == clp::Value::all)
+			registers[i] = state.registers[i];
+		else if (state.registers[i] == clp::Value::all)
+			{}
+		else
+			registers[i].join(state.registers[i]);
+	}
+
+	if (registers.length() < state.registers.length())
+		for(int i=registers.length(); i < state.registers.length(); i++)
+			registers.add(state.registers[i]);
+	// temp registers
+#	ifdef JOIN_TEMP_REGISTERS
+	for(int i=0; i<tmpreg.length() && i<state.tmpreg.length() ; i++)
+		tmpreg[i].join(state.tmpreg[i]);
+	if (tmpreg.length() < state.tmpreg.length())
+		for(int i=tmpreg.length(); i < state.tmpreg.length(); i++)
+			tmpreg.add(state.tmpreg[i]);
+#	endif
+
+	// memory
+	Node *cur = first.next, *cur2 = state.first.next, *next; // *prev = &first,
+	while(cur && cur2) {
+
+		// addr1 < addr2 -> keep
+		if(cur->addr < cur2->addr) {
+			cur = cur->next;
+		}
+
+		// equality ? remove if join result in all
+		else if(cur->addr == cur2->addr) {
+			cur->val.join(cur2->val);
+			cur = cur->next;
+			cur2 = cur2->next;
+		}
+
+		// addr1 > addr2 => remove cur2
+		else
+			cur2 = cur2->next;
+	}
+	TRACEJ(print(cerr); cerr << io::endl;);
+}
+
 
 /**
  * Print the state, the printing does not include the newline at the end
@@ -2511,7 +2575,20 @@ public:
 
 				// store at T
 				if (addrclp == Value::all) {
-					state->set(addrclp, get(*state, i.d()));
+					// obtain the range
+
+					Pair<Address, Address> accessRange = otawa::ACCESS_RANGE(currentInst);
+
+					if(accessRange.fst != Address::null && accessRange.snd != Address::null)
+						state->set(clp::Value(VAL, accessRange.fst.offset(), 1, accessRange.snd.offset() -accessRange.fst.offset()), get(*state, i.d()));
+					else
+						state->set(addrclp, get(*state, i.d()));
+
+
+
+
+
+
 					_nb_store++; _nb_top_store ++;
 					_nb_top_store_addr++;
 					ALARM_STORE_TOP(warnStoreToTop());
@@ -2736,6 +2813,7 @@ public:
 		b.clear();
 		//inst->semInsts(b);
 		bundle.semInsts(b);
+		currentInst = bundle.first();
 		pc = 0;
 		listOfIFsToDo.clear();
 	}
@@ -3052,6 +3130,7 @@ p::declare Analysis::reg = p::init("otawa::clp::CLPAnalysis", Version(0, 1, 0))
 	//.require(VIRTUALIZED_CFG_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
+	.require(FLOW_FACTS_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(clp::CLP_ANALYSIS_FEATURE);
 
@@ -3557,6 +3636,15 @@ State *Manager::state(void) {
 
 Value Manager::getCurrentAccessAddress(void) {
 	return p->getCurrentAccessAddress();
+}
+
+Manager::step_t Manager::rewind(State& rState) {
+	s = rState;
+	cs = &s;
+	p->prepare(mi);
+	i = p->getPC();
+	step_t r = NEW_SEM | NEW_INST;
+	return r;
 }
 
 /**

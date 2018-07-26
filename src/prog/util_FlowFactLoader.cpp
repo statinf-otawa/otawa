@@ -1492,10 +1492,10 @@ void FlowFactLoader::scanMemAccess(xom::Element *element) {
 		laddr = area.address();
 	} else {
 		// use only high and low
-		haddr = Address(scanAddress(helem, c));
-		laddr = Address(scanAddress(lelem, c));
+		haddr = Address(scanAddress(helem, c).address());
+		laddr = Address(scanAddress(lelem, c).address());
 	}
-	eaddr = Address(scanAddress(element, c));
+	eaddr = Address(scanAddress(element, c).address());
 	this->onMemoryAccess(eaddr, laddr, haddr, c);
 }
 

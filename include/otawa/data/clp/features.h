@@ -54,6 +54,7 @@ public:
 	State *state(void);
 	inline int ipc(void) { return i; }
 	Value getCurrentAccessAddress(void);
+	step_t rewind(State& rState);
 
 private:
 	ClpProblem *p;

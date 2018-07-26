@@ -82,6 +82,7 @@ namespace clp {
 		void widening(const State& state, int loopBound);
 		void print(io::Output& out, const hard::Platform *pf = 0) const;
 		const Value& get(const Value& addr) const;
+		void augment(const State& state);
 		
 		static const State EMPTY, FULL;
 
