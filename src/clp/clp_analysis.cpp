@@ -695,6 +695,7 @@ Value& Value::widening(const Value& val) {
 	else if (isConst() && val.isConst()) {
 		_delta = val._base - _base;
 		_mtimes = clp::UMAXn;
+		return *this;
 	}
 
 	// widen((k, 0, 0), (k', d', n')) =
