@@ -691,7 +691,7 @@ Value& Value::widening(const Value& val) {
 	else if (*this == val)
 		return *this;
 
-	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, 1)
+	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, inf)
 	else if (isConst() && val.isConst()) {
 		_delta = val._base - _base;
 		_mtimes = clp::UMAXn;
