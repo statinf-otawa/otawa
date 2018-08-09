@@ -684,7 +684,8 @@ Value& Value::widening(const Value& val) {
 
 	/* widen(ALL, *) = ALL */
 	else if (_kind == ALL || val._kind == ALL)
-		*this = all;
+		return *this = all;
+
 		//set(ALL, 0, 1, UMAXn);
 
 	/* this == val = val */
@@ -703,28 +704,78 @@ Value& Value::widening(const Value& val) {
 		// if d' > 0 /\ k < k' then (k, d', n' + (k' - k) / d')
 		// if d' < 0 /\ k' < k then (k, d', n' + (k' - k) / d')
 		if((val._delta > 0 and _base <= val._base)
-		or (val._delta < 0 and _base >= val._base))
-			return *this = Value(VAL, _base, val._delta, val.mtimes() +  (_base - val._base) / val._delta);
+		or (val._delta < 0 and _base >= val._base)) {
+
+			intn_t _delta_new = gcd(val._delta, val._base - _base);
+			uintn_t _mtimes_new = val._mtimes * (val._delta / _delta_new);
+			uintn_t _extra_mile = ((val._base - _base) / _delta_new);
+
+			if(_mtimes_new < _mtimes)
+				return *this = Value(VAL, _base, _delta_new, UMAXn);
+
+			if((_mtimes_new + _extra_mile) < _mtimes_new)
+				return *this = Value(VAL, _base, _delta_new, UMAXn);
+
+			_mtimes_new = _extra_mile + _mtimes_new;
+			return *this = Value(VAL, _base, _delta_new, _mtimes_new);
+		}
 		// else T
 		else
 			return *this = all;
 	}
 
-	// widen((k, d, n), (k', 0, 0)) = T
-	if(val.isConst())
-		return *this = all;
+	////widen((k, d, n), (k', 0, 0)) = T
+	////if(val.isConst())
+	////	return *this = all;
+
+	// widen((k, d, n), (k', 0, 0))
+	// if d > 0 /\ k < k' then (k, _delta_new, _mtimes_new)
+	// if d < 0 /\ k > k' then (k, _delta_new, _mtimes_new)
+	// The incoming value comparing to the base value should go for the same direction as the original CLP, so inclusion or extension can be considered.
+	// but !this->isConst()
+	if(val.isConst()) {
+		if((_delta > 0 and _base < val._base) || (_delta < 0 and _base > val._base)) {
+			intn_t _delta_new = gcd(_delta, val._base - _base);
+			uintn_t _mtimes_new = _mtimes * (_delta / _delta_new);
+			uintn_t _extra_mile = ((val._base - _base) / _delta_new);
+
+			if(_mtimes_new < _mtimes)
+				return *this = Value(VAL, _base, _delta_new, UMAXn);
+
+			if(_extra_mile >= _mtimes_new) // extend the new scope
+				return *this = Value(VAL, _base, _delta_new, _extra_mile);
+
+			return *this = Value(VAL, _base, _delta_new, _mtimes_new);
+		}
+		else
+			return *this = all;
+	}
+
+
 
 	// if n = n' = ∞
 	if(isInf() and val.isInf()) {
 		// if d = d' /\ |k - k'| % d = 0 then (k, d, n)
 		if((_delta == val._delta) && (elm::abs(val._base - _base) % _delta == 0))
 			return *this;
-		// else T
-		else {
-			*this = all;
-			return *this;
-		}
 	}
+
+
+	if((_delta > 0 && val._delta > 0) && (val._base >= _base)) { // e.g (0x60000004, 8, inf) wid (0x6000000C, 4, inf) = (0x60000004, 4, inf)
+		intn_t _delta_new = gcd(gcd(_delta, val._delta), val._base - _base);
+		return *this = Value(VAL, _base, _delta_new, UMAXn);
+	}
+	else if((_delta < 0 && val._delta < 0) &&(val._base <= _base)) {
+		intn_t _delta_new = gcd(gcd(_delta, val._delta), val._base - _base);
+		return *this = Value(VAL, _base, _delta_new, UMAXn);
+	}
+
+
+	if(isInf() and val.isInf()) {
+		*this = all;
+		return *this;
+	}
+
 
 	// when d != d' /\ d != -d', widen((k, d, -), (k', d', -)) = T
 	//else if (_delta != val._delta && _delta != - val._delta)
@@ -1659,7 +1710,7 @@ Value& Value::_and(const Value& val) {
 #endif	
 }
 
-
+io::Output& operator<<(io::Output& out, const State& state) { state.print(out); return out; }
 //inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 const Value Value::none(NONE), Value::all(ALL, 0, 1, UMAXn);
 const Value Value::bot(NONE), Value::top(ALL, 0, 1, UMAXn);
@@ -2167,7 +2218,6 @@ const Value& State::get(const Value& addr) const {
 }
 
 const State State::EMPTY(Value::none), State::FULL(Value::all);
-io::Output& operator<<(io::Output& out, const State& state) { state.print(out); return out; }
 
 // internal
 struct sorter { static inline int compare(Segment *s1, Segment *s2) { return s1->address().compare(s2->address()); } };
