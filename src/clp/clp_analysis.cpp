@@ -497,6 +497,29 @@ Value& Value::shr(const Value& val) {
 	return *this;
 }
 
+
+Value& Value::asr(const Value& val) {
+	if((_kind == ALL) || !val.isConst() || val._base < 0){
+		set(ALL, 0, 1, UMAXn);
+		return *this;
+	}
+
+	uintn_t mask = 1 << 31;
+	uintn_t up = upper();
+	uintn_t lo = lower();
+
+	if((up & mask) || (lo & mask)) {
+		// *this = Value(VAL, 0, 1, 0xffffffff);
+		set(ALL, 0, 1, UMAXn);
+		return *this;
+	}
+	else {
+		shr(val);
+		return *this;
+	}
+}
+
+
 /**
  * Perform OR operator on values (modifying current one).
  * @param val	The value to OR with the current one.
@@ -1710,7 +1733,6 @@ Value& Value::_and(const Value& val) {
 #endif	
 }
 
-io::Output& operator<<(io::Output& out, const State& state) { state.print(out); return out; }
 //inline io::Output& operator<<(io::Output& out, const Value& v) { v.print(out); return out; }
 const Value Value::none(NONE), Value::all(ALL, 0, 1, UMAXn);
 const Value Value::bot(NONE), Value::top(ALL, 0, 1, UMAXn);
@@ -2759,7 +2781,7 @@ public:
 				if(v == Value::all)
 					_nb_top_set++;
 			} break;
-		case sem::SHR: case sem::ASR: {
+		case sem::SHR: {
 				Value v = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tshr(" << i.d() << ", " << v << ", " << get(*state, i.b()));
 				v.shr(get(*state, i.b()));
@@ -2771,6 +2793,18 @@ public:
 				if(v == Value::all)
 					_nb_top_set++;
 			} break;
+		case sem::ASR: {
+			Value v = get(*state, i.a());
+			TRACESI(cerr << "\t\t\tshr(" << i.d() << ", " << v << ", " << get(*state, i.b()));
+			v.asr(get(*state, i.b()));
+			TRACESI(cerr << ") = " << v << io::endl);
+			TRACEA(if(get(*state, i.a()) != Value::all
+				   && get(*state, i.b()) != Value::all
+				   && v == Value::all) cerr << "\t\t\tALARM! shr\n");
+			set(*state, i.d(), v);
+			if(v == Value::all)
+				_nb_top_set++;
+		} break;
 		case sem::OR: {
 				Value v = get(*state, i.a());
 				TRACESI(cerr << "\t\t\tor(" << i.d() << ", " << v << ", " << get(*state, i.b()));
@@ -3734,6 +3768,10 @@ public:
 }	// clp
 
 } //otawa
+
+namespace elm { namespace io {
+	io::Output& operator<<(io::Output& out, const otawa::clp::State& state) { state.print(out); return out; }
+}}
 
 
 otawa::clp::Plugin otawa_clp_plugin;

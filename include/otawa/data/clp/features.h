@@ -72,4 +72,8 @@ extern Identifier<bool> UNKOWN_BLOCK_EVALUATION;
 
 } }		// otawa::clp
 
+namespace elm { namespace io {
+	io::Output& operator<<(io::Output& out, const otawa::clp::State& state);
+}}
+
 #endif /* OTAWA_CLP_FEATURES_H_ */

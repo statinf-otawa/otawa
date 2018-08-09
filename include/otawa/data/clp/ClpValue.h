@@ -185,6 +185,7 @@ typedef enum {
 		 *            positive constant.
 		*/
 		Value& shr(const Value& val);
+		Value& asr(const Value& val);
 
 		void _or(const Value& val);
 
