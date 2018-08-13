@@ -268,6 +268,16 @@ extern int fft_line;
  * as an unconditional branch.
  * Can only be put on a conditional branch instruction.
  *
+ * @code
+ * <state LOCATION>
+ * 		<reg-value name="TEXT"> VALUE </reg-value>
+ * 		<mem-value type="TEXT" LOCATION> VALUE </reg-value>
+ * </state>
+ * Provide the processor state at a given program point at LOCATION.
+ * The processor state can be composed with register and memory values.
+ * The register is specified with the name, e.g. name="r10".
+ * The memory is specified with the type of access, and its location, e.g. type="uint32" address="0x80000003".
+ *
  * @par Extension
  *
  * Top-level element support also the following extension elements
@@ -797,6 +807,10 @@ void FlowFactLoader::onMemoryAccess(Address iaddr, Address lo, Address hi, const
  * @param value		Value to set.
  */
 void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
+	onRegSet(state, name, value);
+}
+
+void FlowFactLoader::onRegSet(dfa::State* state, string name, const dfa::Value& value) {
 
 	// find register
 	const hard::Register *reg = workSpace()->process()->platform()->findReg(name);
@@ -815,11 +829,14 @@ void FlowFactLoader::onRegSet(string name, const dfa::Value& value) {
  * @param value		Value to set.
  */
 void FlowFactLoader::onMemSet(Address addr, const Type *type, const dfa::Value& value) {
+	onMemSet(state, addr, type, value);
+}
+
+void FlowFactLoader::onMemSet(dfa::State* state, Address addr, const Type *type, const dfa::Value& value) {
 	if(addr.isNull())
 		return;
 	state->record(dfa::MemCell(addr, type, value));
 }
-
 
 
  /**
@@ -1245,9 +1262,11 @@ throw(ProcessorException) {
 			else if(name == "mem-access")
 				scanMemAccess(element);
 			else if(name == "mem-set")
-				scanMemSet(element);
+				scanMemSet(element, state);
 			else if(name == "reg-set")
-				scanRegSet(element);
+				scanRegSet(element, state);
+			else if(name == "state")
+				scanXState(element);
 			else
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
@@ -1504,7 +1523,7 @@ void FlowFactLoader::scanMemAccess(xom::Element *element) {
  * Load a register set instruction.
  * @param element	Element to get information from.
  */
-void FlowFactLoader::scanRegSet(xom::Element *element) {
+void FlowFactLoader::scanRegSet(xom::Element *element, dfa::State* state) {
 
 	// get the name
 	Option<xom::String> name = element->getAttributeValue("name");
@@ -1520,7 +1539,7 @@ void FlowFactLoader::scanRegSet(xom::Element *element) {
 		val = scanValue(element);
 
 	// perform the instruction
-	onRegSet(*name, val);
+	onRegSet(state, *name, val);
 }
 
 
@@ -1528,7 +1547,7 @@ void FlowFactLoader::scanRegSet(xom::Element *element) {
  * Load a memory set.
  * @param element	Element to get information from.
  */
-void FlowFactLoader::scanMemSet(xom::Element *element) {
+void FlowFactLoader::scanMemSet(xom::Element *element, dfa::State* state) {
 
 	// list of known types
 	static struct {
@@ -1567,7 +1586,7 @@ void FlowFactLoader::scanMemSet(xom::Element *element) {
 	dfa::Value val = scanValue(element);
 
 	// perform the instruction
-	onMemSet(addr, type, val);
+	onMemSet(state, addr, type, val);
 }
 
 
@@ -1674,6 +1693,67 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 	delete elems;
 }
 
+// context version
+void FlowFactLoader::scanXState(xom::Element *element, ContextualPath& path)
+throw(ProcessorException) {
+	dfa::State* state = new dfa::State(*(workspace()->process()));
+	Address addr = scanAddress(element, path).address();
+	if(addr.isNull()) {
+		onWarning(_ << "ignoring this loop whose address cannot be computed: " << xline(element));
+		return;
+	}
+	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << addr << " from " << xline(element));
+
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *element = (xom::Element *)child;
+			xom::String name = element->getLocalName();
+			if(name == "reg-value") {
+				scanRegSet(element, state);
+			}
+			else if(name == "mem-value") {
+				scanMemSet(element, state);
+			}
+		}
+	}
+	path.ref(SET_STATE, inst) = state;
+}
+
+
+// global version
+void FlowFactLoader::scanXState(xom::Element *element)
+throw(ProcessorException) {
+	ContextualPath path;
+	dfa::State* state = new dfa::State(*(workspace()->process()));
+	Address addr = scanAddress(element, path).address();
+	if(addr.isNull()) {
+		onWarning(_ << "ignoring this loop whose address cannot be computed: " << xline(element));
+		return;
+	}
+	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+		throw ProcessorException(*this,
+			_ << " no instruction at  " << addr << " from " << xline(element));
+
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *element = (xom::Element *)child;
+			xom::String name = element->getLocalName();
+			if(name == "reg-value") {
+				scanRegSet(element, state);
+			}
+			else if(name == "mem-value") {
+				scanMemSet(element, state);
+			}
+		}
+	}
+	SET_STATE(inst) = state;
+}
 
 
 /**
@@ -1901,6 +1981,8 @@ throw(ProcessorException) {
 				scanXConditional(element, path);
 			else if(name == "function")
 				this->scanXFun(element, path);
+			else if(name == "state")
+				scanXState(element, path);
 		}
 	}
 }
@@ -2065,6 +2147,16 @@ Identifier<bool> NO_RETURN("otawa::NO_RETURN", false);
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
 Identifier<int> MAX_ITERATION("otawa::MAX_ITERATION", -1);
+
+
+/**
+ * Associate a program point with a specific dfa::State.
+ * @ingroup ff
+ *
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<dfa::State*> SET_STATE("otawa::SET_STATE", 0);
 
 
 /**

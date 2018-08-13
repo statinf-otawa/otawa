@@ -90,6 +90,8 @@ protected:
 	virtual void onMemoryAccess(Address iaddr, Address lo, Address hi, const ContextualPath& path);
 	virtual void onRegSet(string name, const dfa::Value& value);
 	virtual void onMemSet(Address addr, const Type *type, const dfa::Value& value);
+	virtual void onRegSet(dfa::State* state, string name, const dfa::Value& value);
+	virtual void onMemSet(dfa::State* state, Address addr, const Type *type, const dfa::Value& value);
 	virtual void onSetInlining(Address address, bool policy, const ContextualPath& path);
 
 	virtual void processWorkSpace(WorkSpace *ws);
@@ -113,6 +115,8 @@ private:
 	// XML support
 	void load(WorkSpace *ws, const Path& path);
 	void loadXML(const string& path) throw(ProcessorException);
+	void scanXState(xom::Element *element) throw(ProcessorException);
+	void scanXState(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
 	void scanXConditional(xom::Element *element, ContextualPath& path) throw(ProcessorException);
@@ -133,8 +137,8 @@ private:
 	void scanIgnoreSeq(xom::Element *element, ContextualPath& cpath);
 	dfa::Value scanValue(xom::Element *element);
 	void scanMemAccess(xom::Element *element);
-	void scanRegSet(xom::Element *element);
-	void scanMemSet(xom::Element *element);
+	void scanRegSet(xom::Element *element, dfa::State* state);
+	void scanMemSet(xom::Element *element, dfa::State* state);
 	void scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy);
 };
 } // otawa

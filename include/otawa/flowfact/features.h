@@ -24,6 +24,7 @@
 
 #include <elm/xom/Element.h>
 
+#include <otawa/dfa/State.h>
 #include <otawa/proc/AbstractFeature.h>
 #include <otawa/prog/Inst.h>
 #include "../prop.h"
@@ -62,6 +63,9 @@ extern Identifier<bool> INLINING_POLICY;
 
 // memory facts
 extern Identifier<Pair<Address, Address> > ACCESS_RANGE;
+
+// state facts
+extern Identifier<dfa::State*> SET_STATE;
 
 // flow fact administration
 extern Identifier<bool> PRESERVED;
