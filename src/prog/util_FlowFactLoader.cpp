@@ -1720,7 +1720,8 @@ throw(ProcessorException) {
 			}
 		}
 	}
-	path.ref(SET_STATE, inst) = state;
+	path.ref(PROVIDED_STATE, inst) = state;
+	EXIST_PROVIDED_STATE(inst) = true;
 }
 
 
@@ -1752,7 +1753,8 @@ throw(ProcessorException) {
 			}
 		}
 	}
-	SET_STATE(inst) = state;
+	PROVIDED_STATE(inst) = state;
+	EXIST_PROVIDED_STATE(inst) = true;
 }
 
 
@@ -2150,13 +2152,14 @@ Identifier<int> MAX_ITERATION("otawa::MAX_ITERATION", -1);
 
 
 /**
- * Associate a program point with a specific dfa::State.
+ * Associate a program point with a provided dfa::State.
  * @ingroup ff
  *
  * @par Hooks
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
-Identifier<dfa::State*> SET_STATE("otawa::SET_STATE", 0);
+Identifier<dfa::State*> PROVIDED_STATE("otawa::PROVIDED_STATE", 0);
+Identifier<bool> EXIST_PROVIDED_STATE("otawa::EXISTPROVIDED_STATE", false);
 
 
 /**

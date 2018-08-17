@@ -133,6 +133,10 @@ Identifier<Analysis::init_t> Analysis::INITIAL(
 		pair((const hard::Register *)0, Address::null));
 
 
+Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", false);
+Identifier<Vector<FlowFactStateInfo>*> FLOW_FACT_STATE_INFO("otawa::clp::FLOW_FACT_STATE_INFO", nullptr);;
+
+
 /**
  * Return positive GCD of two unsigned integers.
  * @param a	First integer.
@@ -1927,8 +1931,9 @@ bool State::equals(const State& state) const {
 	while(cur && cur2) {
 		if(cur->addr != cur2->addr)
 			return false;
-		if(cur->val != cur->val)
+		if(cur->val != cur2->val)
 			return false;
+
 		cur = cur->next;
 		cur2 = cur2->next;
 	}
@@ -2119,7 +2124,7 @@ void State::augment(const State& state) {
 #	endif
 
 	// memory
-	Node *cur = first.next, *cur2 = state.first.next, *next; // *prev = &first,
+	Node *cur = first.next, *cur2 = state.first.next; // *prev = &first,
 	while(cur && cur2) {
 
 		// addr1 < addr2 -> keep
@@ -2341,7 +2346,7 @@ public:
 	void initialize(Address addr, const dfa::Value val) {
 		Value v(VAL, val.base(), val.delta(), val.count());
 		TRACEP(cerr << "init:: @" << addr << " <- " << v << "\n");
-		_init.set(Value(REG, addr.offset()), v);
+		_init.set(Value(VAL, addr.offset()), v);
 	}
 
 	/** Provides the Bottom value of the Abstract Domain */
@@ -2903,6 +2908,35 @@ public:
 		listOfIFsToDo.clear();
 	}
 
+
+	void insertInfo(Domain& out, BasicBlock* bb, Inst* inst) {
+		static int index = 0;
+		Vector<FlowFactStateInfo>* map = FLOW_FACT_STATE_INFO(bb);
+		if(!map->count())
+			return;
+
+		if(inst == bb->first())
+			index = 0;
+
+		for(; index < map->count(); index++) {
+			if(inst->address() == map->get(index).inst->address()) {
+				for(dfa::State::RegIter r(map->get(index).state); r; r++) {
+					Value reg(REG, (*r).fst->platformNumber());
+					Value v(VAL, (*r).snd.base(), (*r).snd.delta(), (*r).snd.count());
+					out.set(reg, v);
+
+				}
+				for(dfa::State::MemIter m(map->get(index).state); m; m++) {
+					Value v(VAL, (*m).value().base(), (*m).value().delta(), (*m).value().count());
+					Value a(VAL, (*m).address().offset());
+					out.set(a, v);
+				}
+			}
+			else
+				break;
+		}
+	}
+
 	/**
 	 * This function update the state by applying a basic block.
 	 * It gives the output state, given the input state and a pointer to the
@@ -2973,6 +3007,9 @@ public:
 			pc = 0;
 			listOfIFsToDo.clear();
 #endif
+
+			// use the provided states associated with the first instruction of the bundle
+			insertInfo(out, bb->toBasic(), currentInst);
 
 			state = &out;
 
@@ -3269,6 +3306,7 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	addCleaner(clp::CLP_ANALYSIS_FEATURE, new CLPStateCleaner(ws));
 
 	VERBOSE(ws->process()) = logFor(LOG_BB);
+	USE_FLOWFACT_STATE(ws->process()) = USE_FLOWFACT_STATE(ws);
 	ClpProblem prob(ws->process());
 
 	// initialize state with initial register values

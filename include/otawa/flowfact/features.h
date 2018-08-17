@@ -65,7 +65,8 @@ extern Identifier<bool> INLINING_POLICY;
 extern Identifier<Pair<Address, Address> > ACCESS_RANGE;
 
 // state facts
-extern Identifier<dfa::State*> SET_STATE;
+extern Identifier<dfa::State*> PROVIDED_STATE;
+extern Identifier<bool> EXIST_PROVIDED_STATE;
 
 // flow fact administration
 extern Identifier<bool> PRESERVED;

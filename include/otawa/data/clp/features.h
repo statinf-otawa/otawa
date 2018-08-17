@@ -22,13 +22,16 @@
 #define OTAWA_CLP_FEATURES_H_
 
 #include <otawa/data/clp/ClpState.h>
+#include <otawa/dfa/State.h>
 #include <otawa/prog/sem.h>
+#include <otawa/prop/ContextualProperty.h>
 
 namespace otawa {
 
 namespace clp {
 
 extern Identifier<bool> VERBOSE;
+extern Identifier<bool> USE_FLOWFACT_STATE;
 
 class ClpProblem;
 
@@ -74,6 +77,23 @@ extern Identifier<bool> UNKOWN_BLOCK_EVALUATION;
 
 namespace elm { namespace io {
 	io::Output& operator<<(io::Output& out, const otawa::clp::State& state);
+}}
+
+namespace otawa { namespace clp {
+class FlowFactStateInfo {
+public:
+	Inst* inst;
+	ContextualPath cpath;
+	dfa::State* state;
+	inline FlowFactStateInfo(void): inst(0), state(0) { } // for vector space allocation
+	inline FlowFactStateInfo(Inst* i, ContextualPath& c, dfa::State* s): inst(i), cpath(c), state(s) {}
+	inline FlowFactStateInfo(const FlowFactStateInfo& ffcsi): inst(ffcsi.inst), cpath(ffcsi.cpath), state(ffcsi.state) { }
+	inline FlowFactStateInfo& operator=(const FlowFactStateInfo& ffcsi) { inst = ffcsi.inst; cpath = ffcsi.cpath; state = ffcsi.state; return *this; }
+	inline bool operator==(const FlowFactStateInfo& ffcsi) const { return ((inst == ffcsi.inst) && (cpath == ffcsi.cpath) && (state == ffcsi.state)); }
+};
+
+extern Identifier<Vector<FlowFactStateInfo>*> FLOW_FACT_STATE_INFO;
+
 }}
 
 #endif /* OTAWA_CLP_FEATURES_H_ */
