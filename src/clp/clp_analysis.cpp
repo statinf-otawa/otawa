@@ -2912,7 +2912,7 @@ public:
 	void insertInfo(Domain& out, BasicBlock* bb, Inst* inst) {
 		static int index = 0;
 		Vector<FlowFactStateInfo>* map = FLOW_FACT_STATE_INFO(bb);
-		if(!map->count())
+		if(!map || !map->count())
 			return;
 
 		if(inst == bb->first())
