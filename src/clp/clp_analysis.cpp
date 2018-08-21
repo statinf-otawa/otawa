@@ -80,6 +80,8 @@ using namespace otawa;
 // reading 1K mem at a time is strange enough
 #define MEMORY_ACCESS_THRESHOLD 1024
 
+#define ARITHMETIC_THRESHOLD 1024
+
 namespace otawa { namespace clp {
 
 
@@ -316,10 +318,90 @@ Value& Value::mul(const Value& val){
 		result = result & 0xFFFF;
 		_base = (intn_t)result;
 	}
+	else if((_delta == 0 || val._delta == 0) && (_mtimes != UMAXn) && (val._mtimes != UMAXn)) {
+		Value k, nk;
+		if(_delta == 0 || _mtimes == 0) {
+			k = *this;
+			nk = val;
+		}
+		else {
+			k = val;
+			nk = *this;
+		}
+		t::uint64 result = _base;
+		result = result * val._base;
+		result = result & 0xFFFF;
+		_base = (intn_t)result;
+
+		t::uint64 result_delta = nk._delta;
+		result_delta = result_delta * k._base;
+		result_delta = result_delta & 0xFFFF;
+		_delta = (intn_t)result_delta;
+
+		_mtimes = nk._mtimes;
+	}
 	else
 		*this = all;
 
 	return *this;
+}
+
+Value& Value::div(const Value& val){
+	if (_kind == NONE && val._kind == NONE) 	/* NONE + NONE = NONE */
+		return *this = none;
+	else if (_kind == ALL || val._kind == ALL) 	/* ALL + anything = ALL */
+		return *this = all;
+	else if(isConst() && val.isConst())
+		return *this = Value(VAL, _base / val._base);
+	else if(isConst() || val.isConst()) {
+		Value k, nk;
+		if(_delta == 0 || _mtimes == 0) {
+			k = *this;
+			nk = val;
+		}
+		else {
+			k = val;
+			nk = *this;
+		}
+		if(nk._mtimes < ARITHMETIC_THRESHOLD) {
+			Value result = Value::bot;
+			for(unsigned int mt = 0; mt <= nk._mtimes; mt++) {
+				int temp = (nk._base + nk._delta * mt) / k._base;
+				result.join(Value(temp));
+			}
+			return *this = result;
+		}
+	}
+
+	return *this = all;
+}
+
+Value& Value::mod(const Value& val){
+	if (_kind == NONE && val._kind == NONE)
+		return *this = none;
+	else if (val._kind == ALL)
+		return *this = all;
+	else if (val.isConst()) {
+		if(_mtimes < ARITHMETIC_THRESHOLD) {
+			Value result = Value::bot;
+			for(unsigned int mt = 0; mt <= _mtimes; mt++) {
+				int temp = (_base + _delta * mt) % val._base;
+				result.join(Value(temp));
+			}
+			return *this = result;
+		}
+		else if(!isInf() && (upper() < val.lower()))
+			return *this;
+		else {
+			return *this = Value(VAL, 0, 1, val.lower() - 1);
+		}
+	}
+	else {
+		return *this = Value(VAL, 0, 1, val.upper() - 1);
+	}
+
+	return *this;
+
 }
 
 
@@ -2835,23 +2917,21 @@ public:
 		case sem::MUL: {
 			Value va = get(*state, i.a());
 			Value vb = get(*state, i.b());
-			if(va.isTop() || vb.isTop())
-				set(*state, i.d(), Value::all);
-			else if(va.isConst() && vb.isConst())
-				set(*state, i.d(), Value(va.lower()*vb.lower()));
-			else
-				set(*state, i.d(), Value::all);
+			va.mul(vb);
+			set(*state, i.d(), va);
 		} break;
-//		case sem::MUL: {
-//				Value v = get(*state, i.a());
-//				TRACESI(cerr << "\t\t\tmul(" << i.d() << ", " << v << ", " << get(*state, i.b()));
-//				v.add(get(*state, i.b()));
-//				TRACESI(cerr << ") = " << v << io::endl);
-//				TRACEA(if(get(*state, i.a()) != Value::all
-//					   && get(*state, i.b()) != Value::all
-//					   && v == Value::all) cerr << "\t\t\tALARM! add\n");
-//				set(*state, i.d(), v);
-//			} break;
+		case sem::MOD: {
+			Value va = get(*state, i.a());
+			Value vb = get(*state, i.b());
+			va.mod(vb);
+			set(*state, i.d(), va);
+		} break;
+		case sem::DIV: {
+			Value va = get(*state, i.a());
+			Value vb = get(*state, i.b());
+			va.div(vb);
+			set(*state, i.d(), va);
+		} break;
 		default: {
 				set(*state, i.d(), Value::all);
 			} break;
@@ -2892,6 +2972,14 @@ public:
 			pc = n.fst;
 			return n.snd;
 		}
+	}
+
+	/**
+	 * Check if there is any more path to evaluate the CLP state
+	 * @return there is a path or not
+	 */
+	inline bool anyMorePath(void) {
+		return (listOfIFsToDo.count() != 0);
 	}
 
 	/**
@@ -3675,10 +3763,12 @@ Manager::~Manager() {
  * @param bb	Basic block to interpret.
  */
 Manager::step_t Manager::start(BasicBlock *bb) {
+	b = bb;
 	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
 	p->prepare(*mi);
+	p->insertInfo(*cs, b, (*mi).first());
 	i = 0;
 	//p->update(cs);
 	//return NEW_INST | NEW_PATH | NEW_SEM;
@@ -3711,6 +3801,7 @@ Manager::step_t Manager::next(void) {
 				return false;
 			cs = &s;
 			p->prepare(mi);
+			p->insertInfo(*cs, b, (*mi).first());
 			i = 0;
 		}
 	}
@@ -3725,7 +3816,10 @@ Manager::step_t Manager::next(void) {
 			delete cs;
 			cs = &s;
 		}
+		if(!p->anyMorePath())
+			r |= END_INST;
 	}
+
 	return r;
 }
 

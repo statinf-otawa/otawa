@@ -42,6 +42,7 @@ public:
 		NEW_SEM = 0x01,
 		NEW_PATH = 0x02,
 		NEW_INST = 0x04,
+		END_INST = 0x08,
 		ENDED = 0;
 	static bool newSem(step_t s) { return s & NEW_SEM; }
 	static bool newPath(step_t s) { return s & NEW_PATH; }
@@ -64,6 +65,7 @@ private:
 	//BasicBlock::InstIter mi;
 	BasicBlock::BundleIter mi;
 	clp::State s, *cs;
+	BasicBlock* b;
 	int i;
 };
 

@@ -189,6 +189,9 @@ typedef enum {
 
 		void _or(const Value& val);
 
+		Value& mod(const Value& val);
+		Value& div(const Value& val);
+
 		/**
 		 * Join another set to the current one
 		 * @param val the value to be joined with
