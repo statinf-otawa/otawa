@@ -1011,7 +1011,7 @@ namespace se{
 		pstack.push(path_t(0, 0, false));
 		while(pstack) {
 			path_t path = pstack.pop();
-			semInstStack.setLength(path.i);
+			semInstStack.setLength(path.i); // ignore the rest of the stack after the ith semantic instruction
 			if(path.i != 0) { // besides the first pop, we reverse the condition as each popping is the "alternative path"
 				semInstStack[path.i - 1]._d = reverseCond(sem::cond_t(semInstStack[path.i - 1].d()));
 			}
@@ -1118,6 +1118,9 @@ namespace se{
 					workList.push(pair(pair(i+si.b()+1, temp), false));
 					break;
 				}
+				else if(si.op == sem::CONT) {
+					i = b.length();
+				}
 				else {
 					SemInstNode* temp = new SemInstNode(i, cond, current);
 					toCleanUp.add(temp);
@@ -1173,7 +1176,8 @@ namespace se{
 	 * given block.
 	 * @param se_orig		Current comparison.
 	 * @param currentBundle	Current bundle.
-	 * @param b				Block to work on.
+	 * @param bb			SemBlock to work on.
+	 * @param branch		Only true for the bundle that has the branching effect, as the first makeFilters call for a list of bundles.
 	 */
 	SECmp *FilterBuilder::makeFilters(SECmp *se_orig, const Bundle& currentBundle, sem::Block& bb, bool branch) {
 		typedef Vector<SECmp *> filters_t;
