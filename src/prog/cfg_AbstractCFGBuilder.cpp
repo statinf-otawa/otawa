@@ -277,7 +277,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 				Inst *i = bb->control();
 
 				// conditional or call case -> sequential edge (not taken)
-				if(!i || i->isConditional())
+				if(!i || (i->isConditional() && !IGNORE_SEQ(i)))
 					seq(m, bb, bb);
 
 				// branch cases
