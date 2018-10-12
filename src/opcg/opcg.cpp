@@ -240,7 +240,7 @@ protected:
 		return name && !name.startsWith("_");		
 	}
 
-	virtual void work(const string &entry, PropList &props) throw(elm::Exception) {
+	virtual void work(const string &entry, PropList &props) {
 
 		// Build the PCG
 		PCGBuilder builder;

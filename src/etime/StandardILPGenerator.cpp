@@ -209,8 +209,8 @@ void ILPGenerator::collectBlock(Vector<EventCase>& events, Block *v) {
  * @param v	Block to look in.
  */
 void ILPGenerator::collectEdge(Vector<EventCase>& events, Edge *e) {
-	collectEvents(events, e->source(), IN_PREFIX, PREFIX_EVENT);
-	collectEvents(events, e->source(), IN_BLOCK, EVENT);
+	collectEvents(events, e, IN_PREFIX, PREFIX_EVENT);
+	collectEvents(events, e, IN_BLOCK, EVENT);
 }
 
 /**
@@ -380,11 +380,17 @@ public:
 		// process each edge
 		const CFGCollection *coll = INVOLVED_CFGS(ws);
 		ASSERT(coll);
-		for(auto g: *coll)
+		for(auto g: *coll) {
+			if(logFor(LOG_FUN))
+				log << "\tCFG " << g << io::endl;
 			for(auto v: *g)
 				if(v->isBasic())
-					for(auto e: v->inEdges())
+					for(auto e: v->inEdges()) {
+						if(logFor(LOG_BLOCK))
+							log << "\t\t" << e << io::endl;
 						process(e);
+					}
+		}
 
 		// generate the bounding constraints of the events
 		for(auto coll: colls) {
@@ -442,13 +448,13 @@ protected:
 	void contributePositive(EventCase event, bool prec) override {
 		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
 		get(event.event())->boundPositive(event, _x_hts, prec);
-		_done |= 1 << event.index();
+		_done.set(event.index());
 	}
 
 	void contributeNegative(EventCase event, bool prec) override {
 		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
 		get(event.event())->boundNegative(event, _x_hts, prec);
-		_done |= 1 << event.index();
+		_done.set(event.index());
 	}
 
 private:
@@ -456,9 +462,12 @@ private:
 	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt) {
 		_edge = e;
 		_t_lts = -1;
+		_t_lts_set = false;
 		_x_e = ipet::VAR(e);
 		_x_hts = nullptr;
-		_done = BitVector(dyn_cnt);
+		if(dyn_cnt > 0)
+			_done.resize(dyn_cnt);
+		_done.clear();
 	}
 
 	void finish(const Vector<EventCase>& events) {
@@ -485,25 +494,16 @@ private:
 			w = e->source()->toBasic();
 		BasicBlock *v = e->sink()->toBasic();
 
-		if(logFor(Processor::LOG_BLOCK)) {
-			log << "\t\t\t";
-			if(w)
-				log << w << ", ";
-			if(e)
-				log << e << ", ";
-			log << v << io::endl;
-		}
-
 		// collect events
 		Vector<EventCase> events;
-		if(v != nullptr)
+		if(w != nullptr)
 			collectPrologue(events, w);
 		collectEdge(events, e);
 		collectBlock(events, v);
 		sortEvents(events);
 		if(logFor(LOG_BB))
 			for(auto e: events)
-				log << "\t\t\t\t" << e << io::endl;
+				log << "\t\t\t" << e << io::endl;
 
 		// build the sequence
 		ParExeSequence *seq = new ParExeSequence();
@@ -525,8 +525,6 @@ private:
 		ParExeGraph *g = build(seq);
 		solve(e, g, events);
 		finish(events);
-		//if(logFor(LOG_BB))
-		//	displayTimes(times, events);
 
 		// clean all
 		delete g;

@@ -186,8 +186,8 @@ public:
 
 	inline const AllocArray<const Bank *>& banks(void) const { return _banks; }
 	inline const AllocArray<const Bus *>& buses(void) const  { return _buses; }
-	static Memory *load(const elm::sys::Path& path) throw(LoadException);
-	static Memory *load(xom::Element *element) throw(LoadException);
+	static Memory *load(const elm::sys::Path& path);
+	static Memory *load(xom::Element *element);
 	const Bank *get(Address address) const;
 
 	time_t worstReadTime(void) const;

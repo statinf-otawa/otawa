@@ -49,33 +49,46 @@ public:
 	inline CFG *entry(void) const { return get(0); }
 	int countBlocks(void) const;
 
-	class Iter: public elm::FragTable<CFG *>::Iter {
+	class Iter: public FragTable<CFG *>::Iter {
+		friend class CFGCollection;
 	public:
 		inline Iter(void) { }
-		inline Iter(WorkSpace *ws): elm::FragTable<CFG *>::Iter(get(ws)->cfgs) { }
-		inline Iter(const FragTable<CFG *>::Iter& i): FragTable<CFG *>::Iter(i) { }
 		inline Iter(const CFGCollection *cfgs): elm::FragTable<CFG *>::Iter(cfgs->cfgs) { }
 		inline Iter(const CFGCollection& cfgs): elm::FragTable<CFG *>::Iter(cfgs.cfgs) { }
+	private:
+		inline Iter(const FragTable<CFG *>::Iter& i): FragTable<CFG *>::Iter(i) { }
 	};
-	inline Iter items(void) const { return cfgs.begin(); }
+
+	inline Iter items(void) const { return Iter(this); }
 	inline Iter operator*(void) const { return items(); }
 	inline Iter begin(void) const { return items(); }
 	inline Iter end(void) const { return cfgs.end(); }
 
 	class BlockIter: public PreIterator<BlockIter, Block *> {
+		friend class CFGCollection;
 	public:
 		inline BlockIter(void) { }
-		inline BlockIter(WorkSpace *ws): cfg(get(ws)), bb(cfg->blocks()) { }
 		inline BlockIter(const CFGCollection *cfgs): cfg(cfgs), bb(cfg->blocks()) { }
 		inline BlockIter(const CFGCollection& cfgs): cfg(&cfgs), bb(cfg->blocks()) { }
 		inline bool ended(void) const { return bb.ended(); }
 		inline Block *item(void) const { return *bb; }
 		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BlockIter(cfg->blocks()); } }
+		inline bool equals(const BlockIter& i) const { return cfg.equals(i.cfg) && bb.equals(bb); }
 	private:
+		inline BlockIter(const CFGCollection& coll, int): cfg(coll.end()) { }
 		Iter cfg;
 		CFG::BlockIter bb;
 	};
-	inline BlockIter blocks(void) const { return BlockIter(this); }
+
+	class BlockRange {
+	public:
+		inline BlockRange(const CFGCollection& coll): _coll(coll) { }
+		inline BlockIter begin(void) const { return BlockIter(_coll); }
+		inline BlockIter end(void) const { return BlockIter(_coll, 0); }
+	private:
+		const CFGCollection& _coll;
+	};
+	inline BlockRange blocks(void) const { return BlockRange(*this); }
 
 	void add(CFG *cfg);
 

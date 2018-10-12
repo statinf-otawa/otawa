@@ -151,7 +151,7 @@ public:
 	max_size(0), proc(NULL)
 	{ }
 
-	virtual void work (const string &entry, PropList &props) throw (elm::Exception) {
+	virtual void work (const string &entry, PropList &props) {
 		require(otawa::COLLECTED_CFG_FEATURE);
 		if(pipeline) {
 			hard::PROCESSOR_ID(props) = pipeline;

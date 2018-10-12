@@ -60,7 +60,7 @@ resources_t& XGraphBuilder::resources(void) const {
  * @return	Current factory.
  */
 Factory *XGraphBuilder::factory(void) const {
-	return _atb->_builder->factory();
+	return _atb->solver()->getFactory();
 }
 
 /**
@@ -112,10 +112,6 @@ public:
 	}
 
 	ParExeGraph *build(ParExeSequence *seq) override {
-		/*ASSERT(workspace() != nullptr);
-		ASSERT(processor() != nullptr);
-		ASSERT(resources() != nullptr);
-		ASSERT(factory() != nullptr);*/
 
 		// build the graph
 		PropList props;

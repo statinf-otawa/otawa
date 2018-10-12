@@ -38,7 +38,7 @@ private:
 // DynProcessor class
 class DynProcessor {
 public:
-	DynProcessor(cstring name) throw(ProcessorNotFound);
+	DynProcessor(cstring name);
 	~DynProcessor(void);
 	inline string name(void) const { return proc->name(); }
 	inline Version version(void) const { return proc->version(); }

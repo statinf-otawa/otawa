@@ -194,12 +194,13 @@ Loop::BlockIter::BlockIter(Loop *loop): _loop(loop), _done(loop->cfg()->count())
  */
 void Loop::BlockIter::next(void) {
 	Block *b = _todo.pop();
-	if(isHeader(b) && b != _loop->header())
+	if(isHeader(b) && b != _loop->header()) {
 		for(auto e = Loop::of(b)->exitEdges(); e; e++)
 			if(Loop::of(e->sink()) == _loop && !_done.contains(e->sink()->index())) {
 				_todo.push(e->sink());
 				_done.add(e->sink()->index());
 			}
+	}
 	else
 		for(auto e = b->outs(); e; e++)
 			if(!isExit(e) && !isBack(e) && !_done.contains(e->sink()->index())) {

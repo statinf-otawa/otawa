@@ -130,7 +130,7 @@ protected:
 			throw OptionException(_ << " plugin " << arg << " cannot be found!");
 	}
 
-	virtual void run(void) throw(elm::Exception) {
+	virtual void run(void) {
 
 		// list options
 		if(list_ilps) {

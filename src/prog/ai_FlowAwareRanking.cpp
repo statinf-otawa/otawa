@@ -115,7 +115,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 	}
 
 	if(logFor(LOG_BLOCK)) {
-		for(auto g = coll->items(); g; g++) {
+		for(auto g: *coll) {
 			log << "\tCFG " << *g << io::endl;
 			for(auto v = g->blocks(); v; v++)
 				log << "\t\t" << *v << ": " << *RANK_OF(v) << io::endl;
@@ -128,7 +128,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 void FlowAwareRanking::destroy(WorkSpace *ws) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
-	for(auto v = coll->blocks(); v; v++)
+	for(auto v: coll->blocks())
 		RANK_OF(v).remove();
 }
 

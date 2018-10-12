@@ -77,7 +77,7 @@ Test::Test(cstring name)
 { }
 
 /**
- * @fn void Test::generate(void) throw(elm::Exception);
+ * @fn void Test::generate(void);
  * Override this function to generate the reference output or the output to check.
  * You can use Application functions like Application::workspace() or Application::require()
  * from this function.
@@ -86,7 +86,7 @@ Test::Test(cstring name)
 
 /**
  */
-void Test::work(const string& entry, PropList &props) throw(elm::Exception) {
+void Test::work(const string& entry, PropList &props) {
 
 	// compute the paths
 	sys::Path elf_path = workspace()->process()->program()->name();

@@ -675,7 +675,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
  * Load an F4 file.
  * @param path	Path of the file.
  */
-void FlowFactLoader::loadF4(const string& path) throw(ProcessorException) {
+void FlowFactLoader::loadF4(const string& path) {
 	if(logFor(LOG_DEPS))
 		log << "\tloading " << path << io::endl;
 
@@ -1177,7 +1177,7 @@ void FlowFactLoader::onUnknownMultiCall(Address control) {
  * Load the flow facts from an XML file.
  * @param path	Path of the XML file.
  */
-void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
+void FlowFactLoader::loadXML(const string& path) {
 
 	// open the file
 	xom::Builder builder;
@@ -1207,8 +1207,7 @@ void FlowFactLoader::loadXML(const string& path) throw(ProcessorException) {
  * @param body	Content of the file.
  * @param cpath	Contextual path.
  */
-void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath)
-throw(ProcessorException) {
+void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 	for(int i = 0; i < body->getChildCount(); i++) {
 		xom::Node *child = body->getChild(i);
 		if(child->kind() == xom::Node::ELEMENT) {
@@ -1595,8 +1594,7 @@ void FlowFactLoader::scanMemSet(xom::Element *element, dfa::State* state) {
  * @param element	Element of the function.
  * @param path		Context path to access the function.
  */
-void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path)
-throw(ProcessorException) {
+void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path) {
 	Address addr;
 
 	// look for the name attribute
@@ -1635,7 +1633,7 @@ throw(ProcessorException) {
  * @li contains a list of called functions,
  * @li contains a function content (compatibility with old syntax).
  */
-void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) throw(ProcessorException) {
+void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) {
 
 	// look for functions
 	xom::Elements *elems = element->getChildElements("function");
@@ -1694,8 +1692,7 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) thro
 }
 
 // context version
-void FlowFactLoader::scanXState(xom::Element *element, ContextualPath& path)
-throw(ProcessorException) {
+void FlowFactLoader::scanXState(xom::Element *element, ContextualPath& path) {
 	dfa::State* state = new dfa::State(*(workspace()->process()));
 	Address addr = scanAddress(element, path).address();
 	if(addr.isNull()) {
@@ -1726,8 +1723,7 @@ throw(ProcessorException) {
 
 
 // global version
-void FlowFactLoader::scanXState(xom::Element *element)
-throw(ProcessorException) {
+void FlowFactLoader::scanXState(xom::Element *element) {
 	ContextualPath path;
 	dfa::State* state = new dfa::State(*(workspace()->process()));
 	Address addr = scanAddress(element, path).address();
@@ -1763,8 +1759,7 @@ throw(ProcessorException) {
  * @param element	Element of the loop.
  * @param path		Context path to access the loop.
  */
-void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path)
-throw(ProcessorException) {
+void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 
 	// get the address
 	Address addr = scanAddress(element, path).address();
@@ -1828,8 +1823,7 @@ int FlowFactLoader::findCall(cstring file, int line, Address& r) {
  * @param call		Location for a call is required.
  * @return			Address of the element or null if there is an error.
  */
-MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path, bool call)
-throw(ProcessorException) {
+MemArea FlowFactLoader::scanAddress(xom::Element *element, ContextualPath& path, bool call) {
 
 	// look for "symbol" attribute
 	Option<xom::String> sym = element->getAttributeValue("symbol");
@@ -1898,8 +1892,7 @@ throw(ProcessorException) {
  * @param name		Name of the element.
  * @return			Read element or none.
  */
-Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name)
-throw(ProcessorException) {
+Option<long> FlowFactLoader::scanInt(xom::Element *element, cstring name) {
 	Option<xom::String> val = element->getAttributeValue(name);
 	if(!val)
 		return none;
@@ -1917,8 +1910,7 @@ throw(ProcessorException) {
 }
 
 
-Option<unsigned long> FlowFactLoader::scanUInt(xom::Element *element, cstring name)
-throw(ProcessorException) {
+Option<unsigned long> FlowFactLoader::scanUInt(xom::Element *element, cstring name) {
 	Option<xom::String> val = element->getAttributeValue(name);
 	if(!val)
 		return none;
@@ -1942,8 +1934,7 @@ throw(ProcessorException) {
  * @param name		Name of the element.
  * @return			Read element or none.
  */
-Option<long> FlowFactLoader::scanBound(xom::Element *element, cstring name)
-throw (ProcessorException) {
+Option<long> FlowFactLoader::scanBound(xom::Element *element, cstring name) {
 	Option<xom::String> val = element->getAttributeValue(name);
 	if(!val)
 		return none;
@@ -1968,8 +1959,7 @@ throw (ProcessorException) {
  * @param element	Container element.
  * @param path		Current context path.
  */
-void FlowFactLoader::scanXContent(xom::Element *element, ContextualPath& path)
-throw(ProcessorException) {
+void FlowFactLoader::scanXContent(xom::Element *element, ContextualPath& path) {
 	for(int i = 0; i < element->getChildCount(); i++) {
 		xom::Node *child = element->getChild(i);
 		if(child->kind() == xom::Node::ELEMENT) {
@@ -1995,8 +1985,7 @@ throw(ProcessorException) {
  * @param element	"if" element.
  * @param path		Current contextual path.
  */
-void FlowFactLoader::scanXConditional(xom::Element *element, ContextualPath& path)
-throw(ProcessorException) {
+void FlowFactLoader::scanXConditional(xom::Element *element, ContextualPath& path) {
 	for(int i = 0; i < element->getChildCount(); i++) {
 		xom::Node *child = element->getChild(i);
 		if(child->kind() == xom::Node::ELEMENT) {
@@ -2040,8 +2029,7 @@ string FlowFactLoader::xline(xom::Node *element) {
  * @return		Matching first address.
  * @throw ProcessorException	If the file/line cannot be resolved to an address.
  */
-MemArea FlowFactLoader::addressOf(const string& file, int line)
-throw(ProcessorException) {
+MemArea FlowFactLoader::addressOf(const string& file, int line) {
 	if(!lines_available)
 		onError("the current loader does not provide source line information");
 

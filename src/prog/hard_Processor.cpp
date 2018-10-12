@@ -514,7 +514,7 @@ const Processor Processor::null;
  * @param path	Path to the file.
  * @throw LoadException 	Thrown if an error is found.
  */
-hard::Processor *Processor::load(const elm::sys::Path& path) throw(LoadException) {
+hard::Processor *Processor::load(const elm::sys::Path& path) {
 	Processor *_processor = new Processor();
 	try {
 		elm::serial2::XOMUnserializer unser(&path);
@@ -538,7 +538,7 @@ hard::Processor *Processor::load(const elm::sys::Path& path) throw(LoadException
  * @param element			XML element to load from.
  * @throw LoadException 	Thrown if an error is found.
  */
-hard::Processor *Processor::load(xom::Element *element) throw(LoadException) {
+hard::Processor *Processor::load(xom::Element *element) {
 	Processor *_processor = new Processor();
 	try {
 		elm::serial2::XOMUnserializer unser(element);

@@ -310,8 +310,8 @@ public:
 	inline hard::Platform *platform(void) const { return _pf; }
 
 	static const Processor null;
-	static Processor *load(const elm::sys::Path& path) throw(LoadException);
-	static Processor *load(xom::Element *element) throw(LoadException);
+	static Processor *load(const elm::sys::Path& path);
+	static Processor *load(xom::Element *element);
 
 	typedef Vector<Step> steps_t;
 	virtual void execute(Inst *inst, steps_t& steps) const;

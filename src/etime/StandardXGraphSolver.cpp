@@ -161,9 +161,9 @@ public:
 		}
 
 		if(logFor(LOG_BB)) {
-			log << "\t\t\t\tdynamic events = " << events.count() << io::endl;
+			log << "\t\t\tdynamic events = " << events.count() << io::endl;
 			for(int i = 0; i < events.count(); i++)
-				log << "\t\t\t\t(" << char(i + 'a') << ") " << events[i]->inst()->address() << "\t" << events[i]->name()
+				log << "\t\t\t(" << char(i + 'a') << ") " << events[i]->inst()->address() << "\t" << events[i]->name()
 					<< " " << events[i].part() << io::endl;
 		}
 
@@ -243,7 +243,7 @@ public:
 			else {
 				bool done = false;
 				List<ConfigSet *>::Iter prev;
-				for(auto cur: times) {
+				for(auto cur = times.begin(); cur; prev = cur, cur++) {
 					if(cur->time() == cost) {
 						cur->add(Config(event_mask));
 						done = true;
@@ -255,7 +255,10 @@ public:
 				if(!done) {
 					ConfigSet *set = new ConfigSet(cost);
 					set->add(Config(event_mask));
-					times.addAfter(prev, set);
+					if(!prev)
+						times.addFirst(set);
+					else
+						times.addAfter(prev, set);
 				}
 			}
 		}
@@ -542,7 +545,6 @@ public:
 
 		case BRANCH:
 			ASSERT(bedge);
-			cerr << "DEBUG: rollbacking " << (void *)bedge << io::endl;
 			g->remove(bedge);
 			bedge = 0;
 			break;
@@ -625,6 +627,7 @@ public:
 	 */
 	void split(const PropList *entity, const Vector<EventCase>& all_events, const List<ConfigSet *>& times) {
 		ASSERT(0 < times.count());
+		displayTimes(times, all_events);
 
 		// mono-time case
 		if(times.count() == 1) {
@@ -674,9 +677,9 @@ public:
 			// scan the set of values
 			Split split(dyn_cnt);
 			set.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
+			ot::time x_hts = 0;
 
 			// x^c_hts = sum{e in E_i /\ (\E c in HTS /\ e in c) /\ (\E c in HTS /\ e not in c)} w_e
-			ot::time x_hts = 0;
 			for(auto ev = *all_events; ev; ev++)
 				if((*ev).index() >= 0 && (split.com & (1 << (*ev).index())) != 0)
 					x_hts += (*ev).event()->weight();
@@ -693,7 +696,7 @@ public:
 				x_hts = weight;
 			ot::time cost = x_hts * confs.top()->time() + (weight - x_hts) * confs[p - 1]->time();
 			if (isVerbose())
-				log << "\t\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
+				log << "\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
 
 			// look for best cost
 			if(cost < best_cost) {
@@ -702,7 +705,7 @@ public:
 			}
 		}
 		if (logFor(LOG_BB))
-			log << "\t\t\t\tbest HTS [" << best_p << " - " << (confs.length() - 1) << "]\n";
+			log << "\t\t\tbest HTS [" << best_p << " - " << (confs.length() - 1) << "]\n";
 
 		// look in the split
 		ConfigSet hts;
@@ -710,7 +713,7 @@ public:
 		makeSplit(confs, best_p, hts, split);
 		hts.scan(split.pos, split.neg, split.unu, split.com, split.cnt);
 		if(isVerbose())
-			log << "\t\t\t\t"
+			log << "\t\t\t"
 				<<   "pos = " 		<< Config(split.pos).toString(split.cnt)
 				<< ", neg = " 		<< Config(split.neg).toString(split.cnt)
 				<< ", unused = " 	<< Config(split.unu).toString(split.cnt)
@@ -718,7 +721,6 @@ public:
 				<< io::endl;
 
 		// contribute
-		displayTimes(times, all_events);
 		contributeSplit(entity, all_events, split);
 	}
 
@@ -731,7 +733,7 @@ public:
 
 		// logging
 		if(logFor(LOG_BB))
-			log << "\t\t\t\tcost = " << cost << io::endl;
+			log << "\t\t\tcost = " << cost << io::endl;
 
 		// record the time
 		contributeBase(cost);
@@ -754,7 +756,7 @@ public:
 		for(int i = p; i < confs.length(); i++)
 			hts.add(*confs[i]);
 		if(logFor(LOG_BLOCK)) {
-			log << "\t\t\t\t" << "LTS time = " << split.lts_time << ", HTS time = " << split.hts_time << " for { ";
+			log << "\t\t\t" << "LTS time = " << split.lts_time << ", HTS time = " << split.hts_time << " for { ";
 			bool fst = true;
 			for(ConfigSet::Iter conf(hts); conf; conf++) {
 				if(fst)
@@ -806,11 +808,12 @@ public:
 	void displayTimes(const List<ConfigSet *>& times, const Vector<EventCase>& events) {
 		if(times) {
 			int i = 0;
-			for(auto t = *times; t; t++, i++) {
-				log << "\t\t\t\t[" << i << "] cost = " << t->time() << " -> ";
-				for(ConfigSet::Iter conf(**t); conf; conf++)
+			for(auto t: times) {
+				log << "\t\t\t[" << i << "] cost = " << t->time() << " -> ";
+				for(ConfigSet::Iter conf(*t); conf; conf++)
 					log << " " << (*conf).toString(events.length());
 				log << io::endl;
+				i++;
 			}
 		}
 	}
@@ -872,6 +875,17 @@ void XGraphSolver::contributeNegative(EventCase event, bool prec) {
  */
 XGraphSolver *XGraphSolver::make(const Monitor& mon) {
 	return new StandardXGraphSolver(mon);
+}
+
+/**
+ * Convenient function to obtain, if defined, the dump directory
+ * for outputting execution graph. If an empty path is returned,
+ * no dumping is needed.
+ * @return		Directory path to dump graph to or an empty path.
+ *
+ */
+sys::Path XGraphSolver::dumpDir(void) const {
+	return _atb->_dir;
 }
 
 } }	// otawa::etime

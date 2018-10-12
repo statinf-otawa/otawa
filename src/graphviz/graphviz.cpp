@@ -216,7 +216,7 @@ public:
 		: display::Displayer(g, d, mode == display::OUTPUT_ANY ? display::OUTPUT_RAW_DOT : mode)
 		{ }
 
-	virtual void process(void) throw(display::Exception) {
+	virtual void process(void) {
 
 		// open the file
 		if(_output == display::OUTPUT_RAW_DOT) {

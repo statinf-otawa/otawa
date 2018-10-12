@@ -826,7 +826,7 @@ public:
 			if(regRowAlloc[i]) {
 				regRowAlloc[i] = 0;
 				int maxj = (i << rblock_shift) + rblock_size;
-				ASSERT(maxj < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
+				ASSERT(t::size(maxj) < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
 				for(int j = i << rblock_shift; j < maxj; j++) {
 					regEachAlloc[j] = 0;
 				}

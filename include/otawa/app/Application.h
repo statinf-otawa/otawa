@@ -61,9 +61,9 @@ public:
 
 protected:
 	virtual void prepare(PropList& props);
-	virtual void work(PropList& props) throw(elm::Exception);
-	virtual void work(const string& entry, PropList &props) throw(elm::Exception);
-	virtual void complete(PropList& props) throw(elm::Exception);
+	virtual void work(PropList& props);
+	virtual void work(const string& entry, PropList &props);
+	virtual void complete(PropList& props);
 
 	inline WorkSpace *workspace(void) const { return ws; }
 	void require(const AbstractFeature&  feature);
@@ -72,7 +72,7 @@ protected:
 	void exit(int code = 0);
 
 	const Vector<string>& arguments(void) const { return _args; }
-	Address parseAddress(const string& s) throw(otawa::Exception);
+	Address parseAddress(const string& s);
 
 private:
 	option::SwitchOption help, verbose;
