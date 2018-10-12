@@ -1449,7 +1449,7 @@ void BPredProcessor::processCFG__Global2B(WorkSpace *ws,CFG* cfg) {
 		for(int i = 0 ; i < bcgs.length() ; i++) {
 			int nb_nodes=0;
 			BCG* bcg=bcgs[i];
-			for(auto node: *bcg)
+			for(auto node UNUSED: *bcg)
 				nb_nodes++;
 			
 			this->stat_nbbr.add(nb_nodes);

@@ -144,7 +144,7 @@ public:
 	{ }
 
 protected:
-	virtual void work (const string &entry, PropList &props) throw(elm::Exception) {
+	virtual void work (const string &entry, PropList &props) {
 
 		// set statistics option
 		if(display_stats || detailed_stats)

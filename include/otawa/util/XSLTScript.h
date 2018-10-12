@@ -35,7 +35,7 @@ using namespace elm;
 
 class XSLTScript: private io::Monitor {
 public:
-	XSLTScript(const elm::sys::Path& path, Monitor& monitor = elm::monitor, bool verbosity = false) throw(otawa::Exception);
+	XSLTScript(const elm::sys::Path& path, Monitor& monitor = elm::monitor, bool verbosity = false);
 	virtual ~XSLTScript(void);
 	xom::Document *document(void) const { return doc; }
 	void setConfiguration(cstring name = "configuration");
@@ -43,7 +43,7 @@ public:
 	void addParam(string name, String value);
 	void addParams(const PropList& props, Identifier<string>& id);
 	void addParams(const PropList& props, Identifier<Pair<string, string> >& id);
-	void transform(void) throw(otawa::Exception);
+	void transform(void);
 	void fillProps(PropList& props, xom::Element *element);
 	void fillProps(PropList& props, cstring name);
 

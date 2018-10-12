@@ -67,7 +67,7 @@ public:
 	inline Factory *factory(void) const { return fact; }
 	inline Element& element(void) const { return *cur.elt; }
 	inline Option<xom::String> get(xom::String name) const { return cur.xelt->getAttributeValue(name); }
-	inline void raise(const string& msg) const throw(Exception) { throw Exception(cur.xelt, msg); }
+	inline void raise(const string& msg) const { throw Exception(cur.xelt, msg); }
 
 	inline bool ended(void) const { return cur.i >= cur.xelt->getChildCount(); }
 	xom::Node *item(void) const {  return cur.xelt->getChild(cur.i); }
@@ -120,7 +120,7 @@ public:
 	inline bool isRequired(void) const { return _flags & REQUIRED; }
 	inline bool isStrict(void) const { return _flags & STRICT; }
 
-	bool parse(Parser& parser) throw(Exception) {
+	bool parse(Parser& parser) {
 		Option<xom::String> val = parser.get(_name);
 		if(val)
 			return process(parser, val);
@@ -130,7 +130,7 @@ public:
 		}
 	}
 
-	virtual bool process(Parser& parser, xom::String value) throw(Exception) = 0;
+	virtual bool process(Parser& parser, xom::String value) = 0;
 	virtual void reset(void) { }
 private:
 	xom::String _name;
@@ -142,7 +142,7 @@ class Content {
 public:
 
 	virtual ~Content(void) { }
-	virtual bool parse(Parser& parser) throw(Exception) = 0;
+	virtual bool parse(Parser& parser) = 0;
 
 	static bool isEmpty(xom::Node *node) {
 		if(node->kind() != xom::Node::TEXT)
@@ -166,7 +166,7 @@ public:
 
 class EmptyContent: public Content {
 public:
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		Parser::mark_t m = parser.mark();
 		for(; parser; parser++)
 			if(!isEmpty(*parser)) {
@@ -199,7 +199,7 @@ public:
 	Element(xom::String name, int kind = 0): _name(name), _kind(kind), _content(empty) { }
 	Element(const Make& m): _name(m._name), _kind(m._kind), attrs(m.attrs), _content(*m._content) { }
 
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		if(!parser)
 			return false;
 
@@ -253,7 +253,7 @@ class Optional: public Content {
 public:
 	Optional(Content& content): con(content) { }
 
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		if(parser)
 			con.parse(parser);
 		return true;
@@ -271,7 +271,7 @@ class Alt: public Content {
 public:
 	Alt(Content& content1, Content& content2): con1(content1), con2(content2) { }
 
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		if(!parser)
 			return false;
 		if(con1.parse(parser))
@@ -290,7 +290,7 @@ class Seq: public Content {
 public:
 	Seq(Content& content1, Content& content2, bool crop = true): con1(content1), con2(content2), _crop(crop) { }
 
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		if(!parser)
 			return false;
 		Parser::mark_t m = parser.mark();
@@ -335,7 +335,7 @@ class Repeat: public Content {
 public:
 	Repeat(Content& content, bool crop = true): _crop(crop), con(content) { }
 
-	virtual bool parse(Parser& parser) throw(Exception) {
+	virtual bool parse(Parser& parser) {
 		while(1) {
 
 			// crop spaces
@@ -361,7 +361,7 @@ class TextAttr: public Attribute {
 public:
 	TextAttr(xom::String name, xom::String init = "", t::uint32 flags = 0): Attribute(name, flags), s(init), i(init) { }
 	xom::String& operator*(void) { return s; }
-	virtual bool process(Parser& parser, xom::String value) throw(Exception) { s = value; return true; }
+	virtual bool process(Parser& parser, xom::String value) { s = value; return true; }
 	virtual void reset(void) { s = i; }
 private:
 	xom::String s, i;
@@ -372,7 +372,7 @@ public:
 	IntAttr(xom::String name, int init = 0, t::uint32 flags = 0): Attribute(name, flags), v(init), i(init) { }
 	int& operator*(void) { return v; }
 
-	virtual bool process(Parser& parser, xom::String value) throw(Exception) {
+	virtual bool process(Parser& parser, xom::String value) {
 		static elm::io::Input in;
 		io::BlockInStream stream(value);
 		in.setStream(stream);
@@ -399,7 +399,7 @@ private:
 class IDAttr: public Attribute {
 public:
 	IDAttr(xom::String name, t::uint32 flags = 0): Attribute(name, flags) { }
-	virtual bool process(Parser& parser, xom::String value) throw(Exception) {
+	virtual bool process(Parser& parser, xom::String value) {
 		if(parser.factory()->hasID(parser.element(), value)) {
 			if(isStrict())
 				parser.raise(_ << "already used identifier \"" << value << "\"in " << name());
@@ -417,7 +417,7 @@ class RefAttr: public Attribute {
 public:
 	RefAttr(xom::String name, t::uint32 flags = 0): Attribute(name, flags), ref(0) { }
 	inline T *reference(void) const { return ref; }
-	virtual bool process(Parser& parser, xom::String value) throw(Exception) {
+	virtual bool process(Parser& parser, xom::String value) {
 		if(!parser.factory()->hasID(parser.element(), value)) {
 			if(isStrict())
 				parser.raise(_ << "undefined reference \"" << value << "\" in " << name());

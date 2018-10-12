@@ -174,10 +174,8 @@ public:
 	virtual void get(Address at, char *buf, int size);
 
 	// LineNumber feature
-	virtual Option<Pair<cstring, int> > getSourceLine(Address addr)
-		throw (UnsupportedFeatureException);
-	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
-		throw (UnsupportedFeatureException);
+	virtual Option<Pair<cstring, int> > getSourceLine(Address addr);
+	virtual void getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses);
 
 	// Simulation management
 	virtual SimState *newState(void);

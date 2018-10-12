@@ -38,7 +38,7 @@ public:
 	void setFastState(dfa::FastState<PotentialValue, MyGC>* _fs) { fs = _fs; }
 	void setTempRegs(Vector<PotentialValue>* vdp) { _tempRegs = vdp; }
 
-	virtual void *allocate(t::size size) throw(BadAlloc) {
+	virtual void *allocate(t::size size) {
 		total = total + size;
 #ifdef EVALUATION
 		static int i = 0;
@@ -51,7 +51,7 @@ public:
 
 	// template access
 	template <class T>
-	inline T *allocate(int n = 1) throw(BadAlloc) {
+	inline T *allocate(int n = 1) {
 		unsigned long size = n * sizeof(T);
 		total = total + size;
 #ifdef EVALUATION

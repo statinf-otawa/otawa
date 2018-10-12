@@ -94,12 +94,13 @@ void PersDomain::fetch(LBlock *lb, ACS& a) {
 	// U_p(a, b) = a' s.t. ∀ b' ∈ B_s
 
 	// if a[b] ∈  [0, A-1]
-	if(0 <= a[b] && a[b] < A)
+	if(0 <= a[b] && a[b] < A) {
 		for(int b_ = 0; b_ < n; b_++)
 			//a'[b'] = a[b'] + 1	if a[b'] < a[b] ∧ a[b'] ∉ { ⊥,  A }
 			if(a[b_] < a[b] && a[b_] != BOT_AGE && a[b_] != A)
 				a[b_] = a[b_] + 1;
 			//a'[b'] = a[b']		else
+	}
 
 	// else
 	else

@@ -43,7 +43,7 @@ namespace otawa { namespace dfa {
  * @param str				String to parse.
  * @throw io::IOException	If the string cannot be parsed.
  */
-Value Value::parse(const string& str) throw(io::IOException) {
+Value Value::parse(const string& str) {
 	if(!str)
 		throw io::IOException("empty value");
 

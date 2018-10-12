@@ -147,8 +147,7 @@ ContextualLoopBound::look(const ContextPath<Address>& path) {
  * @throw AmbiguousBoundException	Thrown when there is already a bound
  * 									for the given context.
  */
-void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max)
-throw(AmbiguousBoundException) {
+void ContextualLoopBound::addMax(const ContextPath<Address>& path, int max) {
 	Tree<data_t> *cur = look(path);
 	if(cur->data().max != -1 && cur->data().max != max) {
 		cur->data().max = elm::max(max, cur->data().max);
@@ -167,8 +166,7 @@ throw(AmbiguousBoundException) {
  * @throw AmbiguousBoundException	Thrown when there is already a bound
  * 									for the given context.
  */
-void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total)
-throw(AmbiguousBoundException) {
+void ContextualLoopBound::addTotal(const ContextPath<Address>& path, int total) {
 	Tree<data_t> *cur = look(path);
 	if(cur->data().total != -1 && cur->data().total != total) {
 		cur->data().total = elm::max(total, cur->data().total);

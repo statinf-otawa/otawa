@@ -66,10 +66,8 @@ public:
 	
 	ContextualLoopBound(int max = undefined, int total = undefined);
 	
-	void addMax(const ContextPath<Address>& path, int max)
-		throw(AmbiguousBoundException);
-	void addTotal(const ContextPath<Address>& path, int total)
-		throw(AmbiguousBoundException);
+	void addMax(const ContextPath<Address>& path, int max);
+	void addTotal(const ContextPath<Address>& path, int total);
 	int findMax(const ContextPath<Address>& path);
 	int findTotal(const ContextPath<Address>& path);
 	

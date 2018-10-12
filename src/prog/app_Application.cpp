@@ -399,7 +399,7 @@ void Application::prepare(PropList& props) {
  * This method is called at end of the processing of the
  * free arguments of command line.
  */
-void Application::complete(PropList& props) throw(elm::Exception) {
+void Application::complete(PropList& props) {
 }
 
 
@@ -411,7 +411,7 @@ void Application::complete(PropList& props) throw(elm::Exception) {
  * When this method is called, the program has been already loaded.
  * @throw	elm::Exception	For any found error.
  */
-void Application::work(PropList &props) throw(elm::Exception) {
+void Application::work(PropList &props) {
 
 	// process each free argument as a function entry
 	for(int i = 0; i < _args.count(); i++) {
@@ -437,7 +437,7 @@ void Application::work(PropList &props) throw(elm::Exception) {
  * @return					Matching address.
  * @throw otawa::Exception	If the address cannot be resolved or parsed.
  */
-Address Application::parseAddress(const string& s) throw(otawa::Exception) {
+Address Application::parseAddress(const string& s) {
 	SymAddress *saddr;
 	try {
 		saddr = SymAddress::parse(s);
@@ -464,7 +464,7 @@ Address Application::parseAddress(const string& s) throw(otawa::Exception) {
  * @param entry				Task entry point name or any free argument.
  * @throw elm::Exception	For any found error.
  */
-void Application::work(const string& entry, PropList &props) throw(elm::Exception) {
+void Application::work(const string& entry, PropList &props) {
 }
 
 

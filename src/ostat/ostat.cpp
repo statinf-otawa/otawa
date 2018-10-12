@@ -246,7 +246,7 @@ public:
 		overall_option(option::SwitchOption::Make(*this).cmd("-o").cmd("--overall").description("Display only overall statistics."))
 	{ }
 
-	virtual void work(const string &entry, PropList &props) throw (elm::Exception) {
+	virtual void work(const string &entry, PropList &props) {
 		require(COLLECTED_CFG_FEATURE);
 		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
 		collect(coll->get(0));
@@ -255,7 +255,7 @@ public:
 				collect(coll->get(i));
 	}
 
-	virtual void work(PropList &props) throw (elm::Exception) {
+	virtual void work(PropList &props) {
 		Application::work(props);
 		StatAccumulator accu;
 

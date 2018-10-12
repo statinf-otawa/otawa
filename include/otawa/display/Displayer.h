@@ -67,7 +67,7 @@ class Displayer {
 public:
 
 	virtual ~Displayer(void);
-	virtual void process(void) throw(Exception) = 0;
+	virtual void process(void) = 0;
 
 	inline sys::Path path(void) const { return _path; }
 	inline layout_t layout(void) const { return _layout; }

@@ -723,7 +723,7 @@ class Command: public Application {
 public:
 	Command(void);
 protected:
-	virtual void work(PropList &props) throw(elm::Exception);
+	virtual void work(PropList &props);
 private:
 	struct GeneratedCFGType {
 		enum CFGType {
@@ -975,7 +975,7 @@ void Command::generateXMLs(String path, int type, PropList &props) {
 
 /**
  */
-void Command::work(PropList &props) throw(elm::Exception) {
+void Command::work(PropList &props) {
 
 	clock_t mkfftime = clock();
 

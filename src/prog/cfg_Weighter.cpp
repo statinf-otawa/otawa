@@ -32,8 +32,26 @@ public:
 	Weighter(p::declare& r = reg): BBProcessor(r) { }
 
 protected:
-	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
+	void processBB(WorkSpace *ws, CFG *cfg, Block *bb) override {
 		compute(bb);
+		if(logFor(LOG_BLOCK))
+			log << "\t\t\tweight = " << *WEIGHT(bb) << io::endl;
+	}
+
+	void cleanup(WorkSpace *ws) override {
+		if(logFor(LOG_BLOCK))
+			log << "\tweight for edges:\n";
+		for(auto v: INVOLVED_CFGS(ws)->blocks())
+			for(auto e: v->outEdges()) {
+				WEIGHT(e) = min(*WEIGHT(v), *WEIGHT(e->sink()));
+				if(logFor(LOG_BLOCK))
+					log << "\t\t" << e << ": weight = " << WEIGHT(e) << io::endl;
+			}
+	}
+
+	void destroy(WorkSpace *ws) override {
+		for(auto v: INVOLVED_CFGS(ws)->blocks())
+			WEIGHT(v).remove();
 	}
 
 private:

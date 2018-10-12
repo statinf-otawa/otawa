@@ -92,22 +92,4 @@
 
 	</stages>
 	
-	<queues>
-		<queue>
-			<name>FETCH_QUEUE</name>
-			<size>3</size>
-			<input ref="FI"/>
-			<output ref="DI"/>
-		</queue>
-		<queue>
-			<name>ISSUE_QUEUE</name>
-			<size>3</size>
-			<input ref="DI"/>
-			<output ref="CM"/>
-			<intern>
-				<stage ref="EX"/>
-			</intern>
-		</queue>
-	</queues>
-	
 </processor>

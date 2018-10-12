@@ -33,7 +33,7 @@ class CFG;
 
 class SymAddress {
 public:
-	static SymAddress *parse(string str) throw(otawa::Exception);
+	static SymAddress *parse(string str);
 	virtual ~SymAddress(void);
 	virtual Address toAddress(WorkSpace *ws) = 0;
 	virtual CFG *cfg(WorkSpace *ws) = 0;

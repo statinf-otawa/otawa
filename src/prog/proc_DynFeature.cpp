@@ -117,28 +117,28 @@ DynFeature::DynFeature(string name)
  * Bind the feature.
  * @throw FeatureNotFound	Launched when the feature can not be resolved.
  */
-void DynFeature::init(void) const throw(FeatureNotFound) {
+void DynFeature::init(void) const {
 	feature = ProcessorPlugin::getFeature(&_name);
 	if(!feature)
 		throw FeatureNotFound(_name);
 }
 
 /**
- * @fn DynFeature::operator AbstractFeature *(void) const throw(FeatureNotFound);
+ * @fn DynFeature::operator AbstractFeature *(void) const;
  * if not already done, bind the feature and return a pointer to.
  * @throw FeatureNotFound	Launched when the feature can not be resolved.
  */
 
 
 /**
- * @fn AbstractFeature *DynFeature::operator*(void) const throw(FeatureNotFound);
+ * @fn AbstractFeature *DynFeature::operator*(void) const;
  * if not already done, bind the feature and return a pointer to.
  * @throw FeatureNotFound	Launched when the feature can not be resolved.
  */
 
 
 /**
- * @fn AbstractFeature::operator AbstractFeature&(void) const throw(FeatureNotFound);
+ * @fn AbstractFeature::operator AbstractFeature&(void) const;
  * if not already done, bind the feature and return a reference to.
  * @throw FeatureNotFound	Launched when the feature can not be resolved.
  */

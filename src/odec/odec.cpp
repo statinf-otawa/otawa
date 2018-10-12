@@ -75,7 +75,7 @@ public:
 	}
 
 protected:
-	virtual void work(PropList &props) throw (elm::Exception) {
+	virtual void work(PropList &props) {
 		WorkSpace *ws = workspace();
 
 		// put the symbols

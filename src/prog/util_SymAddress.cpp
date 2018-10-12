@@ -44,7 +44,7 @@ namespace otawa {
  * @return					Built symbolic address (deletion is delegated to the caller).
  * @throw otawa::Exception	Thrown if there is a parsing error.
  */
-SymAddress *SymAddress::parse(string str) throw(otawa::Exception) {
+SymAddress *SymAddress::parse(string str) {
 	str = str.trim();
 
 	// empty string: nothing to do

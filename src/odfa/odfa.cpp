@@ -465,7 +465,7 @@ public:
 
 protected:
 
-	void work(const string& entry, PropList& props) throw (elm::Exception) {
+	void work(const string& entry, PropList& props) {
 		if(list)
 			performList();
 		else
@@ -496,7 +496,7 @@ private:
 		}
 	}
 
-	void performAnalysis(PropList& props) throw (elm::Exception) {
+	void performAnalysis(PropList& props) {
 		fillRegs(props);
 
 		// perform the analysis

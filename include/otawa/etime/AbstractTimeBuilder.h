@@ -146,6 +146,7 @@ private:
 
 class AbstractTimeBuilder: public Processor {
 	friend class XGraphBuilder;
+	friend class XGraphSolver;
 	friend class ILPGenerator;
 public:
 	static p::declare reg;

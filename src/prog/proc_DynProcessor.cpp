@@ -63,7 +63,7 @@ ProcessorNotFound::ProcessorNotFound(string name)
  * @throw	ProcessorNotFound	If the processor can not be found.
  * @ingroup dyn
  */
-DynProcessor::DynProcessor(cstring name) throw(ProcessorNotFound) {
+DynProcessor::DynProcessor(cstring name) {
 	proc = ProcessorPlugin::getProcessor(name);
 	if(!proc)
 		throw ProcessorNotFound(name);

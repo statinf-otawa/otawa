@@ -524,7 +524,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 		}
 
 	// create the dependency
-	bool provides = 0;
+	int provides = 0;
 	for(FeatureIter feature(reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {
 			provides++;

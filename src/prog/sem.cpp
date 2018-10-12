@@ -470,7 +470,7 @@ void Printer::print(elm::io::Output& out, const inst& inst, const hard::Platform
 	case SETP:
 		out << ' '; printArg(pf2, out, inst.d());
 		out << ", 0x" << io::hex(inst.cst()) << " (" << inst.cst() << ")";
-		if (inst.cst() > type_info<t::int32>::max)
+		if (inst.cst() > type_info<uint_t>::max)
 			out << " (" << (t::int32)inst.cst() << ")";
 		break;
 	case IF:

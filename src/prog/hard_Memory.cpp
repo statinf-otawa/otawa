@@ -397,7 +397,7 @@ const Bank *Memory::get(Address address) const {
  * @param element	Element to load from.
  * @return			Built cache configuration.
  */
-Memory *Memory::load(elm::xom::Element *element) throw(LoadException) {
+Memory *Memory::load(elm::xom::Element *element) {
 	elm::serial2::XOMUnserializer unserializer(element);
 	Memory *conf = new Memory();
 	try {
@@ -417,7 +417,7 @@ Memory *Memory::load(elm::xom::Element *element) throw(LoadException) {
  * @param path	Path to the file.
  * @return		Built cache configuration.
  */
-Memory *Memory::load(const elm::sys::Path& path) throw(LoadException) {
+Memory *Memory::load(const elm::sys::Path& path) {
 	elm::serial2::XOMUnserializer unserializer(&path);
 	Memory *conf = new Memory();
 	try {

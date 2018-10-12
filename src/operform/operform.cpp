@@ -54,7 +54,7 @@ protected:
 			cfgio::NO_INSTS(props) = true;
 	}
 
-	virtual void work(PropList& props) throw(elm::Exception) {
+	virtual void work(PropList& props) {
 		const Vector<string> &args = arguments();
 
 		for(int i = 0; i < args.count(); i++) {
@@ -85,7 +85,7 @@ protected:
 
 	}
 
-	void complete(PropList& props) throw(elm::Exception) {
+	void complete(PropList& props) {
 		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE)) {
 			cerr << "DEBUG: COLLECTED_CFG_FEATURE not provided!\n";
 			workspace()->require(COLLECTED_CFG_FEATURE, props);

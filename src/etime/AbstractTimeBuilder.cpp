@@ -174,7 +174,8 @@ AbstractTimeBuilder::AbstractTimeBuilder(p::declare& r)
 	_explicit(false),
 	_predump(false),
 	_event_th(0),
-	_record(false)
+	_record(false),
+	_sys(nullptr)
 {
 }
 
@@ -220,7 +221,7 @@ void AbstractTimeBuilder::configure(const PropList& props) {
  * @param builder	Builder to use.
  */
 void AbstractTimeBuilder::setBuilder(XGraphBuilder *builder) {
-	ASSERT(builder->_atb == nullptr);
+	ASSERT(_builder == nullptr || builder->_atb == nullptr);
 	if(_builder != nullptr)
 		_builder->_atb = nullptr;
 	_builder = builder;
@@ -232,7 +233,7 @@ void AbstractTimeBuilder::setBuilder(XGraphBuilder *builder) {
  * @param solver	Solver to use.
  */
 void AbstractTimeBuilder::setSolver(XGraphSolver *solver) {
-	ASSERT(solver->_atb == nullptr);
+	ASSERT(solver == nullptr || solver->_atb == nullptr);
 	if(_solver != nullptr)
 		_solver->_atb = nullptr;
 	_solver = solver;
@@ -240,7 +241,7 @@ void AbstractTimeBuilder::setSolver(XGraphSolver *solver) {
 }
 
 void AbstractTimeBuilder::setGenerator(ILPGenerator *generator) {
-	ASSERT(_generator->_atb == nullptr);
+	ASSERT(_generator == nullptr || _generator->_atb == nullptr);
 	if(_generator != nullptr)
 		_generator->_atb = nullptr;
 	_generator = generator;
@@ -296,7 +297,7 @@ void AbstractTimeBuilder::buildResources(void) {
 
     	// all except execute stage
     	if(stage->category() != ParExeStage::EXECUTE) {
-			for(int i = 0; i<stage->width(); i++) {
+			for(int i = 0; i < stage->width(); i++) {
 				StringBuffer buffer;
 				buffer << stage->name() << "[" << i << "]";
 				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
@@ -307,7 +308,7 @@ void AbstractTimeBuilder::buildResources(void) {
     	// execute stage
 		else {
 			if(stage->orderPolicy() == ParExeStage::IN_ORDER) {
-				for (int i=0 ; i<stage->numFus() ; i++) {
+				for(int i = 0; i<stage->numFus(); i++) {
 					ParExePipeline * fu = stage->fu(i);
 					ParExeStage *fu_stage = fu->firstStage();
 					for (int j=0 ; j<fu_stage->width() ; j++) {
@@ -326,27 +327,27 @@ void AbstractTimeBuilder::buildResources(void) {
     // build resources for queues
     for(ParExeProc::QueueIterator queue(_proc) ; queue ; queue++) {
 		int num = queue->size();
-		for (int i=0 ; i < num ; i++) {
+		for(int i = 0; i < num; i++) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
 			StageResource * upper_bound = nullptr;
-			for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
-				if (resource->type() == Resource::STAGE) {
-					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
-						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
-							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
-								upper_bound = (StageResource *) (*resource);
-							}
+			for(auto resource: _resources) {
+				if(resource->type() == Resource::STAGE) {
+					StageResource *sresource = static_cast<StageResource *>(resource);
+					if(sresource->stage() == queue->emptyingStage()) {
+						if(i < queue->size() - sresource->stage()->width() - 1) {
+							if(sresource->slot() == sresource->stage()->width() - 1)
+								upper_bound = sresource;
 						}
 						else {
-							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
-								upper_bound = (StageResource *) (*resource);
-							}
+							if(sresource->slot() == i - queue->size() + sresource->stage()->width())
+								upper_bound = sresource;
 						}
 					}
 				}
 			}
 			ASSERT(upper_bound);
+
 			// build the queue resource
 			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _proc->pipeline()->numStages());
 			_resources.add(new_resource);

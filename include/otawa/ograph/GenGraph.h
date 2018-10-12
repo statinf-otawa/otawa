@@ -54,8 +54,8 @@ public:
 		inline bool hasPred(void) const { return ograph::Node::hasPred(); }
 		inline int countSucc(void) const { return ograph::Node::countSucc(); }	
 		inline int countPred(void) const { return ograph::Node::countPred(); }
-		inline bool isPredOf(const GenNode *node) { return ograph::Node::countPred(); }
-		inline bool isSuccOf(const GenNode *node) { return ograph::Node::isSuccOf(); }
+		inline bool isPredOf(const GenNode *node) { return ograph::Node::isPredOf(node); }
+		inline bool isSuccOf(const GenNode *node) { return ograph::Node::isSuccOf(node); }
 	};
 
 	// GenEdge class

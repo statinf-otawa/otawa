@@ -62,7 +62,7 @@ protected:
 	inline WorkSpace *workSpace(void) const { return _fw; }
 
 	Address addressOf(const string& label);
-	MemArea addressOf(const string& file, int line) throw(ProcessorException);
+	MemArea addressOf(const string& file, int line);
 	void onError(const string& message);
 	void onWarning(const string& message);
 
@@ -108,22 +108,22 @@ private:
 	bool lib;
 
 	// F4 support
-	void loadF4(const string& path) throw(ProcessorException);
+	void loadF4(const string& path);
 
 	// XML support
 	void load(WorkSpace *ws, const Path& path);
-	void loadXML(const string& path) throw(ProcessorException);
-	void scanXLoop(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	void scanXFun(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	void scanXConditional(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	MemArea scanAddress(xom::Element *element, ContextualPath& path, bool call = false) throw(ProcessorException);
+	void loadXML(const string& path);
+	void scanXLoop(xom::Element *element, ContextualPath& path);
+	void scanXFun(xom::Element *element, ContextualPath& path);
+	void scanXConditional(xom::Element *element, ContextualPath& path);
+	MemArea scanAddress(xom::Element *element, ContextualPath& path, bool call = false);
 	int findCall(cstring file, int line, Address& r);
-	Option<long> scanInt(xom::Element *element, cstring name) throw(ProcessorException);
-	Option<unsigned long> scanUInt(xom::Element *element, cstring name) throw(ProcessorException);
-	Option<long> scanBound(xom::Element *element, cstring name) throw(ProcessorException);
-	void scanXContent(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	void scanXBody(xom::Element *element, ContextualPath& path) throw(ProcessorException);
-	void scanXCall(xom::Element *element, ContextualPath& path) throw(ProcessorException);
+	Option<long> scanInt(xom::Element *element, cstring name);
+	Option<unsigned long> scanUInt(xom::Element *element, cstring name);
+	Option<long> scanBound(xom::Element *element, cstring name);
+	void scanXContent(xom::Element *element, ContextualPath& path);
+	void scanXBody(xom::Element *element, ContextualPath& path);
+	void scanXCall(xom::Element *element, ContextualPath& path);
 	string xline(xom::Node *element);
 	void scanNoInline(xom::Element *element, ContextualPath& cpath, bool no_inline);
 	void scanIgnoreEntry(xom::Element *element);

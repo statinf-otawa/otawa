@@ -719,8 +719,7 @@ elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
  * @throw UnsupportedFeatureException	If this function is called and
  * 				the feature @ref SOURCE_LINE_FEATURE is not implemented.
  */
-Option<Pair<cstring, int> > Process::getSourceLine(Address addr)
-throw (UnsupportedFeatureException) {
+Option<Pair<cstring, int> > Process::getSourceLine(Address addr) {
 	throw UnsupportedFeatureException(this, SOURCE_LINE_FEATURE);
 }
 
@@ -735,8 +734,7 @@ throw (UnsupportedFeatureException) {
  * @throw UnsupportedFeatureException	If this function is called and
  * 				the feature @ref SOURCE_LINE_FEATURE is not implemented.
  */
-void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses)
-throw (UnsupportedFeatureException) {
+void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address> >& addresses) {
 	throw UnsupportedFeatureException(this, SOURCE_LINE_FEATURE);
 }
 

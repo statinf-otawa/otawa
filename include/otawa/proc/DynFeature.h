@@ -40,17 +40,17 @@ private:
 class DynFeature {
 public:
 	DynFeature(string name);
-	inline operator AbstractFeature *(void) const throw(FeatureNotFound)
+	inline operator AbstractFeature *(void) const
 		{ if(!feature) init(); return feature; }
-	inline AbstractFeature *operator*(void) const throw(FeatureNotFound)
+	inline AbstractFeature *operator*(void) const
 		{ if(!feature) init(); return feature; }
-	inline operator AbstractFeature&(void) const throw(FeatureNotFound)
+	inline operator AbstractFeature&(void) const
 		{ if(!feature) init(); return *feature; }
 
 private:
 	mutable AbstractFeature *feature;
 	string _name;
-	void init(void) const throw(FeatureNotFound);
+	void init(void) const;
 };
 
 } // otawa

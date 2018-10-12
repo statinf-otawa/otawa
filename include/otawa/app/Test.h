@@ -30,9 +30,9 @@ public:
 	Test(cstring name);
 
 protected:
-	virtual void generate(io::Output& out) throw(elm::Exception) = 0;
+	virtual void generate(io::Output& out) = 0;
 
-	void work(const string& entry, PropList &props) throw(elm::Exception) override;
+	void work(const string& entry, PropList &props) override;
 
 private:
 	option::Switch ref;
