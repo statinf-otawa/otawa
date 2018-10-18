@@ -41,9 +41,9 @@ class LBlockSet;
 class LBlock: public elm::inhstruct::DLNode, public PropList {
 	friend class LBlockSet;
 public:
-	LBlock(LBlockSet *set, BasicBlock *bb, Inst *inst, t::uint32 size, int cache_index);
+	LBlock(LBlockSet *set, BasicBlock *bb, Inst *inst, t::uint32 size, int cache_index, address_t addr);
 	inline int index(void) const { return idx; }
-	inline Address address(void) const { return _inst->address(); }
+	inline Address address(void) const { return _addr; }
 	inline BasicBlock *bb(void) const { return _bb; }
 	inline ot::size size(void) const { return _size; }
 	inline LBlockSet *lblockset(void) const { return lbs; }
@@ -63,6 +63,7 @@ private:
 	t::uint32 _size;
 	BasicBlock *_bb;
 	int idx, cid;
+	address_t _addr;
 };
 
 Output& operator<<(Output& out, const LBlock *block);

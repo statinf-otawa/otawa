@@ -90,7 +90,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 	LBLOCKS(fw) = lbsets;
 	for(int i = 0; i < cache->rowCount(); i++) {
 		lbsets[i] = new LBlockSet(i, cache);
-		new LBlock(lbsets[i], 0, 0, 0, 0);
+		new LBlock(lbsets[i], 0, 0, 0, 0, 0);
 		ASSERT(lbsets[i]->cacheBlockCount() == 1);
 	}
 }
@@ -103,7 +103,7 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
 
 	// Add end blocks
 	for(int i = 0; i < cache->rowCount(); i++)
-		new LBlock(lbsets[i], 0, 0, 0, lbsets[i]->cacheBlockCount());
+		new LBlock(lbsets[i], 0, 0, 0, lbsets[i]->cacheBlockCount(), 0);
 }
 
 
@@ -114,10 +114,10 @@ void LBlockBuilder::cleanup(WorkSpace *fw) {
  * @param index		Index in the BB lblock table.
  * @paramlblocks	BB lblock table.
  */
-void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock*> *lblocks) {
+void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock*> *lblocks, Address addr) {
 
 	// test if the l-block is cacheable
-	Address addr = inst->address();
+	// Address addr = inst->address();
 	const hard::Bank *bank = mem->get(addr);
 	if(!bank)
 		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
@@ -129,7 +129,8 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray
 
 	// compute the cache block ID
 	LBlockSet *lbset = lbsets[cache->set(addr)];
-	ot::mask block = cache->block(inst->address());
+	ot::mask block = cache->block(addr);
+
 	int cid = block_map.get(block, -1);
 	if(cid < 0) {
 		cid = lbset->cacheBlockCount();
@@ -142,11 +143,11 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray
 		top = bb->address() + bb->size();
 
 	// Build the lblock
-	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid);
+	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid, addr);
 	lblocks->set(index, lblock);
 	if(isVerbose())
 		log << "\t\t\t\tblock at " << addr << " size " << top-addr
-			<< " (cache block " << cache->round(inst->address())
+			<< " (cache block " << cache->round(addr)
 			<< ", cid = " << cid << ")\n";
 	index++;
 }
@@ -174,12 +175,18 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
 	// Traverse instruction
 	int index = 0;
 	hard::Cache::set_t set = cache->set(bb->first()->address()) - 1;
-	for(BasicBlock::InstIter inst = bb->insts(); inst; inst++)
+	for(BasicBlock::InstIter inst = bb->insts(); inst; inst++) {
 		if(set != cache->set(inst->address())) {
 			set = cache->set(inst->address());
-			addLBlock(bb, inst, index, lblocks);
+			addLBlock(bb, inst, index, lblocks, inst->address());
 		}
-	ASSERT(index == num_lblocks);
+
+		if(set != cache->set(inst->address() + inst->size() - 1)) { // in case an instruction crosses cache-block
+			set = cache->set(inst->address() + inst->size() - 1);
+			addLBlock(bb, inst, index, lblocks, cache->round(inst->address().offset() + inst->size() - 1));
+		}
+	}
+	ASSERT(index == num_lblocks); // to make sure the last instruction falls to the last LBlock created
 }
 
 
