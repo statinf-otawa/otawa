@@ -753,9 +753,4 @@ const cstring Manager::COMPILATION_DATE = OTAWA_DATE;
 const cstring Manager::VERSION = OTAWA_VERSION;
 
 
-// RTTI
-static rtti::Class<Manager> __class(rtti::make("otawa::Manager")
-	.op("def", Manager::def));
-rtti::Type& Manager::__type = __class;
-
 }	// otawa

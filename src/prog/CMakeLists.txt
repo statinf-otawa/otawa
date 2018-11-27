@@ -13,7 +13,6 @@ set(libotawa_SOURCES
 #   core module
 	"feature.h"
 	"base.cpp"
-	"manager.cpp"
 	"type.cpp"
 	"Loader.cpp"
 
@@ -182,6 +181,7 @@ set(libotawa_SOURCES
 	"prog_FixedTextDecoder.cpp"
 	"prog_Inst.cpp"
 	"prog_Label.cpp"
+	"prog_Manager.cpp"
 	"prog_ProgItem.cpp"
 	"prog_Process.cpp"
 	"prog_Segment.cpp"

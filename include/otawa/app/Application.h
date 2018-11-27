@@ -34,8 +34,8 @@ using namespace elm;
 // LogOption class
 class LogOption: public option::AbstractValueOption {
 public:
-	LogOption(option::Manager& man);
-	LogOption(option::Manager& man, int tag, ...);
+	LogOption(option::Manager *m);
+	LogOption(option::Manager& m);
 	inline operator Processor::log_level_t(void) const { return log_level; }
 	inline Processor::log_level_t operator*(void) const { return log_level; }
 	virtual void process(String arg);

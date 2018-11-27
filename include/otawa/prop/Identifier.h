@@ -265,7 +265,9 @@ template <class T> void from_string(const string& s, T& v)
 template <class T> struct scalar_init { T _ = T(0); };
 template <class T> struct object_init { T _; };
 template <class T> inline void Identifier<T>::fromString(PropList& props, const string& str) const
-	{ typename _if<type_info<T>::is_scalar, scalar_init<T>, object_init<T> >::_ v; from_string(str, v._); set(props, v._); }
+	{ typename elm::_if<type_info<T>::is_scalar, scalar_init<T>, object_init<T> > v;
+	from_string(str, v._);
+	set(props, v._); }
 
 template <> void from_string(const string& str, bool& v);
 template <> void from_string(const string& str, int& v);

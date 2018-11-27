@@ -460,7 +460,7 @@ public:
 	stack	(option::SwitchOption::Make(*this).cmd("-P").cmd("--stack")		.description("perform stack analysis and display results")),
 	insts	(option::SwitchOption::Make(*this).cmd("-I").cmd("--insts")		.description("display state after each instruction")),
 	addrs	(option::SwitchOption::Make(*this).cmd("-a").cmd("--address")	.description("display addresses of memory access")),
-	inits	(*this, option::cmd, "-r", option::cmd, "--reg", option::help, "add an initialization register", option::arg_desc, "REGISTER=VALUE", option::end)
+	inits	(option::ListOption<string>::Make(this).cmd("-r").cmd("--reg")	.description("add an initialization register").argDescription("REGISTER=VALUE"))
 	{ }
 
 protected:

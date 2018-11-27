@@ -27,7 +27,7 @@
 #include <elm/io/InFileStream.h>
 #include <elm/io/OutFileStream.h>
 #include <elm/options.h>
-#include <elm/option/StringOption.h>
+#include <elm/option/ValueOption.h>
 #include <elm/sys/Path.h>
 #include <elm/sys/System.h>
 #include <elm/xom/Serializer.h>
@@ -1300,31 +1300,29 @@ void Command::work(PropList &props) {
  * Build the command.
  */
 Command::Command(void):
-	otawa::Application(
-		"mkff",
-		Version(1, 1, 0),
-		"Hugues Cassé <casse@irit.fr>",
-		"Generate a flow fact file for an application.",
-		"Copyright (c) 2005-17, IRIT - UPS"),
-		contextual(*this, option::cmd, "-E", option::cmd, "--context", option::description, "enable contextual path output for loop bound", option::end),
-		xml(*this, option::cmd, "-x", option::cmd, "--ffx", option::description, "activate FFX output", option::end),
-		dynbranch				(make_switch()			.cmd("-D").cmd("--dynbranch")		.description("check for dynamic branches")),
-		outputCFG(*this, option::cmd, "-C", option::cmd, "--cfg_output", option::description, "output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)", option::end),
-		outputInlinedCFG(*this, option::cmd, "-I", option::cmd, "--inlined_cfg", option::description, "the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C", option::end),
-		outputVirtualizedCFG(*this, option::cmd, "-V", option::cmd, "--virtualized_cfg", option::description, "the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I", option::end),
-		removeDuplicatedTarget	(make_switch()			.cmd("-R").cmd("--no_repeat_multibranch")		.description("do not output the multi-call/branch with the same target addresses")),
-		showBlockProps(*this, option::cmd, "-P", option::cmd, "--show_block_props", option::description, "shows the properties of the block", option::end),
-		rawoutput(*this, option::cmd, "-RO", option::cmd, "--raw_output", option::description, "generate raw dot output file (without calling dot)", option::end),
-		forFun(*this, option::cmd, "-F", option::cmd, "--for_fun", option::description, "the generated dot files will be colorful :)", option::end),
-		slicing(*this, option::cmd, "-T", option::cmd, "--test", option::description, "apply the slicing during dynamic branching analysis", option::end),
-		cfg4PS(*this, option::cmd, "-S", option::cmd, "--show_cfg_SL", option::description, "generate DOT files before and after program slicing (PS)", option::end),
-		cfg4LR(*this, option::cmd, "-L", option::cmd, "--show_cfg_LR", option::description, "generate DOT files before and after loop reduction (LR)", option::end),
-		lightSlicing	(make_switch()			.cmd("-LS").cmd("--light_slicing")		.description("apply the slicing (light) during dynamic branching analysis")),
-		debugging(*this, option::cmd, "-DBG", option::cmd, "--debugging", option::description, "fast output generation", option::end),
-		nosource(*this, option::cmd, "-NS", option::cmd, "--no_source", option::description, "do not output source code in the generated CFGs", option::end),
-		debugSlicing(*this, option::cmd, "-DS", option::cmd, "--debug_slicing", option::description, "show the debugging message of slicing", option::end),
-		outputCFGXML(*this, option::cmd, "-X", option::cmd, "--xml_output", option::description, "generate XML files of each CFG for the initial, the iterations, and the final phases", option::end),
-		outputSimpleCFGXML(*this, option::cmd, "-Y", option::cmd, "--simple_xml_output", option::description, "generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs", option::end)
+	otawa::Application(Make("mkff", Version(1, 1, 0))
+			.author("Hugues Cassé <casse@irit.fr>")
+			.description("Generate a flow fact file for an application.")
+			.copyright("Copyright (c) 2005-17, IRIT - UPS")),
+		contextual				(make_switch().cmd("-E").cmd("--context")				.help("enable contextual path output for loop bound")),
+		xml						(make_switch().cmd("-x").cmd("--ffx")					.help("activate FFX output")),
+		dynbranch				(make_switch().cmd("-D").cmd("--dynbranch")				.help("check for dynamic branches")),
+		outputCFG				(make_switch().cmd("-C").cmd("--cfg_output")			.help("output cfg in a given fashion (otawa::display::CFGOutput::PATH, KIND)")),
+		outputInlinedCFG		(make_switch().cmd("-I").cmd("--inlined_cfg")			.help("the output cfg is inlined (otawa::display::CFGOutput::INLINED = true), implies -C")),
+		outputVirtualizedCFG	(make_switch().cmd("-V").cmd("--virtualized_cfg")		.help("the output cfg is virtualized (otawa::display::CFGOutput::VIRTUALIZED = true), implies -C -I")),
+		removeDuplicatedTarget	(make_switch().cmd("-R").cmd("--no_repeat_multibranch")	.help("do not output the multi-call/branch with the same target addresses")),
+		showBlockProps			(make_switch().cmd("-P").cmd("--show_block_props")		.help("shows the properties of the block")),
+		rawoutput				(make_switch().cmd("-RO").cmd("--raw_output")			.help("generate raw dot output file (without calling dot)")),
+		forFun					(make_switch().cmd("-F").cmd("--for_fun")				.help("the generated dot files will be colorful :)")),
+		slicing					(make_switch().cmd("-T").cmd("--test")					.help("apply the slicing during dynamic branching analysis")),
+		cfg4PS					(make_switch().cmd("-S").cmd("--show_cfg_SL")			.help("generate DOT files before and after program slicing (PS)")),
+		cfg4LR					(make_switch().cmd("-L").cmd("--show_cfg_LR")			.help("generate DOT files before and after loop reduction (LR)")),
+		lightSlicing			(make_switch().cmd("-LS").cmd("--light_slicing")		.help("apply the slicing (light) during dynamic branching analysis")),
+		debugging				(make_switch().cmd("-DBG").cmd("--debugging")			.help("fast output generation")),
+		nosource				(make_switch().cmd("-NS").cmd("--no_source")			.help("do not output source code in the generated CFGs")),
+		debugSlicing			(make_switch().cmd("-DS").cmd("--debug_slicing")		.help("show the debugging message of slicing")),
+		outputCFGXML			(make_switch().cmd("-X").cmd("--xml_output")			.help("generate XML files of each CFG for the initial, the iterations, and the final phases")),
+		outputSimpleCFGXML		(make_switch().cmd("-Y").cmd("--simple_xml_output")		.help("generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs"))
 {
 }
 
