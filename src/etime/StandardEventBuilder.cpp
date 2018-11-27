@@ -57,7 +57,7 @@ public:
 
 	virtual cstring name(void) const { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << *CATEGORY(_lb); }
+	virtual string detail(void) const { return _ << *CATEGORY(_lb) << " L1-I" << " @ " << _lb->address(); }
 
 	virtual int weight(void) const {
 		switch(CATEGORY(_lb)) {
@@ -101,7 +101,7 @@ public:
 	virtual type_t type(void) const { return AFTER; }
 	virtual occurrence_t occurence(void) const { return _occ; }
 	virtual cstring name(void) const { return "branch prediction"; }
-	virtual string detail(void) const { return ""; }
+	virtual string detail(void) const { return "B-P"; }
 	virtual bool isEstimating(bool on) { return on; }
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
@@ -145,7 +145,7 @@ public:
 	}
 
 	virtual cstring name(void) const { return "L1 data cache"; }
-	virtual string detail(void) const { return _ << *dcache::CATEGORY(_acc); }
+	virtual string detail(void) const { return _ << *dcache::CATEGORY(_acc) << " L1-D"; }
 
 	virtual int weight(void) const {
 		switch(dcache::CATEGORY(_acc)) {
@@ -267,7 +267,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		for(int i = 0; i < blocks.count(); i++) {
 
 			// find the instruction
-			while(inst->address() != blocks[i]->address()) {
+			while(inst->topAddress() < blocks[i]->address()) {
 				inst++;
 				ASSERT(inst);
 			}

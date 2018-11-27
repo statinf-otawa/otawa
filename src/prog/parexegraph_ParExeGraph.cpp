@@ -1,7 +1,6 @@
 
 #include <elm/string.h>
 #include <otawa/parexegraph/ParExeGraph.h>
-
 namespace otawa {
 
 /**
@@ -688,7 +687,7 @@ void ParExeGraph::addEdgesForPipelineOrder(void) {
  * @li 0x1014
  */
 void ParExeGraph::addEdgesForFetch(void) {
-	static string cache_trans_msg = "cache", cache_inter_msg = "line", branch_msg = "branch";
+	static string cache_trans_msg = "cache", cache_inter_msg = "line", branch_msg = "branch", cache_intra_msg = "intra";
 	static string in_order = "in-order";
 
 	// get fetch stage
@@ -725,7 +724,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 
 			// no branch
 			else {
-
+				elm::cout << "_cache_line_size = " << _cache_line_size << endl;
 				// no cache
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
@@ -735,6 +734,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 				// cache bound edges
 				else {
 					Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
+					elm::cout << node->name() << " addr " << hex(node->inst()->inst()->address().offset()) << ", cache line = " << hex(cache_line.offset()) << ", current_cache_line = " << hex(current_cache_line.offset()) << endl;
 					if(cache_line != current_cache_line) {
 						new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
 						if(first_cache_line_node != previous)
@@ -743,7 +743,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 						current_cache_line = cache_line;
 					}
 					else
-						new ParExeEdge(previous, node, ParExeEdge::SLASHED);
+						new ParExeEdge(previous, node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg));
 				}
 			}
 		}

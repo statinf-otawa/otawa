@@ -73,6 +73,7 @@ using namespace otawa;
 //#define STATE_MULTILINE
 #define TRACE_INTERSECT(t) // t
 
+#define DISPLAY_MEMORY 1
 
 // enable to load data from segments when load results with T
 #define DATA_LOADER
@@ -787,6 +788,8 @@ Value& Value::join(const Value& val) {
  * @param val the value of the next iteration state
 */
 Value& Value::widening(const Value& val) {
+#ifdef DISPLAY_MEMORY
+#endif
 	/* widen(NONE, NONE) = NONE */
 	if (_kind == NONE && val._kind == NONE)
 		return *this;
@@ -2267,6 +2270,7 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 				out << " = " << val;
 			}
 		}
+#ifdef DISPLAY_MEMORY
 		// memory
 		for(Node *cur = first.next; cur; cur = cur->next) {
 			if(!fst)
@@ -2276,6 +2280,7 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 			out << CLP_START << Address(cur->addr);
 			out << " = " << cur->val;
 		}
+#endif
 		// temp register, not in state
 		for(int i = 0; i < tmpreg.length(); i++){
 			Value val = tmpreg[i];

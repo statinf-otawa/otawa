@@ -471,4 +471,11 @@ private:
 
 }
 
+namespace elm { namespace io {
+	inline io::Output& operator<<(io::Output& out, const otawa::BranchProblem::Domain& state) {
+		state.print(out);
+		return out; }
+}}
+
+
 #endif /*CACHE_MUSTPROBLEM_H_*/

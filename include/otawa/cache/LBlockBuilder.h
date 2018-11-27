@@ -52,7 +52,7 @@ private:
 	const hard::Cache *cache;
 	const hard::Memory *mem;
 	HashMap<ot::mask, int> block_map;
-	void addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock *> *lblocks);
+	void addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray<LBlock *> *lblocks, Address addr);
 };
 
 } }	// otawa::cachze

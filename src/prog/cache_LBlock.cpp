@@ -44,8 +44,8 @@ namespace otawa { namespace cache {
  * @param size			Size of the l-block.
  * @param cache_indx	Cache index.
  */
-LBlock::LBlock(LBlockSet *lbset, BasicBlock *bb, Inst *inst, t::uint32 size, int cache_index)
-: lbs(lbset), _inst(inst), _size(size), _bb(bb), cid(cache_index) {
+LBlock::LBlock(LBlockSet *lbset, BasicBlock *bb, Inst *inst, t::uint32 size, int cache_index, address_t addr)
+: lbs(lbset), _inst(inst), _size(size), _bb(bb), cid(cache_index), _addr(addr) {
 	idx = lbset->LBlockSet::add(this);
 }
 
