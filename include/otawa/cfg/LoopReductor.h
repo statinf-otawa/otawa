@@ -47,7 +47,6 @@ private:
 	void computeInLoops(CFGMaker& maker, loops_t& L);
 
 	Vector<CFGMaker *> vcfgvec;
-	int idx;
 
 	static Identifier<bool> MARK;
 	static Identifier<Block*> DUPLICATE_OF;

@@ -76,7 +76,7 @@ p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
 	.make<LoopReductor>();
 
 LoopReductor::LoopReductor(p::declare& r)
-	: Processor(r), idx(0)
+	: Processor(r)
 {
 }
 
@@ -505,7 +505,8 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 
 				// if ∃h = last{u ∈ S ∧ u ∈ IL(w) } then
 				int h;
-				for(h = S.length() - 1; h >= 0 && !IN_LOOPS(w)->contains(S[h].fst->index()); h--);
+				for(h = S.length() - 1; h >= 0 && !IN_LOOPS(w)->contains(S[h].fst->index()); h--)
+					;
 				DEBUG("h = " << S[h] << io::endl);
 				if(h >= 0)
 
