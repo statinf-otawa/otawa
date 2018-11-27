@@ -133,17 +133,17 @@ log_level(Processor::LOG_NONE)
 
 
 /**
- * Build a log option with the given configuration.
+ * Declare a standard log option identified by "--log".
  * If the option is not passed, revert to value @ref Processor::LOG_NONE.
  * @param man	Used option manager.
- * @param tag	First tag.
- * @param ...	Must be a list of tags and their argument ended by option::end.
  */
-LogOption::LogOption(option::Manager& man, int tag, ...): AbstractValueOption(man), log_level(Processor::LOG_NONE) {
-	VARARG_BEGIN(args, tag)
-		init(man, tag, args);
-	VARARG_END
-}
+LogOption::LogOption(option::Manager *man)
+: option::AbstractValueOption(Make(man)
+	.cmd("--log")
+	.description("select level of log")
+	.argDescription("one of proc, deps, cfg, bb or inst")),
+log_level(Processor::LOG_NONE)
+{ }
 
 
 /**
