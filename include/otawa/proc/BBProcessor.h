@@ -77,12 +77,14 @@ public:
 	BBProcessor(cstring name, elm::Version version = elm::Version::ZERO);
 
 protected:
-	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	void processCFG(WorkSpace *ws, CFG *cfg) override;
 	virtual void processBB(WorkSpace *ws, CFG *cfd, Block *bb) = 0;
-	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
+	void cleanupCFG(WorkSpace *ws, CFG *cfg) override;
 	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb);
-	virtual void destroy(WorkSpace *ws, CFG *cfg);
-	virtual void destroy(WorkSpace *ws, CFG *cfg, Block *b);
+	void destroyCFG(WorkSpace *ws, CFG *cfg) override;
+	virtual void destroyBB(WorkSpace *ws, CFG *cfg, Block *b);
+
+	inline const CFG& blocks() const { return *cfg(); }
 
 	template <class T> void trackBB(const AbstractFeature& feature, const Identifier<T *>& id)
 		{ addCleaner(feature, new BBDeletor<T>(workspace(), id)); }

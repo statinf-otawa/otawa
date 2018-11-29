@@ -98,9 +98,9 @@ void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 /**
  */
-void BBProcessor::destroy(WorkSpace *ws, CFG *cfg) {
+void BBProcessor::destroyCFG(WorkSpace *ws, CFG *cfg) {
 	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-		destroy(ws, cfg, bb);
+		destroyBB(ws, cfg, bb);
 }
 
 
@@ -108,8 +108,15 @@ void BBProcessor::destroy(WorkSpace *ws, CFG *cfg) {
  * Propagate to blocks the destroy action. Default implementation
  * does not nothing.
  */
-void BBProcessor::destroy(WorkSpace *ws, CFG *cfg, Block *b) {
+void BBProcessor::destroyBB(WorkSpace *ws, CFG *cfg, Block *b) {
 }
+
+
+/**
+ * @fn const CFG& BBProcessor::blocks() const;
+ * Get a range on the blocks of the current CFG.
+ * @return	Current CFG blocks range.
+ */
 
 
 /**

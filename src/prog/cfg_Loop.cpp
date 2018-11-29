@@ -268,7 +268,7 @@ protected:
 			makeLoop(p);
 	}
 
-	void destroy(WorkSpace *ws, CFG *cfg, Block *b) override {
+	void destroyBB(WorkSpace *ws, CFG *cfg, Block *b) override {
 		if(Loop::isHeader(b) || b->isEntry()) {
 			delete Loop::ID(b);
 			Loop::ID(b).remove();

@@ -86,7 +86,7 @@ private:
 		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
 	} stat_t;
 
-	static const elm::t::size
+	static const int
 		rblock_shift = 3,
 		rblock_mask = (1 << rblock_shift) - 1,
 		rblock_size = 1 << rblock_shift; 	// the number of registers per row
@@ -126,7 +126,7 @@ public:
 			for(auto i = 0; i < nrblock; i++)
 				regRowAlloc[i] = 0;
 
-			unsigned int regCount = (nrblock* (1 << rblock_shift));
+			int regCount = (nrblock* (1 << rblock_shift));
 			regEachAlloc = new value_t*[regCount];
 			for(auto i = 0; i < regCount; i++)
 				regEachAlloc[i] = 0;
@@ -162,7 +162,7 @@ public:
 	 * @param r	Register to get.
 	 * @return	Register value.
 	 */
-	const value_t& get(t s, register_t r) {
+	const value_t& get(t s, int r) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 		return s->regs[r >> rblock_shift][r & rblock_mask];
 	}
@@ -174,7 +174,7 @@ public:
 	 * @param v		Value to set.
 	 * @return		State after change.
 	 */
-	t set(const t& s, register_t r, const value_t& v, bool show = false) {
+	t set(const t& s, int r, const value_t& v, bool show = false) {
 		ASSERTP(r < nrblock * rblock_size, "register index out of bound");
 		value_t temp = s->regs[r >> rblock_shift][r & rblock_mask];
 		if(dom->equals(temp, v)) // if the existing value is the same as the value to assign, then no change
@@ -826,7 +826,7 @@ public:
 			if(regRowAlloc[i]) {
 				regRowAlloc[i] = 0;
 				int maxj = (i << rblock_shift) + rblock_size;
-				ASSERT(elm::t::size(maxj) < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
+				ASSERT(maxj < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
 				for(int j = i << rblock_shift; j < maxj; j++) {
 					regEachAlloc[j] = 0;
 				}
@@ -998,7 +998,7 @@ private:
 	}
 
 	D *dom;
-	elm::t::size nrblock;
+	int nrblock;
 	T& allocator;
 	int multi_max;
 	dfa::State *istate;

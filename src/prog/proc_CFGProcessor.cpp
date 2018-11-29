@@ -123,8 +123,15 @@ void CFGProcessor::doCleanUp(void) {
  * Propagate the destroy phase to CFG resources.
  * Default implementation does nothing.
  */
-void CFGProcessor::destroy(WorkSpace *ws, CFG *cfg) {
+void CFGProcessor::destroyCFG(WorkSpace *ws, CFG *cfg) {
 }
+
+
+/**
+ * @fn const CFGCollection& CFGProcessor::cfgs(void) const;
+ * Get a range on the CFG of the current task.
+ * @return	Current CFGs range.
+ */
 
 
 /**
@@ -132,7 +139,7 @@ void CFGProcessor::destroy(WorkSpace *ws, CFG *cfg) {
 void CFGProcessor::destroy(WorkSpace *ws) {
 	const CFGCollection *coll = INVOLVED_CFGS(workspace());
 	for(int i = 0; i < coll->count(); i++)
-		destroy(ws, coll->get(i));
+		destroyCFG(ws, coll->get(i));
 }
 
 

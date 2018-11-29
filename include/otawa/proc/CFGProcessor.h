@@ -22,8 +22,9 @@
 #ifndef OTAWA_PROC_CFGPROCESSOR_H
 #define OTAWA_PROC_CFGPROCESSOR_H
 
-#include <otawa/proc/Processor.h>
 #include <elm/data/List.h>
+#include <otawa/proc/Processor.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa {
 	
@@ -49,15 +50,16 @@ protected:
 	virtual void processWorkSpace(WorkSpace *fw);
 	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
-	virtual void destroy(WorkSpace *ws, CFG *cfg);
+	virtual void destroyCFG(WorkSpace *ws, CFG *cfg);
 
 	// useful
-	virtual void destroy(WorkSpace *ws);
+	void destroy(WorkSpace *ws) override;
 	void doCleanUp(void);
 	string str(const Address& address);
 	string str(const Address& base, const Address& address);
 	inline CFG *cfg(void) const { return _cfg; }
-	
+	inline const CFGCollection& cfgs(void) const { return **INVOLVED_CFGS(workspace()); }
+
 private:
 	void init(const PropList& props);
 	CFG *_cfg;
