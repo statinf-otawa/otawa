@@ -119,8 +119,8 @@ public:
 	inline const Address& address(void) const { return _address; }
 	inline const int size(void) const { return _size; }
 	inline type_t type(void) const { return _type; }
-	inline time_t readLatency(void) const { return _latency; }
-	inline time_t writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
+	inline ot::time readLatency(void) const { return _latency; }
+	inline ot::time writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
 	inline int power(void) const { return _power; }
 	inline int blockBits(void) const { return _block_bits; }
 	inline int blockSize(void) const { return 1 << _block_bits; }
@@ -136,14 +136,14 @@ public:
 		{ return addr.page() == address().page() && addr >= address() && addr <= (topAddress() - 1); }
 
 	// deprecated
-	inline time_t latency(void) const { return _latency; }
+	inline ot::time latency(void) const { return _latency; }
 
 private:
 	string _name;
 	Address _address;
 	int _size;
 	type_t _type;
-	time_t _latency, _power, _write_latency;
+	ot::time _latency, _power, _write_latency;
 	int _block_bits;
 	AllocArray<const Mode *> _modes;
 	bool _cached;
@@ -190,23 +190,23 @@ public:
 	static Memory *load(xom::Element *element);
 	const Bank *get(Address address) const;
 
-	time_t worstReadTime(void) const;
-	time_t worstWriteTime(void) const;
-	time_t worstAccessTime(void) const;
+	ot::time worstReadTime(void) const;
+	ot::time worstWriteTime(void) const;
+	ot::time worstAccessTime(void) const;
 
-	time_t readTime(Address a) const;
-	time_t writeTime(Address a) const;
-	time_t accessTime(Address a) const;
+	ot::time readTime(Address a) const;
+	ot::time writeTime(Address a) const;
+	ot::time accessTime(Address a) const;
 
 	// deprecated
-	inline time_t worstAccess(void) const { return worstAccessTime(); }
-	inline time_t worstReadAccess(void) const { return worstReadTime(); }
-	inline time_t worstWriteAccess(void) const { return worstWriteTime(); }
+	inline ot::time worstAccess(void) const { return worstAccessTime(); }
+	inline ot::time worstReadAccess(void) const { return worstReadTime(); }
+	inline ot::time worstWriteAccess(void) const { return worstWriteTime(); }
 
 private:
 	AllocArray<const Bank *> _banks;
 	AllocArray<const Bus *> _buses;
-	mutable time_t _waccess, _wread, _wwrite;
+	mutable ot::time _waccess, _wread, _wwrite;
 };
 
 // features

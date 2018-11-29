@@ -123,12 +123,12 @@ public:
 			top = make(false);
 
 			regRowAlloc = new value_t*[nrblock];
-			for(t::size i = 0; i < nrblock; i++)
+			for(auto i = 0; i < nrblock; i++)
 				regRowAlloc[i] = 0;
 
 			unsigned int regCount = (nrblock* (1 << rblock_shift));
 			regEachAlloc = new value_t*[regCount];
-			for(t::size i = 0; i < regCount; i++)
+			for(auto i = 0; i < regCount; i++)
 				regEachAlloc[i] = 0;
 
 			tempValueAlloc = 0;
@@ -196,7 +196,7 @@ public:
 		// we copy the content of each register in the row, note that the copying could result memory allocation
 		// hence we need to track each register with regEachAlloc
 		// elm::array::copy(rblock, s->regs[r >> rblock_shift], rblock_size);
-		for(t::size i = 0; i < rblock_size; i++) { // copy each register
+		for(auto i = 0; i < rblock_size; i++) { // copy each register
 			regEachAlloc[i] = new(&rblock[i]) value_t(s->regs[r >> rblock_shift][i]);
 		}
 
@@ -209,7 +209,7 @@ public:
 		stateAlloc1 = 0;
 		regsAlloc = 0;
 		regRowAlloc[0] = 0;
-		for(t::size i = 0; i < rblock_size; i++)
+		for(auto i = 0; i < rblock_size; i++)
 			regEachAlloc[i] = 0;
 
 		if(dom->equals(v, dom->top) && equals(res, top)) // if the resulted state is T
@@ -304,7 +304,7 @@ public:
 	 */
 
 	inline int findMemsIndex(address_t a) {
-		t::uint32 i = a;
+		elm::t::uint32 i = a;
 		i = i >> 2; // get rid of the lowest 2 bits
 		// i = i & 0x3F; // the lower 6 bits
 		i = i & (MEM_SIZE - 1);
@@ -561,9 +561,9 @@ public:
 
 		// check registers
 		if(s1->regs != s2->regs) {
-			for(t::size i = 0; i < nrblock; i++)
+			for(auto i = 0; i < nrblock; i++)
 				if(s1->regs[i] != s2->regs[i])
-					for(t::size j = 0; j < rblock_size; j++)
+					for(auto j = 0; j < rblock_size; j++)
 						if(!dom->equals(s1->regs[i][j], s2->regs[i][j]))
 							return false;
 		}
@@ -599,8 +599,8 @@ public:
 		}
 
 		bool fst = true;
-		for(t::size i = 0; i < nrblock; i++)
-			for(t::size j = 0; j < rblock_size; j++)
+		for(auto i = 0; i < nrblock; i++)
+			for(auto j = 0; j < rblock_size; j++)
 				if(!dom->equals(s->regs[i][j], dom->bot) && !dom->equals(s->regs[i][j], dom->top)) {
 					if(!fst)
 						out << ", ";
@@ -756,7 +756,7 @@ public:
 			regs = allocator.template allocate<value_t *>(nrblock);
 			regsAlloc = regs;
 
-			for(t::size i = 0; i < nrblock; i++) {
+			for(auto i = 0; i < nrblock; i++) {
 				if(s1->regs[i] == s2->regs[i])
 					regs[i] = s1->regs[i];
 				else {
@@ -764,7 +764,7 @@ public:
 					regRowAlloc[i] = regs[i];
 
 					int currentJ = i << rblock_shift;
-					for(t::size j = 0; j < rblock_size; j++) {
+					for(auto j = 0; j < rblock_size; j++) {
 						regEachAlloc[currentJ+j] = new(&regs[i][j])value_t(w.process(s1->regs[i][j], s2->regs[i][j]));
 						value_t::tempPVAlloc = 0;
 					}
@@ -822,11 +822,11 @@ public:
 		stateAlloc1 = 0;
 		stateAlloc2 = 0;
 		regsAlloc = 0;
-		for(t::size i = 0; i < nrblock; i++) {
+		for(auto i = 0; i < nrblock; i++) {
 			if(regRowAlloc[i]) {
 				regRowAlloc[i] = 0;
 				int maxj = (i << rblock_shift) + rblock_size;
-				ASSERT(t::size(maxj) < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
+				ASSERT(elm::t::size(maxj) < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
 				for(int j = i << rblock_shift; j < maxj; j++) {
 					regEachAlloc[j] = 0;
 				}
@@ -861,15 +861,15 @@ public:
 			if(already) {
 			}
 			else {
-				for(t::size i = 0; i < nrblock; i++) { // for each row of registers
+				for(auto i = 0; i < nrblock; i++) { // for each row of registers
 					if(regRowAlloc[i]) {
 						already = allocator.template mark(regRowAlloc[i], sizeof(value_t)*rblock_size);
 						if(already) {
 						}
 						else {
-							t::size maxj = (i << rblock_shift) + rblock_size;
+							auto maxj = (i << rblock_shift) + rblock_size;
 							ASSERT(maxj < (istate->process().platform()->regCount() + rblock_size) ); // to make sure we don't have un-realistic maxj, which should cover the size of the regs of any given platform
-							for(t::size j = i << rblock_shift; j < maxj; j++) { // now mark the domain for each register
+							for(auto j = i << rblock_shift; j < maxj; j++) { // now mark the domain for each register
 								if(regEachAlloc[j])
 									regEachAlloc[j]->collect(&allocator);
 							} // end of each register
@@ -934,13 +934,13 @@ public:
 		if(already) {
 		}
 		else {
-			for(t::size i = 0; i < nrblock; i++) {
+			for(auto i = 0; i < nrblock; i++) {
 				already = allocator.template mark(_s->regs[i], sizeof(value_t)*rblock_size);
 				if(already) {
 				}
 				else {
 					// now mark the domain
-					for(t::size j = 0; j < rblock_size; j++) {
+					for(auto j = 0; j < rblock_size; j++) {
 						_s->regs[i][j].collect(&allocator, show);
 					}
 				}
@@ -974,13 +974,13 @@ private:
 	 */
 	t make(bool bot) {
 		value_t **regs = allocator.template allocate<value_t *>(nrblock);
-		for(t::size i = 0; i < nrblock; i++)
+		for(auto i = 0; i < nrblock; i++)
 			regs[i] = 0;
 		regsAlloc = regs; // register the current regs to be collected
 
-		for(t::size i = 0; i < nrblock; i++) {
+		for(auto i = 0; i < nrblock; i++) {
 			regs[i] = allocator.template allocate<value_t>(rblock_size);
-			for(t::size j = 0; j < rblock_size; j++)
+			for(auto j = 0; j < rblock_size; j++)
 				if(bot) {
 					//regs[i][j] = dom->bot;
 					new(&regs[i][j])value_t(dom->bot);

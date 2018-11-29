@@ -452,7 +452,7 @@ Memory::~Memory(void) {
  * Compute the worst access latency.
  * @return Worst access latency.
  */
-time_t Memory::worstAccessTime(void) const {
+ot::time Memory::worstAccessTime(void) const {
 	if(_waccess == 0)
 		_waccess = max(worstReadAccess(), worstWriteAccess());
 	return _waccess;
@@ -463,7 +463,7 @@ time_t Memory::worstAccessTime(void) const {
  * Compute the worst read access latency.
  * @return Worst read access latency.
  */
-time_t Memory::worstReadTime(void) const {
+ot::time Memory::worstReadTime(void) const {
 	if(_wread == 0)
 		for(int i = 0; i < _banks.count(); i++)
 			_wread = max(_wread, _banks[i]->latency());
@@ -475,7 +475,7 @@ time_t Memory::worstReadTime(void) const {
  * Compute the worst read access latency.
  * @return Worst read access latency.
  */
-time_t Memory::worstWriteTime(void) const {
+ot::time Memory::worstWriteTime(void) const {
 	if(_wwrite == 0)
 		for(int i = 0; i < _banks.count(); i++)
 			_wwrite = max(_wwrite, _banks[i]->writeLatency());
@@ -489,7 +489,7 @@ time_t Memory::worstWriteTime(void) const {
  * @param a		Read address.
  * @return		Worst-case read access time.
  */
-time_t Memory::readTime(Address a) const {
+ot::time Memory::readTime(Address a) const {
 	const Bank *b = get(a);
 	if(!b)
 		return worstReadTime();
@@ -504,7 +504,7 @@ time_t Memory::readTime(Address a) const {
  * @param a		Written address.
  * @return		Worst-case write access time.
  */
-time_t Memory::writeTime(Address a) const {
+ot::time Memory::writeTime(Address a) const {
 	const Bank *b = get(a);
 	if(!b)
 		return worstWriteTime();
@@ -519,7 +519,7 @@ time_t Memory::writeTime(Address a) const {
  * @param a		Read address.
  * @return		Worst-case access time.
  */
-time_t Memory::accessTime(Address a) const {
+ot::time Memory::accessTime(Address a) const {
 	const Bank *b = get(a);
 	if(!b)
 		return worstAccessTime();

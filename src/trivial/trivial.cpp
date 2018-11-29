@@ -153,7 +153,7 @@ protected:
 			for(LBlockSet::Iterator lb(*lblocks[i]); lb; lb++)
 				if(lb->bb()) {
 					var x(ipet::VAR(lb->bb()));
-					time_t miss_t = mem->readTime(lb->address());
+					ot::time miss_t = mem->readTime(lb->address());
 					sys += miss_t * x;
 					if(logFor(LOG_INST))
 						log << "\tadded miss for " << lb->address() << " (time = " << miss_t << ")\n";
@@ -219,7 +219,7 @@ protected:
 		BasicBlock *bb = b->toBasic();
 
 		// compute the time spent in memory accesses
-		time_t time = 0;
+		ot::time time = 0;
 		for(BasicBlock::InstIter i = bb->insts(); i; i++)
 			if(i->isMem()) {
 				if(i->isMulti()) {
@@ -303,7 +303,7 @@ protected:
 			break;
 
 		case cache::FIRST_MISS: {
-				time_t t_miss = mem->readTime(acc.address());
+				ot::time t_miss = mem->readTime(acc.address());
 				Block *h = cache::CATEGORY_HEADER(acc);
 				if(!h)
 					sys += t_miss;
@@ -318,7 +318,7 @@ protected:
 		case cache::FIRST_HIT:
 		case cache::ALWAYS_MISS:
 		case cache::NOT_CLASSIFIED: {
-				time_t t_miss = mem->readTime(acc.address());
+				ot::time t_miss = mem->readTime(acc.address());
 				var x(ipet::VAR(site));
 				sys += t_miss * x;
 			}
