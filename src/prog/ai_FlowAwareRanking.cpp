@@ -90,7 +90,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 		// propagate at subprogram return
 		else if(v->isExit())
-			for(auto c = v->cfg()->callers(); c; c++)
+			for(auto c: v->cfg()->callers())
 				for(auto e = c->outs(); e; e++)
 					if(r > RANK_OF(e->sink()))
 						wl.put(pair(e->sink(), r));

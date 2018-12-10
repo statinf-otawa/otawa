@@ -122,8 +122,7 @@ public:
 	void process(CFG *g) {
 		for(auto b: *g)
 			process(b);
-		for(auto c = g->callers(); c; c++)
-			caller_cnt++;
+		caller_cnt += g->callers().count();
 	}
 
 	int bb_cnt;

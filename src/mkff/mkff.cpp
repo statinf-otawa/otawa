@@ -1458,7 +1458,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 				vv.add(v);
 				Vector<SynthBlock*> p;
 
-				for(CFG::CallerIter ci = cfg->callers(); ci; ci++)
+				for(auto ci: cfg->callers())
 					vv[0].add(*ci);
 
 				int currLevel = 0;
@@ -1480,7 +1480,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 						currLevel++;
 						if(vv.count() == currLevel)
 							vv.add(v);
-						for(CFG::CallerIter ci = sb->cfg()->callers(); ci; ci++)
+						for(auto ci: sb->cfg()->callers())
 							vv[currLevel].add(*ci);
 
 						if(vv[currLevel].count() == 0) { // reaches the end

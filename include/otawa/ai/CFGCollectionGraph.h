@@ -46,7 +46,7 @@ public:
 	inline bool isCall(vertex_t v) const { return v->isSynth() && v->toSynth()->callee(); }
 	inline vertex_t entryOf(vertex_t v) const { return v->toSynth()->callee()->entry(); }
 	inline vertex_t exitOf(vertex_t v) const { return v->toSynth()->callee()->exit(); }
-	inline Callers callers(vertex_t v) const { return v->cfg()->callers(); }
+	inline const List<SynthBlock *>& callers(vertex_t v) const { return v->cfg()->callers(); }
 
 	class Iterator: public CFGCollection::BlockIter {
 	public:

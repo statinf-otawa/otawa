@@ -633,7 +633,7 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 
 			if (b->isEntry()) {
 				// then get the set of the callers
-				for(CFG::CallerIter caller = b->cfg()->callers(); caller; caller++) {
+				for(auto caller: b->cfg()->callers()) {
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
 						elm::cerr << __SOURCE_INFO__ << "Found a caller @ CFG " << caller->cfg()->index() << ", BB " << caller->index() << io::endl;
 

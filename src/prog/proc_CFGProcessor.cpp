@@ -51,15 +51,16 @@ namespace otawa {
 
 /**
  */
-p::declare CFGProcessor::reg = p::init("otawa::CFGProcessor", Version(2, 0, 0))
+p::declare CFGProcessor::reg = p::init("otawa::CFGProcessor", Version(2, 1, 0))
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LABEL_FEATURE);
 
 
 /**
  * Build a new CFG processor.
+ * @deprecated
  */
-CFGProcessor::CFGProcessor(void): Processor(reg), _cfg(0) {
+CFGProcessor::CFGProcessor(void): Processor(reg), _cfg(nullptr), _coll(nullptr) {
 }
 
 
@@ -67,33 +68,68 @@ CFGProcessor::CFGProcessor(void): Processor(reg), _cfg(0) {
  * Build a new named processor.
  * @param name		Processor name.
  * @param version	Processor version.
+ * @deprecated
  */
 CFGProcessor::CFGProcessor(cstring name, elm::Version version)
-: Processor(name, version, reg), _cfg(0) {
+: Processor(name, version, reg), _cfg(nullptr), _coll(nullptr) {
 }
 
 
 /**
+ * Build a new CFG processor with the given registration information.
+ * @param reg	Registration information.
  */
-void CFGProcessor::processWorkSpace(WorkSpace *fw) {
+CFGProcessor::CFGProcessor(AbstractRegistration& reg)
+: Processor(reg), _cfg(nullptr), _coll(nullptr) {
+}
+
+
+/**
+ * @deprecated
+ */
+CFGProcessor::CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg)
+: Processor(name, version, reg), _cfg(nullptr), _coll(nullptr) {
+}
+
+
+
+/**
+ */
+void CFGProcessor::processWorkSpace(WorkSpace *ws) {
 
 	// Get the CFG collection
-	const CFGCollection *cfgs = INVOLVED_CFGS(fw);
-	ASSERT(cfgs);
+	_coll = INVOLVED_CFGS(ws);
+	ASSERT(_coll);
 
 	// Visit CFG
-	int count = 0;
-	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++) {
-		if(logFor(LOG_CFG))
-			log << "\tprocess CFG " << cfg->label() << io::endl;
-		_cfg = cfg;
-		processCFG(fw, cfg);
-		count++;
-	}
+	processAll(ws);
 
 	// Record stats
 	if(recordsStats())
-		PROCESSED_CFG(stats) = count;
+		PROCESSED_CFG(stats) = _coll->count();
+}
+
+
+/**
+ * This function is called once the CFG collection has been obtained.
+ * It can be overriden to apply analysis on the whole task (collection
+ * of CFGs). As a default, it call processCFG() for each CFG of the
+ * collection.
+ *
+ * In this function, the following functions are available:
+ * * CFGProcessor::cfgs()
+ * * CFGProcessor::entryCFG()
+ * * CFGProcessor::entryBlock()
+ *
+ * @param ws	Current workspace.
+ */
+void CFGProcessor::processAll(WorkSpace *ws) {
+	for(auto g: *_coll) {
+		if(logFor(LOG_CFG))
+			log << "\tprocess CFG " << g->label() << io::endl;
+		_cfg = g;
+		processCFG(ws, g);
+	}
 }
 
 
@@ -128,9 +164,50 @@ void CFGProcessor::destroyCFG(WorkSpace *ws, CFG *cfg) {
 
 
 /**
+ * @fn CFG *CFGProcessor::cfg(void) const;
+ * Get the current CFG.
+ * @return	Current CFG.
+ * @warning	Can only be called from processCFG().
+ */
+
+
+/**
+ * @fn Block *CFGProcessor::entry() const;
+ * Get the entry block of the current CFG.
+ * @return	Current CFG entry block.
+ * @warning	Can only be called from processCFG().
+ */
+
+
+/**
+ * @fn Block *CFGProcessor::exit() const;
+ * Get the exit block of the current CFG.
+ * @return	Current CFG exit block.
+ * @warning	Can only be called from processCFG().
+ */
+
+
+/**
  * @fn const CFGCollection& CFGProcessor::cfgs(void) const;
  * Get a range on the CFG of the current task.
  * @return	Current CFGs range.
+ * @warning	Can only be called from processAll() or processCFG().
+ */
+
+
+/**
+ * @fn CFG *CFGProcessor::taskCFG() const;
+ * Get the CFG entry point of the current task.
+ * @return	Current task entry point CFG.
+ * @warning	Can only be called from processAll() or processCFG().
+ */
+
+
+/**
+ * @fn Block *CFGProcessor::taskEntry() const;
+ * Get the entry block of the current task entry CFG.
+ * @return	Entry block of the current entry CFG.
+ * @warning	Can only be called from processAll() or processCFG().
  */
 
 

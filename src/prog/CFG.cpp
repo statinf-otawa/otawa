@@ -621,7 +621,7 @@ void BasicBlock::BasicIns::next(void) {
 
 		// function entry
 		else if(p.fst->source()->isEntry())
-			for(CFG::CallerIter c = p.fst->source()->cfg()->callers(); c; c++)
+			for(auto c: p.fst->source()->cfg()->callers())
 				for(Block::EdgeIter i = c->ins(); i; i++)
 					wl.push(pair(*i, *i));
 
@@ -753,7 +753,7 @@ string CFG::format(const Address& addr) {
  */
 int CFG::callCount(void) const {
 	int c = 0;
-	for(CallerIter i = callers(); i; i++)
+	for(auto i: callers())
 		c++;
 	return c;
 }

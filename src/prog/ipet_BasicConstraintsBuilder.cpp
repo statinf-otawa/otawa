@@ -100,8 +100,8 @@ void BasicConstraintsBuilder::processCFG(WorkSpace *ws, CFG *cfg) {
 	//	x_e = sum{i in caller(f)} x_i
 	else {
 		cons c = m(call_label) + x(VAR(entry)) == 0.;
-		for(CFG::CallerIter call = cfg->callers(); call; call++)
-			c += x(VAR(*call));
+		for(auto call: cfg->callers())
+			c += x(VAR(call));
 	}
 
 	// call parent

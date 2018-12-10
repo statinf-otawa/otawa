@@ -77,7 +77,7 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 
 	// build the links
 	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
-		for(CFG::CallerIter call = cfg->callers(); call; call++)
+		for(auto call: cfg->callers())
 			builder.add(map.get(call->caller()), map.get(cfg), new PCGEdge(call));
 
 	// install all

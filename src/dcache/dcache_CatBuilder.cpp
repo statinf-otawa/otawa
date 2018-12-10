@@ -119,7 +119,7 @@ void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domai
 	  	else
 	  		header = ENCLOSING_LOOP_HEADER(bb);
 		if (!header && bb->cfg()->callCount() == 1) { // temp solution
-			CFG::CallerIter a = bb->cfg()->callers();
+			CFG::CallerIter a = bb->cfg()->callers().begin();
 			otawa::Block *cb = *a;
 			if (LOOP_HEADER(cb))
 				header = cb;
@@ -140,7 +140,7 @@ void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domai
 			if (nh)
 				header = nh;
 			else if (header->cfg()->callCount() == 1) { // temp solution
-				CFG::CallerIter a = header->cfg()->callers();
+				CFG::CallerIter a = header->cfg()->callers().begin();
 				otawa::Block *cb = *a;
 				if (LOOP_HEADER(cb))
 					header = cb;

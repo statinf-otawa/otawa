@@ -37,32 +37,40 @@ class CFGProcessor: public Processor {
 public:
 	static p::declare reg;
 
+	CFGProcessor(AbstractRegistration& reg);
+
 	CFGProcessor(void);
 	CFGProcessor(cstring name, elm::Version version);
-	inline CFGProcessor(AbstractRegistration& reg): Processor(reg), _cfg(0) { }
-	inline CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg)
-		: Processor(name, version, reg), _cfg(0) { }
-	virtual void configure(const PropList& props);
+	CFGProcessor(cstring name, const Version& version, AbstractRegistration& reg);
 
 protected:
+	void configure(const PropList& props) override;
+	void processWorkSpace(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
 
 	// to customize
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void processCFG(WorkSpace *fw, CFG *cfg) = 0;
+	virtual void processAll(WorkSpace *ws);
+	virtual void processCFG(WorkSpace *ws, CFG *cfg) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
 	virtual void destroyCFG(WorkSpace *ws, CFG *cfg);
 
 	// useful
-	void destroy(WorkSpace *ws) override;
 	void doCleanUp(void);
 	string str(const Address& address);
 	string str(const Address& base, const Address& address);
+
 	inline CFG *cfg(void) const { return _cfg; }
-	inline const CFGCollection& cfgs(void) const { return **INVOLVED_CFGS(workspace()); }
+	inline Block *entry() const { return cfg()->entry(); }
+	inline Block *exit() const { return cfg()->exit(); }
+
+	inline const CFGCollection& cfgs(void) const { return *_coll; }
+	inline CFG *taskCFG() const { return _coll->entry(); }
+	inline Block *taskEntry() const { return taskCFG()->entry(); }
 
 private:
 	void init(const PropList& props);
 	CFG *_cfg;
+	const CFGCollection *_coll;
 };
 
 // Configuration Properties

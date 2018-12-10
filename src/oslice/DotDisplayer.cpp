@@ -147,7 +147,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 					}
 					else {
 						// normal block here
-						CFG::CallerIter cci = cfg->callers();
+						CFG::CallerIter cci = cfg->callers().begin();
 						do {
 							SynthBlock* xyz = 0;
 							if(cci)
@@ -178,7 +178,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 			}
 
 			// for each call, create a node
-			CFG::CallerIter cci = cfg->callers();
+			CFG::CallerIter cci = cfg->callers().begin();
 			do {
 
 				SynthBlock* xyz = 0;

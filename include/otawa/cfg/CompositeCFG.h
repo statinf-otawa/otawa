@@ -34,7 +34,7 @@ public:
 
 	typedef Block *vertex_t;
 	typedef Edge *edge_t;
-	typedef CFG::CallerIter Callers;
+	typedef const List<SynthBlock *>& Callers;
 
 	inline vertex_t entry(void) const { return _coll.entry()->entry(); }
 	inline vertex_t exit(void) const { return _coll.entry()->exit(); }

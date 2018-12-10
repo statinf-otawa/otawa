@@ -221,7 +221,7 @@ public:
 	inline Block *unknown(void) const { return _unknown; }
 	inline BlockIter blocks(void) const { return vertices(); }
 	inline type_t type(void) const { return _type; }
-	inline CallerIter callers(void) const { return CallerIter(_callers); }
+	inline const List<SynthBlock *>& callers(void) const { return _callers; }
 	int callCount(void) const;
 	void clean(const AbstractIdentifier& id);
 

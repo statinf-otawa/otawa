@@ -72,7 +72,7 @@ Debug::Debug(WorkSpace *ws, sys::Path path): saver(path), in_state(false), faile
 			saver.beginArray();
 			cerr << "DEBUG: " << *bb << io::endl;
 			if(bb->isExit())
-				for(CFG::CallerIter call = bb->cfg()->callers(); call; call++) {
+				for(auto call: bb->cfg()->callers()) {
 					ASSERT(call->outs());
 					cerr << "DEBUG: exit found!\n";
 					saver.put(id(call->cfg(), call->outs()->sink()));

@@ -178,6 +178,15 @@ Address Address::null;
 
 
 /**
+ * @fn Address Address::mask(ot::size m) const;
+ * Build a new address which offset is masked by the given parameter m,
+ * that is, all bits of offset corresponding to 1 in m are set to 0.
+ * @param m		Mask to apply.
+ * @return		Masked address.
+ */
+
+
+/**
  */
 elm::io::Output& operator<<(elm::io::Output& out, Address addr) {
 	if(addr.isNull())

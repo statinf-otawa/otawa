@@ -516,7 +516,7 @@ protected:
 				if(w->cfg()->callCount() == 0)		// X_w,v = x_w,v
 					_log(add(e));
 				else								// X_w,v = x_w,v = ∑{call(u, f)} x_c = ∑{u call f} ∑{(t, u) in E} x_t,u
-					for(CFG::CallerIter c = w->cfg()->callers(); c;c++)
+					for(auto c: w->cfg()->callers())
 						for(Block::EdgeIter ce = c->ins();  ce; ce++)
 							_log(add(add(e), ce));
 			}
