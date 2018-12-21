@@ -27,6 +27,7 @@
 #include <elm/string/StringBuffer.h>
 #include <elm/data/List.h>
 #include <elm/data/BiDiList.h>
+#include <otawa/base.h>
 #include <otawa/cache/cat2/CachePenalty.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
@@ -46,7 +47,12 @@ namespace otawa {
 
 	class ParExeException: public otawa::Exception {
 	public:
-		inline ParExeException(string message): otawa::Exception(message) { }
+		ParExeException(string message);
+	};
+
+	class NoMemFU: public ParExeException {
+	public:
+		NoMemFU();
 	};
 
 	typedef enum code_part {

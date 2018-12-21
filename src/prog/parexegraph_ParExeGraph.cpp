@@ -81,6 +81,33 @@ namespace otawa {
 
 
 /**
+ * @class ParExeException
+ * Exceptions thrown by the parametric execution graph classes.
+ * @ingroup peg
+ */
+
+
+/**
+ */
+ParExeException::ParExeException(string msg): otawa::Exception(msg) {
+};
+
+
+/**
+ * @class NoMemFU
+ * Exception thrown when the execution stage is made of functional units and
+ * no unit is dedicated to memory accesses.
+ * @ingroup peg
+ */
+
+
+/**
+ */
+NoMemFU::NoMemFU(): ParExeException("no memory FU is defined") {
+}
+
+
+/**
  * @class ParExeGraph
  * Representation of a parametric execution graph (@ref peg).
  * @ingroup peg
@@ -724,7 +751,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 
 			// no branch
 			else {
-				elm::cout << "_cache_line_size = " << _cache_line_size << endl;
+				//elm::cout << "_cache_line_size = " << _cache_line_size << endl;
 				// no cache
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
@@ -944,7 +971,8 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 						if(node->stage() == _microprocessor->memStage())
 							producing_node = node;
 				}
-				ASSERTP(producing_node, "Please check if <mem>true</mem> is set to one of the FUs if the last EX stage contains any FUs.");
+				if(producing_node == nullptr)
+					throw NoMemFU();
 				new ParExeEdge(producing_node, node, ParExeEdge::SOLID, 0, comment(data));
 			}
 		}
