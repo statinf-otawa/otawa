@@ -306,26 +306,6 @@ cstring Event::name(void) const {
 
 
 /**
- * For events applying to a particular processor stage,
- * get this stage.
- * @return	Processor stage the event applies to.
- */
-const hard::Stage *Event::stage(void) const {
-	return 0;
-}
-
-
-/**
- * For events applying to a particular processor functional unit,
- * get this functional unit.
- * @return	Processor functional unit the event applies to.
- */
-const hard::FunctionalUnit *Event::fu(void) const {
-	return 0;
-}
-
-
-/**
  * @fn ot::time Event::cost(void) const;
  * Get the cost in cycles of the occurrence of the event.
  * @return	Cost of the event (in cycles).
@@ -378,25 +358,6 @@ void Event::estimate(ilp::Constraint *cons, bool on) {
  */
 Event::rel_t Event::related(void) const {
 	return pair(null<Inst>(), null<const hard::PipelineUnit>());
-}
-
-
-/**
- * For an AFTER or NOT_BEFORE event, update the pair (instruction, stage)
- * the event is relative to.
- * @param rel	The (instruction, stage) the event is relative to.
- */
-void Event::relate(const rel_t &rel) {
-	throw MessageException("Not implemented!");
-}
-
-
-/**
- * Update the type of the event
- * @param type	Type to be updated to
- */
-void Event::setType(type_t type) {
-	throw MessageException("Not implemented!");
 }
 
 

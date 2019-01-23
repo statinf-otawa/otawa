@@ -49,10 +49,6 @@ typedef enum kind_t {
 	MEM,	// no argument
 	BRANCH,	// no argument
 	CUSTOM,	// unit argument
-
-	// deprecated
-	STAGE,	// stage argument
-	FU		// FU argument
 } kind_t;
 
 typedef enum occurence_t {
@@ -68,13 +64,6 @@ typedef enum type_t {
 	NOT_BEFORE = 2,
 } type_t;
 
-typedef enum place_t {
-	NO_PLACE = 0,
-	PREFIX = 1,
-	BLOCK = 2
-} place_t;
-io::Output& operator<<(io::Output& out, place_t p);
-
 
 // Event class
 class Event: public PropList {
@@ -86,21 +75,16 @@ public:
 	inline Inst *inst(void) const { return _inst; }
 
 	// accessors
-	virtual kind_t kind(void) const = 0;
-	virtual ot::time cost(void) const = 0;
-	virtual type_t type(void) const = 0;
-	virtual occurrence_t occurrence(void) const;
 	virtual cstring name(void) const;
 	virtual string detail(void) const;
+
+	virtual kind_t kind(void) const = 0;
+	virtual ot::time cost(void) const = 0;
+	virtual occurrence_t occurrence(void) const;
+
+	virtual type_t type(void) const = 0;
 	virtual Pair<Inst *, const hard::PipelineUnit *> related(void) const;
 	virtual const hard::PipelineUnit *unit(void) const;
-
-	virtual void relate(const rel_t &rel);
-	virtual void setType(type_t type);
-
-	// deprecated
-	virtual const hard::Stage *stage(void) const;
-	virtual const hard::FunctionalUnit *fu(void) const;
 
 	// heuristic contribution
 	virtual int weight(void) const;
@@ -112,7 +96,6 @@ public:
 private:
 	Inst *_inst;
 };
-io::Output& operator<<(io::Output& out, place_t place);
 io::Output& operator<<(io::Output& out, Event *event);
 
 
@@ -136,6 +119,14 @@ private:
 	List<Event *> _es;
 };
 
+
+// useful to manage places in time computation
+typedef enum place_t {
+	NO_PLACE = 0,
+	PREFIX = 1,
+	BLOCK = 2
+} place_t;
+io::Output& operator<<(io::Output& out, place_t p);
 
 // time feature
 extern p::feature TIME_UNIT_FEATURE;
