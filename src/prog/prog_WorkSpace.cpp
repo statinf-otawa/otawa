@@ -458,6 +458,8 @@ xom::Element *WorkSpace::config(void) {
  * @param del_proc	Set to true if the processor needs to be deleted when it is no more used.
  */
 void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
+	if(proc->isDone())
+		return;
 
 	// run the processor
 	proc->configure(props);
@@ -512,6 +514,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 
 	// run the analysis
 	proc->run(this);
+	proc->flags |= Processor::IS_DONE;
 
 	// cleanup used invalidated features
 	for(FeatureIter feature(reg); feature; feature++)
@@ -600,6 +603,21 @@ void WorkSpace::invalidate(const AbstractFeature& feature) {
 	ASSERTP(d, "dependency " << feature.name() << " is not provided!");
 	invalidate(d);
 }
+
+
+/**
+ * Get the implementor of a feature (if provided).
+ * @param feature	Feature for which the implementor is looked.
+ * @return			Found implementor or null pointer.
+ */
+Processor *WorkSpace::getImpl(const AbstractFeature& feature) const {
+	Dependency *d = dep_map.get(&feature, nullptr);
+	if(d == nullptr)
+		return nullptr;
+	else
+		return d->_proc;
+}
+
 
 
 /**

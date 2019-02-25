@@ -95,6 +95,7 @@ public:
 	void require(const AbstractFeature& feature, const PropList& props = PropList::EMPTY);
 	bool isProvided(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
+	Processor *getImpl(const AbstractFeature& feature) const;
 
 	// cancellation management
 	inline void clearCancellation(void) { cancelled = false; }

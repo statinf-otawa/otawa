@@ -82,6 +82,7 @@ public:
 	inline elm::String name(void) const { return _reg->name(); }
 	inline elm::Version version(void) const { return _reg->version(); }
 	inline AbstractRegistration& registration(void) const { return *_reg; }
+	virtual void *interfaceFor(const AbstractFeature& feature) const;
 
 	// Mutators
 	virtual void configure(const PropList& props);
@@ -114,7 +115,8 @@ protected:
 		IS_ALLOCATED	= 0x04 << CUSTOM_SHIFT,
 		IS_PREPARED		= 0x08 << CUSTOM_SHIFT,
 		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT,
-		IS_TIED			= 0x20 << CUSTOM_SHIFT;
+		IS_TIED			= 0x20 << CUSTOM_SHIFT,
+		IS_DONE			= 0x40 << CUSTOM_SHIFT;
 	PropList *stats;
 
 	// accessors
@@ -124,6 +126,7 @@ protected:
 	inline bool isAllocated(void) const { return flags & IS_ALLOCATED; }
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
 	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
+	inline bool isDone() const { return flags & IS_DONE; }
 
 	// configuration
 	void require(const AbstractFeature& feature);

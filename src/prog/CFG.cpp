@@ -753,8 +753,10 @@ string CFG::format(const Address& addr) {
  */
 int CFG::callCount(void) const {
 	int c = 0;
-	for(auto i: callers())
+	for(auto i: callers()) {
+		(void)i;
 		c++;
+	}
 	return c;
 }
 

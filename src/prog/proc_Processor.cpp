@@ -687,6 +687,19 @@ void Processor::use(const AbstractFeature& feature) {
 
 
 /**
+ * Get the interface corresponding to the given feature. The feature
+ * can only be part of the processor provided feature. This function
+ * can only be called once the processor has been executed.
+ *
+ * @param feature	Feature of the looked interface.
+ * @return			Null pointer or interface corresponding to the feature.
+ */
+void *Processor::interfaceFor(const AbstractFeature& feature) const {
+	return nullptr;
+}
+
+
+/**
  * Usually called from a processor constructor, this method records a feature
  * provided by the work of the current processor.
  * @param feature	Provided feature.

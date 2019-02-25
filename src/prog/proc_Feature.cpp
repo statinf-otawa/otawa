@@ -132,6 +132,49 @@ void feature::process(WorkSpace *ws, const PropList& props) const {
 }
 
 
+/**
+ * For internal use only. Work-around the non-definition of WorkSpace
+ * at this point.
+ */
+void *get_impl(WorkSpace *ws, const AbstractFeature& feature) {
+	Processor *p = ws->getImpl(feature);
+	if(p == nullptr)
+		return nullptr;
+	else
+		return p->interfaceFor(feature);
+}
+
+
+/**
+ * @class interfaced_feature
+ *
+ * Objects of this class declare a feature supporting an interface.
+ *
+ * @param T		Default implementation of feature.
+ * @param I		Class of the interface.
+ *
+ * @ingroup proc
+ */
+
+
+/**
+ * @fn const I *interfaced_feature::give(const P *p) const;
+ * This function may used by a processor implementing an interfaced feature
+ * in order to return the interface in its function Processor::interfaceFor().
+ * Calling this function is only convenient if the processor class implements
+ * also the feature interface.
+ * @param p		Current processor.
+ * @return		Current processor converted to the interface.
+ */
+
+
+/**
+ * @fn const I *interfaced_feature::get(WorkSpace *ws) const;
+ * This function is called to obtain the interface of an interfaced feature.
+ * @param ws	Workspace to look for the feature interface.
+ * @return		Feature interface in the given workspace (or null if the feature is not provided).
+ */
+
 }	// p
 
 
