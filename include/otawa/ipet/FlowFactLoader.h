@@ -38,6 +38,7 @@ private:
 	bool lines_available;
 	int total_loop, found_loop, line_loop;
 	int max, total, min;
+	DomInfo *dom;
 
 	bool transfer(Inst *source, BasicBlock *bb, const ContextualPath& path);
 	bool lookLineAt(Inst *source, BasicBlock *bb, const ContextualPath& path);

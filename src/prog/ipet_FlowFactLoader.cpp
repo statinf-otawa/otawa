@@ -130,6 +130,7 @@ void FlowFactLoader::setup(WorkSpace *ws) {
 	total_loop = 0;
 	found_loop = 0;
 	line_loop = 0;
+	dom = DOMINANCE_FEATURE.get(ws);
 }
 
 
@@ -215,7 +216,7 @@ void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const Co
 
 	// look in back edge in case of "while() ..." to "do ... while(...)" optimization
 	for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
-		if(Dominance::isBackEdge(edge) && edge->source()->isBasic()) {
+		if(dom->isBackEdge(edge) && edge->source()->isBasic()) {
 			for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
 				if(lookLineAt(inst, bb, path))
 					return;

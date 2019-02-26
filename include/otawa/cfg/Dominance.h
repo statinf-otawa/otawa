@@ -33,21 +33,28 @@ class Edge;
 namespace dfa { class BitSet; }
 
 // Dominance class
-class Dominance: public ConcurrentCFGProcessor {
+class Dominance: public ConcurrentCFGProcessor, public DomInfo {
 public:
 
 	static p::declare reg;
 	Dominance(void);
 
+	bool dom(Block *b1, Block *b2) override;
+	Block* idom(Block* b) override;
+	bool isBackEdge(Edge *edge) override;
+
+	void *interfaceFor(const AbstractFeature& feature) override;
+
 	static void ensure(CFG *cfg);
 	static bool dominates(Block *bb1, Block *bb2);
 	static inline bool isDominated(Block *bb1, Block *bb2) { return dominates(bb2, bb1); }
 	static bool isLoopHeader(Block *bb);
-	static bool isBackEdge(Edge *edge);
+	//static bool isBackEdge(Edge *edge);
 
 protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);
-	virtual void cleanup(WorkSpace *ws);
+	void processCFG(WorkSpace *fw, CFG *cfg) override;
+	void cleanup(WorkSpace *ws) override;
+
 private:
 	void markLoopHeaders(CFG *cfg);
 };

@@ -184,8 +184,8 @@ public:
 	inline bool dominates(Block *b1, Block *b2) { return dom(b1, b2); }
 	inline bool isDominated(Block *b1, Block *b2) { return dominates(b2, b1); }
 };
-extern p::feature DOMINANCE_FEATURE;
-extern Identifier<DomInfo *> DOM_INFO;
+extern p::interfaced_feature<DomInfo> DOMINANCE_FEATURE;
+//extern Identifier<DomInfo *> DOM_INFO;
 
 // Post-domination
 extern p::feature POSTDOMINANCE_FEATURE;

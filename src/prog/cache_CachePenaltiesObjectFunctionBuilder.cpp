@@ -63,6 +63,13 @@ void CachePenaltiesObjectFunctionBuilder::configure(const PropList& props) {
 
 /**
  */
+void CachePenaltiesObjectFunctionBuilder::setup(WorkSpace *ws) {
+	dom = DOMINANCE_FEATURE.get(ws);
+}
+
+
+/**
+ */
 void CachePenaltiesObjectFunctionBuilder::processBB(
 	WorkSpace *fw,
 	CFG *cfg,
@@ -87,7 +94,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 			if (!cache_penalty->header(1)){
 				ASSERT(cache_penalty->header(0));
 				for(Block::EdgeIter h_edge = cache_penalty->header(0)->ins() ; h_edge ; h_edge++)
-					if (!Dominance::isBackEdge(h_edge))
+					if (!dom->isBackEdge(h_edge))
 						system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS), VAR(h_edge));
 			}
 			
@@ -119,7 +126,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				Constraint *cons_loop = system->newConstraint("double FM header: sum of entering and backing", Constraint::EQ, 0);
 				cons_loop->addLeft(1, loop);
 				for (Block::EdgeIter edge = cache_penalty->header(0)->ins(); edge ; edge++){
-					if (!Dominance::isBackEdge(edge)){
+					if (!dom->isBackEdge(edge)){
 						cons_entry->addRight(1, VAR(edge));
 						cons_loop->addRight(-1, VAR(edge));
 					}
@@ -149,7 +156,7 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				cons_loop = system->newConstraint("double FM header: sum of entering", Constraint::EQ,0);
 				cons_loop->addLeft(1, loop);
 				for (Block::EdgeIter edge = cache_penalty->header(1)->ins() ; edge ; edge++){
-					if (!Dominance::isBackEdge(edge)){
+					if (!dom->isBackEdge(edge)){
 						cons_loop->addRight(-1, VAR(edge));
 					}
 					else {

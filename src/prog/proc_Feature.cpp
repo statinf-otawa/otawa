@@ -150,7 +150,6 @@ void *get_impl(WorkSpace *ws, const AbstractFeature& feature) {
  *
  * Objects of this class declare a feature supporting an interface.
  *
- * @param T		Default implementation of feature.
  * @param I		Class of the interface.
  *
  * @ingroup proc

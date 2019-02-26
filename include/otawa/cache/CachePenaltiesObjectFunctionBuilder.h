@@ -25,9 +25,10 @@ public:
 
 protected:
 	bool _explicit;
+	DomInfo *dom;
 
-	// BBProcessor overload
-	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb);
+	void setup(WorkSpace *ws) override;
+	void processBB(WorkSpace *fw, CFG *cfg, Block *bb) override;
 };
 
 } } // otawa::ipet

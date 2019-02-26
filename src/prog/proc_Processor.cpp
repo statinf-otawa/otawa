@@ -694,7 +694,7 @@ void Processor::use(const AbstractFeature& feature) {
  * @param feature	Feature of the looked interface.
  * @return			Null pointer or interface corresponding to the feature.
  */
-void *Processor::interfaceFor(const AbstractFeature& feature) const {
+void *Processor::interfaceFor(const AbstractFeature& feature) {
 	return nullptr;
 }
 

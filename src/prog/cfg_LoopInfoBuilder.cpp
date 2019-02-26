@@ -321,7 +321,7 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	int i;
 
 	// computes set of headers
-	LoopInfoProblem prob(*cfg, **otawa::DOM_INFO(fw));
+	LoopInfoProblem prob(*cfg, *DOMINANCE_FEATURE.get(fw));
 	if (prob.count() == 0)
 		return;
 	IterativeDFA<LoopInfoProblem, dfa::BitSet, CFG, Successor> dfa(prob, cfg, cfg->exit());

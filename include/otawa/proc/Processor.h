@@ -82,7 +82,7 @@ public:
 	inline elm::String name(void) const { return _reg->name(); }
 	inline elm::Version version(void) const { return _reg->version(); }
 	inline AbstractRegistration& registration(void) const { return *_reg; }
-	virtual void *interfaceFor(const AbstractFeature& feature) const;
+	virtual void *interfaceFor(const AbstractFeature& feature);
 
 	// Mutators
 	virtual void configure(const PropList& props);

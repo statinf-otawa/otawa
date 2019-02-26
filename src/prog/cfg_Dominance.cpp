@@ -32,29 +32,6 @@ using namespace otawa::dfa;
 
 namespace otawa {
 
-class MyDomInfo: public DomInfo {
-public:
-	virtual bool dom(Block *b1, Block *b2) {
-		ASSERT(b1);
-		ASSERT(b2);
-		const BitSet *set = REVERSE_DOM(b2);
-		ASSERT(set);
-		return set->contains(b1->index());
-
-	}
-
-	virtual Block* idom(Block* b) {
-		ASSERTP(false, "idom not yet implemented"); // TODO
-		return NULL;
-	}
-
-	virtual bool isBackEdge(Edge *edge) {
-		ASSERT(edge);
-		return BACK_EDGE(edge);
-	}
-
-};
-
 class DominanceCleaner: public BBCleaner {
 public:
 	DominanceCleaner(WorkSpace *ws): BBCleaner(ws) { }
@@ -99,20 +76,6 @@ Identifier<bool> LOOP_HEADER("otawa::LOOP_HEADER", false);
  * @ingroup cfg
  */
 Identifier<bool> BACK_EDGE("otawa::BACK_EDGE", false);
-
-
-/**
- * Property providing domination information interface.
- *
- * @par Hooks
- * @li @ref WorkSpace
- *
- * @par @li Features
- * @li @ref DOMINANCE_FEATURE
- *
- * @ingroup cfg
- */
-Identifier<DomInfo *> DOM_INFO("otawa::DOM_INFO", 0);
 
 
 /**
@@ -280,7 +243,43 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 /**
  */
 void Dominance::cleanup(WorkSpace *ws) {
-	this->track(DOMINANCE_FEATURE, DOM_INFO(ws) = new MyDomInfo());
+}
+
+
+/**
+ */
+bool Dominance::dom(Block *b1, Block *b2) {
+	ASSERT(b1);
+	ASSERT(b2);
+	const BitSet *set = REVERSE_DOM(b2);
+	ASSERT(set);
+	return set->contains(b1->index());
+}
+
+
+/**
+ */
+Block *Dominance::idom(Block* b) {
+	ASSERTP(false, "idom not yet implemented"); // TODO
+	return NULL;
+}
+
+
+/**
+ */
+bool Dominance::isBackEdge(Edge *edge) {
+	ASSERT(edge);
+	return BACK_EDGE(edge);
+}
+
+
+/**
+ */
+void *Dominance::interfaceFor(const AbstractFeature& feature) {
+	if(&feature == &DOMINANCE_FEATURE)
+		return DOMINANCE_FEATURE.give(this);
+	else
+		return nullptr;
 }
 
 
@@ -334,18 +333,6 @@ void Dominance::ensure(CFG *cfg) {
 
 
 /**
- * Test if the given edge is a back edge.
- * @param edge	Edge to test.
- * @return		True if the edge is a back edge, false else.
- */
-bool Dominance::isBackEdge(Edge *edge) {
-	ASSERT(edge);
-	ASSERTP(edge->target(), "cannot test back edge if the target is not known");
-	return(BACK_EDGE(edge));
-}
-
-
-/**
  * This feature ensures that information about domination between nodes
  * of a CFG is available. Back edges are marked with @ref BACK_EDGE property
  * while dominance may be tested using an interface of type @ref DomInfo
@@ -360,7 +347,7 @@ bool Dominance::isBackEdge(Edge *edge) {
  *
  * @ingroup cfg
  */
-p::feature DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE", new Maker<Dominance>());
+p::interfaced_feature<DomInfo> DOMINANCE_FEATURE("otawa::DOMINANCE_FEATURE", new Maker<Dominance>());
 
 
 /**

@@ -60,17 +60,16 @@ namespace p {
 
 	void *get_impl(WorkSpace *ws, const AbstractFeature& feature);
 
-	template <class T = void, class I = void>
+	template <class I>
 	class interfaced_feature: public feature {
 	public:
-		inline interfaced_feature(cstring name): feature(name, make<T>()) { }
 		inline interfaced_feature(cstring name, AbstractMaker *maker): feature(name, maker) { }
 		inline interfaced_feature(cstring name, p::declare& reg): feature(name, reg) { }
 
-		template <class P> inline const I *give(const P *p) const { return p; }
-		const I *get(WorkSpace *ws) const
+		template <class P> inline I *give(P *p) const { return p; }
+		I *get(WorkSpace *ws) const
 			{ void *p = get_impl(ws, *this); if(p == nullptr) return nullptr;
-			  else return static_cast<const I *>(p); }
+			  else return static_cast<I *>(p); }
 	};
 }
 
