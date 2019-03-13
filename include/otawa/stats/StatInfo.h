@@ -45,8 +45,9 @@ public:
 		Iter(WorkSpace *ws);
 	};
 
-private:
-	static Vector<StatCollector *>& get(WorkSpace *ws);
+	static const Vector<StatCollector *>& get(WorkSpace *ws);
+
+	private:
 	Vector<StatCollector *> stats;
 };
 

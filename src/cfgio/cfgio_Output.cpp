@@ -43,7 +43,7 @@ p::declare Output::reg = p::init("otawa::cfgio::Output", Version(1, 0, 0))
  * the fully-qualified name of the property identifier.
  * @ingroup cfgio
  */
-Identifier<cstring> INCLUDE("otawa::cfgio::INCLUDE", 0);
+p::id<cstring> INCLUDE("otawa::cfgio::INCLUDE", 0);
 
 
 /**
@@ -51,15 +51,22 @@ Identifier<cstring> INCLUDE("otawa::cfgio::INCLUDE", 0);
  * output of instructions in basic blocks.
  * @ingroup cfgio
  */
-Identifier<bool> NO_INSTS("otawa::cfgio::NO_INSTS", true);
+p::id<bool> NO_INSTS("otawa::cfgio::NO_INSTS", true);
 
 
 /**
  * Used to select the file path to output to.
  * If not defined, output is performed to standard output.
  */
-Identifier<Path> OUTPUT("otawa::cfgio::OUTPUT");
+p::id<Path> OUTPUT("otawa::cfgio::OUTPUT");
 
+
+/**
+ * USe to output source line information in the output of
+ * otawa::cfgio::Output.
+ * @ingroup cfgio
+ */
+p::id<bool> LINE_INFO("otawa::cfgio::LINE_INFO", false);
 
 /**
  * @defgroup cfgio	CFG Input / Output
@@ -80,14 +87,15 @@ Identifier<Path> OUTPUT("otawa::cfgio::OUTPUT");
  * Output the current CFG collection in XML matching the DTD ${OTAWA_HOME}/share/Otawa/dtd/cfg.dtd .
  *
  * @par Configuration
- * @li @ref INCLUDE -- include the identifier whose name is given in the output.
- * @li @ref OUTPUT -- path to output file to (if not defined, output to standard output).
+ * @li @ref otawa::cfgio::INCLUDE -- include the identifier whose name is given in the output.
+ * @li @ref otawa::cfgio::OUTPUT -- path to output file to (if not defined, output to standard output).
+ * @li @ref otawa::cfgio::LINE_INFO -- emit source line information on output.
  * @ingroup cfgio
  */
 
 /**
  */
-Output::Output(void): BBProcessor(reg), root(0), cfg_node(0), last_bb(0), all(false), no_insts(false) {
+Output::Output(void): BBProcessor(reg), root(0), cfg_node(0), last_bb(0), all(false), no_insts(false), line_info(false) {
 }
 
 
@@ -191,7 +199,21 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				}
 			}
 
-		// if provided, gives the time
+		// generate the line information
+		if(b->isBasic() && line_info) {
+			Pair<cstring, int> cur("", 0);
+			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
+				Option<Pair<cstring, int> > line = ws->process()->getSourceLine(inst->address());
+				if(line && *line != cur) {
+					cur = line;
+					xom::Element *line_node = new xom::Element("line");
+					bb_node->appendChild(line_node);
+					line_node->addAttribute(new xom::Attribute("file", cur.fst));
+					string line = _ << cur.snd;
+					line_node->addAttribute(new xom::Attribute("line", &line));
+				}
+			}
+		}
 
 	}
 
@@ -228,6 +250,7 @@ void Output::configure(const PropList& props) {
 	// other options
 	path = cfgio::OUTPUT(props);
 	no_insts = NO_INSTS(props);
+	line_info = LINE_INFO(props);
 }
 
 

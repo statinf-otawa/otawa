@@ -22,13 +22,16 @@
 
 #include <elm/option/StringList.h>
 #include <elm/sys/System.h>
+
 #include <otawa/app/Application.h>
-#include <otawa/script/Script.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/util/FlowFactLoader.h>
-#include <otawa/ilp/System.h>
-#include <otawa/stats/StatInfo.h>
 #include <otawa/cfg/features.h>
+#include <otawa/cfgio/Output.h>
+#include <otawa/ilp/System.h>
+#include <otawa/ipet/IPET.h>
+#include <otawa/script/Script.h>
+#include <otawa/stats/StatInfo.h>
+#include <otawa/util/BBRatioDisplayer.h>
+#include <otawa/util/FlowFactLoader.h>
 
 using namespace otawa;
 using namespace elm::option;
@@ -140,7 +143,8 @@ public:
 	list			(SwitchOption			::Make(*this).cmd("--list")		.cmd("-l").description("list configuration items")),
 	timed			(SwitchOption			::Make(*this).cmd("--timed")	.cmd("-t").description("display computation")),
 	display_stats	(SwitchOption			::Make(*this).cmd("-S")			.cmd("--stats").description("display statistics")),
-	detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics"))
+	detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics")),
+	wcet_stats		(SwitchOption			::Make(*this).cmd("-W")			.cmd("--wcet-stat").description("detailed statistics about WCET"))
 	{ }
 
 protected:
@@ -255,31 +259,15 @@ protected:
 				cerr << "No statistics to display.\n";
 		}
 
-		// display detail of statistics
-		if(detailed_stats && StatInfo::Iter(workspace())) {
-			sys::Path spath = entry + "-stats";
-			if(!spath.exists())
-
-				// ensure the director is available
-				try
-					{ sys::System::makeDir(spath); }
-				catch(sys::SystemException& e)
-					{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
-				else if(!spath.isDir())
-					throw otawa::Exception(_ << spath << " exists and is not a directory!");
-				else if(!spath.isWritable())
-					throw otawa::Exception(_ << spath << " exists but is not writable!");
-
-				// generate the statistics
-				for(StatInfo::Iter stat(workspace()); stat; stat++) {
-					string id = string(stat->id()).replace("/", "-");
-					io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
-					Output out(*stream);
-					StatOutput sout(out);
-					stat->collect(sout);
-					delete stream;
-				}
+		// display detailed statistics about WCET
+		if(wcet >= 0 && wcet_stats) {
+			BBRatioDisplayer disp;
+			disp.process(workspace(), props);
 		}
+
+		// display detail of statistics
+		if(detailed_stats && StatInfo::Iter(workspace()))
+			genDetails(entry, props);
 	}
 
 private:
@@ -290,7 +278,57 @@ private:
 	SwitchOption timed;
 	SwitchOption display_stats;
 	SwitchOption detailed_stats;
+	SwitchOption wcet_stats;
 	string bin, task;
+
+	/**
+	 * Generate detailed statistics.
+	 * @param entry	Entry name.
+	 * @param props	Current properties.
+	 */
+	void genDetails(string entry, PropList& props) {
+		sys::Path spath = entry + "-stats";
+
+		// remove directory if it already exist
+		if(spath.exists()) {
+			if(!spath.isDir())
+				throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
+			else
+				try
+					{ spath.remove();; }
+				catch(sys::SystemException& e) {
+					throw otawa::Exception(_ << "cannot remove " << spath << " to output statistics: " << e.message());
+				}
+		}
+
+		// create the directory
+		try
+			{ sys::System::makeDir(spath); }
+		catch(sys::SystemException& e)
+			{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
+
+		// generate the statistics
+		for(StatInfo::Iter stat(workspace()); stat; stat++) {
+			string id = string(stat->id()).replace("/", "-");
+			io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
+			Output out(*stream);
+			StatOutput sout(out);
+			stat->collect(sout);
+			delete stream;
+		}
+
+		// output the CFG
+		try {
+			cfgio::Output out;
+			cfgio::OUTPUT(props) = spath / "cfg.xml";
+			cfgio::LINE_INFO(props) = true;
+			out.process(workspace(), props);
+		}
+		catch(sys::SystemException& e) {
+			throw otawa::Exception(_ << "cannot write CFG in statistics: " << e.message());
+		}
+	}
+
 };
 
 int main(int argc, char **argv) {

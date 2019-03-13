@@ -49,6 +49,7 @@ protected:
 	Path path;
 	bool all;
 	bool no_insts;
+	bool line_info;
 };
 
 } }	// otawa::cfgio

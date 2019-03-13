@@ -209,7 +209,7 @@ void StatInfo::remove(WorkSpace *ws, StatCollector& stats) {
 }
 
 
-Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
+const Vector<StatCollector *>& StatInfo::get(WorkSpace *ws) {
 	static Vector<StatCollector *> empty;
 	StatInfo *info = StatInfo::ID(ws);
 	if(!info)
