@@ -31,12 +31,15 @@ import re
 import optparse
 import urllib.parse
 
+import gi
 from gi.repository import GLib
 from gi.repository import GObject
+gi.require_version('Gtk' , '3.0')
 from gi.repository import Gtk
 from gi.repository import Gdk
 from gi.repository import GdkPixbuf
 from gi.repository import Pango
+gi.require_version('PangoCairo', '1.0')
 from gi.repository import PangoCairo
 import cairo
 
@@ -1326,7 +1329,7 @@ class Animation(object):
     def stop(self):
         self.dot_widget.animation = NoAnimation(self.dot_widget)
         if self.timeout_id is not None:
-            GLib.source_remove(self.timeout_id)
+            #GLib.source_remove(self.timeout_id)
             self.timeout_id = None
 
     def tick(self):

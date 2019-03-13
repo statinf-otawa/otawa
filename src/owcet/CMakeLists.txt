@@ -1,4 +1,4 @@
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib/")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../lib;${ORIGIN}/../lib/otawa/proc/otawa;${ORIGIN}/../lib/otawa/otawa")
 set(CMAKE_CXX_FLAGS "-Wall -g" )
 
 set(owcet_SOURCES
@@ -7,7 +7,6 @@ set(owcet_SOURCES
 
 add_executable(owcet ${owcet_SOURCES})
 
-target_link_libraries(owcet ${LIBELM})
-target_link_libraries(owcet otawa)
+target_link_libraries(owcet otawa cfgio ${LIBELM})
 
 install(TARGETS owcet DESTINATION bin)
