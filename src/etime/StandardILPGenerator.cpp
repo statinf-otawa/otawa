@@ -21,7 +21,7 @@
 
 #include <elm/data/quicksort.h>
 #include <otawa/ipet.h>
-#include <otawa/etime/AbstractTimeBuilder.h>
+#include <otawa/etime/StandardILPGenerator.h>
 
 namespace otawa { namespace etime {
 
@@ -256,303 +256,275 @@ int ILPGenerator::countDyn(const Vector<EventCase>& events) {
 
 
 /**
+ * @class StandardILPGenerator
  * The default implementation of ILPGenerator.
  * Apply the LTS/HTS method resulting in two times for each BB.
  * @ingroup etime
  */
-class StandardILPGenerator: public ILPGenerator {
 
-	typedef t::uint32 mask_t;
+/**
+ */
+StandardILPGenerator::EventCollector::EventCollector(Event *event): imprec(0), evt(event) {
+}
 
-	/**
-	 * Collects variables linking events with blocks in ILP.
-	 */
-	class EventCollector {
-		typedef enum {
-			PREFIX_OFF = 0,
-			PREFIX_ON = 1,
-			BLOCK_OFF = 2,
-			BLOCK_ON = 3,
-			SIZE = 4
-		} case_t;
+/**
+ * Add an imprecise contribution.
+ * @param c		Event case.
+ */
+void StandardILPGenerator::EventCollector::boundImprecise(EventCase c) {
+	if(c.part() == IN_PREFIX)
+		imprec |= (1 << PREFIX_OFF) | (1 << PREFIX_ON);
+	else
+		imprec |= (1 << BLOCK_OFF) | (1 << BLOCK_ON);
+}
 
-	public:
+/**
+ * Add a code sequence variable to an activation of the event.
+ * @param c		Event case.
+ * @param x		Occurrence count variable.
+ * @param prec 	True if the bound is precise.
+ */
+void StandardILPGenerator::EventCollector::boundPositive(EventCase c, ilp::Var *x, bool prec) {
+	case_t cc;
+	if(c.part() == IN_PREFIX)
+		cc = PREFIX_ON;
+	else
+		cc = BLOCK_ON;
+	if(!prec)
+		imprec |= 1 << cc;
+	vars[cc].add(x);
+}
 
-		EventCollector(Event *event): imprec(0), evt(event) { }
-		inline Event *event(void) const { return evt; }
+/**
+ * Add a code sequence variable to an non-activation of the event.
+ * @param c		Event case.
+ * @param x		Occurrence count variable.
+ * @param prec 	True if the bound is precise.
+ */
+void StandardILPGenerator::EventCollector::boundNegative(EventCase c, ilp::Var *x, bool prec) {
+	case_t cc;
+	if(c.part() == IN_PREFIX)
+		cc = PREFIX_OFF;
+	else
+		cc = BLOCK_OFF;
+	if(!prec)
+		imprec |= 1 << cc;
+	vars[cc].add(x);
+}
 
-		/**
-		 * Add an imprecise contribution.
-		 * @param c		Event case.
-		 */
-		void boundImprecise(EventCase c) {
-			if(c.part() == IN_PREFIX)
-				imprec |= (1 << PREFIX_OFF) | (1 << PREFIX_ON);
-			else
-				imprec |= (1 << BLOCK_OFF) | (1 << BLOCK_ON);
+/**
+ * Make the variable and constraint for the current event.
+ * According to the variable list and the provided overestimation,
+ * may generate zero, one or several constraints.
+ * @param sys	System to create constraints in.
+ */
+void StandardILPGenerator::EventCollector::make(ilp::System *sys) {
+	for(int c = 0; c < SIZE; ++c) {
+		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
+			ilp::Constraint *cons = sys->newConstraint(
+				evt->name() ,
+				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
+			evt->estimate(cons, isOn(case_t(c)));
+			for(List<ilp::Var *>::Iter v(vars[c]); v; v++)
+				cons->addRight(1, *v);
 		}
+	}
+}
 
-		/**
-		 * Add a code sequence variable to an activation of the event.
-		 * @param c		Event case.
-		 * @param x		Occurrence count variable.
-		 * @param prec 	True if the bound is precise.
-		 */
-		void boundPositive(EventCase c, ilp::Var *x, bool prec) {
-			case_t cc;
-			if(c.part() == IN_PREFIX)
-				cc = PREFIX_ON;
-			else
-				cc = BLOCK_ON;
-			if(!prec)
-				imprec |= 1 << cc;
-			vars[cc].add(x);
-		}
 
-		/**
-		 * Add a code sequence variable to an non-activation of the event.
-		 * @param c		Event case.
-		 * @param x		Occurrence count variable.
-		 * @param prec 	True if the bound is precise.
-		 */
-		void boundNegative(EventCase c, ilp::Var *x, bool prec) {
-			case_t cc;
-			if(c.part() == IN_PREFIX)
-				cc = PREFIX_OFF;
-			else
-				cc = BLOCK_OFF;
-			if(!prec)
-				imprec |= 1 << cc;
-			vars[cc].add(x);
-		}
+/**
+ */
+StandardILPGenerator::StandardILPGenerator(const Monitor& mon):
+	ILPGenerator(mon),
+	_edge(nullptr),
+	_t_lts(-1),
+	_x_e(nullptr),
+	_x_hts(nullptr),
+	_t_lts_set(false)
+{ }
 
-		/**
-		 * Make the variable and constraint for the current event.
-		 * According to the variable list and the provided overestimation,
-		 * may generate zero, one or several constraints.
-		 * @param sys	System to create constraints in.
-		 */
-		void make(ilp::System *sys) {
-			for(int c = 0; c < SIZE; ++c) {
-				if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
-					ilp::Constraint *cons = sys->newConstraint(
-						evt->name() ,
-						/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
-					evt->estimate(cons, isOn(case_t(c)));
-					for(List<ilp::Var *>::Iter v(vars[c]); v; v++)
-						cons->addRight(1, *v);
+/**
+ */
+void StandardILPGenerator::process(WorkSpace *ws) {
+
+	// process each edge
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	ASSERT(coll);
+	for(auto g: *coll) {
+		if(logFor(LOG_FUN))
+			log << "\tCFG " << g << io::endl;
+		for(auto v: *g)
+			if(v->isBasic())
+				for(auto e: v->inEdges()) {
+					if(logFor(LOG_BLOCK))
+						log << "\t\t" << e << io::endl;
+					process(e);
 				}
-			}
+	}
+
+	// generate the bounding constraints of the events
+	for(auto coll: colls) {
+		coll->make(system());
+		delete coll;
+	}
+	colls.clear();
+}
+
+/**
+ */
+void StandardILPGenerator::contributeBase(ot::time time) {
+	ASSERTP(!_t_lts_set, "several contributeBase() performed");
+	_t_lts_set = true;
+	_t_lts = time;
+
+	// logging
+	if(logFor(LOG_BB))
+		log << "\t\t\t\tcost = " << time << io::endl;
+
+	// add to the objective function
+	system()->addObjectFunction(time, _x_e);
+	if(isRecording())
+		LTS_TIME(_edge) = time;
+}
+
+/**
+ */
+void StandardILPGenerator::contributeTime(ot::time t_hts) {
+	ASSERTP(_t_lts_set, "perform contributeBase() first");
+
+	// new HTS variable
+	string hts_name;
+	if(isExplicit()) {
+		StringBuffer buf;
+		buf << "e_";
+		buf << _edge->source()->index() << "_";
+		buf << _edge->sink()->index() << "_"
+			<< _edge->sink()->cfg()->label() << "_hts";
+		hts_name = buf.toString();
+	}
+	_x_hts = system()->newVar(hts_name);
+
+	// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
+	system()->addObjectFunction(t_hts - _t_lts, _x_hts);
+	if(isRecording())
+		HTS_CONFIG(_edge).add(pair(t_hts - _t_lts, _x_hts));
+
+	// 0 <= x_hts <= x_edge
+	ilp::Constraint *cons = system()->newConstraint("0 <= x_hts", ilp::Constraint::LE);
+	cons->addRight(1, _x_hts);
+	cons = system()->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
+	cons->addLeft(1, _x_hts);
+	cons->addRight(1, _x_e);
+}
+
+/**
+ */
+void StandardILPGenerator::contributePositive(EventCase event, bool prec) {
+	ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
+	get(event.event())->boundPositive(event, _x_hts, prec);
+	_done.set(event.index());
+}
+
+/**
+ */
+void StandardILPGenerator::contributeNegative(EventCase event, bool prec) {
+	ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
+	get(event.event())->boundNegative(event, _x_hts, prec);
+	_done.set(event.index());
+}
+
+/**
+ */
+void StandardILPGenerator::prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt) {
+	_edge = e;
+	_t_lts = -1;
+	_t_lts_set = false;
+	_x_e = ipet::VAR(e);
+	_x_hts = nullptr;
+	if(dyn_cnt > 0)
+		_done.resize(dyn_cnt);
+	_done.clear();
+}
+
+/**
+ */
+void StandardILPGenerator::finish(const Vector<EventCase>& events) {
+
+	// bound for non-variable events
+	// foreach e in always(e) do C^e_p += x_edge
+	for(auto e: events)
+		switch(e->occurrence()) {
+		case ALWAYS:	get(e.event())->boundPositive(e, _x_e, true); break;
+		case NEVER:		get(e.event())->boundNegative(e, _x_e, true); break;
+		default:		break;
 		}
 
-	private:
+	// all non-processed dynamic causes imprecision
+	for(auto e: events)
+		if(e->occurrence() == SOMETIMES
+		&& !_done.bit(e.index()))
+			get(e.event())->boundImprecise(e);
+}
 
-		/**
-		 * Test if the event is on or off.
-		 * @param c		Case to test.
-		 * @return		True if on, false if off.
-		 */
-		inline bool isOn(case_t c) {
-			static bool ons[SIZE] = { false, true, false, true };
-			return ons[c];
-		}
+/**
+ */
+void StandardILPGenerator::process(Edge *e) {
+	BasicBlock *w = nullptr;
+	if(e->source()->isBasic())
+		w = e->source()->toBasic();
+	BasicBlock *v = e->sink()->toBasic();
 
-		t::uint32 imprec;
-		Event *evt;
-		List<ilp::Var *> vars[SIZE];
-	};
-
-public:
-
-	/**
-	 */
-	StandardILPGenerator(const Monitor& mon):
-		ILPGenerator(mon),
-		_edge(nullptr),
-		_t_lts(-1),
-		_x_e(nullptr),
-		_x_hts(nullptr),
-		_t_lts_set(false)
-	{ }
-
-	void process(WorkSpace *ws) override {
-
-		// process each edge
-		const CFGCollection *coll = INVOLVED_CFGS(ws);
-		ASSERT(coll);
-		for(auto g: *coll) {
-			if(logFor(LOG_FUN))
-				log << "\tCFG " << g << io::endl;
-			for(auto v: *g)
-				if(v->isBasic())
-					for(auto e: v->inEdges()) {
-						if(logFor(LOG_BLOCK))
-							log << "\t\t" << e << io::endl;
-						process(e);
-					}
-		}
-
-		// generate the bounding constraints of the events
-		for(auto coll: colls) {
-			coll->make(system());
-			delete coll;
-		}
-		colls.clear();
-	}
-
-protected:
-
-	void contributeBase(ot::time time) override {
-		ASSERTP(!_t_lts_set, "several contributeBase() performed");
-		_t_lts_set = true;
-		_t_lts = time;
-
-		// logging
-		if(logFor(LOG_BB))
-			log << "\t\t\t\tcost = " << time << io::endl;
-
-		// add to the objective function
-		system()->addObjectFunction(time, _x_e);
-		if(isRecording())
-			LTS_TIME(_edge) = time;
-	}
-
-	void contributeTime(ot::time t_hts) override {
-		ASSERTP(_t_lts_set, "perform contributeBase() first");
-
-		// new HTS variable
-		string hts_name;
-		if(isExplicit()) {
-			StringBuffer buf;
-			buf << "e_";
-			buf << _edge->source()->index() << "_";
-			buf << _edge->sink()->index() << "_"
-				<< _edge->sink()->cfg()->label() << "_hts";
-			hts_name = buf.toString();
-		}
-		_x_hts = system()->newVar(hts_name);
-
-		// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
-		system()->addObjectFunction(t_hts - _t_lts, _x_hts);
-		if(isRecording())
-			HTS_CONFIG(_edge).add(pair(t_hts - _t_lts, _x_hts));
-
-		// 0 <= x_hts <= x_edge
-		ilp::Constraint *cons = system()->newConstraint("0 <= x_hts", ilp::Constraint::LE);
-		cons->addRight(1, _x_hts);
-		cons = system()->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
-		cons->addLeft(1, _x_hts);
-		cons->addRight(1, _x_e);
-	}
-
-	void contributePositive(EventCase event, bool prec) override {
-		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
-		get(event.event())->boundPositive(event, _x_hts, prec);
-		_done.set(event.index());
-	}
-
-	void contributeNegative(EventCase event, bool prec) override {
-		ASSERTP(_x_hts != nullptr, "call contributeTime() fist");
-		get(event.event())->boundNegative(event, _x_hts, prec);
-		_done.set(event.index());
-	}
-
-private:
-
-	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt) {
-		_edge = e;
-		_t_lts = -1;
-		_t_lts_set = false;
-		_x_e = ipet::VAR(e);
-		_x_hts = nullptr;
-		if(dyn_cnt > 0)
-			_done.resize(dyn_cnt);
-		_done.clear();
-	}
-
-	void finish(const Vector<EventCase>& events) {
-
-		// bound for non-variable events
-		// foreach e in always(e) do C^e_p += x_edge
+	// collect events
+	Vector<EventCase> events;
+	if(w != nullptr)
+		collectPrologue(events, w);
+	collectEdge(events, e);
+	collectBlock(events, v);
+	sortEvents(events);
+	if(logFor(LOG_BB))
 		for(auto e: events)
-			switch(e->occurrence()) {
-			case ALWAYS:	get(e.event())->boundPositive(e, _x_e, true); break;
-			case NEVER:		get(e.event())->boundNegative(e, _x_e, true); break;
-			default:		break;
-			}
+			log << "\t\t\t" << e << io::endl;
 
-		// all non-processed dynamic causes imprecision
-		for(auto e: events)
-			if(e->occurrence() == SOMETIMES
-			&& !_done.bit(e.index()))
-				get(e.event())->boundImprecise(e);
+	// build the sequence
+	ParExeSequence *seq = new ParExeSequence();
+	int index = 0;
+	if(w)
+		for(auto i: *w)
+			seq->addLast(new ParExeInst(i, w, PROLOGUE, index++));
+	for(auto i: *v)
+		seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
+
+	// numbers the dynamic events
+	int cnt = 0;
+	for(int i = 0; i < events.count(); i++)
+		if(events[i].event()->occurrence() == SOMETIMES)
+			events[i].setIndex(cnt++);
+
+	// build the graph
+	prepare(e, events, countDyn(events));
+	ParExeGraph *g = build(seq);
+	solve(e, g, events);
+	finish(events);
+
+	// clean all
+	delete g;
+	delete seq;
+}
+
+/**
+ * Get the collector for the given event.
+ * If it doesn't exist, create it.
+ * @param event		Concerned event.
+ * @return			Matching collector (never null).
+ */
+StandardILPGenerator::EventCollector *StandardILPGenerator::get(Event *event) {
+	EventCollector *coll = colls.get(event, nullptr);
+	if(!coll) {
+		coll = new EventCollector(event);
+		colls.put(event, coll);
 	}
-
-	void process(Edge *e) {
-		BasicBlock *w = nullptr;
-		if(e->source()->isBasic())
-			w = e->source()->toBasic();
-		BasicBlock *v = e->sink()->toBasic();
-
-		// collect events
-		Vector<EventCase> events;
-		if(w != nullptr)
-			collectPrologue(events, w);
-		collectEdge(events, e);
-		collectBlock(events, v);
-		sortEvents(events);
-		if(logFor(LOG_BB))
-			for(auto e: events)
-				log << "\t\t\t" << e << io::endl;
-
-		// build the sequence
-		ParExeSequence *seq = new ParExeSequence();
-		int index = 0;
-		if(w)
-			for(auto i: *w)
-				seq->addLast(new ParExeInst(i, w, PROLOGUE, index++));
-		for(auto i: *v)
-			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
-
-		// numbers the dynamic events
-		int cnt = 0;
-		for(int i = 0; i < events.count(); i++)
-			if(events[i].event()->occurrence() == SOMETIMES)
-				events[i].setIndex(cnt++);
-
-		// build the graph
-		prepare(e, events, countDyn(events));
-		ParExeGraph *g = build(seq);
-		solve(e, g, events);
-		finish(events);
-
-		// clean all
-		delete g;
-		delete seq;
-	}
-
-	/**
-	 * Get the collector for the given event.
-	 * If it doesn't exist, create it.
-	 * @param event		Concerned event.
-	 * @return			Matching collector (never null).
-	 */
-	EventCollector *get(Event *event) {
-		EventCollector *coll = colls.get(event, nullptr);
-		if(!coll) {
-			coll = new EventCollector(event);
-			colls.put(event, coll);
-		}
-		return coll;
-	}
-
-	HashMap<Event *, EventCollector *> colls;
-	Edge *_edge;
-	ot::time _t_lts;
-	ilp::Var *_x_e, *_x_hts;
-	bool _t_lts_set;
-	BitVector _done;
-};
+	return coll;
+}
 
 /**
  * Build the default ILP generator instance.

@@ -11,6 +11,7 @@ set(SOURCES
     "EdgeTimeBuilder.cpp"
 	"hook.cpp"
     "StandardEventBuilder.cpp"
+    "TimeUnitTimer.cpp"
 )
 
 include_directories(".")
