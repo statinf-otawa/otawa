@@ -314,28 +314,31 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
     // build resources for queues
     for (ParExeProc::QueueIterator queue(_microprocessor) ; queue ; queue++) {
-		int num = queue->size();
-		for (int i=0 ; i<num ; i++) {
+		for (int i=0 ; i< queue->size() ; i++) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
+
+			// find upper extraction bound
 			StageResource * upper_bound = nullptr;
 			for (Vector<Resource *>::Iter resource(_hw_resources) ; resource ; resource++) {
 				if (resource->type() == Resource::STAGE) {
-					if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
-						if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
-							if (((StageResource *)(*resource))->slot() == ((StageResource *)(*resource))->stage()->width()-1) {
-								upper_bound = (StageResource *) (*resource);
-							}
+					StageResource *s = ((StageResource *)(*resource));
+
+					if(s->stage() == queue->emptyingStage()) {
+						if(i < queue->size() - s->stage()->width() /*- 1*/) {
+							if(s->slot() == s->stage()->width()-1)
+								upper_bound = s;
 						}
 						else {
-							if (((StageResource *)(*resource))->slot() == i - queue->size() + ((StageResource *)(*resource))->stage()->width()) {
-								upper_bound = (StageResource *) (*resource);
-							}
+							if(s->slot() == i - queue->size() + s->stage()->width())
+								upper_bound = s;
 						}
 					}
+
 				}
 			}
 			ASSERT(upper_bound);
+
 			// build the queue resource
 			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
 			_hw_resources.add(new_resource);
