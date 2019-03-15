@@ -156,7 +156,7 @@ protected:
 		used.clear();
 		for(Identifier<etime::Unit *>::Getter i(v, etime::TIME_UNIT); i; i++) {
 			etime::Unit *tu = *i;
-			for(etime::Unit::ContribIter e = tu->contribs(); e; e++) {
+			for(auto e: tu->path()) {
 				processAccesses(*tu, etime::PREFIX, e->source(), e->source(), e->source());
 				processAccesses(*tu, etime::PREFIX, otawa::LOOP_EXIT_EDGE(e) ? e->sink() : e->source(), e->source(), e);
 				if(otawa::LOOP_EXIT_EDGE(e))
@@ -259,7 +259,7 @@ p::declare EdgeEventBuilder::reg = p::init("otawa::icat3::EdgeEventBuilder", Ver
 	.require(MUST_PERS_ANALYSIS_FEATURE)
 	.require(hard::MEMORY_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
-	.require(etime::TIME_UNIT_FEATURE);
+	.require(etime::UNIT_FEATURE);
 
 
 /**
