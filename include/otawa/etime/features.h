@@ -101,17 +101,19 @@ io::Output& operator<<(io::Output& out, Event *event);
 
 class Unit: public PropList {
 public:
-	typedef List<Edge *>::Iter ContribIter;
-	typedef List<Event *>::Iter EventIter;
 
 	inline Unit(void): _e(0) { }
 	inline Unit(Edge *e): _e(e) { }
-	inline Edge *edge(void) const { return _e; }
-	inline ContribIter contribs(void) const { return ContribIter(_cs); }
-	inline EventIter events(void) const { return EventIter(_es); }
+	inline Edge *pivot(void) const { return _e; }
+	inline const List<Edge *> path(void) const { return _cs; }
+	inline const List<Event *> events(void) const { return _es; }
 
 	inline void add(Edge *e) { _cs.add(e); }
 	inline void add(Event *e) { _es.add(e); }
+
+	// deprecated
+	inline const List<Edge *> contribs(void) const { return _cs; }
+	inline Edge *edge(void) const { return _e; }
 
 private:
 	Edge *_e;
@@ -129,7 +131,8 @@ typedef enum place_t {
 io::Output& operator<<(io::Output& out, place_t p);
 
 // time feature
-extern p::feature TIME_UNIT_FEATURE;
+class TimeUnitBuilder;
+extern p::feature UNIT_FEATURE;
 extern p::id<Unit *> TIME_UNIT;
 
 // event feature

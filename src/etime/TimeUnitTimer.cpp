@@ -114,10 +114,10 @@ private:
 
 /**
  */
-p::declare reg = p::init("otawa::etime::TimeUnitTimer", Version(1, 0, 0))
+p::declare TimeUnitTimer::reg = p::init("otawa::etime::TimeUnitTimer", Version(1, 0, 0))
 	.extend<AbstractTimeBuilder>()
 	.make<TimeUnitTimer>()
-	.require(etime::TIME_UNIT_FEATURE);
+	.require(etime::UNIT_FEATURE);
 
 /**
  */

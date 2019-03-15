@@ -401,23 +401,63 @@ io::Output& operator<<(io::Output& out, place_t place) {
 
 
 /**
- * @class TimeUnit
- * An time unit represents the unit of time evaluation of etime. It corresponds
- * mainly to an edge where the timing information will be hooked and a block for which
- * the time is computed. Most of the time, it is composed of a prefix block to
- * take into account precisely the overlapping of instructions blocks.
+ * @class Unit
+ * An Time Unit (TU) represents the unit of time evaluation of etime. It corresponds
+ * mainly to a path in the CFG for which the time has to be computed. This path
+ * is split in two parts:
+ *	* first part (from the beginning to the pivot edge) is the context or the
+ *	  prefix(to provide a state as precise as possible to the time calculation),
+ *	* second part (from the pivot edge to the end) represents measured/computed blocks,
+ *	  that is, the blocks for which a time is calculated and inserted in
+ *	  the WCET calculation.
  *
- * Because of the synthetic blocks, there is sometimes a difference between the
- * edge supporting the count of time unit occurrences, count edge, and the edge
- * supporting the event of the transition from prefix to current block, event edge.
+ * There are different ways to build TUs. The default implementation
+ * (@ref TimeUnitBuilder) builds very small TU made of one edge between the previous
+ * BB (context / prefix) and the computed BB. When the previous block is not a BB
+ * (entry or call block), several edges are looked back (in callers or in called CFG)
+ * until finding a BB.
  *
  * @ingroup etime
+ */
+
+/**
+ * @fn Edge *Unit::pivot(void) const;
+ * Get the edge pivot between the context part of the path and the measured block part.
+ * Source vertex of this edge is inthe context part and sink vertex is in the measured part.
+ * @return	Pivot edge.
+ */
+
+/**
+ * @fn const List<Edge *> Unit::path(void) const;
+ * Get the list of edges making the unit path in order (from first edge of the path,
+ * to the last edge).
+ * @return	Edges mading the path of the unit.
+ */
+
+/**
+ * @fn const List<Event *> Unit::events(void) const;
+ * Get the list of events applying to the time unit.
+ * @return	Time unit edges (not ordered in any way).
  */
 
 
 /**
  * Provide the basic implementation of @ref TIME_UNIT_FEATURE based
  * on the description of the @ref etime module.
+ *
+ * Time units are built as below:
+ * 	* block part is composed of one vertex, *v*
+ * 	* for each basic block predecessor, *v*, one-edge time unit is created: [*w* -> *v*]
+ * 	* if a predecessor *w* is the entry of the task, one edge time unit is also created: [*w* -> *v*]
+ * 	* if a predecessor *w* is a synthetic block but callee CFG is unknown,  one-edge time unit is created: [*w* -> *v*]
+ * 	* if a predecessor *w* is a synthetic and but callee CFG is known, callee blocks are looked back until finding
+ * 	  a basic block (or possibly entering again a called CFG): this may create several time units made of the traversed
+ * 	  edges,
+ * 	* if a predecessor *w* is the entry of CFG (not of the task), the caller CFG blocks are looked back until
+ * 	  finding a basic block (possibly entering again a called CFG): also, this may create several time units made of
+ * 	  the traversed edges.
+ *
+ * One can observe that the time units will be made of two BB: the computed block and, if available, one context BB.s
  */
 class TimeUnitBuilder: public BBProcessor {
 public:
@@ -426,89 +466,98 @@ public:
 
 protected:
 
-	Unit *add(Edge *e) {
+	static Unit *make(Edge *e) {
 		Unit *tu = new Unit(e);
-		TIME_UNIT(e->sink()).add(tu);
 		tu->add(e);
 		return tu;
 	}
 
-	Unit *add(Unit *tu, Edge *e) {
+	static Unit *add(Unit *tu, Edge *e) {
 		tu->add(e);
 		return tu;
 	}
 
-	inline void _log(Unit *tu) {
+	static Unit *copy(Unit *ctu) {
+		Unit *tu = new Unit(ctu->edge());
+		Vector<Edge *> es;
+		for(auto e: ctu->contribs())
+			es.push(e);
+		while(es)
+			tu->add(es.pop());
+		return tu;
+	}
+
+	void complete(Unit *tu) {
 		if(logFor(LOG_INST))
 			logTU(tu);
+		TIME_UNIT(tu->edge()->sink()).add(tu);
 	}
 
 	void logTU(Unit *tu) {
-		Block *v;
-		for(Unit::ContribIter i = tu->contribs(); i; i++)
-			v = i->sink();
-		log << "\t\t\t\tadded TU to " << v << " for ";
+		log << "\t\t\tadded TU = [";
 		bool fst = true;
-		for(Unit::ContribIter i = tu->contribs(); i; i++) {
+		for(auto i: tu->path()) {
 			if(fst)
 				fst = false;
 			else
 				log << ", ";
-			log << *i;
+			log << i;
 		}
-		log << io::endl;
+		log << "]\n";
 	}
 
-	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override {
 		if(!b->isBasic())
 			return;
 		BasicBlock *v = b->toBasic();
-
-		// post: x_v = ∑{(w, v) in E} X_w,v
 		for(Block::EdgeIter e = v->ins(); e; e++) {
 			Block *w = e->source();
+			lookBack(make(e), w);
+		}
+	}
 
-			// w is basic (X_w,v = x_w,v)
-			if(w->isBasic())
-				_log(add(e));
+private:
 
-			// entry case
-			else if(w->isEntry()) {
-				if(w->cfg()->callCount() == 0)		// X_w,v = x_w,v
-					_log(add(e));
-				else								// X_w,v = x_w,v = ∑{call(u, f)} x_c = ∑{u call f} ∑{(t, u) in E} x_t,u
-					for(auto c: w->cfg()->callers())
-						for(Block::EdgeIter ce = c->ins();  ce; ce++)
-							_log(add(add(e), ce));
+	void lookBack(Unit *tu, Block *w) {
+		ASSERT(!w->isExit());
+
+		if(w->isBasic())			// ending BB
+			complete(tu);
+
+		else if(w->isEntry()) {		// w is entry
+			if(!w->cfg()->callers())	// task entry: stop
+				complete(tu);
+			else {						// CFG entry: look back callers
+				for(auto c: w->cfg()->callers())
+					for(auto e: c->inEdges())
+						lookBack(add(copy(tu), e), e->source());
+				delete tu;
 			}
+		}
 
-			// synthetic case
-			else {
-				ASSERT(w->isSynth());
-				if(!w->cfg())									// X_w,v = x_w,v
-					_log(add(e));
-				else if(w->cfg()->exit()->countIns() == 1) {
-					Edge *ce = w->cfg()->exit()->ins();
-					Block *u = ce->source();
-					if(u->isBasic())							// X_w,v = x_w,v
-						_log(add(add(e), ce));
-				}
-				else if(w->cfg()->callCount() == 1)				// X_w,v = x_w = ∑{(u, ωf) in E} x_u,ωf /\ |call(w, f)| = 1
-					for(Block::EdgeIter re = w->cfg()->exit()->ins(); re; re++)
-						_log(add(add(e), re));
-				else											// X_w,v = x_w,v
-					_log(add(e));
+		else {						// w is synthetic
+			ASSERT(w->isSynth());
+			CFG *g = w->toSynth()->callee();
+
+			if(g == nullptr)			// unknown callee: stop here
+				complete(tu);
+
+			else {						// know callee: look back before exit
+				for(auto e: g->exit()->inEdges())
+					lookBack(add(copy(tu), e), e->source());
+				delete tu;
 			}
-
 		}
 	}
 
 };
 
+/**
+ */
 p::declare TimeUnitBuilder::reg = p::init("otawa::etime::TimeUnitBuilder", Version(1, 0, 0))
 	.extend<BBProcessor>()
 	.make<TimeUnitBuilder>()
-	.provide(etime::TIME_UNIT_FEATURE);
+	.provide(etime::UNIT_FEATURE);
 
 
 /**
@@ -519,7 +568,7 @@ p::declare TimeUnitBuilder::reg = p::init("otawa::etime::TimeUnitBuilder", Versi
  *
  * @ingroup etime
  */
-p::feature TIME_UNIT_FEATURE("otawa::etime::TIME_UNIT_FEATURE", p::make<TimeUnitBuilder>());
+p::feature UNIT_FEATURE("otawa::etime::UNIT_FEATURE", p::make<TimeUnitBuilder>());
 
 
 /**
