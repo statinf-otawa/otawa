@@ -1496,13 +1496,24 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 
 	// special contribution with com
 	if(com) {
-		// sum{e in com} x_e >= x_hts
-		static string msg = "complex constraint for times";
-		ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
+
+		// test that all contributes
+		bool all = true;
 		for(int i = 0; i < events.length(); i++)
-			if((com & (1 << i)) && events[i].fst->isEstimating(true))
-				events[i].fst->estimate(c, true);
-		c->addRight(1, x_hts);
+			if((com & (1 << i)) && !events[i].fst->isEstimating(true)) {
+				all = false;
+				break;
+			}
+
+		// sum{e in com} x_e >= x_hts
+		if(all) {
+			static string msg = "complex constraint for times";
+			ilp::Constraint *c = sys->newConstraint(msg, ilp::Constraint::GE, 0);
+			for(int i = 0; i < events.length(); i++)
+				if((com & (1 << i)) && events[i].fst->isEstimating(true))
+					events[i].fst->estimate(c, true);
+			c->addRight(1, x_hts);
+		}
 	}
 
 }
