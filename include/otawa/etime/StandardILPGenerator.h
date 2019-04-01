@@ -59,7 +59,6 @@ public:
 	void process(WorkSpace *ws) override;
 
 protected:
-
 	void contributeBase(ot::time time) override;
 	void contributeTime(ot::time t_hts) override;
 	void contributePositive(EventCase event, bool prec) override;

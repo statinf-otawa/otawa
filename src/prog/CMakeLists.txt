@@ -115,9 +115,8 @@ set(libotawa_SOURCES
 	"util_AccessedAddress.cpp"
 	"util_StackAnalysis.cpp"
 	"util_SymAddress.cpp"
-#	"clp_analysis.cpp"
-#	"clp_symbolic_expr.cpp"
 	"dfa_State.cpp"
+	"dfa_Lexicon.cpp"
 
 #    abstract interpretation module
 	"ai.cpp"

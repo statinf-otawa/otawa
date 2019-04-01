@@ -34,11 +34,11 @@ public:
 
 protected:
 
-	void generate(io::Output& out) throw(elm::Exception) override {
+	void generate(io::Output& out) override {
 
 		// compute dominance
 		require(DOMINANCE_FEATURE);
-		DomInfo *info = DOM_INFO(workspace());
+		DomInfo *info = DOMINANCE_FEATURE.get(workspace());
 
 		// output domination information
 		for(auto g: **otawa::INVOLVED_CFGS(workspace())) {

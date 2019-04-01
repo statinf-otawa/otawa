@@ -192,7 +192,7 @@ protected:
 					<< (place == etime::PREFIX ? "prefix" : "block")
 					<< " event " << evt << io::endl;
 			}
-			tu.add(evt);
+			//tu.add(evt);	!!TOFIX!!
 
 			// update state
 			mustpers[lb->set()]->update(accs[i], acss[lb->set()]);

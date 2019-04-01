@@ -31,12 +31,30 @@ namespace otawa { namespace etime {
  * @ingroup etime
  */
 class TimeUnitGenerator: public ILPGenerator {
+
+	class EventBounds {
+	public:
+		inline EventBounds(Event *e): evt(e) { }
+		inline Event *event() const { return evt; }
+		inline const List<ilp::Var *>& upperBounded() const { return up; }
+		inline const List<ilp::Var *>& lowerBounded() const { return lo; }
+		inline void addUpperBounded(ilp::Var *v) { up.add(v); }
+		inline void addLowerBounded(ilp::Var *v) { lo.add(v); }
+	private:
+		Event *evt;
+		List<ilp::Var *> up;
+		List<ilp::Var *> lo;
+	};
+
 public:
 
 	TimeUnitGenerator(const Monitor& mon):
 		ILPGenerator(mon),
 		tu(nullptr),
-		base_time(0)
+		_t_lts(0),
+		_t_lts_set(false),
+		_x_e(nullptr),
+		_x_hts(nullptr)
 	{ }
 
 	void process(WorkSpace *ws) override {
@@ -65,7 +83,75 @@ public:
 
 protected:
 
+	/**
+	 * Collect events.
+	 * @param events	To store events to.
+	 * @param props		Property list to look in.
+	 * @param part		Part number in the unit.
+	 * @param id		Identifier used to retrieve events.
+	 */
+	void collectEvents(Vector<EventCase>& events, PropList *props, part_t part, p::id<Event *>& id) {
+		for(auto e: id.all(props))
+			events.add(EventCase(e, part));
+	}
+
+	/**
+	 * Collect instructions to build an instruction sequence.
+	 * @param seq		Sequence to be completed with instructions of the given block.
+	 * @param b			Block containing instructions to add to the sequence.
+	 * @param part		ExeGraph part (PROLOGUE or BLOCK).
+	 * @param index		Current instruction index.
+	 */
+	void collectInsts(ParExeSequence *seq, Block *b, code_part_t part, int& index) {
+		if(!b->isBasic())
+			return;
+		BasicBlock *bb = b->toBasic();
+		for(auto i: *bb)
+			seq->addLast(new ParExeInst(i, bb, part, index++));
+	}
+
 	void process(Unit *_tu) {
+		tu = _tu;
+		Vector<EventCase> events;
+
+
+		// collect BBs and events (for retro compatibility)
+		collectEvents(events, tu->path().first()->source(), 0, EVENT);
+		part_t p = 0;
+		for(auto e: tu->path()) {
+			collectEvents(events, e, p, PREFIX_EVENT);
+			p++;
+			collectEvents(events, e, p, EVENT);
+			collectEvents(events, e->sink(), p, EVENT);
+		}
+
+		// numbers the dynamic events
+		int cnt = 0;
+		for(int i = 0; i < events.count(); i++)
+			if(events[i].event()->occurrence() == SOMETIMES)
+				events[i].setIndex(cnt++);
+
+
+		// build the sequence
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+		collectInsts(seq, tu->path().first()->source(), PROLOGUE, index);
+		code_part_t cpart = PROLOGUE;
+		for(auto e: tu->path()) {
+			if(e == tu->pivot())
+				cpart = otawa::BLOCK;
+			collectInsts(seq, e->sink(), cpart, index);
+		}
+
+		// build the graph
+		//prepare(e, events, countDyn(events));
+		ParExeGraph *g = build(seq);
+		//solve(e, g, events);
+		//finish(events);
+
+		// clean all
+		delete g;
+		delete seq;
 
 	}
 
@@ -91,8 +177,13 @@ protected:
 
 
 private:
+	HashMap<Event *, EventBounds *> bounds;
+
 	Unit *tu;
-	ot::time base_time;
+	ot::time _t_lts;
+	bool _t_lts_set;
+	ilp::Var *_x_e, *_x_hts;
+	BitVector _done;
 };
 
 

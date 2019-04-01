@@ -125,6 +125,24 @@ Address Address::null;
 
 
 /**
+ * @fn Address Address::roundDown(offset_t size);
+ * Produce a new address where the offset is rounded down to a lower
+ * or equal offset multiple of size.
+ * @param size	Size to round with (must be a power of 2!).
+ * @return		Address after rounding.
+ */
+
+
+/**
+ * @fn Address Address::roundUp(offset_t size);
+ * Produce a new address where the offset is rounded up to a higher
+ * or equal offset multiple of size.
+ * @param size	Size to round with (must be a power of 2!).
+ * @return		Address after rounding.
+ */
+
+
+/**
  * @fn page_t Address::page(void) const;
  * Get the page number.
  * @return	Page number.

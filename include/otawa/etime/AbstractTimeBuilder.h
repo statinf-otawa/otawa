@@ -30,8 +30,11 @@
 namespace otawa { namespace etime {
 
 typedef Vector<Resource *> resources_t;
-typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } part_t;
-io::Output& operator<<(io::Output& out, part_t p);
+//typedef enum { IN_PREFIX = 0, IN_BLOCK = 1, IN_SIZE = 2 } part_t;
+typedef int part_t;
+const part_t IN_PREFIX = 0;
+const part_t IN_BLOCK = 1;
+const part_t IN_SIZE = 2;
 class AbstractTimeBuilder;
 class ILPGenerator;
 

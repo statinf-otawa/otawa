@@ -1,4 +1,5 @@
 ====== Property Work ======
+@label props
 
 The properties are the first-class citizens of the OTAWA core used to annotate a program representation. They form a simple and usable facility to attach to/retrieve from the program representation some pieces of information. This section describes in details the use of properties.
 

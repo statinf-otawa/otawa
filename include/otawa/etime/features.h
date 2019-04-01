@@ -106,10 +106,24 @@ public:
 	inline Unit(Edge *e): _e(e) { }
 	inline Edge *pivot(void) const { return _e; }
 	inline const List<Edge *> path(void) const { return _cs; }
-	inline const List<Event *> events(void) const { return _es; }
+	inline const List<Pair<Event *, int> > events(void) const { return _es; }
 
 	inline void add(Edge *e) { _cs.add(e); }
-	inline void add(Event *e) { _es.add(e); }
+
+	class BlockIter: public PreIterator<BlockIter, BlockIter> {
+	public:
+		inline BlockIter(): u(nullptr), i(0) { }
+		inline BlockIter(Unit& unit): u(&unit), e(u->_cs), i(0) { }
+		inline const BlockIter& item() const { return *this; }
+		inline bool ended() const { return e.ended(); }
+		inline void next() { if(i != 0) e.next(); i++; }
+		inline Block *block() const { if(i == 0) return e->source(); else return e->sink(); }
+		inline void add(Event *e) {  }
+ 	private:
+		Unit *u;
+		List<Edge *>::Iter e;
+		int i;
+	};
 
 	// deprecated
 	inline const List<Edge *> contribs(void) const { return _cs; }
@@ -118,7 +132,7 @@ public:
 private:
 	Edge *_e;
 	List<Edge *> _cs;
-	List<Event *> _es;
+	List<Pair<Event *, int> > _es;
 };
 
 

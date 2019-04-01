@@ -32,7 +32,7 @@ public:
 	CFGTest(void): Application(Make("CFGTest")) {
 	}
 
-	virtual void work(const string& entry, PropList &props) throw(elm::Exception) {
+	virtual void work(const string& entry, PropList &props) {
 		require(COLLECTED_CFG_FEATURE);
 		require(otawa::LOOP_INFO_FEATURE);
 

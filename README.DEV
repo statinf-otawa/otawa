@@ -10,6 +10,14 @@ of:
   * ''doc'' to build and install automatic documentation.
 
 
+===== Testing =====
+
+To enable the compilation of testing code, run CMake with variable OTAWA_RUN set to yes:
+<code sh>
+cmake . -DOTAWA_TEST=yes
+</code>
+
+
 ===== Source Formatting =====
 
 The source format used in OTAWA is very close to usual C++ source formatting.

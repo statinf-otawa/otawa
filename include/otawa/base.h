@@ -67,6 +67,8 @@ public:
 	inline Address(offset_t offset): pg(0), off(offset) { }
 	inline Address(page_t page, offset_t offset): pg(page), off(offset) { }
 	inline Address(const Address& address): pg(address.pg), off(address.off) { }
+	inline Address roundDown(offset_t size) { return Address(pg, off & ~(size -1)); }
+	inline Address roundUp(offset_t size) { return Address(pg, (off + size - 1) & ~(size -1)); }
 
 	// Accessors
 	inline page_t page(void) const { return pg; }

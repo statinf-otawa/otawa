@@ -30,16 +30,6 @@ extern Identifier<String> GRAPHS_OUTPUT_DIRECTORY;
 
 namespace etime {
 
-io::Output& operator<<(io::Output& out, part_t p) {
-	static cstring label[IN_SIZE] = {
-			"in-prefix",
-			"in-block"
-	};
-	out << label[p];
-	return out;
-}
-
-
 /**
  * @class EventCase
  * TODO
