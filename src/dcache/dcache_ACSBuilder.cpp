@@ -792,7 +792,6 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 		}
 	}
 	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
-		cerr << "DEBUG: injecting (WT) " << access << io::endl;
 		if(access.kind() == BlockAccess::ANY) {
 			ageAll(s); // there may be an unknown block in the set whose age is larger then any block
 		}
@@ -813,7 +812,6 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 		}
 	}
 	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_BACK) { // currently it follows the same strategy as the LOAD
-		cerr << "DEBUG: injecting (WB) " << access << io::endl;
 		if(access.kind() == BlockAccess::ANY) {
 			ageAll(s);
 		}

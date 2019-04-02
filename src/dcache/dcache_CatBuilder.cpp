@@ -231,11 +231,8 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 					processLBlock(bb, b, dom, domMay);
 
 				// update ACSs
-				cerr << "DEBUG: updating " << b << io::endl;
 				prob->update(dom, b);
 				probMay->update(domMay, b);
-				cerr << "DEBUG: MUSTPERS = "; prob->print(cerr, dom); cerr << io::endl;
-				cerr << "DEBUG: MAY = "; prob->print(cerr, dom); cerr << io::endl;
 			}
 		}
 	}
