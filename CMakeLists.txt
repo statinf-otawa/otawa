@@ -60,7 +60,7 @@ else()
 	set(LIBDIR "lib")
 endif()
 set(PLUGDIR      "${CMAKE_INSTALL_PREFIX}/lib/otawa")
-set(PROCDIR      "${PLUGDIR}/proc")
+set(PROCDIR      "${PLUGDIR}")
 set(LOADERDIR    "${PLUGDIR}/loader")
 set(ILPDIR       "${PLUGDIR}/ilp")
 

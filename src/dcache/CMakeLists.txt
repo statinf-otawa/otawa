@@ -1,6 +1,6 @@
 # arm2 plugin build process
 
-set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../..")
+set(CMAKE_INSTALL_RPATH "${ORIGIN}/../../..:${ORIGIN}")
 set(CMAKE_MACOSX_RPATH true)
 set(CMAKE_CXX_FLAGS "-Wall" )
 
@@ -24,5 +24,5 @@ target_link_libraries(dcache ${LIBELM})
 target_link_libraries(dcache otawa clp)
 
 # installation
-install(TARGETS dcache DESTINATION "${PROCDIR}/otawa")
-install(FILES dcache.eld DESTINATION "${PROCDIR}/otawa")
+install(TARGETS dcache DESTINATION "${PLUGDIR}/otawa")
+install(FILES dcache.eld DESTINATION "${PLUGDIR}/otawa")
