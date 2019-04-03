@@ -32,6 +32,7 @@ class Processor;
 
 // features
 extern p::interfaced_feature<const Memory> MEMORY_FEATURE;
+extern p::interfaced_feature<const CacheConfiguration> CACHE_CONFIGURATION_FEATURE;
 
 }	// hard
 

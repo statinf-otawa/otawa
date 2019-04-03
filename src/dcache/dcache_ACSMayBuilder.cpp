@@ -253,7 +253,7 @@ void ACSMayBuilder::configure(const PropList &props) {
 /**
  */
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->dataCache();
 
 	// prepare the template of the final vector
 	typedef Vector<ACS *> acs_result_t;

@@ -342,7 +342,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 
 		// get information
-		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		const hard::Cache *cache = conf->dataCache();
 		if(!cache)
 			throw ProcessorException(*this, "no data cache !");

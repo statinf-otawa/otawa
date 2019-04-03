@@ -76,7 +76,7 @@ void BlockBuilder::configure(const PropList &props) {
 /**
  */
 void BlockBuilder::setup(WorkSpace *ws) {
-	cache = hard::CACHE_CONFIGURATION(ws)->dataCache();
+	cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->dataCache();
 	if(!cache)
 		throw otawa::Exception("no data cache !");
 	if(cache->replacementPolicy() != hard::Cache::LRU)

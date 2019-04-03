@@ -425,7 +425,7 @@ private:
 		// initialize cache size
 		if(_ws != workspace()) {
 			_ws = workspace();
-			const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(_ws);
+			const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION_FEATURE.get(_ws);
 			if (cache && cache->instCache())
 				_cache_line_size = cache->instCache()->blockSize();
 			else

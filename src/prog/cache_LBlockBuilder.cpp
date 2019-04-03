@@ -76,7 +76,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 
 	// check the cache
 	cache = 0;
-	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(fw);
+	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(fw);
 	if(conf)
 	cache = conf->instCache();
 	if(!cache)

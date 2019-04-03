@@ -24,6 +24,7 @@
 
 #include <elm/sys/Path.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/hard/features.h>
 #include <otawa/proc/Accessor.h>
 #include <otawa/proc/Feature.h>
 
@@ -59,8 +60,6 @@ protected:
 
 
 // features
-extern p::feature CACHE_CONFIGURATION_FEATURE;
-extern Identifier<const CacheConfiguration *> CACHE_CONFIGURATION;
 extern FunAccessor<const Cache *> L1_ICACHE;
 extern FunAccessor<const Cache *> L1_DCACHE;
 

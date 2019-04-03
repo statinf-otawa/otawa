@@ -30,7 +30,7 @@ p::declare LBlockProcessor::reg = p::init("otawa::LBlockProcessor", Version(1, 0
  * @param name		Processor name.
  * @param version	Processor version.
  */
-LBlockProcessor::LBlockProcessor(AbstractRegistration &registration): Processor(registration) {
+LBlockProcessor::LBlockProcessor(AbstractRegistration &registration): Processor(registration), _cache(nullptr) {
 }
 
 
@@ -41,7 +41,7 @@ void LBlockProcessor::processWorkSpace(WorkSpace *ws) {
 	// get configuration
 	LBlockSet **sets = LBLOCKS(ws);
 	ASSERT(sets);
-	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+	const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 	ASSERT(conf);
 	_cache = conf->instCache();
 	ASSERT(_cache);

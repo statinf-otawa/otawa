@@ -1459,7 +1459,7 @@ ParExeGraph::ParExeGraph(
 	_explicit(false)
 {
 	if(_ws != nullptr) {
-		const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		if (cache && cache->instCache())
 			_cache_line_size = cache->instCache()->blockSize();
 		else {

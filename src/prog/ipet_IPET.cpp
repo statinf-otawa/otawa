@@ -208,7 +208,7 @@ public:
 
 protected:
 	virtual void prepare(WorkSpace *ws) {
-		const hard::CacheConfiguration& conf = **hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration& conf = *hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 
 		// no cache needed?
 		if(!conf.instCache() && !conf.dataCache()) {

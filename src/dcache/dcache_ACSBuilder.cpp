@@ -410,7 +410,7 @@ void ACSBuilder::configure(const PropList &props) {
 /**
  */
 void ACSBuilder::processWorkSpace(WorkSpace *fw) {
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->dataCache();
 
 	DATA_FIRSTMISS_LEVEL(fw) = level;
 

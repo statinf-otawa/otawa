@@ -261,7 +261,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 		am_msg = "L1 I$: always miss",
 		fm_msg = "L1 I$: first miss",
 		nc_msg = "L1 I$: not-classified";
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->instCache();
 	if(!cache)
 		throw ProcessorException(*this, "no instruction cache available");
 	ilp::System *system = SYSTEM(fw);
@@ -423,7 +423,7 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 	CAT2OnlyConstraintBuilder::processWorkSpace(ws);
 
 	// get configurations
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(ws)->instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->instCache();
 	ilp::System *system = SYSTEM(ws);
 	LBlockSet **lbsets = LBLOCKS(ws);
 	int penalty = cache->missPenalty();

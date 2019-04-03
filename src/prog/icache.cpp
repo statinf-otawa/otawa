@@ -72,7 +72,7 @@ public:
 protected:
 
 	void setup(WorkSpace *ws) override {
-		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		ASSERT(conf);
 		icache = conf->instCache();
 		if(!icache && logFor(LOG_FUN))
@@ -175,7 +175,7 @@ public:
 protected:
 
 	void setup(WorkSpace *ws) override {
-		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		ASSERT(conf);
 		icache = conf->instCache();
 		if(!icache && logFor(LOG_FUN))

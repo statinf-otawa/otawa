@@ -162,7 +162,7 @@ namespace otawa {
 		virtual void computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq);
 		virtual void BuildVectorOfHwResources();
 		virtual void configureMem(WorkSpace *ws) {
-			icache = hard::CACHE_CONFIGURATION(ws)->instCache();
+			icache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->instCache();
 			_do_consider_icache = icache;
 			mem = hard::MEMORY_FEATURE.get(ws);
 		}

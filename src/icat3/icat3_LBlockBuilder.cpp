@@ -79,7 +79,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 
 		// get the cache
-		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
+		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		ASSERT(conf);
 		const hard::Cache *cache = conf->instCache();
 		if(!cache)

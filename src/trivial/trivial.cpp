@@ -137,7 +137,7 @@ public:
 protected:
 
 	virtual void setup(WorkSpace *ws) {
-		cache = hard::CACHE_CONFIGURATION(ws)->instCache();
+		cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->instCache();
 		if(!cache)
 			throw ProcessorException(*this, "no instruction cache available");
 		sys = model(ipet::SYSTEM(ws));
@@ -284,7 +284,7 @@ public:
 protected:
 
 	virtual void setup(WorkSpace *ws) {
-		cache = hard::CACHE_CONFIGURATION(ws)->instCache();
+		cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->instCache();
 		if(!cache)
 			throw ProcessorException(*this, "no instruction cache here!");
 		mem = hard::MEMORY_FEATURE.get(ws);

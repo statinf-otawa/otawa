@@ -259,7 +259,7 @@ void CATBuilder::configure(const PropList &props) {
 void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 	//int i;
 	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->dataCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->dataCache();
 
 	for (int i = 0; i < cache->rowCount(); i++) {
 		ASSERT(i == colls[i].cacheSet());

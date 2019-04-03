@@ -164,7 +164,7 @@ void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 	}
 
 	LBlockSet **lbsets = LBLOCKS(fw);
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION(fw)->instCache();
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->instCache();
 
 	for (int i = 0; i < cache->rowCount(); i++) {
 		processLBlockSet(fw, lbsets[i], cache);

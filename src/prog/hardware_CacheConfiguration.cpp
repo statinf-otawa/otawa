@@ -181,45 +181,56 @@ string CacheConfiguration::cacheName(const Cache *cache) const {
 class CacheConfigurationProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	CacheConfigurationProcessor(p::declare& r = reg): Processor(r), config(0), xml(0) { }
+	CacheConfigurationProcessor(p::declare& r = reg): Processor(r), caches(nullptr), xml(nullptr), to_free(false) { }
 
 	virtual void configure(const PropList& props) {
 		Processor::configure(props);
-		config = CACHE_CONFIG(props);
-		if(!config) {
+		caches = CACHE_CONFIG(props);
+		if(!caches) {
 			xml = CACHE_CONFIG_ELEMENT(props);
 			if(!xml)
 				path = CACHE_CONFIG_PATH(props);
 		}
 	}
 
+	void *interfaceFor(const AbstractFeature& feature) override {
+		return const_cast<CacheConfiguration *>(caches);
+	}
+
+	void destroy(WorkSpace *ws) override {
+		if(to_free)
+			delete caches;
+		caches = nullptr;
+		to_free = false;
+	}
+
 protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
-		if(config) {
-			CACHE_CONFIGURATION(ws) = config;
+		if(caches) {
 			if(logFor(LOG_DEPS))
 				log << "\tcustom cache configuration\n";
 		}
 		else if(xml) {
-			config = CacheConfiguration::load(xml);
-			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
+			caches = CacheConfiguration::load(xml);
+			to_free = true;
 			if(logFor(LOG_DEPS))
 				log << "\t cache configuration from XML element\n";
 		}
 		else if(path) {
 			if(logFor(LOG_DEPS))
 				log << "\t cache configuration from \"" << path << "\"\n";
-			config = CacheConfiguration::load(path);
-			track(CACHE_CONFIGURATION_FEATURE, CACHE_CONFIGURATION(ws) = config);
+			caches = CacheConfiguration::load(path);
+			to_free = true;
 		}
 		else if(logFor(LOG_DEPS))
 			log << "\tno cache configuration\n";
 	}
 
 private:
-	const CacheConfiguration *config;
+	const CacheConfiguration *caches;
 	xom::Element *xml;
 	Path path;
+	bool to_free;
 };
 
 
@@ -230,17 +241,18 @@ p::declare CacheConfigurationProcessor::reg = p::init("otawa::CacheConfiguration
 
 /**
  * This feature ensures we have obtained the cache configuration
- * of the system.
+ * of the system. This features is interfaced; this means that you can fetch
+ * the cache configuration with the code:
+ * <code c++>
+ * const CacheConfiguration *config = CACHE_CONFIGURATION_FEATURE.get(workspace);
+ * </code>
  *
  * Configuration:
- * @li @ref CACHE_CONFIG -- cache configuration objerct to use,
+ * @li @ref CACHE_CONFIG -- cache configuration object to use,
  * @li @ref CACHE_CONFIG_ELEMENT -- cache configuration as an XML element,
  * @li @ref CACHE_CONFIG_PATH -- path to the cache configuration descriptor in XML.
- *
- * Properties
- * @li @ref otawa::CACHE_CONFIGURATION
  */
-p::feature CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", p::make<CacheConfigurationProcessor>());
+p::interfaced_feature<const CacheConfiguration> CACHE_CONFIGURATION_FEATURE("otawa::hard::CACHE_CONFIGURATION_FEATURE", p::make<CacheConfigurationProcessor>());
 
 
 /**
