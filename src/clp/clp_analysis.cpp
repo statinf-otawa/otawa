@@ -3347,6 +3347,7 @@ p::declare Analysis::reg = p::init("otawa::clp::CLPAnalysis", Version(0, 1, 0))
 	.require(LOOP_INFO_FEATURE)
 	.require(FLOW_FACTS_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
+	.require(hard::MEMORY_FEATURE)
 	.provide(clp::CLP_ANALYSIS_FEATURE);
 
 Analysis::Analysis(p::declare& r)
@@ -3371,7 +3372,7 @@ Analysis::Analysis(p::declare& r)
 /**
  */
 void Analysis::setup(WorkSpace *ws) {
-	mem = hard::MEMORY(ws);
+	mem = hard::MEMORY_FEATURE.get(ws);
 }
 
 

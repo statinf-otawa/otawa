@@ -41,7 +41,7 @@ public:
 	static p::declare reg;
 	
 	Analysis(p::declare& r = reg);
-	virtual void configure(const PropList &props);
+	void configure(const PropList &props) override;
 	
 	/** @return the number of machine instructions analysed. */
 	inline clp::STAT_UINT get_nb_inst(void){ return _nb_inst; }
@@ -69,8 +69,8 @@ public:
 	inline clp::STAT_UINT get_nb_top_load(void) const { return _nb_top_load; }
 	
 protected:
-	virtual void setup(WorkSpace *ws);
-	virtual void processWorkSpace(WorkSpace *ws);
+	void setup(WorkSpace *ws) override;
+	void processWorkSpace(WorkSpace *ws) override;
 	Vector<init_t> inits;
 private:
 	const hard::Memory *mem;

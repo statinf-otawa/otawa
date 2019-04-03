@@ -81,7 +81,7 @@ void BlockBuilder::setup(WorkSpace *ws) {
 		throw otawa::Exception("no data cache !");
 	if(cache->replacementPolicy() != hard::Cache::LRU)
 		throw otawa::Exception("unsupported replacement policy in data cache !");
-	mem = hard::MEMORY(ws);
+	mem = hard::MEMORY_FEATURE.get(ws);
 	if(!mem) {
 		if(isVerbose())
 			log << "INFO: no workspace memory. Using default memory.\n";

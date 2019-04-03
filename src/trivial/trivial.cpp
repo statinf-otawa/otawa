@@ -142,7 +142,7 @@ protected:
 			throw ProcessorException(*this, "no instruction cache available");
 		sys = model(ipet::SYSTEM(ws));
 		ASSERT(sys);
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 	}
 
@@ -209,7 +209,7 @@ protected:
 	virtual void setup(WorkSpace *ws) {
 		sys = model(ipet::SYSTEM(ws));
 		ASSERT(sys);
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 	}
 
@@ -287,7 +287,7 @@ protected:
 		cache = hard::CACHE_CONFIGURATION(ws)->instCache();
 		if(!cache)
 			throw ProcessorException(*this, "no instruction cache here!");
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		sys = model(ipet::SYSTEM(ws));
 	}
 

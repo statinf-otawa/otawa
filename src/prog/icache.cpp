@@ -71,22 +71,22 @@ public:
 
 protected:
 
-	virtual void setup(WorkSpace *ws) {
+	void setup(WorkSpace *ws) override {
 		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
 		ASSERT(conf);
 		icache = conf->instCache();
 		if(!icache && logFor(LOG_FUN))
 			log << "\tno instruction cache available; nothing to do.\n";
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 	}
 
-	virtual void processWorkSpace(WorkSpace *ws) {
+	void processWorkSpace(WorkSpace *ws) override {
 		if(icache)
 			BBProcessor::processWorkSpace(ws);
 	}
 
-	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override {
 		if(!b->isBasic())
 			return;
 		BasicBlock *bb = b->toBasic();
@@ -174,22 +174,22 @@ public:
 
 protected:
 
-	virtual void setup(WorkSpace *ws) {
+	void setup(WorkSpace *ws) override {
 		const hard::CacheConfiguration *conf = hard::CACHE_CONFIGURATION(ws);
 		ASSERT(conf);
 		icache = conf->instCache();
 		if(!icache && logFor(LOG_FUN))
 			log << "\tno instruction cache available; nothing to do.\n";
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 	}
 
-	virtual void processWorkSpace(WorkSpace *ws) {
+	void processWorkSpace(WorkSpace *ws) override {
 		if(icache)
 			BBProcessor::processWorkSpace(ws);
 	}
 
-	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
+	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override {
 		if(!b->isBasic())
 			return;
 		BasicBlock *bb = b->toBasic();

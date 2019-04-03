@@ -30,7 +30,7 @@
 #include <elm/serial2/macros.h>
 #include <elm/sys/Path.h>
 
-#include <otawa/proc/AbstractFeature.h>
+#include <otawa/hard/features.h>
 #include <otawa/prog/Manager.h>
 
 namespace elm { namespace xom { class Element; } }
@@ -210,8 +210,8 @@ private:
 };
 
 // features
-extern p::feature MEMORY_FEATURE;
-extern Identifier<const Memory *> MEMORY;
+//extern p::feature MEMORY_FEATURE;
+//extern Identifier<const Memory *> MEMORY;
 
 } // hard
 

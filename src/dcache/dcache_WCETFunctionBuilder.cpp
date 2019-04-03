@@ -55,7 +55,7 @@ void WCETFunctionBuilder::setup(WorkSpace *ws) {
 	// get information
 	sys = ipet::SYSTEM(ws);
 	ASSERT(sys);
-	mem = hard::MEMORY(ws);
+	mem = hard::MEMORY_FEATURE.get(ws);
 	ASSERT(mem);
 
 	// look for worst times

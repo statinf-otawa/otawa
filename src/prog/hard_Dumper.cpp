@@ -46,7 +46,7 @@ Dumper::Dumper(void): Processor(reg) {
 void Dumper::processWorkSpace(WorkSpace *ws) {
 
 	// retrieve memory
-	const hard::Memory *mem = hard::MEMORY(ws);
+	const hard::Memory *mem = hard::MEMORY_FEATURE.get(ws);
 	if(!mem)
 		mem = &single<hard::Memory>();
 

@@ -538,57 +538,68 @@ ot::time Memory::accessTime(Address a) const {
 class MemoryProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	MemoryProcessor(p::declare &r = reg): Processor(r), config(0), xml(0) { }
+	MemoryProcessor(p::declare &r = reg): Processor(r), mem(nullptr), xml(nullptr), to_free(false) { }
 
-	virtual void configure(const PropList& props) {
+	void configure(const PropList& props) override {
 		Processor::configure(props);
-		config = MEMORY_OBJECT(props);
-		if(!config) {
+		mem = MEMORY_OBJECT(props);
+		if(!mem) {
 			xml = MEMORY_ELEMENT(props);
 			if(!xml)
 				path = MEMORY_PATH(props);
 		}
 	}
 
+	void *interfaceFor(const AbstractFeature& feature) override {
+		return const_cast<Memory *>(mem);
+	}
+
+	void destroy(WorkSpace *ws) {
+		if(to_free)
+			delete mem;
+	}
+
 protected:
-	virtual void processWorkSpace(WorkSpace *ws) {
+
+	void processWorkSpace(WorkSpace *ws) override {
 
 		// find the memory configuration
-		if(config) {
-			MEMORY(ws) = config;
+		if(mem) {
 			if(logFor(LOG_DEPS))
 				log << "\tcustom memory configuration\n";
 		}
 		else if(xml) {
-			config = Memory::load(xml);
-			track(MEMORY_FEATURE, MEMORY(ws) = config);
+			mem = Memory::load(xml);
+			to_free = true;
 			if(logFor(LOG_DEPS))
 				log << "\tmemory configuration from XML element\n";
 		}
 		else if(path) {
 			if(logFor(LOG_DEPS))
 				log << "\tmemory configuration from \"" << path << "\"\n";
-			config = Memory::load(path);
-			track(MEMORY_FEATURE, MEMORY(ws) = config);
+			mem = Memory::load(path);
+			to_free = true;
 		}
 		else if(logFor(LOG_DEPS)) {
-			config = 0;
+			mem = nullptr;
 			log << "\tno memory configuration\n";
 		}
 
 		// verbose display
-		if(isVerbose() && config)
-			for(int i = 0; i < config->banks().count(); i++)
-				log << "\t\t" << config->banks()[i]->name() << "\t"
-					<< config->banks()[i]->address() << "-"
-					<< (config->banks()[i]->topAddress() - 1)
+		if(isVerbose() && mem)
+			for(auto b: mem->banks())
+			//for(int i = 0; i < mem->banks().count(); i++)
+				log << "\t\t" << b->name() << "\t"
+					<< b->address() << "-"
+					<< (b->topAddress() - 1)
 					<< io::endl;
 	}
 
 private:
-	const Memory *config;
+	const Memory *mem;
 	xom::Element *xml;
 	Path path;
+	bool to_free;
 };
 
 
@@ -619,27 +630,12 @@ p::declare MemoryProcessor::reg = p::init("otawa::MemoryProcessor", Version(1, 0
 
 /**
  * This feature ensures we have obtained the memory configuration
- * of the system.
- *
- * @par Properties
- * @li @ref otawa::hard::MEMORY
+ * of the system. This feature provides an interface that can be obtained with:
+ * <code c++>
+ * const hard::Memory *mem = hard::MEMOR_FEATURE.get(workspace);
+ * </code>
  */
-p::feature MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", p::make<MemoryProcessor>());
-
-
-/**
- * Current memory.
- *
- * @par Hooks
- * @li @ref otawa::WorkSpace
- *
- * @par Features
- * @li @ref otawa::CACHE_CONFIGURATION_FEATURE
- *
- * @par Default Value
- * Cache configuration without any cache (never null).
- */
-Identifier<const Memory *> MEMORY("otawa::hard::MEMORY", &Memory::full);
+p::interfaced_feature<const Memory> MEMORY_FEATURE("otawa::hard::MEMORY_FEATURE", p::make<MemoryProcessor>());
 
 } // hard
 

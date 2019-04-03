@@ -218,7 +218,7 @@ void StandardEventBuilder::configure(const PropList& props) {
 void StandardEventBuilder::setup(WorkSpace *ws) {
 
 	// look for memory
-	mem = hard::MEMORY(ws);
+	mem = hard::MEMORY_FEATURE.get(ws);
 	if(mem)
 		bank = mem->banks()[0];
 	else

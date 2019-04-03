@@ -232,7 +232,7 @@ protected:
 		coll = icat3::LBLOCKS(ws);
 		ASSERT(coll);
 		A = coll->A();
-		mem = hard::MEMORY(ws);
+		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 		man = new ACSManager(ws);
 	}

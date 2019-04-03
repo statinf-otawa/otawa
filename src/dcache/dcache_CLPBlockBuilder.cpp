@@ -86,7 +86,7 @@ void CLPBlockBuilder::setup(WorkSpace *ws) {
 		throw otawa::Exception("unsupported replacement policy in data cache !");
 
 	// get memory
-	mem = hard::MEMORY(ws);
+	mem = hard::MEMORY_FEATURE.get(ws);
 
 	// build the block collection
 	colls = new BlockCollection[cache->rowCount()];

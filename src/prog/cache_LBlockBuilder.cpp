@@ -65,7 +65,7 @@ p::declare LBlockBuilder::reg = p::init("otawa::util::LBlockBuilder", Version(1,
 /**
  * Build a new l-block builder.
  */
-LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r), lbsets(0), cache(0) {
+LBlockBuilder::LBlockBuilder(AbstractRegistration& r): BBProcessor(r), lbsets(nullptr), cache(nullptr), mem(nullptr) {
 }
 
 
@@ -83,7 +83,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 		throw ProcessorException(*this, "No cache in this platform.");
 
 	// get the memory
-	mem = hard::MEMORY(fw);
+	mem = hard::MEMORY_FEATURE.get(fw);
 
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];

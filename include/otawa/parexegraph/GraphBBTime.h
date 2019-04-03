@@ -164,7 +164,7 @@ namespace otawa {
 		virtual void configureMem(WorkSpace *ws) {
 			icache = hard::CACHE_CONFIGURATION(ws)->instCache();
 			_do_consider_icache = icache;
-			mem = hard::MEMORY(ws);
+			mem = hard::MEMORY_FEATURE.get(ws);
 		}
 
     public:
