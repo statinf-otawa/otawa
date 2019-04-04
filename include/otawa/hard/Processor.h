@@ -21,13 +21,14 @@
 #ifndef OTAWA_HARD_PROCESSOR_H
 #define OTAWA_HARD_PROCESSOR_H
 
-#include <elm/string.h>
+#include <elm/data/Array.h>
 #include <elm/serial2/macros.h>
 #include <elm/serial2/collections.h>
-#include <elm/data/Array.h>
-#include <otawa/prog/Inst.h>
-#include <elm/util/strong_type.h>
+#include <elm/string.h>
 #include <elm/sys/Path.h>
+#include <elm/util/strong_type.h>
+#include <otawa/hard/features.h>
+#include <otawa/prog/Inst.h>
 #include <otawa/prog/Manager.h>
 
 namespace otawa {
@@ -349,8 +350,6 @@ inline T Stage::select(Inst::kind_t kind, const T table[]) const {
 }
 
 // features
-extern p::feature PROCESSOR_FEATURE;
-extern Identifier<const Processor *> PROCESSOR;
 extern Identifier<string> PROCESSOR_ID;
 
 } } // otawa::hard

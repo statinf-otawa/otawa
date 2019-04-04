@@ -259,7 +259,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		void GraphBBTime<G>::processWorkSpace(WorkSpace *ws) {
 
 		_ws = ws;
-		const hard::Processor *proc = hard::PROCESSOR(_ws);
+		const hard::Processor *proc = hard::PROCESSOR_FEATURE.get(_ws);
 		if(proc == &hard::Processor::null)
 			throw ProcessorException(*this, "no processor to work with");
 //		else {

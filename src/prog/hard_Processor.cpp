@@ -648,12 +648,12 @@ n *
 class ProcessorProcessor: public otawa::Processor {
 public:
 	static p::declare reg;
-	ProcessorProcessor(p::declare& r = reg): Processor(r), config(0), xml(0) { }
+	ProcessorProcessor(p::declare& r = reg): Processor(r), proc(nullptr), xml(nullptr), to_free(false) { }
 
-	virtual void configure(const PropList& props) {
+	void configure(const PropList& props) override {
 		Processor::configure(props);
-		config = otawa::PROCESSOR(props);
-		if(!config) {
+		proc = otawa::PROCESSOR(props);
+		if(!proc) {
 			id = PROCESSOR_ID(props);
 			if(!id) {
 				xml = PROCESSOR_ELEMENT(props);
@@ -663,42 +663,50 @@ public:
 		}
 	}
 
+	void *interfaceFor(const AbstractFeature& f) override {
+		return const_cast<hard::Processor *>(proc);
+	}
+
+	void destroy(WorkSpace *ws) override {
+		if(to_free)
+			delete proc;
+		proc = nullptr;
+		to_free = false;
+	}
+
 protected:
-	virtual void processWorkSpace(WorkSpace *ws) {
+	void processWorkSpace(WorkSpace *ws) override {
 
 		// processor provided in configuration
-		if(config) {
-			hard::PROCESSOR(ws) = config;
+		if(proc) {
 			if(logFor(LOG_DEPS)) {
 				log << "\tcustom processor configuration\n";
-				dump(config);
+				dump(proc);
 			}
 		}
 
 		// processor from XML node
 		else if(xml) {
-			hard::Processor *proc = hard::Processor::load(xml);
-			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
+			proc = hard::Processor::load(xml);
+			to_free = true;
 			if(logFor(LOG_DEPS)) {
 				log << "\tprocessor configuration from XML element\n";
 				dump(proc);
 			}
 			proc->_process = ws->process();
 			proc->_pf = ws->process()->platform();
-			config = proc;
 		}
 
 		// processor from XML file
 		else if(path) {
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << path << "\"\n";
-			hard::Processor *proc = hard::Processor::load(path);
+			proc = hard::Processor::load(path);
+			to_free = true;
 			if(logFor(LOG_DEPS))
 				dump(proc);
-			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
 			proc->_process = ws->process();
 			proc->_pf = ws->process()->platform();
-			config = proc;
 		}
 
 		// processor from OTAWA names
@@ -708,11 +716,10 @@ protected:
 				throw ProcessorException(*this, _ << "cannot find processor named " << id);
 			if(logFor(LOG_DEPS))
 				log << "\tprocessor configuration from \"" << id << "\"\n";
-			hard::Processor *proc = orig->instantiate(ws->process());
+			proc = orig->instantiate(ws->process());
+			to_free = true;
 			if(logFor(LOG_DEPS))
 				dump(proc);
-			track(PROCESSOR_FEATURE, hard::PROCESSOR(ws) = proc);
-			config = proc;
 		}
 
 		// no processor
@@ -755,10 +762,11 @@ private:
 		}
 	}
 
-	hard::Processor *config;
+	hard::Processor *proc;
 	xom::Element *xml;
 	Path path;
 	string id;
+	bool to_free;
 };
 
 p::declare ProcessorProcessor::reg = p::init("otawa::ProcessorProcessor", Version(1, 0, 0))
@@ -768,13 +776,16 @@ p::declare ProcessorProcessor::reg = p::init("otawa::ProcessorProcessor", Versio
 
 /**
  * This feature ensures we have obtained the memory configuration
- * of the system.
+ * of the system. This feature is interfaced; this means that one can get the
+ * processor with the code below:
+ * <code c++>
+ * const hard::Processor *proc = hard::PROCESSOR_FEATURE.get(workspace);
+ * </code>
  *
  * @par Properties
- * @li @ref otawa::hard::PROCESSOR
  * @li @ref otawa::hard::PROCESSOR_ID
  */
-p::feature PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", p::make<ProcessorProcessor>());
+p::interfaced_feature<const Processor> PROCESSOR_FEATURE("otawa::hard::PROCESSOR_FEATURE", p::make<ProcessorProcessor>());
 
 
 /**

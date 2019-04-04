@@ -156,7 +156,7 @@ public:
 		if(pipeline) {
 			hard::PROCESSOR_ID(props) = pipeline;
 			workspace()->require(hard::PROCESSOR_FEATURE, props);
-			proc = *hard::PROCESSOR(workspace());
+			proc = hard::PROCESSOR_FEATURE.get(workspace());
 			ASSERTP(proc, "No processor found in platform");
 		}
 		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());

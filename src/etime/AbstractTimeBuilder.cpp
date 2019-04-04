@@ -243,7 +243,7 @@ void AbstractTimeBuilder::setGenerator(ILPGenerator *generator) {
  *
  */
 void AbstractTimeBuilder::setup(WorkSpace *ws) {
-	const hard::Processor *proc = hard::PROCESSOR(ws);
+	const hard::Processor *proc = hard::PROCESSOR_FEATURE.get(ws);
 	if(proc == &hard::Processor::null)
 		throw ProcessorException(*this, "no processor to work with");
 	_proc = new ParExeProc(proc);
