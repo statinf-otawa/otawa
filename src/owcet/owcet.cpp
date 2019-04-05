@@ -200,13 +200,13 @@ protected:
 			ipet::EXPLICIT(props) = true;
 		TASK_ENTRY(props) = entry;
 		script::PATH(props) = path;
-		script::Script scr;
-		scr.process(workspace(), props);
+		script::Script *scr = new script::Script();
+		workspace()->run(scr, props);
 
 		// process the list option
 		if(list) {
 			cerr << "CONFIGURATION OF " << *script << io::endl;
-			for(script::Script::ItemIter item(scr); item; item++) {
+			for(script::Script::ItemIter item(*scr); item; item++) {
 				cerr << "* item " << item->name << ": " << script::ScriptItem::type_labels[item->type];
 				if(item->deflt)
 					cerr << " (" << item->deflt << ")";
@@ -221,7 +221,7 @@ protected:
 		ot::time wcet = ipet::WCET(workspace());
 		if(wcet == -1)
 			cerr << "ERROR: no WCET computed (see errors above)." << io::endl;
-		else if(scr.version() == 1)
+		else if(scr->version() == 1)
 			cout << "WCET[" << entry << "] = " << wcet << " cycles\n";
 
 		// ILP dump
@@ -261,8 +261,7 @@ protected:
 
 		// display detailed statistics about WCET
 		if(wcet >= 0 && wcet_stats) {
-			BBRatioDisplayer disp;
-			disp.process(workspace(), props);
+			workspace()->run<BBRatioDisplayer>(props);
 		}
 
 		// display detail of statistics
@@ -319,10 +318,9 @@ private:
 
 		// output the CFG
 		try {
-			cfgio::Output out;
 			cfgio::OUTPUT(props) = spath / "cfg.xml";
 			cfgio::LINE_INFO(props) = true;
-			out.process(workspace(), props);
+			workspace()->run<cfgio::Output>(props);
 		}
 		catch(sys::SystemException& e) {
 			throw otawa::Exception(_ << "cannot write CFG in statistics: " << e.message());

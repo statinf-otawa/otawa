@@ -22,6 +22,7 @@
 #include <elm/assert.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/proc/DynProcessor.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
@@ -105,7 +106,7 @@ DynProcessor::~DynProcessor(void) {
  */
 void DynProcessor::process(WorkSpace *ws, const PropList &props) {
 	ASSERTP(proc, "an unresolved dynamic processor must not be used !");
-	proc->process(ws, props);
+	ws->run(proc, props);
 }
 
 }	// otawa

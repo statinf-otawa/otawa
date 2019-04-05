@@ -49,63 +49,74 @@ using namespace elm::io;
  * These services are provided either by the program loader, or by a previous analysis.
  * These services are composed of:
  * @li properties linked to the program representation,
- * @li methods providing meaninful results in the objefct of the program representation.
+ * @li methods providing meaningful results in the object of the program representation.
  *
  * The feature are an easier way to inform the framework that some services are provided
  * and to group properties and methods in logical sets. A feature is mainly implemented
  * by an @ref otawa::AbstractFeature.
  *
- * It may be implemented by a simple @ref otawa::Feature with a default code processor
+ * It may be implemented using the command otawa::p::feature with a default code processor
  * (see below) to satisfy the service if it is not provided. As the goal of feature is
- * to share some data between analyses, it is first declared in a header file, for
+ * to share some data between analyzes, it is first declared in a header file, for
  * example "my_feature.h" :
  * @code
  * #include <otawa/proc/Feature.h>
  * #include "MyDefaultProcessor.h"
  *
- * extern Feature<MyDefaultProcessor> MY_FEATURE;
+ * extern p::feature MY_FEATURE;
  * @endcode
  *
- * Then, it must defined in a source file, for example, "my_feature.cpp":
+ * Then, it must defined in a source file, for example, "my_feature.cpp",
+ * with a default builder, @c MyProcessor in this example:
  * @code
  * #include "my_feature.h"
  *
- * Feature<MyDefaultProcessor> MY_FEATURE("MY_FEATURE");
+ * p::feature MY_FEATURE("MY_FEATURE", p::make<MyProcessor>());
  * @endcode
  *
  * Note that a feature must have a unique name: duplicate names in features names will be
  * detected at system startup and will cause abortion of the application. Although it is
- * not mandatory, it is advised (1) to give a name in uppercase with underscores to separe
- * names and (2) to give the full-qualified C++ name. This last property will help to
+ * not mandatory, it is advised (1) to give a name in upper case with underscores to separate
+ * names and (2) to give the full-qualified C++ name. This convention will help to
  * retrieve features when dynamic module loading is used.
  *
- * The way proposed above to declare a feature has a drawback: it is costly in computation
- * time as it requires the user to include the default processor class.
- * To avoid this, OTAWA propose to use the  @ref otawa::SilentFeature class.
- * In this cas, the header file will become:
+ * Some features can come with a specific interface providing some special facilities
+ * that cannot be expressed using properties. This interface is typically an abstract class.
+ * To declare such a feature, one has to use "p::interfaced_feature" as:
  * @code
- * #include <otawa/proc/SilentFeature.h>
- *
- * extern SilentFeature MY_FEATURE;
+ * p::interfaced_feature<MyInterface> MY_FEATURE;
  * @endcode
  *
- * The, the source file is a bit more complex as it must now design the default processor:
+ * To obtain this interface in a workspace wher the feature is provided, one has to
+ * use feature function, AbstractFeature::get() as below:
  * @code
- * #include "my_feature.h"
- * #include "MyDefaultProcessor"
+ * WorkSpace *ws;
+ * ws->require(MY_FEATURE);
+ * MyInterface *inter = MY_FEATURE.get(ws);
+ * @endcode
  *
- * static SilentFeature::Maker<MyDefaultProcessor> MY_MAKER;
- * SilentFeature MY_FEATURE("MY_FEATURE", MY_MAKER);
+ * To implement, any code processor implementing the feature has to provide a function
+ * named @ref Processor::interfaceFor() and to return the corresponding interface:
+ * @code
+ * class MyProcessor: public Processor {
+ * public:
+ * 	...
+ * 	void *interfaceFor(const AbstractFeature& f) override { return inter; }
+ * 	...
+ * private:
+ * 	...
+ * 	MyInterface *inter;
+ * };
  * @endcode
  *
  *
  * @par Code Processors
  *
- * A code processor performs an analysis, that is, scan the program representation,
- * extracts some properties and provide them to the remaining analyses. To organize the
+ * A code processor performs an analysis, that is, scans the program representation,
+ * extracts some properties and provide them to the remaining analyzes. To organize the
  * properties, they are grouped logically in features. To organize this work, the
- * code processors records themselves to OTAWA in order to:
- * @li ensures that the required features are available,
+ * code processors records itself to OTAWA in order to:
+ * @li ensure that the required features are available,
  * @li inform that the processor computes some new features.
  *
  * Consequently, in OTAWA, analyses are packaged inside code processors
@@ -119,7 +130,7 @@ using namespace elm::io;
  * contextual processor and so on),
  * @li resource cleanup.
  *
- * This class provides also a common way to invoke analyses. The configuration
+ * This class provides also a common way to invoke analyzes. The configuration
  * is perform in a property list structure:
  * @code
  * PropList props;
@@ -130,8 +141,8 @@ using namespace elm::io;
  *
  * Then, the processor object is simply created and invoked on a workspace:
  * @code
- * MyProcessor proc;
- * proc.process(workspace, props);
+ * WorkSpace *ws;
+ * ws->run<MyProcessor>(props);
  * @endcode
  *
  * For example, to redirect the log output of the processor and to activate
@@ -140,13 +151,20 @@ using namespace elm::io;
  * PropList props;
  * Processor::VERBOSE(props) = true;
  * Processor::LOG(props) = System::newFile("my_log.txt");
- * Domination dom;
- * dom.process(workspace, props);
+ * ws->run<Domination>(props);
  * @endcode
  *
- * Notice that the configuration properties are passed to all processor invoked to provided
+ * Notice that the configuration properties are passed to all processor invoked to provide
  * features required by the invoked processor.
  *
+ * Code processors are usually invoked directly by a user or indirectly to implement a
+ * specific feature. Whatever the case, the code processor follows this calling cycle:
+ *	* @ref Processor::prepare() -- called before satisfying its required/used features,
+ *	* @ref Processor::setup() -- to set up some common resources
+ *	* @ref Processor::processWorkSpace() -- to perform the analysis itself
+ *	* @ref Processor::cleanup() -- to clean the resources allocated in setup()
+ *	* @ref Processor::commit() -- to install properties required its provided features,
+ *	* @ref Processor::destroy() -- called at deletion/invalidation of its provided features to clean up properties installed in commit().
  *
  * @par Processor Registration
  *
@@ -459,16 +477,6 @@ void Processor::run(WorkSpace *ws) {
 
 
 /**
- * Execute the code processor on the given workspace.
- * @param ws	Workspace to work on.
- * @param props	Configuration properties.
- */
-void Processor::process(WorkSpace *ws, const PropList& props) {
-	ws->run(this, props);
-}
-
-
-/**
  * @fn bool Processor::isVerbose(void) const;
  * Test if the verbose mode is activated.
  * @return	True if the verbose is activated, false else.
@@ -508,6 +516,19 @@ void Processor::setup(WorkSpace *ws) {
  * @param ws	Workspace to work on.
  */
 void Processor::cleanup(WorkSpace *ws) {
+}
+
+/**
+ * This processor is called as soon as all the required and invalidated
+ * features has been removed to let the processor install its own
+ * properties. This is specially useful when the current processor
+ * uses/requires a feature that it is also providing.
+ *
+ * The default implementation does nothing.
+ *
+ * @param ws	Current workspace.
+ */
+void Processor::commit(WorkSpace *ws) {
 }
 
 
@@ -695,7 +716,7 @@ void Processor::use(const AbstractFeature& feature) {
  * @return			Null pointer or interface corresponding to the feature.
  */
 void *Processor::interfaceFor(const AbstractFeature& feature) {
-	return nullptr;
+	throw ProcessorException(*this, _ << "interface for " << feature.name() << " not implemented!");
 }
 
 

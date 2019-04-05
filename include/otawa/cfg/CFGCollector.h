@@ -35,7 +35,8 @@ public:
 	static p::declare reg;
 
 	CFGCollector(p::declare& r = reg);
-	virtual void configure(const PropList& props);
+	void configure(const PropList& props) override;
+	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
 	void setup(WorkSpace *ws) override;
@@ -45,6 +46,7 @@ protected:
 private:
 	Vector<string> added_funs;
 	Vector<Address> added_cfgs;
+	CFGCollection *coll;
 };
 
 extern view::View& ASSEMBLY_VIEW;

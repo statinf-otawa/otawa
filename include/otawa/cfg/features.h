@@ -106,7 +106,7 @@ extern p::id<CFG *> ENTRY_CFG;
 extern p::id<Bag<Address> > BB_BOUNDS;
 extern p::id<Address> ADDED_CFG;
 extern p::id<CString> ADDED_FUNCTION;
-extern p::feature COLLECTED_CFG_FEATURE;
+extern p::interfaced_feature<const CFGCollection> COLLECTED_CFG_FEATURE;
 extern p::id<const CFGCollection *> INVOLVED_CFGS;
 extern p::id<Edge *> CALLED_BY;
 

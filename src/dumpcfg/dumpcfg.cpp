@@ -129,7 +129,8 @@ Displayer::Displayer(cstring name, const Version version):
 	Processor(name, version),
 	display_assembly(false),
 	source_info(false),
-	display_all(false)
+	display_all(false),
+	perform_view(nullptr)
 {
 	require(otawa::COLLECTED_CFG_FEATURE);
 }
@@ -173,10 +174,10 @@ void Displayer::configure(const PropList& props) {
 
 
 // Displayers
-SimpleDisplayer simple_displayer;
+/*SimpleDisplayer simple_displayer;
 DisassemblerDisplayer disassembler_displayer;
 DotDisplayer dot_displayer;
-MultipleDotDisplayer mult_displayer;
+MultipleDotDisplayer mult_displayer;*/
 
 
 // DumpCFG class
@@ -216,13 +217,15 @@ private:
  */
 void DumpCFG::prepare(PropList &props) {
 	if(simple)
-		displayer = &simple_displayer;
+		displayer = new SimpleDisplayer();
 	else if(disassemble)
-		displayer = &disassembler_displayer;
+		displayer = new DisassemblerDisplayer();
 	else if(dot)
-		displayer = &dot_displayer;
+		displayer = new DotDisplayer();
 	else if(mult)
-		displayer = &mult_displayer;
+		displayer = new MultipleDotDisplayer();
+	else
+		displayer = new SimpleDisplayer();
 }
 
 
@@ -251,7 +254,7 @@ DumpCFG::DumpCFG(void):
 	view			(make_switch()			.cmd("-w").cmd("--view")		.description("if available, view the produced output with the system viewer")),
 	out				(make_value<string>()	.cmd("-o").cmd("--output")		.description("select the output file or directory (-M option)")),
 
-	displayer(&simple_displayer)
+	displayer(nullptr)
 {
 }
 
@@ -295,7 +298,7 @@ void DumpCFG::dump(const string& name, PropList& props) {
 		if(out)
 			Displayer::OUT(props) = out;
 
-		displayer->process(workspace(), props);
+		workspace()->run(displayer, props);
 	}
 }
 

@@ -88,23 +88,21 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 	if(decoder) {
 	    if(logFor(LOG_DEPS))
 	        log << "INFO: using loader plugin decoder.\n";
-	    decoder->process(fw, *conf_props);
-        }
-        else {
-            if(logFor(LOG_DEPS))
-                log << "INFO: no default decoder\n";
-            if(!fw->process()->instSize() || follow_paths) {
-                if(logFor(LOG_DEPS))
-                	log << "INFO: using VarTextDecoder\n";
-		    VarTextDecoder decoder;
-		    decoder.process(fw, *conf_props);
-            }
-            else {
-                if(logFor(LOG_DEPS))
-                    log << "INFO: using FixedTextDecoder\n";
-                FixedTextDecoder decoder;
-		decoder.process(fw, *conf_props);
-            }
+	    fw->run(decoder, *conf_props);
+	}
+	else {
+		if(logFor(LOG_DEPS))
+			log << "INFO: no default decoder\n";
+		if(!fw->process()->instSize() || follow_paths) {
+			if(logFor(LOG_DEPS))
+				log << "INFO: using VarTextDecoder\n";
+		    fw->run<VarTextDecoder>(*conf_props);
+		}
+		else {
+			if(logFor(LOG_DEPS))
+				log << "INFO: using FixedTextDecoder\n";
+			fw->run<FixedTextDecoder>(*conf_props);
+		}
 	}
 
 	// Put the labels

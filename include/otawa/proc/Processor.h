@@ -86,8 +86,6 @@ public:
 
 	// Mutators
 	virtual void configure(const PropList& props);
-	void process(WorkSpace *ws, const PropList& props = PropList::EMPTY);
-	virtual void destroy(WorkSpace *ws);
 
 	// Configuration Properties
 	static Identifier<PropList *> STATS;
@@ -153,6 +151,8 @@ protected:
 	virtual void setup(WorkSpace *ws);
 	virtual void cleanup(WorkSpace *ws);
 	virtual void collectStats(WorkSpace *ws);
+	virtual void commit(WorkSpace *ws);
+	virtual void destroy(WorkSpace *ws);
 
 	// deprecated
 	void recordStat(const AbstractFeature& feature, StatCollector *collector);

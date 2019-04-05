@@ -525,12 +525,12 @@ private:
 		// display the CFG
 		if(cfg) {
 			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-			CLPCFGOutput output(ctx);
-			output.process(workspace(), props);
+			CLPCFGOutput *output = new CLPCFGOutput(ctx);
+			workspace()->run(output, props);
 		}
 		else {
-			TextualDisplayer displayer(ctx);
-			displayer.process(workspace(), props);
+			TextualDisplayer *displayer = new TextualDisplayer(ctx);
+			workspace()->run(displayer, props);
 		}
 
 	}

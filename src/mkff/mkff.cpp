@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	mkff utility
  *
  *	This file is part of OTAWA
@@ -620,11 +619,11 @@ private:
 // ControlOutput processor
 class ControlOutput: public CFGProcessor {
 public:
-	ControlOutput(Printer& printer);
+	ControlOutput(Printer&);
 protected:
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
-	virtual void processCFG(WorkSpace *ws, CFG *cfg);
+	void setup(WorkSpace *ws) override;
+	void cleanup(WorkSpace *ws) override;
+	void processCFG(WorkSpace *ws, CFG *cfg) override;
 private:
 	void prepare(WorkSpace *ws, CFG *cfg);
 	bool one;
@@ -1002,8 +1001,7 @@ void Command::work(PropList &props) {
 
 	if(!debugging) {
 		// Load flow facts and record unknown values
-		QuestFlowFactLoader ffl;
-		ffl.process(workspace(), props);
+		QuestFlowFactLoader *ffl = workspace()->run<QuestFlowFactLoader>(props);
 
 		// determine printer
 
@@ -1016,7 +1014,7 @@ void Command::work(PropList &props) {
 		p->printHeader(cout);
 
 		// Build the checksums of the binary files
-		if(!ffl.checkSummed()) {
+		if(!ffl->checkSummed()) {
 			for(Process::FileIter file(workspace()->process()); file; file++) {
 				checksum::Fletcher sum;
 				io::InFileStream stream(file->name());
@@ -1182,12 +1180,12 @@ void Command::work(PropList &props) {
 
 	if(!debugging) {
 		// display low-level flow facts
-		ControlOutput ctrl(*p);
-		ctrl.process(workspace(), props);
+		ControlOutput *ctrl = new ControlOutput(*p);
+		workspace()->run(ctrl, props);
 
 		// display the context tree
-		FFOutput out(*p, removeDuplicatedTarget, contextual);
-		out.process(workspace(), props);
+		FFOutput *out = new FFOutput(*p, removeDuplicatedTarget, contextual);
+		workspace()->run(out, props);
 
 		// output footer for XML
 		p->printFooter(cout);

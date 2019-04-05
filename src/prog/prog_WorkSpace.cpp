@@ -28,6 +28,7 @@
 #include <config.h>
 #include <otawa/ilp/System.h>
 #include <otawa/manager.h>
+#include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/proc/FeatureDependency.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Registry.h>
@@ -452,7 +453,41 @@ xom::Element *WorkSpace::config(void) {
 
 
 /**
+ * Find and run the code processor corresponding to the given name
+ * with the given configuration.
+ * @param props	Property list to use (optional).
+ * @return		The built processor.
+ * @throw otawa::Exception -- if there is an error in the processor or
+ * the processor cannot be found.
+ */
+Processor *WorkSpace::run(cstring name, const PropList& props) {
+	Processor *p = otawa::ProcessorPlugin::getProcessor(name);
+	if(p == nullptr)
+		throw Exception(_ << "code processor " << name << " cannot be found!");
+	run(p, props, true);
+	return p;
+}
+
+
+/**
+ * Processor *WorkSpace::run(const PropList& props);
+ * Create a processor of type T and run it in the current workspace using the given
+ * properties. As locally declared processor are no more allowed, this function is
+ * the easier to call a processor which class is known.
+ *
+ * @param T			Class of the processor.
+ * @param props		Configuration properties (optional).
+ * @return			The built processor.
+ * @throw otawa::Exception	As thrown by the code processor during its execution.
+ */
+
+
+/**
  * Run the given in the current workspace.
+ *
+ * Notice that, after this call, the workspace is the owner of the passed processor object
+ * and, therefore, will be in charge of releasing it at the right time.
+ *
  * @param proc		Processor to run.
  * @param props		Configuration to use.
  * @param del_proc	Set to true if the processor needs to be deleted when it is no more used.
@@ -527,6 +562,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 		}
 
 	// create the dependency
+	proc->commit(this);
 	int provides = 0;
 	for(FeatureIter feature(reg); feature; feature++)
 		if(feature->kind() == FeatureUsage::provide) {

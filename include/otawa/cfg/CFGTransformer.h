@@ -36,10 +36,13 @@ class CFGTransformer: public Processor {
 public:
 	static p::declare reg;
 	CFGTransformer(p::declare& r = reg);
+	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	void processWorkSpace(WorkSpace *ws) override;
+	void cleanup(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
+	void commit(WorkSpace *ws) override;
 
 	BasicBlock *build(Inst *inst, int n);
 	BasicBlock *build(Array<Inst *> insts);
@@ -73,6 +76,7 @@ private:
 	HashMap<CFG *, CFGMaker *> cmap;
 	HashMap<Block *, Block *> bmap;
 	bool no_unknown;
+	CFGCollection *coll;
 };
 
 }	// otawa

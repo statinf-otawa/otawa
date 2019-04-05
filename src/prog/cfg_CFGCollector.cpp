@@ -125,7 +125,7 @@ private:
  * @warning The COLLECTED_CFG_FEATURE must be provided!
  */
 const CFGCollection *CFGCollection::get(WorkSpace *ws) {
-	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	const CFGCollection *coll = COLLECTED_CFG_FEATURE.get(ws);
 	ASSERT(coll);
 	return coll;
 }
@@ -177,7 +177,7 @@ int CFGCollection::countBlocks(void) const {
 
 /**
  */
-CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r) {
+CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r), coll(nullptr) {
 }
 
 /**
@@ -223,16 +223,15 @@ void CFGCollector::setup(WorkSpace *ws) {
 void CFGCollector::cleanup(WorkSpace *ws) {
 
 	// build the CFG collection and clean markers
-	CFGCollection *coll = new CFGCollection();
+	coll = new CFGCollection();
 	for(Iter m(*this); m; m++) {
 		CFG *g = m->build();
 		coll->add(g);
 	}
 
 	// install the collection
-	otawa::INVOLVED_CFGS(ws) = coll;
+	INVOLVED_CFGS(ws) = coll;
 	ENTRY_CFG(ws) = (*coll)[0];
-	addCleaner(COLLECTED_CFG_FEATURE, new CollectorCleaner(ws, coll));
 
 	// install the view
 	//view::Manager::add(ws, &ASSEMBLY_VIEW);
@@ -246,6 +245,12 @@ void CFGCollector::cleanup(WorkSpace *ws) {
  */
 void CFGCollector::destroy(WorkSpace *ws) {
 	//view::Manager::remove(ws, &ASSEMBLY_VIEW);
+	if(coll != nullptr) {
+		delete coll;
+		INVOLVED_CFGS(ws).remove();
+		ENTRY_CFG(ws).remove();
+		coll = nullptr;
+	}
 }
 
 
@@ -270,6 +275,13 @@ void CFGCollector::configure(const PropList& props) {
 		added_cfgs.add(cfg);
 	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun; fun++)
 		added_funs.add(*fun);
+}
+
+
+/**
+ */
+void *CFGCollector::interfaceFor(const AbstractFeature& f) {
+	return coll;
 }
 
 
@@ -324,7 +336,7 @@ p::id<Edge *> CALLED_BY("otawa::CALLED_BY", 0);
  *
  * @ingroup cfg
  */
-p::feature COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", new Maker<CFGCollector>());
+p::interfaced_feature<const CFGCollection> COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", new Maker<CFGCollector>());
 
 
 /**

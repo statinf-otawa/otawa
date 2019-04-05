@@ -761,7 +761,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 				// cache bound edges
 				else {
 					Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
-					elm::cout << node->name() << " addr " << hex(node->inst()->inst()->address().offset()) << ", cache line = " << hex(cache_line.offset()) << ", current_cache_line = " << hex(current_cache_line.offset()) << endl;
+					//elm::cout << node->name() << " addr " << hex(node->inst()->inst()->address().offset()) << ", cache line = " << hex(cache_line.offset()) << ", current_cache_line = " << hex(current_cache_line.offset()) << endl;
 					if(cache_line != current_cache_line) {
 						new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
 						if(first_cache_line_node != previous)

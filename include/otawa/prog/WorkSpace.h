@@ -90,7 +90,10 @@ public:
 	void loadConfig(const elm::sys::Path& path);
 
 	// Feature management
-	void run(Processor *proc, const PropList& props, bool del_proc = false);
+	void run(Processor *proc, const PropList& props = PropList::EMPTY, bool del_proc = false);
+	Processor *run(cstring name, const PropList& props = PropList::EMPTY);
+	template <class T> T *run(const PropList& props = PropList::EMPTY)
+		{ T *p = new T(); run(p, props, true); return p; }
 	inline void run(Processor& proc, const PropList& props, bool del_proc = false) { run(&proc, props); }
 	void require(const AbstractFeature& feature, const PropList& props = PropList::EMPTY);
 	bool isProvided(const AbstractFeature& feature);

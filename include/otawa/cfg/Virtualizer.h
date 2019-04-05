@@ -43,17 +43,18 @@ public:
 	Virtualizer(void);
 	static p::declare reg;
 
-	virtual void configure(const PropList& props);
+	void configure(const PropList& props) override;
+	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	void processWorkSpace(WorkSpace *ws) override;
+	void cleanup(WorkSpace *ws) override;
+	void commit(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
 
 private:
 	void make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path);
 	void makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining);
-	//void enteringCall(BasicBlock *caller, BasicBlock *callee, ContextualPath &path);
-	//void leavingCall(BasicBlock *to, ContextualPath &path);
 	CFGMaker& makerOf(CFG *cfg);
 	CFGMaker& newMaker(Inst *first);
 	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
@@ -62,6 +63,7 @@ private:
 	List<CFG *> todo;
 	HashMap<CFG *, CFGMaker *> map;
 	FragTable<CFGMaker *> makers;
+	CFGCollection *coll;
 };
 
 }	// otawa

@@ -72,11 +72,11 @@ protected:
 			else if(a.startsWith("process:")) {
 				setTask(props, "main");
 				string n = a.substring(8);
-				Processor *p = clean(ProcessorPlugin::getProcessor(&n));
+				Processor *p = ProcessorPlugin::getProcessor(&n);
 				if(!p)
 					throw otawa::Exception(_ << "cannot find feature " << n);
 				else
-					p->process(workspace(), props);
+					workspace()->run(p, props);
 			}
 			else if(!setTask(props, a))
 				cerr << "WARNING: don't know what to do with: " << a << ". Ignoring it.\n";
@@ -98,8 +98,7 @@ protected:
 			if(!dot) {
 				if(out)
 					cfgio::OUTPUT(props) = *out;
-				cfgio::Output output;
-				output.process(workspace(), props);
+				workspace()->run<cfgio::Output>(props);
 			}
 
 			// DOT output
@@ -115,8 +114,7 @@ protected:
 					display::CFGOutput::VIEW(props) = v;
 				}
 				display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-				display::CFGOutput output;
-				output.process(workspace(), props);
+				workspace()->run<display::CFGOutput>(props);
 			}
 		}
 	}

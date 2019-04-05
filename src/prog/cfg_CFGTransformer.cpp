@@ -54,16 +54,40 @@ using namespace elm;
  * @ingroup cfg
  */
 
+/**
+ */
 p::declare CFGTransformer::reg = p::init("otawa::CFGTransformer", Version(1, 0, 0))
 	.maker<CFGTransformer>()
 	.require(otawa::COLLECTED_CFG_FEATURE)
 	.invalidate(otawa::COLLECTED_CFG_FEATURE)
 	.provide(otawa::COLLECTED_CFG_FEATURE);
 
+
 /**
  */
-CFGTransformer::CFGTransformer(p::declare& r): Processor(r), _entry(0), cur(0), no_unknown(false) {
+CFGTransformer::CFGTransformer(p::declare& r)
+	: Processor(r), _entry(nullptr), cur(nullptr), no_unknown(false), coll(nullptr)
+	{ }
+
+
+/**
+ */
+void *CFGTransformer::interfaceFor(const AbstractFeature& f) {
+	return coll;
 }
+
+
+/**
+ */
+void CFGTransformer::destroy(WorkSpace *ws) {
+	if(coll != nullptr) {
+		delete coll;
+		INVOLVED_CFGS(ws).remove();
+		ENTRY_CFG(ws).remove();
+		coll = nullptr;
+	}
+}
+
 
 /**
  * Build a basic block starting at the given instruction
@@ -313,19 +337,22 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
 /**
  */
 void CFGTransformer::cleanup(WorkSpace *ws) {
-	CFGCollection *coll = new CFGCollection();
-	CFG *nentry = 0;
+	coll = new CFGCollection();
 	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
 		CFG *cfg = m->build();
-		if(!nentry)
-			nentry = cfg;
 		coll->add(cfg);
 		delete *m;
 	}
-	ASSERT(nentry);
-	addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = nentry);
-	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = coll);
 }
+
+
+/**
+ */
+void CFGTransformer::commit(WorkSpace *ws) {
+	ENTRY_CFG(ws) = coll->entry();
+	INVOLVED_CFGS(ws) = coll;
+}
+
 
 /**
  * Prepare a maker to be transformed.
