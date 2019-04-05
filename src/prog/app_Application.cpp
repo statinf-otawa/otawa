@@ -365,6 +365,7 @@ int Application::run(int argc, char **argv) {
 				otawa::FLOW_FACTS_PATH(props).add(Path(ff[i]));
 
 		// do the work
+		Monitor::configure(props);
 		work(props);
 		complete(props);
 	}
@@ -492,6 +493,30 @@ void Application::require(const AbstractFeature&  feature) {
 	ASSERTP(props2, "require() is only callable from work(task_name, props) function");
 	ws->require(feature, *props2);
 }
+
+
+/**
+ * Run the given processor in the current workspace using the current property
+ * list as configuration.
+ * @param p		Processor to run.
+ */
+void Application::run(Processor *p) {
+	ASSERTP(props2, "run() is only callable from work(task_name, props) function");
+	ws->run(p, *props2);
+}
+
+
+/**
+ * @fn T *Application::run();
+ * Create a code processor of type T and run it in the current workspace using the
+ * current property list as configuration.
+ *
+ * Notice that the workspace is in charge of releasing the processor instance
+ * at the right time.
+ *
+ * @param T		Type of processor to run.
+ * @return		Built processor.
+ */
 
 
 /**

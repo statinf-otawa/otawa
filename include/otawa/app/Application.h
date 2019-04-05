@@ -45,7 +45,7 @@ private:
 
 
 // Application class
-class Application: public option::Manager {
+class Application: public option::Manager, public otawa::Monitor {
 public:
 	Application(const Make& make);
 	Application(
@@ -67,12 +67,15 @@ protected:
 
 	inline WorkSpace *workspace(void) const { return ws; }
 	void require(const AbstractFeature&  feature);
-	virtual void process(string arg);
-	inline bool isVerbose(void) const { return verbose; }
 	void exit(int code = 0);
+	void run(Processor *p);
+	template <class T> T *run()
+		{ T *p = new T(); run(p); return p; }
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s);
+
+	void process(string arg) override;
 
 private:
 	option::SwitchOption help, verbose;
