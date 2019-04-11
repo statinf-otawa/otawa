@@ -21,6 +21,7 @@
 
 #include <elm/avl/Set.h>
 #include <elm/data/SortedList.h>
+#include <elm/io/ansi.h>
 #include <elm/option/SwitchOption.h>
 
 #include <otawa/app/Application.h>
@@ -54,12 +55,13 @@
  * @endcode
  *
  * The following are provided:
- * @li -r, --regs: display register information,
+ * @li -b, --bytes: display bytes of instructions,
+ * @li -c, --condition: display condition for conditional instructions,
  * @li -k, --kind: display kind of instructions,
+ * @li -r, --regs: display register information,
+ * @li -p, --pipeline PROCESSOR_NAME: display execution pipeline of instructions for the given processor
  * @li -s, --semantics:	display translation of instruction into semantics language,
  * @li -t, --target: display target of control instructions
- * @li -b, --bytes: display bytes of instructions
- * @li -p, --pipeline PROCESSOR_NAME: display execution pipeline of instructions for the given processor
  *
  * @par Example
  * @code
@@ -147,18 +149,28 @@ public:
 	target	(option::SwitchOption::Make(this).cmd("-t").cmd("--target")		.description("display target of control instructions")),
 	bytes	(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes")		.description("display bytes composing the instruction")),
 	ksem	(option::SwitchOption::Make(this).cmd("-S").cmd("--kernel-sem")	.description("display the kernel semantic instruction (without condition for conditional instructions")),
+	cond    (option::SwitchOption::Make(this).cmd("-c").cmd("--condition")	.description("for architecture supporting conditional instructions, display the condition")),
 	pipeline(option::Value<string>::Make(this).cmd("-p").cmd("--pipeline")	.description("display execution pipeline of instructions for the given processor").argDescription("PROCESSOR_NAME").def("")),
 	max_size(0), proc(NULL)
 	{ }
 
 	virtual void work (const string &entry, PropList &props) {
 		require(otawa::COLLECTED_CFG_FEATURE);
+
+		// support pipeline
 		if(pipeline) {
 			hard::PROCESSOR_ID(props) = pipeline;
 			workspace()->require(hard::PROCESSOR_FEATURE, props);
 			proc = hard::PROCESSOR_FEATURE.get(workspace());
-			ASSERTP(proc, "No processor found in platform");
+			if(!proc)
+				throw otawa::Exception("No processor found in platform");
 		}
+
+		// support condition
+		if(cond && !workspace()->isProvided(otawa::CONDITIONAL_INSTRUCTIONS_FEATURE))
+			throw otawa::Exception("condition display requires an instruction set with conditional instructions");
+
+		// perform the display
 		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
 		for(int i = 0; i < coll->count(); i++)
 			processCFG(coll->get(i));
@@ -176,7 +188,7 @@ private:
 	 * Disassemble a CFG.
 	 */
 	void processCFG(CFG *cfg) {
-		cout << "# FUNCTION " << cfg->label() << io::endl;
+		cout << io::BOLD << io::BRIGHT_BLUE << "# FUNCTION " << cfg->label() << io::PLAIN << io::endl;
 
 		// put BB in the right order
 		typedef elm::avl::Set<BasicBlock *, BasicBlockComparator> avl_t;
@@ -211,7 +223,7 @@ private:
 				bu.semKernel(block);
 			else
 				bu.semInsts(block);
-			cout << "\t\tsemantics\n";
+			cout << io::YELLOW << "\t\tsemantics\n" << io::PLAIN;
 			otawa::sem::Printer printer(workspace()->platform());
 			for(int i = 0; i < block.count(); i++) {
 				cout << "\t\t\t";
@@ -237,16 +249,16 @@ private:
 
 		// disassemble labels
 		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
-			cout << '\t' << *label << ":\n";
+			cout << '\t' << io::CYAN << *label << ":\n" << io::PLAIN;
 		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
-			cout << '\t' << *label << ":\n";
+			cout << '\t' << io::CYAN << *label << ":\n" << io::PLAIN;
 
 		// display the address
 		cout << inst->address();
 
 		// display bytes of instruction (if required)
 		if(bytes) {
-			cout << '\t';
+			cout << "  ";
 			for(t::uint32 i = 0; i < inst->size(); i++) {
 				t::uint8 b;
 				workspace()->process()->get(inst->address() + i, b);
@@ -260,11 +272,11 @@ private:
 		}
 
 		// disassemble instruction
-		cout << "\t" << inst << io::endl;
+		cout << "  " << inst << io::endl;
 
 		// display kind if required
 		if(kind) {
-			cout << "\t\tkind = ";
+			cout << io::YELLOW << "\t\tkind = " << io::PLAIN;
 			Inst::kind_t kind = inst->kind();
 			for(int i = 0; kinds[i].kind; i++)
 				if(kinds[i].kind & kind)
@@ -272,10 +284,17 @@ private:
 			cout << io::endl;
 		}
 
+		// display condition
+		if(cond) {
+			Condition c = inst->condition();
+			if(!c.isEmpty())
+				cout << io::YELLOW << "\t\tcondition: " << io::PLAIN << c << io::endl;
+		}
+
 		// display target if any
 		if(target) {
 			if(inst->isControl() && !inst->isReturn() && !(kind & Inst::IS_TRAP)) {
-				cout << "\t\ttarget = ";
+				cout << io::YELLOW << "\t\ttarget = " << io::PLAIN;
 				Inst *target = inst->target();
 				if(!target)
 					cout << "unknown";
@@ -297,7 +316,7 @@ private:
 				ASSERTP(reg, "No register found in platform for unique identifier " << rr[i]);
 				srr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
-			cout << "\t\tread regs = ";
+			cout << io::YELLOW << "\t\tread regs = " << io::PLAIN;
 			for(SortedList<string>::Iter r(srr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
@@ -311,7 +330,7 @@ private:
 				ASSERTP(reg, "No register found in platform for unique identifier " << rr[i]);
 				swr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
-			cout << "\t\twritten regs = ";
+			cout << io::YELLOW << "\t\twritten regs = " << io::PLAIN;
 			for(SortedList<string>::Iter r(swr); r; r++)
 				cout << *r << " ";
 			cout << io::endl;
@@ -326,7 +345,7 @@ private:
 		out << endl;
 	}
 
-	option::SwitchOption regs, kind, sem, target, bytes, ksem;
+	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond;
 	option::Value<string> pipeline;
 	t::uint32 max_size;
 	const hard::Processor *proc;

@@ -38,6 +38,42 @@ using namespace elm;
 namespace otawa {
 
 /**
+ * @addtogroup prog
+ * @section prog_process Processes
+ *
+ * A process is the representation of the program at the start of the execution.
+ * A process mainly provides the content of the different memories composing
+ * the platform updated to with the bits of the program. In addition,
+ * the process provides also details bout the underlying architecture
+ * (instruction set, endianness, registers, branching model, etc) or
+ * about the capacities of the loader.
+ *
+ * A simple way to get information about capabilities of an architecture
+ * is to look to features provided by the process. They are automatically
+ * transfered to any workspace using the process. For example,
+ * to test if the architecture supports "delayed branches", one can write:
+ * ~~~~
+ * 	WorkSpace *ws = ...;
+ * 	if(ws->provides(DELAYED_BRANCHEES)
+ * 		...;
+ * ~~~~
+ *
+ * The following features are usually provided by processes:
+ *	* otawa::CONDITIONAL_INSTRUCTIONS_FEATURE
+ *	* otawa::CONTROL_DECODING_FEATURE
+ *	* otawa::DELAYED_FEATURE
+ *	* otawa::DELAYED2_FEATURE
+ *	* otawa::FLOAT_MEMORY_ACCESS_FEATURE
+ *	* otawa::MEMORY_ACCESS_FEATURE
+ *	* otawa::REGISTER_USAGE_FEATURE
+ *	* otawa::SEMANTICS_INFO
+ *	* otawa::SEMANTICS_INFO_EXTENDED
+ *	* otawa::SEMANTICS_INFO_FLOAT
+ *	* otawa::SOURCE_LINE_FEATURE
+ *	* otawa::VLIW_SUPPORTED
+ */
+
+/**
  * This feature is put on processes by the loader to inform that the
  * control instruction of the current instruction contains delayed branches
  *
@@ -47,6 +83,7 @@ namespace otawa {
  * @par Properties
  * @li @ref otawa::DELAYED
  *
+ * @ingroup prog
  */
 p::feature DELAYED_FEATURE("otawa::DELAYED_FEATURE", new Maker<NoProcessor>());
 
@@ -74,7 +111,7 @@ SimState::~SimState(void) {
 
 
 /**
- * @fn Process *process(void) const;
+ * @fn Process *SimState::process(void) const;
  * Get the owner process.
  * @return	Owner process.
  */
@@ -742,6 +779,7 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
 /**
  * @class ProcessException
  * An exception generated from a process.
+ * @ingroup proc
  */
 
 
@@ -787,6 +825,7 @@ String ProcessException::message(void) {
  * @class UnsupportedFeatureException
  * This class is used to throw an exception when a process does not support
  * an invoked feature.
+ * @ingroup prog
  */
 
 
@@ -802,6 +841,7 @@ String UnsupportedFeatureException::message(void) {
  * @class OutOfSegmentException
  * This exception is thrown when a memory access is performed on process
  * with an address that does not point in a segment of the executable file.
+ * @ingroup prog
  */
 
 
@@ -820,6 +860,7 @@ String OutOfSegmentException::message(void) {
  * memory segment of the program.
  * @par Provided Methods
  * @li @ref Process::get() family of methods.
+ * @ingroup prog
  */
 p::feature MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE", new Maker<NoProcessor>());
 
@@ -831,6 +872,7 @@ p::feature MEMORY_ACCESS_FEATURE("otawa::MEMORY_ACCESS_FEATURE", new Maker<NoPro
  * @li @ref Process::get(Address, float&),
  * @li @ref Process::get(Address, double&),
  * @li @ref Process::get(Address, long double&),
+ * @ingroup prog
  */
 p::feature FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEATURE", new Maker<NoProcessor>());
 
@@ -841,6 +883,7 @@ p::feature FLOAT_MEMORY_ACCESS_FEATURE("otawa::FLOAT_MEMORY_ACCES_FEATURE", new 
  * @par Provided Methods
  * @li @ref	Inst::readRegs(void);
  * @li @ref Inst::writtenRegs(void);
+ * @ingroup prog
  */
 p::feature REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE", new Maker<NoProcessor>());
 
@@ -850,6 +893,7 @@ p::feature REGISTER_USAGE_FEATURE("otawa::REGISTER_USAGE_FEATURE", new Maker<NoP
  * for control instructions.
  * @par Provided Methods
  * @li @ref Inst::target()
+ * @ingroup prog
  */
 p::feature CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE", new Maker<NoProcessor>());
 
@@ -860,6 +904,7 @@ p::feature CONTROL_DECODING_FEATURE("otawa::CONTROL_DECODING_FEATURE", new Maker
  * @par Provided Methods
  * @li @ref Process::getSourceLine()
  * @li @ref Process::getAddresses()
+ * @ingroup prog
  */
 p::feature SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE", new Maker<NoProcessor>());
 
@@ -869,6 +914,7 @@ p::feature SOURCE_LINE_FEATURE("otawa::SOURCE_LINE_FEATURE", new Maker<NoProcess
  * This feature is provided on Process objects by architecture implementing VLIW
  * facilities. This means mainly that Inst::IS_BUNDLE and Inst::semWriteBack() are used
  * in instructions.
+ * @ingroup prog
  */
 p::feature VLIW_SUPPORTED("otawa::VLIW_SUPPORTED", new Maker<NoProcessor>());
 
@@ -879,6 +925,7 @@ p::feature VLIW_SUPPORTED("otawa::VLIW_SUPPORTED", new Maker<NoProcessor>());
  * instructions. A common example are the ARM microprocessors which instructions,
  * at least in normal mode, can be conditional. The architectures providing this
  * feature implement the method Inst::condition() and Inst::updateCondition().
+ * @ingroup prog
  */
 p::feature CONDITIONAL_INSTRUCTIONS_FEATURE("otawa::CONDITIONAL_INSTRUCTIONS_FEATURE", new Maker<NoProcessor>());
 
@@ -887,6 +934,7 @@ p::feature CONDITIONAL_INSTRUCTIONS_FEATURE("otawa::CONDITIONAL_INSTRUCTIONS_FEA
  * argument passing. It contains the image address of the argv vector.
  * @p Hooks
  * @li @ref Process
+ * @ingroup prog
  */
 Identifier<Address> ARGV_ADDRESS("otawa::ARGV_ADDRESS", Address::null);
 
@@ -896,6 +944,7 @@ Identifier<Address> ARGV_ADDRESS("otawa::ARGV_ADDRESS", Address::null);
  * argument passing. It contains the image address of the envp vector.
  * @p Hooks
  * @li @ref Process
+ * @ingroup prog
  */
 Identifier<Address> ENVP_ADDRESS("otawa::ENVP_ADDRESS", Address::null);
 
@@ -905,6 +954,7 @@ Identifier<Address> ENVP_ADDRESS("otawa::ENVP_ADDRESS", Address::null);
  * argument passing. It contains the image address of the auxv vector.
  * @p Hooks
  * @li @ref Process
+ * @ingroup prog
  */
 Identifier<Address> AUXV_ADDRESS("otawa::AUXV_ADDRESS", Address::null);
 
@@ -914,6 +964,7 @@ Identifier<Address> AUXV_ADDRESS("otawa::AUXV_ADDRESS", Address::null);
  * It contains the startup address of the stack pointer.
  * @p Hooks
  * @li @ref Process
+ * @ingroup prog
  */
 Identifier<Address> SP_ADDRESS("otawa::SP_ADDRESS", Address::null);
 
@@ -921,6 +972,7 @@ Identifier<Address> SP_ADDRESS("otawa::SP_ADDRESS", Address::null);
 /**
  * @class DecodingException
  * This exception is thrown by a loader to inform about problems during decoding.
+ * @ingroup prog
  */
 
 
@@ -946,6 +998,7 @@ DecodingException::DecodingException(const string& message):
  * @li @ref otawa::sim::State::upperRead()
  * @li @ref otawa::sim::State::lowerWrite()
  * @li @ref otawa::sim::State::upperWrite()
+ * @ingroup prog
  */
 p::feature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", new Maker<NoProcessor>());
 
@@ -959,6 +1012,7 @@ p::feature MEMORY_ACCESSES("otawa::MEMORY_ACCESSES", new Maker<NoProcessor>());
  *
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
+ * @ingroup prog
  */
 p::feature SEMANTICS_INFO("otawa::SEMANTICS_INFO", new Maker<NoProcessor>());
 
@@ -985,6 +1039,8 @@ p::feature SEMANTICS_INFO("otawa::SEMANTICS_INFO", new Maker<NoProcessor>());
  *
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
+ *
+ * @ingroup prog
  */
 p::feature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", new Maker<NoProcessor>());
 
@@ -1000,6 +1056,8 @@ p::feature SEMANTICS_INFO_EXTENDED("otawa::SEMANTICS_INFO_EXTENDED", new Maker<N
  *
  * @par Activated Methods
  * @li @ref otawa::Inst::semInsts() method.
+ *
+ * @ingroup prog
  */
 p::feature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", new Maker<NoProcessor>());
 
@@ -1007,6 +1065,7 @@ p::feature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", new Maker<NoProce
 /**
  * @enum delayed_t
  * Enumeration giving the type of delayed modes used by control instruction.
+ * @ingroup prog
  */
 
 /**
@@ -1032,6 +1091,7 @@ p::feature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", new Maker<NoProce
  * @li @ref otawa::DELAYED_FEATURE
  * @par Hook
  * @li @ref otawa::Inst (control instruction)
+ * @ingroup prog
  */
 Identifier<delayed_t> DELAYED("otawa::DELAYED", DELAYED_None);
 
@@ -1111,6 +1171,7 @@ int Process::maxTemp(void) const {
 /**
  * @class DelayedInfo
  * Provide information on delayed branches.
+ * @ingroup prog
  */
 
 
@@ -1144,6 +1205,8 @@ int DelayedInfo::count(Inst *inst) {
  *
  * @par Properties
  * @li @ref DELAYED_INFO
+ *
+ * @ingroup prog
  */
 p::feature DELAYED2_FEATURE("otawa::DELAYED2_FEATURE", new Maker<NoProcessor>());
 
@@ -1157,12 +1220,14 @@ p::feature DELAYED2_FEATURE("otawa::DELAYED2_FEATURE", new Maker<NoProcessor>())
  *
  * @par Features
  * @li @ref DELAYED2_FEATURE
+ *
+ * @ingroup prog
  */
 Identifier<DelayedInfo *> DELAYED_INFO("otawa::DELAYED_INFO", 0);
 
 
 /**
- * @classclass Condition
+ * @class Condition
  * This type of object is returned by Inst::condition() method and is used
  * to manage conditional instructions (which conditional branches are only
  * a particular case). It provides information about the condition that
@@ -1365,6 +1430,8 @@ Condition Condition::inverse(void) const {
 /**
  */
 io::Output& operator<<(io::Output& out, const Condition& c) {
+	if(c.isEmpty())
+		return out;
 	if(c.reg())
 		out << c.reg()->name();
 	out << ':';
