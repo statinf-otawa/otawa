@@ -39,11 +39,14 @@ public:
 	Slicer(AbstractRegistration& _reg = reg);
 	static p::declare reg;
 
-	virtual void configure(const PropList &props);
+	void configure(const PropList &props) override;
+	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void cleanup(WorkSpace *ws);
+	void processWorkSpace(WorkSpace *fw) override;
+	void commit(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
+
 	virtual void slicing(void);
 
  	void processWorkingList(elm::Vector<WorkingElement*>& workingList);

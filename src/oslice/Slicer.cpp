@@ -129,6 +129,7 @@ private:
 /*
  * The Cleaner class for COLLECTED_CFG_FEATURE
  */
+#if 0
 class CollectedCFGCleaner: public Cleaner {
 public:
 	CollectedCFGCleaner(WorkSpace *_ws): ws(_ws) { }
@@ -152,13 +153,19 @@ protected:
 private:
 	WorkSpace* ws;
 };
+#endif
 
 
 /**
  */
-Slicer::Slicer(AbstractRegistration& _reg): otawa::Processor(_reg) {
-	_lightSlicing = false;
-}
+Slicer::Slicer(AbstractRegistration& _reg)
+	:	otawa::Processor(_reg),
+		sliced_coll(nullptr),
+		_debugLevel(0),
+	    _outputCFG( false),
+	    _lightSlicing(false)
+{ }
+
 
 /**
  */
@@ -169,6 +176,12 @@ void Slicer::configure(const PropList &props) {
 	_debugLevel = SLICE_DEBUG_LEVEL(props);
 	_outputCFG = CFG_OUTPUT(props);
 	//_lightSlicing = ENABLE_LIGHT_SLICING(props);
+}
+
+
+///
+void *Slicer::interfaceFor(const AbstractFeature& f) {
+	return sliced_coll;
 }
 
 
@@ -516,14 +529,30 @@ CFGMaker& Slicer::newMaker(Inst *first) {
 // this function is called at the end of the processor
 // the main idea is to replace the INVOLVED_CFGS of the workspace
 // by the new one which is the CFG_original \ sliced_instructions
-void Slicer::cleanup(WorkSpace *ws) {
+void Slicer::commit(WorkSpace *ws) {
 	ASSERT(sliced_coll);
 	ENTRY_CFG(ws) = (*sliced_coll)[0];
 	INVOLVED_CFGS(ws) = sliced_coll;
-	addCleaner(COLLECTED_CFG_FEATURE, new CollectedCFGCleaner(ws));
-	//addCleaner(SLICER_FEATURE, new CollectedCFGCleaner(ws));
-	//SLICER_FEATURE
 }
+
+
+///
+void Slicer::destroy(WorkSpace *ws) {
+	if(sliced_coll != nullptr) {
+
+		List<CFG *> cfgsToDelete;
+		for(auto g: *sliced_coll)
+			delete g;
+
+		ENTRY_CFG(ws).remove();
+		INVOLVED_CFGS(ws).remove();
+		delete sliced_coll;
+		sliced_coll = nullptr;
+
+	}
+}
+
+
 
 void Slicer::initIdentifiersForEachBB(const CFGCollection& coll) {
 	// for each CFG
