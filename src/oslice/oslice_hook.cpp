@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	Plug-in hook for oslice
  *
  *	This file is part of OTAWA

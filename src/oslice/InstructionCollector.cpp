@@ -1,10 +1,8 @@
 /*
- *     $Id$
- *     TO BE DETERMINED
- *
+ * 	InstructionCollector class implemetation
  *
  *     This file is part of OTAWA
- *     Copyright (c) 2007, IRIT UPS.
+ *     Copyright (c) 2015, IRIT UPS.
  *
  *     OTAWA is free software; you can redistribute it and/or modify
  *     it under the terms of the GNU General Public License as published by
