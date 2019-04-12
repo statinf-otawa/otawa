@@ -67,7 +67,7 @@ namespace otawa {
  * @ingroup cfg
  */
 
-p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
+p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 1))
 	.use(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
 	//.provide(LOOP_HEADERS_FEATURE)
@@ -76,7 +76,7 @@ p::declare LoopReductor::reg = p::init("otawa::LoopReductor", Version(2, 0, 0))
 	.make<LoopReductor>();
 
 LoopReductor::LoopReductor(p::declare& r)
-	: Processor(r)
+	: Processor(r), coll(nullptr)
 {
 }
 
@@ -166,25 +166,38 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 
 /**
  */
-void LoopReductor::cleanup(WorkSpace *ws) {
-	CFGCollection *new_coll = new CFGCollection();
+void LoopReductor::commit(WorkSpace *ws) {
+	coll = new CFGCollection();
 	for(int i = 0; i < vcfgvec.count(); i++) {
 #		ifdef DO_DEBUG
 			bool to_dump = TO_DUMP(vcfgvec[i]);
 #		endif
 		CFG *cfg = vcfgvec[i]->build();
-		new_coll->add(cfg);
+		coll->add(cfg);
 #		ifdef DO_DEBUG
 			if(to_dump)
 				displayCFG(ws, cfg, "new");
 #endif
-		if(i == 0)
-			addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = cfg);
 		delete vcfgvec[i];
 	}
-	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = new_coll);
+	INVOLVED_CFGS(ws) = coll;
+	ENTRY_CFG(ws) = coll->entry();
 }
 
+
+///
+void LoopReductor::destroy(WorkSpace *ws) {
+	if(coll != nullptr) {
+		INVOLVED_CFGS(ws).remove();
+		ENTRY_CFG(ws).remove();
+	}
+}
+
+
+///
+void *LoopReductor::interfaceFor(const AbstractFeature& f) {
+	return coll;
+}
 
 
 /**

@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/io/ansi.h>
 #include <elm/sys/System.h>
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
@@ -53,6 +54,8 @@ namespace otawa {
  * write your own commands adapted to a specific process not already provided
  * by OTAWA.
  *
+ * @par Using Application class
+ *
  * Although the usual way to write a command with a @c main function works,
  * you can save a tedious task of handling parameters, opening the executable, processing
  * error by using the @ref otawa::app::Application class.
@@ -66,7 +69,7 @@ namespace otawa {
  *
  * class MyCommand: public Application {
  * public:
- * 	MyCommand(void): Application("my-command", Version(1, 0, 2)) { }
+ * 	MyCommand(void): Application(Make("my-command", Version(1, 0, 2))) { }
  * protected:
  *	void work(PropList &props) throw(elm::Exception) {
  *		// do_something useful on the opened workspace
@@ -97,7 +100,7 @@ namespace otawa {
  * using namespace elm;
  * class MyCommand: public app::Application {
  * public:
- * 	MyCommand(void): app::Application("my-command", Version(1, 0, 2)),
+ * 	MyCommand(void): app::Application(Make("my-command", Version(1, 0, 2))),
  * 		option1(*this),
  * 		option2(*this), ... { }
  * private:
@@ -108,6 +111,23 @@ namespace otawa {
  * @endcode
  *
  * Finally, just compile your OTAWA application and it is ready to run and to process an executable.
+ *
+ * @par Facilities of the application class
+ *
+ * The application provides several helper functions:
+ *	* error() -- display an error message,
+ *	* warn() -- display a warning,
+ *	* info() -- display an information,
+ *	* fail() -- display an error and stop,
+ *	* require() -- require a feature
+ *	* workspace() -- current workspace,
+ *	* run() -- execute a code processor,
+ *	* exit() -- stop the application.
+ *
+ * In addition, Application provides display and logging services as a code processor:
+ *	* out -- current output
+ *	* log -- current log system
+ *	* logFor() -- test the logging level.
  */
 
 /**
@@ -126,8 +146,8 @@ namespace otawa {
 LogOption::LogOption(option::Manager& man)
 : option::AbstractValueOption(Make(man)
 	.cmd("--log")
-	.description("select level of log")
-	.argDescription("one of proc, deps, cfg, bb or inst")),
+	.description("select level of log (one of proc, deps, cfg, bb or inst)")
+	.argDescription("LEVEL")),
 log_level(Processor::LOG_NONE)
 { }
 
@@ -140,8 +160,8 @@ log_level(Processor::LOG_NONE)
 LogOption::LogOption(option::Manager *man)
 : option::AbstractValueOption(Make(man)
 	.cmd("--log")
-	.description("select level of log")
-	.argDescription("one of proc, deps, cfg, bb or inst")),
+	.description("select level of log (one of proc, deps, cfg, bb or inst)")
+	.argDescription("LEVEL")),
 log_level(Processor::LOG_NONE)
 { }
 
@@ -325,7 +345,7 @@ int Application::run(int argc, char **argv) {
 			string arg = sets[i];
 			int p = arg.indexOf('=');
 			if(p < 0) {
-				cerr << "ERROR: bad --set argument: \"" << arg << "\"\n";
+				error(_ << "bad --set argument: \"" << arg << "\"");
 				failed = true;
 				continue;
 			}
@@ -337,7 +357,7 @@ int Application::run(int argc, char **argv) {
 			if(!id) {
 				id = ProcessorPlugin::getIdentifier(&name);
 				if(!id) {
-					cerr << "ERROR: unknown identifier \"" << name << "\"\n";
+					error(_ << " unknown identifier \"" << name << "\"");
 					failed = true;
 					continue;
 				}
@@ -370,12 +390,12 @@ int Application::run(int argc, char **argv) {
 		complete(props);
 	}
 	catch(option::OptionException& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
 		displayHelp();
+		error(e.message());
 		result = 1;
 	}
 	catch(elm::Exception& e) {
-		cerr << "ERROR: " << e.message() << io::endl;
+		error(e.message());
 		result = 1;
 	}
 
@@ -517,6 +537,44 @@ void Application::run(Processor *p) {
  * @param T		Type of processor to run.
  * @return		Built processor.
  */
+
+
+/**
+ * Display an error message and stop the application with the given error code.
+ * @param code	Return code of the application.
+ * @param msg	Message to display.
+ */
+void Application::fail(int code, string msg) {
+	error(msg);
+	exit(code);
+}
+
+
+/**
+ * Display an error message with the given message.
+ * @param msg	Message to display.
+ */
+void Application::error(string msg) {
+	cerr << io::BRIGHT_RED << "ERROR: " << io::PLAIN << msg << io::endl;
+}
+
+
+/**
+ * Display a warning message with the given message.
+ * @param msg	Message to display.
+ */
+void Application::warn(string msg) {
+	cerr << io::BRIGHT_GREEN << "WARNING: " << io::PLAIN << msg << io::endl;
+}
+
+
+/**
+ * Display an information to the user with the given message.
+ * @param msg	Message to display.
+ */
+void Application::info(string msg) {
+	cerr << io::CYAN << "INFO: " << io::PLAIN << msg << io::endl;
+}
 
 
 /**

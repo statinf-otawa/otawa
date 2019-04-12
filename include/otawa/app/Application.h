@@ -71,6 +71,10 @@ protected:
 	void run(Processor *p);
 	template <class T> T *run()
 		{ T *p = new T(); run(p); return p; }
+	void fail(int code, string msg);
+	void error(string msg);
+	void warn(string msg);
+	void info(string msg);
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s);

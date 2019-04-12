@@ -351,7 +351,6 @@ Inst *ConditionalRestructurer::guard(Inst *i, const Condition& cond) {
  * @param b		Block to rebuild.
  */
 void ConditionalRestructurer::make(Block *b) {
-	cerr << "DEBUG:  " << b << io::endl;
 	for(Block::EdgeIter e = b->outs(); e; e++)
 		for(p::id<Pair<Block *, int> >::Getter sb(b, BB); sb; sb++)
 			if(!e->flags()
@@ -359,7 +358,6 @@ void ConditionalRestructurer::make(Block *b) {
 			|| (e->isNotTaken() && ((*sb).snd & NOT_TAKEN)))
 				for(p::id<Pair<Block *, int> >::Getter tb(e->target(), BB); tb; tb++) {
 					build((*sb).fst, (*tb).fst, e->flags());
-					cerr << "DEBUG: " << (*sb).fst << " -> " << (*tb).fst << io::endl;
 				}
 }
 

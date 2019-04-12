@@ -35,10 +35,12 @@ class LoopReductor: public Processor {
 public:
 	static p::declare reg;
 	LoopReductor(p::declare& r = reg);
+	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	void processWorkSpace(WorkSpace *ws) override;
+	void commit(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
 
 private:
 	typedef Vector<dfa::BitSet *> loops_t;
@@ -47,6 +49,7 @@ private:
 	void computeInLoops(CFGMaker& maker, loops_t& L);
 
 	Vector<CFGMaker *> vcfgvec;
+	CFGCollection *coll;
 
 	static Identifier<bool> MARK;
 	static Identifier<Block*> DUPLICATE_OF;

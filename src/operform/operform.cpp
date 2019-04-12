@@ -33,7 +33,9 @@ using namespace otawa;
 class OPerform: public Application {
 public:
 	OPerform(void):
-		Application("operform", Version(0, 1, 0)),
+		Application(Make("operform", Version(0, 1, 0))
+			.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.")
+			.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*")),
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),
 		out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--out").description("select output file").argDescription("PATH")),
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
@@ -41,8 +43,6 @@ public:
 		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output")),
 		view(option::ValueOption<string>::Make(*this).cmd("-V").cmd("--view").description("display the given view").argDescription("view"))
 	{
-		info.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.");
-		info.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*");
 	}
 
 protected:

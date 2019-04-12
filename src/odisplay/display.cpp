@@ -229,8 +229,6 @@ string operator>>(string s, output_mode_t& mode) {
 		{ "view",	OUTPUT_VIEW },
 		{ "",		OUTPUT_ANY}
 	};
-	cerr << "DEBUG: called!\n";
-	//string s = in.scanWord();
 	for(int i = 0; labs[i].mode != OUTPUT_ANY; i++)
 		if(labs[i].name == s) {
 			mode = labs[i].mode;

@@ -24,7 +24,7 @@
 #include <elm/data/SortedList.h>
 #include <elm/options.h>
 
-#include <otawa/app/Application.h>
+#include <otawa/app/CFGApplication.h>
 #include <otawa/manager.h>
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/util/FlowFactLoader.h>
@@ -181,7 +181,7 @@ MultipleDotDisplayer mult_displayer;*/
 
 
 // DumpCFG class
-class DumpCFG: public Application {
+class DumpCFG: public CFGApplication {
 public:
 
 	DumpCFG(void);
@@ -189,7 +189,6 @@ public:
 	// options
 	opt::Switch	remove_eabi,
 				all_functions,
-				inline_calls,
 				display_assembly,
 				simple,
 				disassemble,
@@ -203,12 +202,14 @@ public:
 	Displayer *displayer;
 
 protected:
-	virtual void work(const string& entry, PropList &props) { dump(entry, props); }
-	virtual void prepare(PropList &props);
+	void processTask(const CFGCollection& coll, PropList &props) override {
+		dump(props);
+	}
+	void prepare(PropList &props) override;
 
 private:
 	void dump(CFG *cfg, PropList& props);
-	void dump(const string& name, PropList& props);
+	void dump(PropList& props);
 
 };
 
@@ -233,17 +234,17 @@ void DumpCFG::prepare(PropList &props) {
  * Build the command.
  */
 DumpCFG::DumpCFG(void):
-	Application(Make("dumpcfg", Version(2, 0, 0))
+	CFGApplication(Make("dumpcfg", Version(2, 1, 0))
 		.description(
 			"Dump to the standard output the CFG of functions.\n"
 			"If no function name is given, the main function is dumped.")
 		.copyright("Copyright (c) 2016, IRIT - UPS")
 		.author("H. Cassé <casse@irit.fr>")
+		.free_argument("PROGRAM TASK*")
 	),
 
 	remove_eabi		(make_switch()			.cmd("-r").cmd("--remove")		.description("Remove __eabi function call, if available.")),
 	all_functions	(make_switch()			.cmd("-a").cmd("--all")			.description("Dump all functions.")),
-	inline_calls	(make_switch()			.cmd("-i").cmd("--inline")		.description("Inline the function calls.")),
 	display_assembly(make_switch()			.cmd("-d").cmd("--display")		.description("Display assembly instructions.")),
 	simple			(make_switch()			.cmd("-S").cmd("--simple")		.description("Select simple output (default).")),
 	disassemble		(make_switch()			.cmd("-L").cmd("--list")		.description("Select listing output.")),
@@ -263,13 +264,7 @@ DumpCFG::DumpCFG(void):
  * Process the given CFG, that is, build the sorted list of BB in the CFG and then display it.
  * @param name	Name of the function to process.
  */
-void DumpCFG::dump(const string& name, PropList& props) {
-
-	// if required, build the delayed
-	/* TODO
-	if(workspace()->isProvided(DELAYED_FEATURE)
-	|| workspace()->isProvided(DELAYED2_FEATURE))
-		require(DELAYED_CFG_FEATURE);*/
+void DumpCFG::dump(PropList& props) {
 
 	// get the CFG
 	require(COLLECTED_CFG_FEATURE);
@@ -283,22 +278,19 @@ void DumpCFG::dump(const string& name, PropList& props) {
 	// Dump the CFG
 	else {
 
-		if(inline_calls)
-			require(VIRTUALIZED_CFG_FEATURE);
-
 		// set options
 		if(display_assembly)
 			Displayer::DISASSEMBLE(props) = display_assembly;
 		if(source)
 			Displayer::SOURCE(props) = source;
-		if(inline_calls)
-			Displayer::ALL(props) = inline_calls;
+		if(cfg_virtualize)
+			Displayer::ALL(props) = true;
 		if(view)
 			Displayer::VIEW(props) = view;
 		if(out)
 			Displayer::OUT(props) = out;
 
-		workspace()->run(displayer, props);
+		run(displayer);
 	}
 }
 
