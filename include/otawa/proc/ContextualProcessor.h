@@ -37,8 +37,8 @@ public:
 	ContextualProcessor(p::declare &_reg = reg);
 
 protected:
-	virtual void processCFG (WorkSpace *fw, CFG *cfg);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const ContextualPath& path) = 0;
+	void processCFG(WorkSpace *fw, CFG *cfg) override;
+	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb, const ContextualPath& path) = 0;
 };
 
 } // otawa

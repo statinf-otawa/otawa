@@ -79,6 +79,15 @@ static const t::uint8
  */
 static p::id<Pair<Block *, int> > BB("");
 
+
+/**
+ * In the case where a loop header has to be duplicated, it
+ * is first replaced by a virtual node (maintaining the simple)
+ * loop structure that is tied to the conditional versions of
+ * the header.
+ */
+static p::id<Block *> HD("");
+
 /**
  * This feature ensures that the CFG is transformed to reflect the effects of conditional instructions.
  *
@@ -91,6 +100,7 @@ p::feature CONDITIONAL_RESTRUCTURED_FEATURE("otawa::CONDITIONAL_RESTRUCTURED_FEA
 /**
  */
 p::declare ConditionalRestructurer::reg = p::init("otawa::ConditionalRestructurer", Version(1, 0, 0))
+	.use(LOOP_HEADERS_FEATURE)
 	.require(VIRTUAL_INST_FEATURE)
 	.provide(CONDITIONAL_RESTRUCTURED_FEATURE)
 	.extend<CFGTransformer>()
@@ -313,10 +323,20 @@ void ConditionalRestructurer::split(Block *b) {
 
 	}
 
-	// build the block and clean
-	for(Vector<Case *>::Iter k(cases); k; k++) {
-		BB(bb).add(pair(static_cast<Block *>(build(k->insts())), int(k->branch())));
-		delete *k;
+	// header block with several cases
+	Block *h = nullptr;
+	if(LOOP_HEADER(b) && cases.length() > 1) {
+		h = build();
+		HD(b) = h;
+	}
+
+	// create the duplicates
+	for(auto c: cases) {
+		Block *nbb = build(c->insts());
+		BB(bb).add(pair(nbb, int(c->branch())));
+		if(h != nullptr)
+			build(h, nbb, 0);
+		delete c;
 	}
 }
 
@@ -352,13 +372,16 @@ Inst *ConditionalRestructurer::guard(Inst *i, const Condition& cond) {
  */
 void ConditionalRestructurer::make(Block *b) {
 	for(Block::EdgeIter e = b->outs(); e; e++)
-		for(p::id<Pair<Block *, int> >::Getter sb(b, BB); sb; sb++)
-			if(!e->flags()
-			|| (e->isTaken() && ((*sb).snd & TAKEN))
-			|| (e->isNotTaken() && ((*sb).snd & NOT_TAKEN)))
-				for(p::id<Pair<Block *, int> >::Getter tb(e->target(), BB); tb; tb++) {
-					build((*sb).fst, (*tb).fst, e->flags());
-				}
+		for(auto sb: BB.all(b))
+			if(e->flags() == 0
+			|| (e->isTaken() && (sb.snd & TAKEN))
+			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN))) {
+				if(HD(e->sink()) != nullptr)
+					build(sb.fst, HD(e->sink()), e->flags());
+				else
+					for(auto tb: BB.all(e->sink()))
+						build(sb.fst, tb.fst, e->flags());
+			}
 }
 
 } // otawa

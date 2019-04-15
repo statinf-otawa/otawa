@@ -48,6 +48,7 @@ protected:
 	BasicBlock *build(Array<Inst *> insts);
 	SynthBlock *build(CFGMaker *callee);
 	SynthBlock *build(CFG *callee);
+	PhonyBlock *build();
 	Edge *build(Block *src, Block *snk, t::uint32 flags);
 
 	virtual Block *clone(Block *b);

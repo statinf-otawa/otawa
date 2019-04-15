@@ -31,7 +31,7 @@ namespace otawa {
 
 /**
  * @class ContextualProcessor
- * A contextual processor allows to process basic block in a call-aware way
+ * A contextual processor allows to process blocks in a call-aware way
  * even with a virtual CFG (where called CFG are inlined).
  *
  * First, the basic
@@ -95,8 +95,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 
 		// process next block
 		item_t it = todo.get();
-		if(it.fst->isBasic())
-			this->processBB(ws, cfg, it.fst->toBasic(), it.snd);
+		processBB(ws, cfg, it.fst, it.snd);
 		done.set(it.fst->index());
 
 		// put next blocks

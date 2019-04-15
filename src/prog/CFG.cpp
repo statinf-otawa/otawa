@@ -88,7 +88,7 @@ namespace otawa {
  * 	}
  *
  * 	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
- * 		if(bb->isEnd())
+ * 		if(bb->isVirtual())
  * 			return;
  *		cout << "\t" << bb << io::endl;
  *		for(BasicBlock::InstIter inst = bb->insts(); inst; inst++)
@@ -304,7 +304,7 @@ io::Output& operator<<(io::Output& out, Edge *edge) {
  */
 
 /**
- * @fn bool Block::isEnd(void)   const;
+ * @fn bool Block::isVirtual(void)   const;
  * Test if the block is an end, i.e. an entry, exit or unknown block.
  * @return	True if block is an end.
  */
@@ -391,11 +391,13 @@ io::Output& operator<<(io::Output& out, Block *block) {
 		out << "<null>";
 
 	// end processing
-	else if(block->isEnd()) {
+	else if(block->isVirtual()) {
 		if(block->isEntry())
 			out << "entry";
 		else if(block->isExit())
 			out << "exit";
+		else if(block->isPhony())
+			out << "BB " <<block->index() << " (phony)";
 		else
 			out << "unknown";
 	}
@@ -461,6 +463,18 @@ Inst *SynthBlock::callInst(void) {
  * @fn CFG *SynthBlock::caller(void) const;
  * Get the CFG owner of a synthetic block (if any).
  * @return	Caller / owner CFG.
+ */
+
+
+/**
+ * @class PhonyBlock;
+ * A phony block does not represent any code in the program but may be used
+ * to structure the CFG in a more regular way. It is member of the "end"
+ * family blocks but does not really represent a end.
+ *
+ * For most analyzes, a virtual block can be considered as transparent.
+ *
+ * @ingroup cfg
  */
 
 
@@ -682,7 +696,7 @@ CFG::~CFG(void) {
 
 	// delete nodes
 	for(BlockIter b = this->vertices(); b; b++) {
-		if(b->isEnd())
+		if(b->isVirtual())
 			delete b;
 		else if(b->isBasic()) {
 			BasicBlock *bb = **b;
@@ -826,7 +840,7 @@ io::Output& operator<<(io::Output& out, CFG *cfg) {
 CFGMaker::CFGMaker(Inst *first, bool fix)
 : GenDiGraphBuilder<Block, Edge>(cfg = new CFG(first)),
   _fix(fix) {
-	cfg->_entry = new Block(Block::IS_END | Block::IS_ENTRY);
+	cfg->_entry = new Block(Block::IS_VIRTUAL | Block::IS_ENTRY);
 	add(cfg->_entry);
 }
 
@@ -858,7 +872,7 @@ Block *CFGMaker::exit(void) {
  */
 Block *CFGMaker::unknown(void) {
 	if(!cfg->_unknown) {
-		cfg->_unknown = new Block(Block::IS_END | Block::IS_UNKN);
+		cfg->_unknown = new Block(Block::IS_VIRTUAL | Block::IS_UNKN);
 		cfg->_unknown->_cfg = cfg;
 		if(_fix)
 			add(cfg->_unknown);

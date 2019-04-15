@@ -62,25 +62,26 @@ class Block: public PropList, public graph::GenVertex<Block, Edge> {
 	friend class CFGMaker;
 public:
 	static const t::uint16
-		IS_END   = 0 << 0,
-		IS_BASIC = 1 << 0,
-		IS_SYNTH = 2 << 0,
-		IS_ENTRY = 0 << 2,
-		IS_EXIT  = 1 << 2,
-		IS_UNKN	 = 2 << 2,
-		IS_VIRT  = 3 << 2,
-		IS_CALL  = 0x2 << 0,
-		MASK1 	 = 0x3,
-		MASK12	 = MASK1 | (0x3 << 2);
+		IS_VIRTUAL	= 0 << 0,
+		IS_BASIC	= 1 << 0,
+		IS_SYNTH 	= 2 << 0,
+		IS_ENTRY 	= 0 << 2,
+		IS_EXIT  	= 1 << 2,
+		IS_UNKN		= 2 << 2,
+		IS_PHONY  	= 3 << 2,
+		IS_CALL  	= 0x2 << 0,
+		MASK1 	 	= 0x3,
+		MASK12	 	= MASK1 | (0x3 << 2);
 
-	inline bool isEnd(void)   const   { return (_type & MASK1)  == IS_END; }
-	inline bool isEntry(void) const   { return (_type & MASK12) == (IS_END | IS_ENTRY); }
-	inline bool isExit(void)  const   { return (_type & MASK12) == (IS_END | IS_EXIT); }
-	inline bool isUnknown(void) const { return (_type & MASK12) == (IS_END | IS_UNKN); }
-	inline bool isVirtual(void) const { return (_type & MASK12) == (IS_END | IS_VIRT); }
-	inline bool isSynth(void) const   { return (_type & MASK1)  == IS_SYNTH; }
-	inline bool isCall(void)  const   { return (_type & MASK12) == (IS_SYNTH | IS_CALL); }
-	inline bool isBasic(void) const   { return (_type & MASK1)  == IS_BASIC; }
+	inline bool isEnd(void)   	const { return (_type & MASK1)  == IS_VIRTUAL; }
+	inline bool isVirtual(void)	const { return (_type & MASK1)  == IS_VIRTUAL; }
+	inline bool isEntry(void) 	const { return (_type & MASK12) == (IS_VIRTUAL | IS_ENTRY); }
+	inline bool isExit(void)  	const { return (_type & MASK12) == (IS_VIRTUAL | IS_EXIT); }
+	inline bool isUnknown(void) const { return (_type & MASK12) == (IS_VIRTUAL | IS_UNKN); }
+	inline bool isPhony(void) 	const { return (_type & MASK12) == (IS_VIRTUAL | IS_PHONY); }
+	inline bool isSynth(void) 	const { return (_type & MASK1)  == IS_SYNTH; }
+	inline bool isCall(void)  	const { return (_type & MASK12) == (IS_SYNTH | IS_CALL); }
+	inline bool isBasic(void) 	const { return (_type & MASK1)  == IS_BASIC; }
 
 	inline int id(void) const;
 	inline const BasicBlock *toBasic(void) const;
@@ -116,6 +117,12 @@ public:
 	inline Address address(void) const;
 private:
 	CFG *_callee;
+};
+
+
+class PhonyBlock: public Block {
+public:
+	inline PhonyBlock(): Block(IS_VIRTUAL | IS_PHONY) { }
 };
 
 

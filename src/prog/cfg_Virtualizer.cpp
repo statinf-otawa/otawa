@@ -245,9 +245,14 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 	for(CFG::BlockIter v = cfg->blocks(); v; v++)
 
 		// process end block
-		if(v->isEnd()) {
+		if(v->isVirtual()) {
 			if(v->isUnknown())
 				bmap.put(cfg->unknown(), maker.unknown());
+			else if(v->isPhony()) {
+				Block *nv = new PhonyBlock();
+				maker.add(nv);
+				bmap.add(*v, nv);
+			}
 			else
 				continue;
 		}

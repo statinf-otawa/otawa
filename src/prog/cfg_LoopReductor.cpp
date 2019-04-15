@@ -238,6 +238,11 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 		return maker.exit();
 	else if(b->isUnknown())
 		return maker.unknown();
+	else if(b->isPhony()) {
+		PhonyBlock *nb = new PhonyBlock();
+		maker.add(nb);
+		return nb;
+	}
 	else {
 		ASSERT(false);
 		return 0;

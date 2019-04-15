@@ -150,6 +150,17 @@ SynthBlock *CFGTransformer::build(CFG *callee) {
 }
 
 /**
+ * Build a virtual block in the current CFG.
+ * @return	Built virtual block.
+ */
+PhonyBlock *CFGTransformer::build() {
+	PhonyBlock *b = new PhonyBlock();
+	cur->add(b);
+	return b;
+}
+
+
+/**
  * Build a new edge with the same characteristics as the given one
  * with new source and sink.
  * @param src	Source vertex.
@@ -181,8 +192,9 @@ Block *CFGTransformer::clone(Block *b) {
 		else if(b->isUnknown())
 			return cur->unknown();
 		else {
-			ASSERT(false);
-			return 0;
+			Block *b = new PhonyBlock();
+			cur->add(b);
+			return b;
 		}
 	}
 
