@@ -185,7 +185,6 @@ public:
 	inline bool isDominated(Block *b1, Block *b2) { return dominates(b2, b1); }
 };
 extern p::interfaced_feature<DomInfo> DOMINANCE_FEATURE;
-//extern Identifier<DomInfo *> DOM_INFO;
 
 // Post-domination
 extern p::feature POSTDOMINANCE_FEATURE;
@@ -199,7 +198,13 @@ extern Identifier<PostDomInfo *> PDOM_INFO;
 
 // Loop support
 class Loop;
-extern p::feature EXTENDED_LOOP_FEATURE;
+class LoopManager {
+public:
+	virtual ~LoopManager();
+	virtual Loop *top(CFG *cfg) = 0;
+	virtual Loop *loop(Block *v) = 0;
+};
+extern p::interfaced_feature<LoopManager *> EXTENDED_LOOP_FEATURE;
 
 // Split CFG support
 typedef Pair<BasicBlock *, Inst *> location_t;

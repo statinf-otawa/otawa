@@ -22,6 +22,7 @@
 #define INCLUDE_OTAWA_CFG_LOOP_H_
 
 #include <elm/data/List.h>
+#include <elm/data/Range.h>
 #include <otawa/dfa/BitSet.h>
 #include "features.h"
 
@@ -37,6 +38,7 @@ public:
 
 	Loop(Block *h);
 	Loop(CFG *cfg);
+	Address address() const;
 	inline Block *header(void) const { return _h; }
 	inline bool isTop(void) const { return !_h; }
 	inline Loop *parent(void) const { return _p; }
@@ -44,26 +46,35 @@ public:
 
 	inline int depth(void) const { return _d; }
 	bool includes(Loop *il) const;
+	inline bool equals(Loop *l) const { return l == this; }
 
-	typedef List<Loop *>::Iter ChildIter;
-	inline ChildIter subLoops(void) const { return ChildIter(_c); }
-	inline ChildIter endSubLoops(void) const { return ChildIter(); }
+	inline const List<Loop *>& subLoops() const { return _c; }
 
-	typedef Vector<Edge *>::Iter ExitIter;
-	inline ExitIter exitEdges(void) const { return **EXIT_LIST(_h); }
-	inline ExitIter endExitEdges(void) const { return *Vector<Edge *>::null; }
+	inline const Vector<Edge *>& exitEdges() const { return **EXIT_LIST(_h); }
 
 	class BlockIter: public PreIterator<BlockIter, Block *> {
 	public:
-		BlockIter(Loop *loop);
+		BlockIter();
+		BlockIter(const Loop *loop);
 		inline bool ended(void) const { return !_todo.isEmpty(); }
 		inline Block *item(void) const { return _todo.first(); }
 		void next(void);
 	private:
-		Loop *_loop;
+		const Loop *_loop;
 		List<Block *> _todo;
 		dfa::BitSet _done;
 	};
+
+	class BlockRange {
+	public:
+		inline BlockRange(const Loop *loop): l(loop) { }
+		inline BlockIter begin() const { return BlockIter(l); }
+		inline BlockIter end() const { return BlockIter(); }
+	private:
+		const Loop *l;
+	};
+
+	inline BlockRange blocks() const { return BlockRange(this); }
 
 	static p::id<Loop *> ID;
 private:

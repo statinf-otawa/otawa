@@ -24,6 +24,27 @@
 
 namespace otawa {
 
+
+/**
+ * @class LoopManager;
+ * Interface of EXTENDED_LOOP_FEATURE. Mainly provides access to CFG top-level
+ * loop.
+ *
+ * @ingroup cfg
+ */
+
+///
+LoopManager::~LoopManager() {
+}
+
+/**
+ * @fn Loop *LoopManager::top(CFG *cfg);
+ * Get the top-level loop for the given CFG. Each CFG has a top-level loop
+ * that is not a loop but the parent of any loop in the CFG.
+ * @return	Top-level loop.
+ */
+
+
 /**
  * @class Loop
  *
@@ -104,8 +125,33 @@ Loop::Loop(Block *h): _h(h) {
  * @param cfg	CFG of the top-level loop.
  */
 Loop::Loop(CFG *cfg): _h(cfg->entry()), _p(nullptr), _d(0) {
-	ID(_h) = this;
+	ID(cfg) = this;
 }
+
+
+/**
+ * Get an address to identify a loop.
+ * This is usually the address of the first instruction of the header,
+ * when the header is a basic block. Else, this functions look up in the header
+ * successor for a valid basic block.
+ * @return	Address of the loop.
+ */
+Address Loop::address() const {
+	Block *v = _h;
+	while(!v->isBasic()) {
+		bool found = false;
+		for(auto e: v->outEdges())
+			if(Loop::of(e->sink()) == this) {
+				v = e->sink();
+				found = true;
+				break;
+			}
+		if(!found)
+			return Address::null;
+	}
+	return v->toBasic()->address();
+}
+
 
 /**
  * @fn Block *Loop::header(void) const;
@@ -153,27 +199,29 @@ bool Loop::includes(Loop *il) const {
 }
 
 /**
- * @fn Loop::ChildIter Loop::subLoops(void) const;
- * Get the iterator on the immediate sub-loops of the current loop.
+ * @fn bool Loop::equals(Loop *l) const;
+ * Test if the current loop is equal to the given loop.
+ * Notice it's just enough to compare pointer to check equality.
+ * @param l		Loop to compare with.
+ * @return		True if both loops are equal, false else.
+ */
+
+/**
+ * @fn const List<Loop *>& Loop::subLoops(void) const;
+ * Get the set of the immediate sub-loops of the current loop.
  * @return	Immediate sub-loops iterator.
  */
 
 /**
- * @fn Loop::ChildIter Loop::endSubLoops(void) const;
- * Get the end tag to iterate on immediate sub-loops.
- * @return	End tag to iterate on immediate sub-loops.
- */
-
-/**
- * @fn Loop::ExitIter Loop::exitEdges(void) const;
- * Get the iterator on the exit edges of the current loop.
+ * @fn const Vector<Edge *>& Loop::exitEdges(void) const;
+ * Get the set of exit edges of the current loop.
  * @return	Iterator on exit edges.
  */
 
 /**
- * @fn Loop::ExitIter endExitEdges(void) const;
- * Get the end tag to iterate on exit edges.
- * @return	End tag to iterate on exit edges.
+ * @fn BlockRange Loop::blocks() const;
+ * Get the set of blocks in the current loop (including headers of sub-loops).
+ * @return	Set of loop blocks.
  */
 
 
@@ -185,7 +233,12 @@ bool Loop::includes(Loop *il) const {
 
 /**
  */
-Loop::BlockIter::BlockIter(Loop *loop): _loop(loop), _done(loop->cfg()->count()) {
+Loop::BlockIter::BlockIter(): _loop(nullptr), _done(true) {
+}
+
+/**
+ */
+Loop::BlockIter::BlockIter(const Loop *loop): _loop(loop), _done(loop->cfg()->count()) {
 	_todo.push(loop->header());
 	_done.add(loop->header()->index());
 }
@@ -195,7 +248,7 @@ Loop::BlockIter::BlockIter(Loop *loop): _loop(loop), _done(loop->cfg()->count())
 void Loop::BlockIter::next(void) {
 	Block *b = _todo.pop();
 	if(isHeader(b) && b != _loop->header()) {
-		for(auto e = Loop::of(b)->exitEdges(); e; e++)
+		for(auto e: Loop::of(b)->exitEdges())
 			if(Loop::of(e->sink()) == _loop && !_done.contains(e->sink()->index())) {
 				_todo.push(e->sink());
 				_done.add(e->sink()->index());
@@ -241,10 +294,22 @@ p::id<Loop *> Loop::ID("");
  *
  * @ingroup cfg
  */
-class ExtendedLoopBuilder: public BBProcessor {
+class ExtendedLoopBuilder: public BBProcessor, public LoopManager {
 public:
 	static p::declare reg;
-	ExtendedLoopBuilder(p::declare& r = reg) {
+	ExtendedLoopBuilder(p::declare& r = reg): BBProcessor(r) {
+	}
+
+	void *interfaceFor(const AbstractFeature& f) override {
+		return static_cast<LoopManager *>(this);
+	}
+
+	Loop *top(CFG *cfg) override {
+		return Loop::top(cfg);
+	}
+
+	Loop *loop(Block *v) override {
+		return Loop::of(v);
 	}
 
 protected:
@@ -255,17 +320,16 @@ protected:
 	}
 
 	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override {
-		new Loop(cfg);
 		if(Loop::isHeader(b))
 			makeLoop(b);
 	}
 
 	void makeLoop(Block *b) {
-		if(Loop::of(b) != nullptr)
+		if(Loop::ID(b) != nullptr)
 			return;
-		Block *p = ENCLOSING_LOOP_HEADER(b);
-		if(p != nullptr)
-			makeLoop(p);
+		if(ENCLOSING_LOOP_HEADER(b) != nullptr)
+			makeLoop(ENCLOSING_LOOP_HEADER(b));
+		new Loop(b);
 	}
 
 	void destroyBB(WorkSpace *ws, CFG *cfg, Block *b) override {
@@ -290,7 +354,8 @@ p::declare ExtendedLoopBuilder::reg = p::init("otawa::ExtendedLoopBuilder", Vers
 /**
  * This feature build @ref Loop objects representing the hierarchy of loops and attach it
  * to the CFG and its blocks. The loop can be accessing using properties (described below)
- * but an easier access is provided by @ref Loop::of() or @ref Loop::top().
+ * but an easier access is provided by @ref Loop::of(), @ref Loop::top() or by using
+ * LoopManager feature interface.
  *
  * @par Properties
  * @li @ref Loop::ID
@@ -299,6 +364,6 @@ p::declare ExtendedLoopBuilder::reg = p::init("otawa::ExtendedLoopBuilder", Vers
  * @li @ref ExtendedLoopBuilder (default)
  *
  */
-p::feature EXTENDED_LOOP_FEATURE("otawa::EXTENDED_LOOP_FEATURE", p::make<ExtendedLoopBuilder>());
+p::interfaced_feature<LoopManager *> EXTENDED_LOOP_FEATURE("otawa::EXTENDED_LOOP_FEATURE", p::make<ExtendedLoopBuilder>());
 
 }	// otawa
