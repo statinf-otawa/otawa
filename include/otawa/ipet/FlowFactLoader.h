@@ -30,9 +30,9 @@ public:
 	FlowFactLoader(p::declare& r = reg);
 
 protected:
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup (WorkSpace *fw);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const ContextualPath& path);
+	void setup(WorkSpace *ws) override;
+	void cleanup (WorkSpace *fw) override;
+	void processBB(WorkSpace *ws, CFG *cfg, Block *bb, const ContextualPath& path) override;
 
 private:
 	bool lines_available;
@@ -40,8 +40,9 @@ private:
 	int max, total, min;
 	DomInfo *dom;
 
-	bool transfer(Inst *source, BasicBlock *bb, const ContextualPath& path);
-	bool lookLineAt(Inst *source, BasicBlock *bb, const ContextualPath& path);
+	bool scan(Block *v, Block *t, const ContextualPath& path);
+	bool transfer(Inst *source, Block *bb, const ContextualPath& path);
+	bool lookLineAt(Inst *source, Block *bb, const ContextualPath& path);
 };
 
 } } // otawa::ipet

@@ -23,6 +23,7 @@
 #include <elm/io.h>
 #include <otawa/cfg.h>
 #include <otawa/cfg/Dominance.h>
+#include <otawa/cfg/Loop.h>
 #include <otawa/flowfact/features.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
@@ -50,7 +51,7 @@ namespace otawa { namespace ipet {
 p::declare FlowFactLoader::reg = p::init("otawa::ipet::FlowFactLoader", Version(2, 0, 0))
 	.base(ContextualProcessor::reg)
 	.maker<FlowFactLoader>()
-	.require(LOOP_HEADERS_FEATURE)
+	.require(EXTENDED_LOOP_FEATURE)
 	.require(otawa::FLOW_FACTS_FEATURE)
 	.provide(otawa::ipet::FLOW_FACTS_FEATURE);
 
@@ -66,7 +67,8 @@ FlowFactLoader::FlowFactLoader(p::declare& r)
  	line_loop(0),
  	max(0),
  	total(0),
- 	min(0)
+ 	min(0),
+	dom(nullptr)
 {
 }
 
@@ -77,7 +79,7 @@ FlowFactLoader::FlowFactLoader(p::declare& r)
  * @param bb		Target BB.
  * @return			True if some loop bound information has been found, false else.
  */
-bool FlowFactLoader::transfer(Inst *source, BasicBlock *bb, const ContextualPath& path) {
+bool FlowFactLoader::transfer(Inst *source, Block *bb, const ContextualPath& path) {
 	bool all = true;
 
 	// look for MAX_ITERATION
@@ -156,7 +158,7 @@ void FlowFactLoader::cleanup(WorkSpace *ws) {
  * @param bb	BB to put the bound to.
  * @return		True if the bound has been found, false else.
  */
-bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb, const ContextualPath& path) {
+bool FlowFactLoader::lookLineAt(Inst *inst, Block *bb, const ContextualPath& path) {
 	if(!lines_available)
 		return false;
 
@@ -183,50 +185,79 @@ bool FlowFactLoader::lookLineAt(Inst *inst, BasicBlock *bb, const ContextualPath
 
 /**
  */
-void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb, const ContextualPath& path) {
-	ASSERT(ws);
-	ASSERT(cfg);
-	ASSERT(bb);
+void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, Block *b, const ContextualPath& path) {
 
 	// only for loop headers
-	if(bb->isEnd() || !LOOP_HEADER(bb))
+	if(!LOOP_HEADER(b))
 		return;
 	total_loop++;
 
-	// initialization
+	// look for bounds
 	max = -1;
 	total = -1;
 	min = -1;
+	if(logFor(LOG_BB))
+		log << "\t\tlooking bound for loop headed by " << b << io::endl;
+	scan(b, b, path);
 
-	// Look in the first instruction of the BB
-	BasicBlock::InstIter iter(bb);
-	ASSERT(iter);
-	if(transfer(iter, bb, path))
-		return;
-
-	// Attempt to look at the start of the matching source line
-	if(lookLineAt(bb->first(), bb, path))
-		return;
-
-	// Look all instruction in the header
-	// (in case of aggregation in front of the header)
-	for(BasicBlock::InstIter inst(bb); inst; inst++)
-		if(lookLineAt(inst, bb, path))
-			return;
-
-	// look in back edge in case of "while() ..." to "do ... while(...)" optimization
-	for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
-		if(dom->isBackEdge(edge) && edge->source()->isBasic()) {
-			for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
-				if(lookLineAt(inst, bb, path))
-					return;
-		}
-
-	// warning for lacking loops
+	// warning for missing loops
+	// TODO
 	if(max < 0 && total < 0) {
-		warn(_ << "no limit for the loop at " << str(path.getEnclosingFunction(), bb->address()) << ".");
+		warn(_ << "no limit for the loop at " << str(path.getEnclosingFunction(), Loop::of(b)->address()) << ".");
 		warn(_ << " in the context " << path);
 	}
+}
+
+
+/**
+ * Scan for loop bound.
+ * @param v		Block to scan.
+ * @param t		Target of bound annotations.
+ * @param path	Current context path.
+ */
+bool FlowFactLoader::scan(Block *v, Block *t, const ContextualPath& path) {
+	if(logFor(LOG_BB))
+		log << "\t\t\tlooking in " << v << io::endl;
+
+	// is it phony?
+	if(v->isPhony()) {
+		for(auto e: v->outEdges())
+			if(Loop::of(v) == Loop::of(e->sink())
+			&& scan(e->sink(), t, path))
+				return true;
+	}
+
+	// else it is a BB
+	else {
+		BasicBlock *bb = v->toBasic();
+
+		// Look in the first instruction of the BB
+		BasicBlock::InstIter iter(bb);
+		ASSERT(iter);
+		if(transfer(iter, t, path))
+			return true;
+
+		// Attempt to look at the start of the matching source line
+		if(lookLineAt(bb->first(), t, path))
+			return true;
+
+		// Look all instruction in the header
+		// (in case of aggregation in front of the header)
+		for(BasicBlock::InstIter inst(bb); inst; inst++)
+			if(lookLineAt(inst, t, path))
+				return true;
+
+		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
+		for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
+			if(dom->isBackEdge(edge) && edge->source()->isBasic()) {
+				for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
+					if(lookLineAt(inst, t, path))
+						return true;
+			}
+
+	}
+
+	return false;
 }
 
 
