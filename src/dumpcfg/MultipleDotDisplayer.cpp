@@ -28,26 +28,10 @@
 #include <otawa/cfg.h>
 #include <otawa/manager.h>
 #include <otawa/program.h>
-#include "../../include/otawa/display/CFGDecorator.h"
+#include <otawa/display/CFGOutput.h>
 
 using namespace elm;
 using namespace otawa;
-
-class MultipleDotDecorator: public display::CFGDecorator {
-public:
-	MultipleDotDecorator(WorkSpace *ws): display::CFGDecorator(ws) { }
-protected:
-	virtual void displaySynthBlock(CFG *g, SynthBlock *b, display::Text& content, display::VertexStyle& style) const {
-		display::CFGDecorator::displaySynthBlock(g, b, content, style);
-		if(b->callee()) {
-			if(!b->callee()->index())
-				content.setURL("index.dot");
-			else
-				content.setURL(_ << b->callee()->index() << ".dot");
-		}
-	}
-
-};
 
 /**
  */
@@ -72,29 +56,18 @@ void MultipleDotDisplayer::setup(WorkSpace *ws) {
 /**
  */
 void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
-	const CFGCollection& coll = **otawa::INVOLVED_CFGS(ws);
+	PropList props;
+	display::CFGOutput::PATH(props) = dir;
+	display::CFGOutput::SOURCE(props) = source_info;
+	display::CFGOutput::ASSEMBLY(props) = display_assembly;
+	display::CFGOutput::SEM(props) = display_sem;
+	display::CFGOutput::IKIND(props) = display_kind;
+	cerr << "DEBUG: display_kind = " << display_kind << io::endl;
+	display::CFGOutput::REGS(props) = display_regs;
+	display::CFGOutput::TARGET(props) = display_target;
+	display::CFGOutput::BYTES(props) = display_bytes;
 
-	// configuration of decorator
-	MultipleDotDecorator decor(ws);
-	decor.display_source_line = source_info;
-	decor.display_assembly = display_assembly;
-
-	// get the provider
-	display::Provider *prov = display::Provider::get(display::OUTPUT_RAW_DOT);
-	if(!prov)
-		throw ProcessorException(*this, "no provider of dot output");
-
-	// generate the CFGs
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
-		//display::DisplayedCFG dcfg(**cfg);
-		display::Displayer *disp = prov->make(cfg, decor);
-		if(cfg->index() == 0)
-			disp->setPath(dir / "index.dot");
-		else
-			disp->setPath(dir / string(_ << cfg->index() << ".dot"));
-		disp->process();
-		delete disp;
-	}
+	ws->run<display::CFGOutput>(props);
 
 	// if requested, launch the viewer
 	if(perform_view) {

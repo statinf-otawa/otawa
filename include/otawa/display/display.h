@@ -41,6 +41,7 @@ public:
 	Color(t::uint32 color);
 	Color(string name);
 	inline const string& asText(void) const { return text; }
+	inline operator bool() const { return text; }
 	
 private:
 	string text;
@@ -178,6 +179,13 @@ public:
 template <class T> Begin<T> begin(const T& v) { return Begin<T>(v); }
 template <class T> End<T> end(const T& v) { return End<T>(v); }
 
+class Indent {
+public:
+	inline Indent(int _n = 1): n(_n) { }
+	int n;
+};
+inline Indent indent(int n = 1) { return Indent(n); }
+
 typedef enum {
 	BR,
 	BR_LEFT,
@@ -208,6 +216,7 @@ public:
 	virtual void setURL(const string& url) = 0;
 	virtual void tag(const Tag& nl) = 0;
 	virtual void align(display::align align) = 0;
+	virtual void indent(int n) = 0;
 };
 
 inline Text& operator<<(Text& out, const Begin<text_style_t>& s) { out.tag(s.value, false); return out; }
@@ -216,6 +225,7 @@ inline Text& operator<<(Text& out, const Begin<Color>& c) { out.color(c.value, f
 inline Text& operator<<(Text& out, const End<Color>& c) { out.color(c.value, true); return out; }
 inline Text& operator<<(Text& out, const Tag& tag) { out.tag(tag); return out; }
 inline Text& operator<<(Text& out, display::align align) { out.align(align); return out; }
+inline Text& operator<<(Text& out, Indent i) { out.indent(i.n); return out;}
 template <class T>
 inline Text& operator<<(Text& out, const T& v) { out.out() << v; return out; }
 

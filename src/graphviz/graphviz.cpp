@@ -46,6 +46,7 @@ public:
 			case '"':	r = out.write("&quot;", 6);	break;
 			case '{':	r = out.write("\\{", 2);	break;
 			case '}':	r = out.write("\\}", 2);	break;
+			case '|':	r = out.write("\\|", 2);	break;
 			case '\n':	newLine();					break;
 			default:	r = out.write(*p);			break;
 			}
@@ -78,7 +79,7 @@ public:
 		return _out;
 	}
 
-	virtual void tag(display::text_style_t style, bool end) {
+	void tag(display::text_style_t style, bool end) override {
 		cstring name;
 
 		// default: do not accept <hr/>
@@ -149,14 +150,14 @@ public:
 		}
 	}
 
-	virtual void color(const display::Color& color, bool end) {
+	void color(const display::Color& color, bool end) override {
 		if(!end)
 			_buf << "<FONT COLOR=\"" << color.asText() << "\">";
 		else
 			_buf << "</FONT>";
 	}
 
-	virtual void tag(const display::Tag& tag) {
+	void tag(const display::Tag& tag) override {
 		switch(tag.tag) {
 		case display::BR:
 			_buf << "<BR";
@@ -188,6 +189,11 @@ public:
 	}
 
 	void setURL(const string& url) override { _url = url; }
+
+	void indent(int n) override {
+		for(int i = 0; i < n; i++)
+			_buf << "&nbsp;";
+	}
 
 	inline string url(void) const { return _url; }
 	inline string text(void) { string r = _buf.toString(); _buf.reset(); return r; }

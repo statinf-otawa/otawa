@@ -24,7 +24,7 @@
 #include <elm/io/ansi.h>
 #include <elm/option/SwitchOption.h>
 
-#include <otawa/app/Application.h>
+#include <otawa/app/CFGApplication.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prog/Process.h>
 #include <otawa/hard/Processor.h>
@@ -134,15 +134,13 @@ static struct {
 };
 
 
-class ODisasm: public Application {
+class ODisasm: public CFGApplication {
 public:
 
 	ODisasm(void)
-	: Application(
-		"odisasm",
-		Version(1, 0, 0),
-		"Disassemble instruction to OTAWA instruction description",
-		"H. Cassé <casse@irit.fr>"),
+	: CFGApplication(Make("odisasm", Version(1, 1, 0))
+		.description("Disassemble instruction to OTAWA instruction description")
+		.author("H. Cassé <hugues.casse@irit.fr>")),
 	regs	(option::SwitchOption::Make(this).cmd("-r").cmd("--regs")		.description("display register information")),
 	kind	(option::SwitchOption::Make(this).cmd("-k").cmd("--kind")		.description("display kind of instructions")),
 	sem		(option::SwitchOption::Make(this).cmd("-s").cmd("--semantics")	.description("display translation of instruction in semantics language")),
@@ -154,7 +152,9 @@ public:
 	max_size(0), proc(NULL)
 	{ }
 
-	virtual void work (const string &entry, PropList &props) {
+protected:
+
+	void processTask(const CFGCollection& coll, PropList &props) override {
 		require(otawa::COLLECTED_CFG_FEATURE);
 
 		// support pipeline
@@ -166,14 +166,9 @@ public:
 				throw otawa::Exception("No processor found in platform");
 		}
 
-		// support condition
-		if(cond && !workspace()->isProvided(otawa::CONDITIONAL_INSTRUCTIONS_FEATURE))
-			throw otawa::Exception("condition display requires an instruction set with conditional instructions");
-
 		// perform the display
-		const CFGCollection *coll = otawa::INVOLVED_CFGS(workspace());
-		for(int i = 0; i < coll->count(); i++)
-			processCFG(coll->get(i));
+		for(auto g: coll)
+			processCFG(g);
 	}
 
 

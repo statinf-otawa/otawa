@@ -55,7 +55,7 @@ private:
 /**
  * @class CFGOutput
  * @author H. Cassé <casse@irit.fr>
- * This processor produces an output of the CFG of the current workspace
+ * This processor produces an output of the CFGs of the current workspace
  * (including disassembly and attribute dump). For each CFG involved in the
  * computation, a file CFG_NAME.EXT is created with the EXT, extension, depends
  * on the @ref CFGOutput::KIND configuration.
@@ -72,7 +72,12 @@ private:
 // CFGOutputDecorator class
 class CFGOutputDecorator: public CFGDecorator {
 public:
-	inline CFGOutputDecorator(CFGOutput& out, WorkSpace *ws, bool raw = false): CFGDecorator(ws), _out(out), rawInfo(raw) { }
+	inline CFGOutputDecorator(CFGOutput& out, WorkSpace *ws, bool raw = false)
+	:	CFGDecorator(ws),
+		_out(out),
+		rawInfo(raw),
+		pf(*ws->process()->platform())
+	{ }
 
 	void decorate(CFG *graph, Text& caption, GraphStyle& style) const override {
 		_out.genGraphLabel(graph, caption, style);
@@ -92,13 +97,87 @@ public:
 		_out.genEdgeLabel(graph, edge, label, style);
 	}
 
+	void displayAssembly(CFG *graph, BasicBlock *block, Text& content) const override {
+		if(_out._ass)
+			CFGDecorator::displayAssembly(graph, block, content);
+	}
+
+	void displayInst(Inst *i, Text& content) const override {
+		if(_out._bytes) {
+			content << begin(Color("grey"));
+			for(auto a = i->address(); a < i->topAddress(); a = a + 1) {
+				t::uint8 b;
+				ws->process()->get(a, b);
+				content << hex(b).width(2).pad('0');
+			}
+			content << end(Color("grey")) << ' ';
+		}
+		CFGDecorator::displayInst(i, content);
+	}
+
+	void displayInfo(Inst *i, Text& content) const override {
+		if(_out._ikind)
+			content << display::begin(display::SMALL) << display::begin(_out._sem_color)
+					<< display::indent(4) << "kind = " << i->getKind()
+					<< display::end(_out._sem_color) << display::end(display::SMALL) << display::left;
+		if(_out._target && i->isControl() && !i->isReturn() && !i->isSpecial())
+			content << display::begin(display::SMALL) << display::begin(_out._sem_color)
+					<< display::indent(4) << "target = " << i->target()->address()
+					<< display::end(_out._sem_color) << display::end(display::SMALL) << display::left;
+		if(_out._regs) {
+			RegSet rs, ws;
+			i->readRegSet(rs);
+			i->writeRegSet(ws);
+			if(rs || ws) {
+				content << display::begin(display::SMALL) << display::begin(_out._sem_color);
+				if(rs) {
+					content << display::indent(4) << "read regs: ";
+					content << pf.findReg(rs[0])->name();
+					for(int i = 1; i < rs.length(); i++)
+						content << ", " << pf.findReg(rs[i])->name();
+					content << display::left;
+				}
+				if(ws) {
+					content << display::indent(4) << "written regs: ";
+					content << pf.findReg(ws[0])->name();
+					for(int i = 1; i < ws.length(); i++)
+						content << ", " << pf.findReg(ws[i])->name();
+					content << display::left;
+				}
+				content << display::end(_out._sem_color) << display::end(display::SMALL);
+			}
+		}
+		if(_out._sem) {
+			sem::Block b;
+			i->semInsts(b);
+			if(b) {
+				content << display::begin(display::SMALL) << display::begin(_out._sem_color);
+				for(auto si: b)
+					content << display::indent(4) << si << display::left;
+				content << display::end(_out._sem_color) << display::end(display::SMALL);
+			}
+			i->semInsts(b);
+		}
+	}
+
+	virtual void displaySynthBlock(CFG *g, SynthBlock *b, Text& content, VertexStyle& style) const {
+		display::CFGDecorator::displaySynthBlock(g, b, content, style);
+		if(b->callee()) {
+			if(!b->callee()->index())
+				content.setURL("index.dot");
+			else
+				content.setURL(_ << b->callee()->index() << ".dot");
+		}
+	}
+
 private:
 	CFGOutput& _out;
 	bool rawInfo;
+	hard::Platform& pf;
 };
 
 p::declare CFGOutput::reg =
-	p::init("otawa::display::CFGOutput", Version(2, 0, 0), CFGProcessor::reg)
+	p::init("otawa::display::CFGOutput", Version(2, 1, 0), CFGProcessor::reg)
 	.maker<CFGOutput>();
 
 /**
@@ -109,7 +188,17 @@ CFGOutput::CFGOutput(AbstractRegistration& _reg):
 	kind(OUTPUT_DOT),
 	rawInfo(false),
 	dec(nullptr),
-	_view(nullptr)
+	_view(nullptr),
+	_sem(false),
+	_source(true),
+	_props(false),
+	_ass(true),
+	_ikind(false),
+	_regs(false),
+	_target(false),
+	_bytes(false),
+	_sem_color("blue"),
+	_source_color("green")
 {
 }
 
@@ -117,28 +206,78 @@ CFGOutput::CFGOutput(AbstractRegistration& _reg):
 /**
  * Configuration identifier of @ref CFGOutput for the kind of generated file.
  */
-Identifier<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", OUTPUT_DOT);
+p::id<display::kind_t> CFGOutput::KIND("otawa::display::CFGOutput::KIND", OUTPUT_DOT);
 
 /**
  * Configuration identifier of @ref CFGOutput for the directory path where to
  * create the output file.
  */
-Identifier<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH");
+p::id<string> CFGOutput::PATH("otawa::display::CFGOutput::PATH");
 
 /**
  * Configuration identifier of @ref CFGOutput for the prefix file name
  */
-Identifier<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
+p::id<string> CFGOutput::PREFIX("otawa::display::CFGOutput::PREFIX", "");
 
 /**
  * Configuration identifier of @ref CFGOutput to decide if the blocks will be using the raw information from the CFGOutput::genBBLabel()
  */
-Identifier<bool> CFGOutput::RAW_BLOCK_INFO("otawa::display::CFGOutput::RAW_BLOCK_INFO", false);
+p::id<bool> CFGOutput::RAW_BLOCK_INFO("otawa::display::CFGOutput::RAW_BLOCK_INFO", false);
 
 /**
  * Configuration identifier of @ref CFGOutput to decide which view to use.
  */
-Identifier<view::View *> CFGOutput::VIEW("otawa::display::CFGOutput::VIEW", nullptr);
+p::id<view::View *> CFGOutput::VIEW("otawa::display::CFGOutput::VIEW", nullptr);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of semantics instructions.
+ */
+p::id<bool> CFGOutput::SEM("otawa::display::CFGOutput::SEM", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of source lines.
+ */
+p::id<bool> CFGOutput::SOURCE("otawa::display::CFGOutput::SOURCE", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of properties.
+ */
+p::id<bool> CFGOutput::PROPS("otawa::display::CFGOutput::PROPS", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of assembly.
+ */
+p::id<bool> CFGOutput::ASSEMBLY("otawa::display::CFGOutput::ASSEMBLY", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of instruction kind.
+ */
+p::id<bool> CFGOutput::IKIND("otawa::display::CFGOutput::IKIND", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of used registers.
+ */
+p::id<bool> CFGOutput::REGS("otawa::display::CFGOutput::REGS", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of branch instruction target.
+ */
+p::id<bool> CFGOutput::TARGET("otawa::display::CFGOutput::TARGET", false);
+
+/**
+ * Configuration identifier of CFGOutput to enable display of instruction bytes.
+ */
+p::id<bool> CFGOutput::BYTES("otawa::display::CFGOutput::BYTES", false);
+
+/**
+ * Configuration identifier of CFGOutput to select colors of semantic instructions.
+ */
+p::id<Color> CFGOutput::SEM_COLOR("otawa::display::CFGOutput::SEM_COLOR");
+
+/**
+ * Configuration identifier of CFGOutput to select colors of source line.
+ */
+p::id<Color> CFGOutput::SOURCE_COLOR("otawa::display::CFGOutput::SOURCE_COLOR");
 
 
 /**
@@ -149,6 +288,21 @@ void CFGOutput::configure(const PropList &props) {
 	path = PATH(props);
 	rawInfo = RAW_BLOCK_INFO(props);
 	_view = VIEW(props);
+	_sem = SEM(props);
+	cerr << "DEBUG: _sem = " << _sem << io::endl;
+	_source = SOURCE(props);
+	_props = PROPS(props);
+	_ass = ASSEMBLY(props);
+	_ikind = IKIND(props);
+	_regs = REGS(props);
+	_target = TARGET(props);
+	_bytes = BYTES(props);
+	Color c = SEM_COLOR(props);
+	if(c)
+		_sem_color = c;
+	c = SOURCE_COLOR(props);
+	if(c)
+		_source_color = c;
 }
 
 /**
@@ -202,6 +356,9 @@ void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
 	}
 	else
 		dec = new CFGOutputDecorator(*this, ws);
+	dec->display_assembly = _ass;
+	dec->display_source_line = _source;
+	dec->display_props = rawInfo;
 
 	// perform the output
 	display::Displayer *disp = display::Provider::display(g, *dec, kind);

@@ -72,6 +72,35 @@ Color::Color(String name) {
 
 
 /**
+ * @class Begin<T> display::begin(const T& v);
+ * Produce a special tag that, send to a Text, starts a new style area.
+ * The style depends on the passed value that may be a Color or
+ * of type text_style_t.
+ * @param v		Value embedded in the tag.
+ * @ingroup display
+ */
+
+
+/**
+ * @class Begin<T> display::end(const T& v);
+ * Produce a special tag that, send to a Text, ends a style area.
+ * The style depends on the passed value that may be a Color or
+ * of type text_style_t.
+ * @param v		Value embedded in the tag.
+ * @ingroup display
+ */
+
+
+/**
+ * @class Indent display::indent(int n);
+ * Produce a special tag that, send to a Text, indent the display
+ * of the given indentation size.
+ * @param n		Indentation size.
+ * @ingroup display
+ */
+
+
+/**
  * @class TextStyle
  * Description of the style of text.
  * @ingroup display
@@ -211,7 +240,21 @@ Text::~Text(void) {
  * @param url	Full-text URL.
  */
 
-const Tag br(BR), left(BR_LEFT), center(BR_CENTER), right(BR_RIGHT), hr(HR);
+/**
+ * @fn void Text::indent(int n);
+ * Indent the text for the given quantity.
+ * A simpler way to perform indentation is to use the function display::indent()
+ * on the text.
+ * @param n	Indentation (in space characters).
+ */
+
+const Tag
+	br(BR),				///< Its display on a Text breaks the current line. 										@ingroup display
+	left(BR_LEFT),		///< Its display on a Text breaks the current line and starts a new line aligned to left.	@ingroup display
+	center(BR_CENTER),	///< Its display on a Text breaks the current line and starts a new centered line.			@ingroup display
+	right(BR_RIGHT),	///< Its display on a Text breaks the current line and starts a new line aligned to right.	@ingroup display
+	hr(HR);				///< Its display on a Text breaks the current line and display an horizontal rule.			@ingroup display
+
 
 /**
  * Specialize input reading of output mode for option argument decoding.

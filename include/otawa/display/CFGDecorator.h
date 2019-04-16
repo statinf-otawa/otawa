@@ -52,11 +52,15 @@ protected:
 	virtual void displayProps(CFG *graph, BasicBlock *block, Text& content) const;
 	virtual void displaySourceLine(Address addr, Text& content) const;
 	virtual void displayLabels(Inst *i, Text& content) const;
+	virtual void displayInst(Inst *i, Text& content) const;
+	virtual void displayInfo(Inst *i, Text& content) const;
 
 	inline WorkSpace *workspace(void) const { return ws; }
 
-private:
+protected:
 	WorkSpace *ws;
+
+private:
 	mutable cstring file;
 	mutable int line;
 };

@@ -37,17 +37,19 @@ class CFGOutputDecorator;
 
 // CFGOutput class
 class CFGOutput: public CFGProcessor {
-	friend class CDFGOutputDeclarator;
+	friend class CFGOutputDecorator;
 public:
 	static p::declare reg;
 	CFGOutput(AbstractRegistration& _reg = reg);
 
 	// Configuration
-	static Identifier<display::kind_t> KIND;
-	static Identifier<string> PATH;
-	static Identifier<string> PREFIX;
-	static Identifier<bool> RAW_BLOCK_INFO;
-	static Identifier<view::View *> VIEW;
+	static p::id<display::kind_t> KIND;
+	static p::id<string> PATH;
+	static p::id<string> PREFIX;
+	static p::id<bool> RAW_BLOCK_INFO;
+	static p::id<view::View *> VIEW;
+	static p::id<bool> SEM, SOURCE, PROPS, ASSEMBLY, IKIND, REGS, TARGET, BYTES;
+	static p::id<Color> SEM_COLOR, SOURCE_COLOR;
 
 	virtual void genGraphLabel(CFG *graph, Text& caption, GraphStyle& style);
 	virtual void genBBLabel(CFG *graph, Block *block, Text& content, VertexStyle& style);
@@ -67,6 +69,8 @@ private:
 	bool rawInfo;
 	display::CFGDecorator *dec;
 	view::View *_view;
+	bool _sem, _source, _props, _ass, _ikind, _regs, _target, _bytes;
+	Color _sem_color, _source_color;
 };
 
 } }	// otawa::display

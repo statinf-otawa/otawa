@@ -130,7 +130,12 @@ Displayer::Displayer(cstring name, const Version version):
 	display_assembly(false),
 	source_info(false),
 	display_all(false),
-	perform_view(nullptr)
+	perform_view(nullptr),
+	display_sem(false),
+	display_kind(false),
+	display_regs(false),
+	display_target(false),
+	display_bytes(false)
 {
 	require(otawa::COLLECTED_CFG_FEATURE);
 }
@@ -196,7 +201,12 @@ public:
 				source,
 				xml,
 				mult,
-				view;
+				view,
+				display_sem,
+				display_kind,
+				display_regs,
+				display_target,
+				display_bytes;
 	opt::Value<string> out;
 
 	Displayer *displayer;
@@ -234,7 +244,7 @@ void DumpCFG::prepare(PropList &props) {
  * Build the command.
  */
 DumpCFG::DumpCFG(void):
-	CFGApplication(Make("dumpcfg", Version(2, 1, 0))
+	CFGApplication(Make("dumpcfg", Version(2, 2, 0))
 		.description(
 			"Dump to the standard output the CFG of functions.\n"
 			"If no function name is given, the main function is dumped.")
@@ -253,6 +263,11 @@ DumpCFG::DumpCFG(void):
 	xml				(make_switch()			.cmd("-x").cmd("--xml")			.description("output the CFG as an XML file")),
 	mult			(make_switch()			.cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
 	view			(make_switch()			.cmd("-w").cmd("--view")		.description("if available, view the produced output with the system viewer")),
+	display_sem		(make_switch()			.cmd("--display-sem")			.help("display semantic instructions")),
+	display_kind	(make_switch()			.cmd("--display-kind")			.help("display instruction kind")),
+	display_regs	(make_switch()			.cmd("--display-regs")			.help("display used registers")),
+	display_target	(make_switch()			.cmd("--display-target")		.help("display branch instruction targets")),
+	display_bytes	(make_switch()			.cmd("--display-bytes")			.help("display instruction bytes")),
 	out				(make_value<string>()	.cmd("-o").cmd("--output")		.description("select the output file or directory (-M option)")),
 
 	displayer(nullptr)
@@ -289,7 +304,11 @@ void DumpCFG::dump(PropList& props) {
 			Displayer::VIEW(props) = view;
 		if(out)
 			Displayer::OUT(props) = out;
-
+		displayer->display_sem = display_sem;
+		displayer->display_kind = display_kind;
+		displayer->display_regs = display_regs;
+		displayer->display_target = display_target;
+		displayer->display_bytes = display_bytes;
 		run(displayer);
 	}
 }

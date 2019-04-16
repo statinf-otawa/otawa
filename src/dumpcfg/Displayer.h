@@ -28,6 +28,11 @@ protected:
 	bool source_info;
 	bool display_all;
 	bool perform_view;
+	bool display_sem;
+	bool display_kind;
+	bool display_regs;
+	bool display_target;
+	bool display_bytes;
 	sys::Path out;
 };
 

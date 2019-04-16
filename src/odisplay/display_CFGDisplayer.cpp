@@ -152,9 +152,34 @@ void CFGDecorator::displayAssembly(CFG *graph, BasicBlock *block, Text& content)
 		displayLabels(i, content);
 
 		// display instruction
-		content << ot::address(i->address()) << "  " << *i
-				<< display::left;
+		content << ot::address(i->address()) << "  ";
+		displayInst(i, content);
+		content << display::left;
+		displayInfo(i, content);
 	}
+}
+
+
+/**
+ * Called to display an instruction. Just output the instruction
+ * as a default. Notice that this call is followed by the display
+ * of a line return.
+ * @param i		Instruction to display.
+ * @param text	Text to output to.
+ */
+void CFGDecorator::displayInst(Inst *i, Text& content) const {
+	content << i;
+}
+
+
+/**
+ * This function is called to customize the output of information following
+ * an instruction. It must be ended by a line return.
+ * The default implementation does nothing.
+ * @param i		Current instruction.
+ * @param text	Text to output to.
+ */
+void CFGDecorator::displayInfo(Inst *i, Text& content) const {
 }
 
 
