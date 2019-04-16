@@ -38,11 +38,15 @@ namespace otawa {
  *   and the possibly to refine a condition getting the refinement and the complement
  *   of the refinement relatively to the current condition.
  */
-class MyNOP: public NOP {
-public:
-	MyNOP(WorkSpace *ws, Inst *i, const Condition& cond): NOP(ws, i), _cond(cond) { }
 
-	virtual void semInsts (sem::Block &block) {
+/**
+ * Class representing an instruction turned into a NOP but providing an "assume".
+ */
+class GuardNOP: public NOP {
+public:
+	GuardNOP(WorkSpace *ws, Inst *i, const Condition& cond): NOP(ws, i), _cond(cond) { }
+
+	void semInsts(sem::Block &block) override {
 		if(!_cond.isEmpty())
 			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
 	}
@@ -51,11 +55,15 @@ private:
 	Condition _cond;
 };
 
-class CondInst: public VirtualInst {
+/**
+ * Class representing a conditional instruction expressing the condition with an
+ * "assume" and the semantic block without condition.
+ */
+class GuardInst: public VirtualInst {
 public:
-	CondInst(WorkSpace *ws, Inst *i, const Condition& cond): VirtualInst(ws, i), _cond(cond) { }
+	GuardInst(WorkSpace *ws, Inst *i, const Condition& cond): VirtualInst(ws, i), _cond(cond) { }
 
-	virtual void semInsts (sem::Block &block) {
+	void semInsts(sem::Block &block) override {
 		if(!_cond.isEmpty()) {
 			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
 			VirtualInst::semKernel(block);
@@ -65,6 +73,17 @@ public:
 private:
 	Condition _cond;
 };
+
+/**
+ * Class representing a conditional instruction executed in a context corresponding
+ * to its condition and therefore that does not need to expression the condition.
+ */
+class CondInst: public VirtualInst {
+public:
+	CondInst(WorkSpace *ws, Inst *i): VirtualInst(ws, i) { }
+	void semInsts(sem::Block& block) override { VirtualInst::semKernel(block); }
+};
+
 
 static const t::uint8
 	NONE		= 0b00,
@@ -271,7 +290,7 @@ void ConditionalRestructurer::split(Block *b) {
 	BasicBlock *bb = b->toBasic();
 	Vector<Case *> cases;
 	cases.add(new Case());
-	for(BasicBlock::InstIter i(bb); i; i++) {
+	for(auto i: *bb) {
 		Condition c = i->condition();
 		wr.clear();
 		i->writeRegSet(wr);
@@ -306,7 +325,7 @@ void ConditionalRestructurer::split(Block *b) {
 
 				// c subset of cc => add instruction
 				else if(cc <= c)
-					cases[k]->add(i, wr, i->isControl() ? TAKEN : NONE);
+					cases[k]->add(perform(i), wr, i->isControl() ? TAKEN : NONE);
 
 				// cc subset of c => split
 				else if(c & cc) {
@@ -348,7 +367,7 @@ void ConditionalRestructurer::split(Block *b) {
  */
 Inst *ConditionalRestructurer::nop(Inst *i, const Condition& c) {
 	if(_anop != i || !c.isEmpty()) {
-		_nop = new MyNOP(workspace(), i, c);
+		_nop = new GuardNOP(workspace(), i, c);
 		_anop = i;
 	}
 	return _nop;
@@ -362,7 +381,18 @@ Inst *ConditionalRestructurer::nop(Inst *i, const Condition& c) {
  * @return		Corresponding guarded instruction.
  */
 Inst *ConditionalRestructurer::guard(Inst *i, const Condition& cond) {
-	return new CondInst(workspace(), i, cond);
+	return new GuardInst(workspace(), i, cond);
+}
+
+
+/**
+ * Build an instruction executing in its condition context (no need for
+ * condition).
+ * @param i		Condition instruction.
+ * @return		Corresponding condition instruction.
+ */
+Inst *ConditionalRestructurer::perform(Inst *i) {
+	return new CondInst(workspace(), i);
 }
 
 
