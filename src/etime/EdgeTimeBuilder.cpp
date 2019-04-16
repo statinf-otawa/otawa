@@ -380,6 +380,7 @@ void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
 	events.clear();
 }
 
+
 /**
  */
 void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
@@ -387,8 +388,54 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	// nothing to with an end or a synthetic block
 	if(!b->isBasic())
 		return;
-	BasicBlock *bb = b->toBasic();
+	target = b->toBasic();
 
+	// look out all predecessors
+	for(auto e: b->inEdges()) {
+		source = nullptr;
+		Block *p = e->source();
+
+		// find the previous BB
+		while(source == nullptr) {
+
+			// BB case
+			if(p->isBasic())
+				source = p->toBasic();
+
+			// phony case
+			else if(p->isPhony()) {
+				if(p->countIns() == 1)
+					p = p->inEdges().begin()->source();
+				else
+					break;
+			}
+
+			// entry case
+			else if(p->isEntry()) {
+				if(p->cfg()->callCount() == 1)
+					p = p->cfg()->callers().begin()->inEdges().begin()->source();
+				else
+					break;
+			}
+
+			// synthetic case
+			else {
+				SynthBlock *sb = b->toSynth();
+				if(sb->callee() != nullptr
+				&& sb->callee()->exit()->countIns() == 1)
+					p = sb->callee()->exit()->inEdges().begin()->source();
+				else
+					break;
+			}
+
+		}
+
+		// compute the time
+		edge = e;
+		processEdge(ws, cfg);
+	}
+
+#if 0
 	// use each basic edge
 	bool one = false;
 	for(BasicBlock::BasicIns e(bb); e; e++) {
@@ -401,11 +448,12 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 	// first block: no predecessor
 	if(!one) {
-		source = 0;
-		edge = 0;
+		source = nullptr;
+		edge = nullptr;
 		target = bb;
 		processEdge(ws, cfg);
 	}
+#endif
 
 #if 0
 	// process each primary edge
