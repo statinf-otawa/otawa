@@ -246,7 +246,7 @@ protected:
 	/**
 	 */
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *v) {
-		for(Block::EdgeIter e = v->outs(); e; e++) {
+		for(Block::EdgeIter e = v->outs(); e(); e++) {
 			if(logFor(LOG_BLOCK))
 				log << "\t\t\t\tprocess " << *e << io::endl;
 			if(v->isSynth() && v->toSynth()->callee())
@@ -254,7 +254,7 @@ protected:
 			else
 				man->start(v);
 			processAccesses(v, *icache::ACCESSES(v));
-			processAccesses(v, *icache::ACCESSES(e));
+			processAccesses(v, *icache::ACCESSES(*e));
 		}
 	}
 
@@ -282,10 +282,10 @@ protected:
 				if(0 <= age && age < A) {
 					cat = PE;
 					LoopIter h(v);
-					for(int d = man->depth(lb) - 2; d >= 0 && h; d--, h++) {
+					for(int d = man->depth(lb) - 2; d >= 0 && h(); d--, h++) {
 						age = man->persAge(lb, d);
 						if(0 <= age && age < A) {
-							HEADER(accs[i]) = h;
+							HEADER(accs[i]) = *h;
 							break;
 						}
 					}

@@ -224,7 +224,7 @@ void DelayedBuilder::cleanup(WorkSpace *ws) {
  * @param cfg	CFG to mark.
  */
 void DelayedBuilder::mark(CFG *cfg) {
-	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++)
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
 			Inst *control = bb->control();
@@ -305,7 +305,7 @@ void DelayedBuilder::buildBB(CFG *cfg, CFGMaker& maker) {
 		log << "\t\tbuild states\n";
 
 	// build the basic blocks
-	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++) {
 		Block *delayed = 0;
 
 		// all except BB
@@ -335,7 +335,7 @@ void DelayedBuilder::buildBB(CFG *cfg, CFGMaker& maker) {
 
 				// add indirect BB for other entering edges
 				// TODO delayed should be built once!
-				for(Block::EdgeIter edge = bb->ins(); edge; edge++)
+				for(Block::EdgeIter edge = bb->ins(); edge(); edge++)
 					if(edge->isTaken()) {
 						delayed = build(first, dcnt);
 						DELAYED_TARGET(bb) = delayed;
@@ -376,31 +376,31 @@ void DelayedBuilder::buildEdges(CFG *cfg, CFGMaker& maker) {
 	if(logFor(LOG_BLOCK))
 		cerr << "\t\tbuild edges for " << cfg << io::endl;
 
-	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++) {
 		if(logFor(LOG_BB))
 			cerr << "\t\t" << *b << io::endl;
-		if(!isMapped(b))
+		if(!isMapped(*b))
 			continue;
-		Block *vb = get(b);
+		Block *vb = get(*b);
 
-		switch(ACTION(b)) {
+		switch(ACTION(*b)) {
 
 		// no delay
 		case DO_NOTHING:
-			for(Block::EdgeIter edge = b->outs(); edge; edge++)
-				cloneEdge(edge, vb, edge->flags());
+			for(Block::EdgeIter edge = b->outs(); edge(); edge++)
+				cloneEdge(*edge, vb, edge->flags());
 			break;
 
 		// just swallowing
 		case DO_SWALLOW:
-			for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+			for(Block::EdgeIter edge = b->outs(); edge(); edge++) {
 				if(isMapped(edge->target()))
-					cloneEdge(edge, vb, edge->flags());
+					cloneEdge(*edge, vb, edge->flags());
 				else
 					// relink successors of removed mono-instruction BB
 					// TODO fix it to support multiple swallowing (rare but may happen)
-					for(Block::EdgeIter out = edge->target()->outs(); out; out++)
-						cloneEdge(out, vb, edge->flags());
+					for(Block::EdgeIter out = edge->target()->outs(); out(); out++)
+						cloneEdge(*out, vb, edge->flags());
 			}
 			break;
 
@@ -408,7 +408,7 @@ void DelayedBuilder::buildEdges(CFG *cfg, CFGMaker& maker) {
 		case DO_INSERT:
 			{
 				BasicBlock *bb = b->toBasic();
-				for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+				for(Block::EdgeIter edge = b->outs(); edge(); edge++) {
 
 					// not taken
 					//if(edge->isNotTaken() == Edge::NOT_TAKEN) {
@@ -423,14 +423,14 @@ void DelayedBuilder::buildEdges(CFG *cfg, CFGMaker& maker) {
 
 						// relink successors of removed mono-instruction BB
 						else
-							for(Block::EdgeIter out = edge->target()->outs(); out; out++)
-								cloneEdge(out, nop, out->flags());
+							for(Block::EdgeIter out = edge->target()->outs(); out(); out++)
+								cloneEdge(*out, nop, out->flags());
 					}
 
 					// other edges
 					else {
 						BasicBlock *ibb = makeBB(bb->last()->nextInst());
-						insert(edge, ibb);
+						insert(*edge, ibb);
 					}
 				}
 			}

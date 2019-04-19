@@ -83,7 +83,7 @@ bool BHGNode::exitsWithNT() {
 bool BHGNode::isSuccessor(BHGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(auto s = outs();s ;s++) {
+	for(auto s = outs(); s() ;s++) {
 		if(s->sink()->getCorrespondingBB()->index() == succ->getCorrespondingBB()->index()) {
 			withT = withT || s->isTaken();
 			withNT = withNT || !(s->isTaken());

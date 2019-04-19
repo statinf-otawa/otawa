@@ -216,8 +216,8 @@ Value::Value(t::uint32 base, t::uint32 delta, t::uint32 count) {
  */
 State::State(Process& process): proc(process) {
 	stree::SegmentBuilder<address_t, bool> builder(false);
-	for(Process::FileIter file(&proc); file; file++)
-		for(File::SegIter seg(file); seg; seg++)
+	for(Process::FileIter file(&proc); file(); file++)
+		for(File::SegIter seg(*file); seg(); seg++)
 			if(seg->isExecutable() || (seg->isInitialized() && !seg->isWritable()))
 				builder.add(seg->address().offset(), seg->topAddress().offset() - 1, true);
 	builder.make(mem);
@@ -336,9 +336,9 @@ protected:
 	void configure(const PropList& props) {
 		Processor::configure(props);
 		reg_inits.clear();
-		for(Identifier<Pair<const hard::Register *, Value> >::Getter init(props, REG_INIT); init; init++)
+		for(Identifier<Pair<const hard::Register *, Value> >::Getter init(props, REG_INIT); init(); init++)
 			reg_inits.add(*init);
-		for(Identifier<MemCell>::Getter init(props, MEM_INIT); init; init++)
+		for(Identifier<MemCell>::Getter init(props, MEM_INIT); init(); init++)
 			mem_inits.add(*init);
 	}
 

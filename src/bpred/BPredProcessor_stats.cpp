@@ -82,11 +82,11 @@ String BPredProcessor::predictorToString() {
  */
 int countBranches(CFG *cfg) {
 	int res = 0;
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 
 		unsigned int nb_OE = 0;
 		// Parcours des OutEdges
-		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 			if(edge->isTaken()) nb_OE++;
 			else if(edge->isNotTaken()) nb_OE++;

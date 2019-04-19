@@ -152,7 +152,7 @@ void Viewer::print(display::Text& out) {
  * @param out	Stream to output to.
  */
 void Viewer::print(PropertyType *type, io::Output& out) const {
-	for(auto pv = *_props; pv; pv++)
+	for(auto pv = *_props; pv(); pv++)
 		if(pv->type() == type) {
 			pv->print(out);
 			break;
@@ -165,7 +165,7 @@ void Viewer::print(PropertyType *type, io::Output& out) const {
  * @param out	Formatted output to display to.
  */
 void Viewer::print(PropertyType *type, display::Text& out) const {
-	for(auto pv = *_props; pv; pv++)
+	for(auto pv = *_props; pv(); pv++)
 		if(pv->type() == type) {
 			pv->print(out);
 			break;
@@ -178,9 +178,9 @@ void Viewer::print(PropertyType *type, display::Text& out) const {
  * @return		Found property viewer or null.
  */
 const PropertyViewer *Viewer::property(PropertyType *type) const {
-	for(auto pv = *_props; pv; pv++)
+	for(auto pv = *_props; pv(); pv++)
 		if(pv->type() == type)
-			return pv;
+			return *pv;
 	return nullptr;
 }
 

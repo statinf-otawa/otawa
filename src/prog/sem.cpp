@@ -424,8 +424,8 @@ void Block::print(elm::io::Output& out, const hard::Platform *pf) const {
  * @param block	Block to output.
  */
 void Printer::print(elm::io::Output& out, const Block& block, const hard::Platform *plf) const {
-	for(Block::InstIter inst(block); inst; inst++) {
-		print(out, inst, plf);
+	for(Block::InstIter inst(block); inst(); inst++) {
+		print(out, *inst, plf);
 		out << io::endl;
 	}
 }
@@ -781,8 +781,8 @@ void BBIter::start(BasicBlock *bb) {
 void BBIter::next(void) {
 	if(si.ended()) {
 		i++;
-		if(i)
-			si.start(i);
+		if(i())
+			si.start(*i);
 		else
 			return;
 	}

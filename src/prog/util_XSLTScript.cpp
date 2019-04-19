@@ -179,8 +179,8 @@ void XSLTScript::addParam(string name, String value) {
  */
 void XSLTScript::addParams(const PropList& props, Identifier<string>& id) {
 	ASSERTP(state == OPENED, "invalid operation at this state");
-	for(Identifier<string>::Getter param(props, id); param; param++) {
-		string text = param;
+	for(Identifier<string>::Getter param(props, id); param(); param++) {
+		string text = *param;
 		int p = text.indexOf('=');
 		if(p < 0)
 			throw otawa::Exception(_ << "bad parameter value: " << param);
@@ -199,8 +199,8 @@ void XSLTScript::addParams(const PropList& props, Identifier<string>& id) {
  */
 void XSLTScript::addParams(const PropList& props, Identifier<Pair<string, string> >& id) {
 	ASSERTP(state == OPENED, "invalid operation at this state");
-	for(Identifier<Pair<string, string> >::Getter param(props, id); param; param++)
-		params.add(param);
+	for(Identifier<Pair<string, string> >::Getter param(props, id); param(); param++)
+		params.add(*param);
 }
 
 

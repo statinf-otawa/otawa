@@ -44,7 +44,7 @@ protected:
 		}
 		if(LOOP_HEADER(bb)) {
 			bb->removeProp(LOOP_HEADER);
-			for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
+			for(BasicBlock::EdgeIter edge(bb->ins()); edge(); edge++)
 				bb->removeProp(BACK_EDGE);
 		}
 	}
@@ -230,10 +230,10 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 	DominanceProblem dp(cfg);
 	dfa::IterativeDFA<DominanceProblem, BitSet, CFG> engine(dp, cfg, cfg->entry());
 	engine.compute();
-	for (CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
+	for (CFG::VertexIter bb(cfg->vertices()); bb(); bb++) {
 	  BitSet *b = engine.outSet(*bb);
 	  b = new BitSet(*b);
-	  REVERSE_DOM(bb) = b;
+	  REVERSE_DOM(*bb) = b;
 	}
 	markLoopHeaders(cfg);
 	addCleaner(DOMINANCE_FEATURE, new DominanceCleaner(ws));
@@ -291,9 +291,9 @@ void *Dominance::interfaceFor(const AbstractFeature& feature) {
  */
 void Dominance::markLoopHeaders(CFG *cfg) {
 	ASSERT(cfg);
-	for(CFG::VertexIter bb(cfg->vertices()); bb; bb++) {
-		for(BasicBlock::EdgeIter edge(bb->outs()); edge; edge++)
-			if(dominates(edge->target(), bb)) {
+	for(CFG::VertexIter bb(cfg->vertices()); bb(); bb++) {
+		for(BasicBlock::EdgeIter edge(bb->outs()); edge(); edge++)
+			if(dominates(edge->target(), *bb)) {
 
 				// verbose output
 				if(logFor(LOG_BLOCK)) {
@@ -304,7 +304,7 @@ void Dominance::markLoopHeaders(CFG *cfg) {
 
 				// record information
 				LOOP_HEADER(edge->target()) = true;
-				BACK_EDGE(edge) = true;
+				BACK_EDGE(*edge) = true;
 			}
 	}
 }

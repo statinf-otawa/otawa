@@ -572,9 +572,9 @@ FlowFactLoader::FlowFactLoader(p::declare& r):
  */
 void FlowFactLoader::configure (const PropList &props) {
 	Processor::configure(props);
-	for(Identifier<Path>::Getter path(props, FLOW_FACTS_PATH); path; path++)
+	for(Identifier<Path>::Getter path(props, FLOW_FACTS_PATH); path(); path++)
 		paths.add(*path);
-	for(Identifier<xom::Element *>::Getter node(props, FLOW_FACTS_NODES); node; node++)
+	for(Identifier<xom::Element *>::Getter node(props, FLOW_FACTS_NODES); node(); node++)
 		nodes.add(*node);
 
 	mandatory = FLOW_FACTS_MANDATORY(props);
@@ -731,7 +731,7 @@ void FlowFactLoader::onWarning(const string& message) {
 void FlowFactLoader::onIgnoreEntry(string name) {
 
 	// look for the symbol
-	for(Process::FileIter file(workspace()->process()); file; file++) {
+	for(Process::FileIter file(workspace()->process()); file(); file++) {
 		Symbol *sym = file->findSymbol(name);
 		if(sym) {
 			IGNORE_ENTRY(sym) = true;
@@ -847,7 +847,7 @@ void FlowFactLoader::onMemSet(dfa::State* state, Address addr, const Type *type,
 void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 
 	// Find the file
-	for(Process::FileIter file(_fw->process()); file; file++) {
+	for(Process::FileIter file(_fw->process()); file(); file++) {
 		Path cpath = file->name();
 		if(cpath.namePart() == name) {
 
@@ -1103,7 +1103,7 @@ void FlowFactLoader::onMultiBranch(Address control, const Vector<Address>& targe
 	for(int i = 0; i < targets.length(); i++)
 		if(!targets[i].isNull()) {
 			bool found = false;
-			for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target; target++)
+			for(Identifier<Address>::Getter target(inst, BRANCH_TARGET); target(); target++)
 				if (target.item() == targets[i]) {
 					found = true;
 					break;
@@ -1132,7 +1132,7 @@ void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets
 	for(int i = 0; i < targets.length(); i++)
 		if(!targets[i].isNull()) {
 			bool found = false;
-			for(Identifier<Address>::Getter target(inst, CALL_TARGET); target; target++)
+			for(Identifier<Address>::Getter target(inst, CALL_TARGET); target(); target++)
 				if (target.item() == targets[i]) {
 					found = true;
 					break;

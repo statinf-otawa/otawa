@@ -72,8 +72,8 @@ CFGInfo::~CFGInfo(void) {
  * Remove all CFG stored in this CFG information.
  */
 void CFGInfo::clear(void) {
-	for(Iter g(this); g; g++)
-		delete g;
+	for(Iter g(this); g(); g++)
+		delete *g;
 	_cfgs.clear();
 }
 

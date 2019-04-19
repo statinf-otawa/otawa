@@ -95,27 +95,27 @@ void DotDisplayer::display(const CFGCollection& coll) {
 			break;
 
 		// traverse blocks
-		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 			if(display_all && v->isSynth()) {
 
 				if(!v->toSynth()->callee()) {
 					elm::cout << __SOURCE_INFO__ << "sliced block " << v->index() << io::endl;
-					for(Block::EdgeIter e = v->outs(); e; e++) {
+					for(Block::EdgeIter e = v->outs(); e(); e++) {
 						elm::cout << __SOURCE_INFO__ << "\tto " << e->sink()->index() << io::endl;
 					}
 
 					// display block header
 					_output << "\t";
-					displayName(cfg, v);
+					displayName(cfg, *v);
 					_output << " [label=";
 					//displayLabel(v);
 					_output << "Sliced_BB_" << v->index();
 					_output << "];\n";
 
-					for(Block::EdgeIter e = v->outs(); e; e++) {
+					for(Block::EdgeIter e = v->outs(); e(); e++) {
 						// display edge header
 						_output << "\t";
-						displayName(cfg, v);
+						displayName(cfg, *v);
 						_output << " -> ";
 						displayName(cfg, e->sink());
 						// display properties
@@ -137,7 +137,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 						SynthBlock* sb = v->toSynth()->outs()->sink()->toSynth();
 						if(sb->callee()) {
 							_output << "\t";
-							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), v);
+							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), *v);
 							_output << " -> ";
 							displayName(sb->callee(), sb->callee()->entry(), sb);
 							_output << " [label=\"return then call\", style=dashed, weight=1];\n";
@@ -150,19 +150,19 @@ void DotDisplayer::display(const CFGCollection& coll) {
 						CFG::CallerIter cci = cfg->callers().begin();
 						do {
 							SynthBlock* xyz = 0;
-							if(cci)
+							if(cci())
 								xyz = *cci;
 
 							_output << "\t";
-							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), v);
+							displayName(v->toSynth()->callee(), v->toSynth()->callee()->exit(), *v);
 							_output << " -> ";
 							// to the output node of the synth node
 							displayName(cfg, v->toSynth()->outs()->sink(), xyz);
 							_output << " [label=\"return\", style=dashed, weight=1];\n";
 
-							if(cci)
+							if(cci())
 								cci++;
-						} while(cci);
+						} while(cci());
 					}
 
 				}
@@ -182,12 +182,12 @@ void DotDisplayer::display(const CFGCollection& coll) {
 			do {
 
 				SynthBlock* xyz = 0;
-				if(cci)
+				if(cci())
 					xyz = *cci;
 				_output << "\t";
-				displayName(cfg, v, xyz);
+				displayName(cfg, *v, xyz);
 				_output << " [label=";
-				displayLabel(v);
+				displayLabel(*v);
 				_output << "];\n";
 
 
@@ -209,14 +209,14 @@ void DotDisplayer::display(const CFGCollection& coll) {
 //			}
 
 			// display edges
-			for(Block::EdgeIter e = v->outs(); e; e++) {
+			for(Block::EdgeIter e = v->outs(); e(); e++) {
 				// case of a call with display of all
 				if(e->sink()->isSynth() && display_all && e->sink()->toSynth()->callee()) {
 					SynthBlock *sb = e->sink()->toSynth();
 
 					// call edge
 					_output << "\t";
-					displayName(cfg, v, xyz);
+					displayName(cfg, *v, xyz);
 					_output << " -> ";
 					displayName(sb->callee(), sb->callee()->entry(), sb);
 					_output << " [label=\"call\", style=dashed, weight=1];\n";
@@ -236,7 +236,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 				else if(e->sink()->isSynth() && display_all) { // no callee .... sliced?
 					// display edge header
 					_output << "\t";
-					displayName(cfg, v);
+					displayName(cfg, *v);
 					_output << " -> ";
 					displayName(cfg, e->sink());
 					// display properties
@@ -250,7 +250,7 @@ void DotDisplayer::display(const CFGCollection& coll) {
 
 					// display edge header
 					_output << "\t";
-					displayName(cfg, v, xyz);
+					displayName(cfg, *v, xyz);
 					_output << " -> ";
 					displayName(cfg, e->sink(), xyz);
 
@@ -279,9 +279,9 @@ void DotDisplayer::display(const CFGCollection& coll) {
 				}
 			}
 
-			if(cci)
+			if(cci())
 				cci++;
-		} while(cci);
+		} while(cci());
 
 		} // for each block
 	}
@@ -322,7 +322,7 @@ void DotDisplayer::displayLabel(Block *v) {
 			bool first = true;
 
 			InstSet* setInst = SET_OF_REMAINED_INSTRUCTIONS(bb);
-			for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 
 
 				if(first)
@@ -331,11 +331,11 @@ void DotDisplayer::displayLabel(Block *v) {
 					_output << "<br ALIGN=\"LEFT\"/>";
 
 				// Display labels
-				for(Identifier<String>::Getter label(inst, FUNCTION_LABEL);
-				label; label++)
+				for(Identifier<String>::Getter label(*inst, FUNCTION_LABEL);
+				label(); label++)
 					_output << *label << ":<br ALIGN=\"LEFT\"/>";
-				for(Identifier<String>::Getter label(inst, LABEL);
-				label; label++)
+				for(Identifier<String>::Getter label(*inst, LABEL);
+				label(); label++)
 					_output << *label << ":<br ALIGN=\"LEFT\"/>";
 
 				// display the debug line
@@ -345,7 +345,7 @@ void DotDisplayer::displayLabel(Block *v) {
 						if((*info).fst != file || (*info).snd != line) {
 
 							if(_show_slicing) {
-								if(!setInst->contains(inst)) {
+								if(!setInst->contains(*inst)) {
 									_output << "<Font face=\"monospace\" color=\"red\">";
 								}
 								else
@@ -368,7 +368,7 @@ void DotDisplayer::displayLabel(Block *v) {
 				// Display the instruction
 				// Display the instruction
 				if(_show_slicing) {
-					if(!setInst->contains(inst)) {
+					if(!setInst->contains(*inst)) {
 						_output << "<Font face=\"monospace\" color=\"red\">";
 					}
 					else

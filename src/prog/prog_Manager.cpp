@@ -310,10 +310,10 @@ Loader *Manager::findFileLoader(const elm::sys::Path& path) {
 	if(isVerbose()) {
 		log << "INFO: looking for loader \"" << path << "\"\n";
 		log << "INFO: searchpaths:\n";
-		for(elm::sys::Plugger::PathIterator path(loader_plugger); path; path++)
+		for(elm::sys::Plugger::PathIterator path(loader_plugger); path(); path++)
 			log << "INFO:	- " << *path << io::endl;
 		log << "INFO: available loaders\n";
-		for(elm::sys::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+		for(elm::sys::Plugger::Iter plugin(loader_plugger); plugin(); plugin++)
 			log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
 	}
 	return findLoader(name.toCString());
@@ -372,10 +372,10 @@ WorkSpace *Manager::loadBin(
 			log << "INFO: looking for loader \"" << name << "\"\n";
 			log << "INFO: prefix path = " << prefixPath() << io::endl;
 			log << "INFO: searchpaths:\n";
-			for(elm::sys::Plugger::PathIterator path(loader_plugger); path; path++)
+			for(elm::sys::Plugger::PathIterator path(loader_plugger); path(); path++)
 				log << "INFO:	- " << *path << io::endl;
 			log << "INFO: available loaders\n";
-			for(elm::sys::Plugger::Iterator plugin(loader_plugger); plugin; plugin++)
+			for(elm::sys::Plugger::Iter plugin(loader_plugger); plugin(); plugin++)
 				log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
 		}
 		loader = findLoader(name.toCString());
@@ -513,7 +513,7 @@ ilp::System *Manager::newILPSystem(string name) {
 
 	// if not found, look the list of available
 	if(!plugin) {
-		elm::sys::Plugger::Iterator plug(ilp_plugger);
+		elm::sys::Plugger::Iter plug(ilp_plugger);
 		if(!plug.ended())
 			plugin = static_cast<ilp::ILPPlugin *>(plug.plug());
 	}

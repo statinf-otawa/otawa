@@ -288,13 +288,13 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve(0, &entry_dom);
 
 
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+					MUST_ACS(*bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
 					if(logFor(LOG_BLOCK)) {
-						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(*bb)->get(line)) << io::endl;
 						//log << "\t\t\t" << *bb << ": " << *mustList.results[cfg->number()][bb->number()] << io::endl;
 					}
 				}
@@ -318,14 +318,14 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve(0, &entry_dom);
 
 			// Store the resulting ACS into the properties
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 					ASSERT(line == coll.cacheSet());
-					MUST_ACS(bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
+					MUST_ACS(*bb)->set(line, new ACS(*mustList.results[cfg->index()][bb->index()]));
 					if(logFor(LOG_BLOCK))
-						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(*bb)->get(line)) << io::endl;
 				}
 			}
 		}
@@ -344,17 +344,17 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 					MUSTProblem::Domain &must = mustpersList.results[cfg->index()][bb->index()]->getMust();
 					PERSProblem::Domain &pers = mustpersList.results[cfg->index()][bb->index()]->getPers();
-					MUST_ACS(bb)->set(line, new ACS(must));
+					MUST_ACS(*bb)->set(line, new ACS(must));
 					if(logFor(LOG_BLOCK))
-						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
-					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
-					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->get(line);
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(*bb)->get(line)) << io::endl;
+					PERS_ACS(*bb)->set(line, new ACS(pers.getWhole()));
+					acs_stack_t& stack = LEVEL_PERS_ACS(*bb)->get(line);
 					int len = pers.length();
 					stack.tie(len, new ACS *[len]);
 					for(int i = 0; i < len; i++)
@@ -373,19 +373,19 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			mustHai.solve();
 
 			// Store.
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+				for (CFG::BlockIter bb = cfg->blocks(); *bb; bb++) {
 					if(!bb->isBasic())
 						continue;
 					MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
 					PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
-					MUST_ACS(bb)->set(line, new ACS(must));
+					MUST_ACS(*bb)->set(line, new ACS(must));
 					if(logFor(LOG_BLOCK))
-						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(bb)->get(line)) << io::endl;
-					PERS_ACS(bb)->set(line, new ACS(pers.getWhole()));
-					acs_stack_t& stack = LEVEL_PERS_ACS(bb)->get(line);
+						log << "\t\t\t" << *bb << ": " << *(MUST_ACS(*bb)->get(line)) << io::endl;
+					PERS_ACS(*bb)->set(line, new ACS(pers.getWhole()));
+					acs_stack_t& stack = LEVEL_PERS_ACS(*bb)->get(line);
 					int len = pers.length();
 					stack.tie(len, new ACS *[len]);
 					for(int i = 0; i < len; i++)
@@ -425,12 +425,12 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// Build the vectors for receiving the ACS...
-	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-			MUST_ACS(bb) = new acs_result_t(temp);
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+		for (CFG::BlockIter bb = cfg->blocks(); *bb; bb++) {
+			MUST_ACS(*bb) = new acs_result_t(temp);
 			if(level != DFML_NONE) {
-				PERS_ACS(bb) = new acs_result_t(temp);
-				LEVEL_PERS_ACS(bb) = new acs_stack_table_t(level_temp);
+				PERS_ACS(*bb) = new acs_result_t(temp);
+				LEVEL_PERS_ACS(*bb) = new acs_stack_table_t(level_temp);
 			}
 		}
 
@@ -779,7 +779,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { }
 			// first -------------- set ------------ last, if the set lies inside the range
 			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
 					if(vbi->set() == set) {
 						Domain t = s;
 						inject(t, vbi->index());
@@ -799,7 +799,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 			if((access.first() < access.last()) && (set < access.first() || set > access.last())) { } // outside
 			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { } // outside
 			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
 					if(vbi->set() == set) {
 						Domain t = s;
 						injectWriteThrough(t, vbi->index());
@@ -819,7 +819,7 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 			if((access.first() < access.last()) && (set < access.first() || set > access.last())) { } // outside
 			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { } // outside
 			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi; vbi++)
+				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
 					if(vbi->set() == set) {
 						Domain t = s;
 						inject(t, vbi->index());

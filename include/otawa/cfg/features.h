@@ -72,7 +72,7 @@ public:
 		inline BlockIter(const CFGCollection& cfgs): cfg(&cfgs), bb(cfg->blocks()) { }
 		inline bool ended(void) const { return bb.ended(); }
 		inline Block *item(void) const { return *bb; }
-		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg) bb = CFG::BlockIter(cfg->blocks()); } }
+		inline void next(void) { bb++; if(!bb) { cfg++; if(cfg()) bb = CFG::BlockIter(cfg->blocks()); } }
 		inline bool equals(const BlockIter& i) const { return cfg.equals(i.cfg) && bb.equals(bb); }
 	private:
 		inline BlockIter(const CFGCollection& coll, int): cfg(coll.end()) { }

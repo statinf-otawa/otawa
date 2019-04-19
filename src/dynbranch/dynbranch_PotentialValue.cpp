@@ -159,8 +159,8 @@ PotentialValue operator&(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita & *itb);
 	return res;
 }
@@ -174,8 +174,8 @@ PotentialValue operator|(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita | *itb);
 	return res;
 }
@@ -189,8 +189,8 @@ PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita ^ *itb);
 	return res;
 }
@@ -198,7 +198,7 @@ PotentialValue operator^(const PotentialValue& a, const PotentialValue& b) {
 PotentialValue operator~(const PotentialValue& a) {
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
 		res.insert(~(*ita));
 	return res;
 }
@@ -212,8 +212,8 @@ PotentialValue operator+(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita + *itb);
 	return res;
 }
@@ -227,8 +227,8 @@ PotentialValue operator-(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita - *itb);
 	return res;
 }
@@ -242,8 +242,8 @@ PotentialValue operator*(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert((*ita)*(*itb));
 	return res;
 }
@@ -257,8 +257,8 @@ PotentialValue operator>>(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++) {
-		for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator ita(a); ita(); ita++) {
+		for(PotentialValue::Iterator itb(b); itb(); itb++) {
 			res.insert(*ita >> *itb);
 		}
 	}
@@ -274,8 +274,8 @@ PotentialValue logicalShiftRight(const PotentialValue& a, const PotentialValue& 
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++) {
-		for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator ita(a); ita(); ita++) {
+		for(PotentialValue::Iterator itb(b); itb(); itb++) {
 			res.insert((unsigned int)*ita >> *itb);
 		}
 	}
@@ -291,8 +291,8 @@ PotentialValue MULH(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++) {
 			t::int64 temp = (*ita)*(*itb);
 			t::uint32 temp2 = temp >> 32;
 			res.insert(temp2);
@@ -309,8 +309,8 @@ PotentialValue DIV(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++) {
 			if(*itb == 0)
 				return PotentialValue::top;
 
@@ -328,8 +328,8 @@ PotentialValue DIVU(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++) {
 			if(*itb == 0)
 				return PotentialValue::top;
 
@@ -349,8 +349,8 @@ PotentialValue operator<<(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita << *itb);
 	return res;
 }
@@ -364,8 +364,8 @@ PotentialValue operator||(const PotentialValue& a, const PotentialValue& b) {
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
-		for(PotentialValue::Iterator itb(b); itb; itb++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
+		for(PotentialValue::Iterator itb(b); itb(); itb++)
 			res.insert(*ita || *itb);
 	return res;
 }
@@ -379,9 +379,9 @@ PotentialValue merge(const PotentialValue& a, const PotentialValue& b) { // resu
 	}
 	PotentialValue res;
 	PotentialValue::tempPVAlloc = &res;
-	for(PotentialValue::Iterator ita(a); ita; ita++)
+	for(PotentialValue::Iterator ita(a); ita(); ita++)
 		res.insert(*ita);
-	for(PotentialValue::Iterator itb(b); itb; itb++) {
+	for(PotentialValue::Iterator itb(b); itb(); itb++) {
 		res.insert(*itb);
 	}
 	return res;
@@ -403,7 +403,7 @@ bool operator==(const PotentialValue& a, const PotentialValue& b) {
 	*/
 
 	if(a.length() == b.length()) {
-		for(PotentialValue::Iterator isa(a); isa; isa++)
+		for(PotentialValue::Iterator isa(a); isa(); isa++)
 			if(!b.contains(*isa))
 				return false;
 		return true;
@@ -434,7 +434,7 @@ Output& operator<<(Output& o, PotentialValue const& pv) {
 
 	o << "{";
 	bool fst = true;
-	for(PotentialValue::Iterator i(pv); i; i++) {
+	for(PotentialValue::Iterator i(pv); i(); i++) {
 		if(!fst)
 			o << ", ";
 		else

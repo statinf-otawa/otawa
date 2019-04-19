@@ -242,9 +242,9 @@ inline void WideningFixPoint<Listener>::leaveContext(Domain &dom, Block* bb, hai
 
 template < class Listener >
 inline void WideningFixPoint<Listener>::updateEdge(Edge *edge, Domain &dom) {
-		HAI_TRACE("update to " << edge->sink() << " from " << dom);
+		HAI_TRACE("\t\tupdate " << edge << " from " << dom);
 		prob.updateEdge(edge, dom);
-		HAI_TRACE("to " << dom);
+		HAI_TRACE("\t\tto " << dom);
 }
 
 template <class Listener> template<class GC>
@@ -255,7 +255,7 @@ inline int WideningFixPoint<Listener>::collect(Block* bb, const GC *gc) const {
 
 	// mark all the states on edge going out from bb
 	int i = 0;
-	for(Block::EdgeIter out = bb->outs(); out; out++) {
+	for(Block::EdgeIter out = bb->outs(); out(); out++) {
 		typename Listener::Problem::Domain* s = *STATE(*out);
 		if (s != 0) {
 			s->collect(gc);

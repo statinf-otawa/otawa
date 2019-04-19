@@ -57,7 +57,7 @@ public:
 
 	inline void printTempRegs(string begin = "", string end="") {
 		int j = 0;
-		for(Vector<PotentialValue>::Iterator i(*_tempRegs); i; i++, j++) {
+		for(Vector<PotentialValue>::Iterator i(*_tempRegs); i(); i++, j++) {
 			if(((*i).bTop == false) && ((*i).length() == 0))
 				continue;
 		}

@@ -189,7 +189,7 @@ const PropList& ContextualProperty::findProps(
 	stack.push(&props);
 	const Node *node = &root;
 	for(const ContextualList *l = path.list(); l; l = &l->next())
-		for(Node::Iterator child(node); child; child++) {
+		for(inhstruct::Tree::Iter child(node); child; child++) {
 			Node *cur = (Node *)*child;
 			if(cur->step == l->step()) {
 				stack.push(cur);
@@ -215,7 +215,7 @@ PropList& ContextualProperty::makeProps(const ContextualPath& path) {
 	Node *parent = &root;
 	for(const ContextualList *l = path.list(); l; l = &l->next()) {
 		bool found = false;
-		for(Node::Iterator child(parent); child; child++) {
+		for(inhstruct::Tree::Iter child(parent); child; child++) {
 			Node *node = (Node *)*child;
 			if(node->step == l->step()) {
 				parent = node;
@@ -336,7 +336,7 @@ PropList& ContextualProperty::refProps(
 	Node *parent = &root;
 	for(int i = path.count() - 1; i >= 0; i--) {
 		bool found = false;
-		for(Node::Iterator child(parent); child; child++) {
+		for(inhstruct::Tree::Iter child(parent); child; child++) {
 			Node *node = (Node *)*child;
 			if(node->step == path[i]) {
 				parent = node;
@@ -382,7 +382,7 @@ void ContextualProperty::printRec(io::Output& out, const Node& node, int indent)
 		out << '\t';
 	out << node.step << ' ' << (void *)&(const PropList&)node << ' ';
 	node.print(out); out << '\n';
-	for(Node::Iterator child(&node); child; child++) {
+	for(inhstruct::Tree::Iter child(&node); child; child++) {
 		Node *node = (Node *)*child;
 		printRec(out, *node, indent + 1);
 	}

@@ -110,8 +110,8 @@ AbstractRegistration::AbstractRegistration(string name, Version version, Abstrac
  */
 void AbstractRegistration::setFeatures(const List<FeatureUsage>& coll) {
 	_feats.clear();
-	for(List<FeatureUsage>::Iter use(coll); use; use++)
-		_feats.add(use);
+	for(List<FeatureUsage>::Iter use(coll); use(); use++)
+		_feats.add(*use);
 }
 
 
@@ -121,8 +121,8 @@ void AbstractRegistration::setFeatures(const List<FeatureUsage>& coll) {
  */
 void AbstractRegistration::setConfigs(const List<AbstractIdentifier *>& coll) {
 	configs.clear();
-	for(List<AbstractIdentifier *>::Iter use(coll); use; use++)
-		configs.add(use);
+	for(List<AbstractIdentifier *>::Iter use(coll); use(); use++)
+		configs.add(*use);
 }
 
 
@@ -139,7 +139,7 @@ void AbstractRegistration::record(void) {
  * @return			True if the feature is provided, false else.
  */
 bool AbstractRegistration::provides(const AbstractFeature& feature) {
-	for(FeatureIter fuse(*this); fuse; fuse++)
+	for(FeatureIter fuse(*this); fuse(); fuse++)
 		if(&(fuse->feature()) == &feature
 		&& fuse->kind() == FeatureUsage::provide)
 			return true;
@@ -153,7 +153,7 @@ bool AbstractRegistration::provides(const AbstractFeature& feature) {
  * @return			True if the feature is required, false else.
  */
 bool AbstractRegistration::requires(const AbstractFeature& feature) {
-	for(FeatureIter fuse(*this); fuse; fuse++)
+	for(FeatureIter fuse(*this); fuse(); fuse++)
 		if(&(fuse->feature()) == &feature
 		&& fuse->kind() == FeatureUsage::require)
 			return true;
@@ -167,7 +167,7 @@ bool AbstractRegistration::requires(const AbstractFeature& feature) {
  * @return			True if the feature is used or required, false else.
  */
 bool AbstractRegistration::uses(const AbstractFeature& feature) {
-	for(FeatureIter fuse(*this); fuse; fuse++)
+	for(FeatureIter fuse(*this); fuse(); fuse++)
 		if(&(fuse->feature()) == &feature
 		&& (fuse->kind() == FeatureUsage::require || fuse->kind() == FeatureUsage::use))
 			return true;
@@ -181,7 +181,7 @@ bool AbstractRegistration::uses(const AbstractFeature& feature) {
  * @return			True if the feature is invalidated, false else.
  */
 bool AbstractRegistration::invalidates(const AbstractFeature& feature) {
-	for(FeatureIter fuse(*this); fuse; fuse++)
+	for(FeatureIter fuse(*this); fuse(); fuse++)
 		if(&(fuse->feature()) == &feature
 		&& fuse->kind() == FeatureUsage::invalidate)
 			return true;

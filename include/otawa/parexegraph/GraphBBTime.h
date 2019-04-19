@@ -91,8 +91,8 @@ namespace otawa {
 			_edge = NULL;
 		}
 		PathContext(const PathContext& ctxt){
-			for (List<BasicBlock *>::Iter block(ctxt._bb_list) ; block ; block++)
-				_bb_list.addLast(block);
+			for (List<BasicBlock *>::Iter block(ctxt._bb_list) ; block() ; block++)
+				_bb_list.addLast(*block);
 			_num_insts = ctxt._num_insts;
 			_num_bbs = ctxt._num_bbs;
 			_bb = ctxt._bb;
@@ -121,7 +121,7 @@ namespace otawa {
 		inline Edge * edge     ()
 		{ return _edge;}
 		void dump(io::Output& output) {
-			for (List<BasicBlock *>::Iter bb(_bb_list) ; bb ; bb++){
+			for (List<BasicBlock *>::Iter bb(_bb_list) ; bb() ; bb++){
 				output << "b" << bb->index() << "-";
 			}
 		}
@@ -285,12 +285,12 @@ void GraphBBTime<G>::configure(const PropList& props) {
     _hw_resources.add(new_resource);
 
     // build resource for stages and FUs
-    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage() ; stage++) {
 		if (stage->category() != ParExeStage::EXECUTE) {
 			for (int i=0 ; i<stage->width() ; i++) {
 				StringBuffer buffer;
 				buffer << stage->name() << "[" << i << "]";
-				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
+				StageResource * new_resource = new StageResource(buffer.toString(), *stage, i, resource_index++);
 				_hw_resources.add(new_resource);
 			}
 		}
@@ -313,14 +313,14 @@ void GraphBBTime<G>::configure(const PropList& props) {
     }
 
     // build resources for queues
-    for (ParExeProc::QueueIterator queue(_microprocessor) ; queue ; queue++) {
+    for (ParExeProc::QueueIterator queue(_microprocessor) ; queue() ; queue++) {
 		for (int i=0 ; i< queue->size() ; i++) {
 			StringBuffer buffer;
 			buffer << queue->name() << "[" << i << "]";
 
 			// find upper extraction bound
 			StageResource * upper_bound = nullptr;
-			for (Vector<Resource *>::Iter resource(_hw_resources) ; resource ; resource++) {
+			for (Vector<Resource *>::Iter resource(_hw_resources) ; resource() ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					StageResource *s = ((StageResource *)(*resource));
 
@@ -340,7 +340,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			ASSERT(upper_bound);
 
 			// build the queue resource
-			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
+			QueueResource * new_resource = new QueueResource(buffer.toString(), *queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
 			_hw_resources.add(new_resource);
 		}
     }
@@ -371,13 +371,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		BasicBlock *bb = ctxt->lastBlock();
 		int last_stage_cap = _microprocessor->lastStage()->width();
 		int num_preds = 0;
-		for(BasicBlock::EdgeIter edge = bb->ins(); edge; edge++) {
+		for(BasicBlock::EdgeIter edge = bb->ins(); edge(); edge++) {
 			Block *pred = edge->source();
 			if (pred->isBasic()) {
 				BasicBlock *pred = edge->source()->toBasic();
 				num_preds++;
 				PathContext *new_ctxt = new PathContext(*ctxt);
-				new_ctxt->addBlock(pred, edge);
+				new_ctxt->addBlock(pred, *edge);
 				if ( (new_ctxt->numInsts() >= last_stage_cap)
 					 &&
 					 (new_ctxt->numBlocks() > depth) )
@@ -414,11 +414,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		ParExeSequence * seq = new ParExeSequence();
 		code_part_t part = PROLOGUE;
 		int index = 0;
-		for (PathContext::BasicBlockIterator block(*ctxt) ; block ; block++){
-			if (block == ctxt->mainBlock())
+		for (PathContext::BasicBlockIterator block(*ctxt) ; block() ; block++){
+			if (*block == ctxt->mainBlock())
 				part = BLOCK;
-			for(BasicBlock::InstIter inst = block->insts(); inst; inst++) {
-				ParExeInst * par_exe_inst = new ParExeInst(inst, block, part, index++);
+			for(BasicBlock::InstIter inst = block->insts(); inst(); inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(*inst, *block, part, index++);
 				seq->addLast(par_exe_inst);
 			}
 		}
@@ -447,7 +447,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		// process NOT_CLASSIFIED lblocks
 		LBlockManager lbm;
-		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+		for (ParExeSequence::InstIterator inst(seq) ; inst() ; inst++)  {
 			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 			if (cat != INVALID_CATEGORY){
 				if (cat == cache::NOT_CLASSIFIED){
@@ -458,13 +458,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						list->addLast(tctxt);
 					}
 					else {
-						for (List<TimingContext *>::Iter tctxt(*list) ; tctxt ; tctxt++){
+						for (List<TimingContext *>::Iter tctxt(*list) ; tctxt() ; tctxt++){
 							TimingContext *new_tctxt = new TimingContext(tctxt.item());
 							NodeLatency * nl = new NodeLatency(inst->fetchNode(), cacheMissPenalty(inst->inst()->address()));
 							new_tctxt->addNodeLatency(nl);
 							to_add->addLast(new_tctxt);
 						}
-						for (List<TimingContext *>::Iter tctxt(*to_add) ; tctxt ; tctxt++){
+						for (List<TimingContext *>::Iter tctxt(*to_add) ; tctxt() ; tctxt++){
 							list->addLast(tctxt.item());
 						}
 						to_add->clear();
@@ -492,7 +492,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		// find FIRST_MISS headers
 		LBlockManager lbm;
-		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+		for (ParExeSequence::InstIterator inst(seq) ; inst() ; inst++)  {
 			category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 			if (cat != INVALID_CATEGORY){
 				if (cat == cache::FIRST_MISS){
@@ -541,7 +541,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				list->addLast(tctxt_first);
 
 				LBlockManager lbm;
-				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+				for (ParExeSequence::InstIterator inst(seq) ; inst() ; inst++)  {
 					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 					if (cat != cache::INVALID_CATEGORY){
 						if (cat == cache::FIRST_MISS){ // must be with header0
@@ -566,7 +566,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				tctxt_first_others->setType(CachePenalty::x_HIT);
 				list->addLast(tctxt_first_others);
 				LBlockManager lbm;
-				for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+				for (ParExeSequence::InstIterator inst(seq) ; inst() ; inst++)  {
 					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 					if (cat != cache::INVALID_CATEGORY){
 						if (cat == cache::FIRST_MISS){
@@ -592,7 +592,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	template <class G>
 		void GraphBBTime<G>::computeDefaultTimingContextForICache(TimingContext *dtctxt, ParExeSequence *seq){
 		LBlockManager lbm;
-		for (ParExeSequence::InstIterator inst(seq) ; inst ; inst++)  {
+		for (ParExeSequence::InstIterator inst(seq) ; inst() ; inst++)  {
 			cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 			if (cat != cache::INVALID_CATEGORY){
 				if (cat == cache::ALWAYS_MISS) {
@@ -633,7 +633,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
     
 		// no cache
 		if(!_do_consider_icache)
-			for(typename G::InstIterator inst(execution_graph); inst; inst++)
+			for(typename G::InstIterator inst(execution_graph); inst(); inst++)
 				inst->fetchNode()->setLatency(memoryLatency(inst->inst()->address()));
 
 		// compute reference cost
@@ -651,7 +651,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			// verbosity
 			if(isVerbose()) {
 				LBlockManager lbm;
-				for (ParExeSequence::InstIterator inst(sequence) ; inst ; inst++)  {
+				for (ParExeSequence::InstIterator inst(sequence) ; inst() ; inst++)  {
 					cache::category_t cat = lbm.next(inst->basicBlock(), inst->inst());
 					if (cat != cache::INVALID_CATEGORY){
 						log << "\t\t\tcategory of I" << inst->index() << " is ";
@@ -683,7 +683,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			if (!default_timing_context.isEmpty()){
 				if(isVerbose()) {
 					log << "\t\t\t\tdefault timing context: misses for";
-					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++){
+					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl() ; nl++){
 						log << "I" << nl->node()->inst()->index() << ", ";
 					}
 					log << " - ";
@@ -693,7 +693,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 				if (_do_output_graphs) {
 					StringBuffer buf;
 					buf << "cost with AM = " << default_icache_cost << "\\lAM (";
-					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl ; nl++)
+					for (TimingContext::NodeLatencyIterator nl(default_timing_context) ; nl() ; nl++)
 						buf << "I" << nl->node()->inst()->index() << ", ";
 					buf << ")";
 					outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
@@ -715,24 +715,24 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 			bool first = true;
 			if (!FM_timing_context_list.isEmpty()){
-				for (List<TimingContext *>::Iter FM_tctxt(FM_timing_context_list) ; FM_tctxt ; FM_tctxt++){
+				for (List<TimingContext *>::Iter FM_tctxt(FM_timing_context_list) ; FM_tctxt() ; FM_tctxt++){
 					if (first) {
 						cache_penalty->setHeader(0, FM_tctxt->header(0));
 						cache_penalty->setHeader(1, FM_tctxt->header(1));
 						first = false;
 					}
 					if (!NC_timing_context_list.isEmpty()){
-						for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+						for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt() ; NC_tctxt++){
 							int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
 							if (NC_cost > reference_cost)
 								reference_cost = NC_cost;
 							int cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), FM_tctxt.item());
 							if(isVerbose()) {
 								log << "\n\t\tcontext " << index << ": ";
-								for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+								for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl() ; nl++){
 									log << "I" << (nl.item())->node()->inst()->index() << ",";
 								}
-								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl() ; nl++){
 									log << "I" << (nl.item())->node()->inst()->index() << ",";
 								}
 								log << "  - ";
@@ -752,10 +752,10 @@ void GraphBBTime<G>::configure(const PropList& props) {
 							if (_do_output_graphs) {
 								StringBuffer buf;
 								buf << "FM-NC cost = " << cost << "\\lfirst(";
-									for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++)
+									for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl() ; nl++)
 										buf << "I" << (nl.item())->node()->inst()->index() << ",";
 								buf << "),\\lNC(";
-									for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
+									for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl() ; nl++)
 										buf << "I" << (nl.item())->node()->inst()->index() << ",";
 								buf << ")";
 								outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
@@ -766,7 +766,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						int cost = analyzeTimingContext(execution_graph, NULL, FM_tctxt.item());
 						if(isVerbose()) {
 							log << "\t\tcontext " << index << ": ";
-							for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++){
+							for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl() ; nl++){
 								log << "I" << (nl.item())->node()->inst()->index() << ",";
 							}
 							log << "  - ";
@@ -783,7 +783,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 						if (_do_output_graphs){
 							StringBuffer buf;
 							buf << "NC cost = " << cost << "\\lNC (";
-								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl ; nl++)
+								for (TimingContext::NodeLatencyIterator nl(*(FM_tctxt.item())) ; nl() ; nl++)
 									buf << "I" << (nl.item())->node()->inst()->index() << ",";
 							buf << ")";
 							outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
@@ -793,11 +793,11 @@ void GraphBBTime<G>::configure(const PropList& props) {
 	    
 			}
 			else { // no FM context
-				for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt ; NC_tctxt++){
+				for (List<TimingContext *>::Iter NC_tctxt(NC_timing_context_list) ; NC_tctxt() ; NC_tctxt++){
 					int NC_cost = analyzeTimingContext(execution_graph, NC_tctxt.item(), NULL);
 					if(isVerbose()) {
 						log << "\t\tcontext " << index << ": ";
-						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++){
+						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl() ; nl++){
 							log << "I" << (nl.item())->node()->inst()->index() << ",";
 						}
 						log << " - ";
@@ -808,7 +808,7 @@ void GraphBBTime<G>::configure(const PropList& props) {
 					if (_do_output_graphs){
 						StringBuffer buf;
 						buf << "NC cost = " << NC_cost << "\\l NC (";
-						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl ; nl++)
+						for (TimingContext::NodeLatencyIterator nl(*(NC_tctxt.item())) ; nl() ; nl++)
 							buf << "I" << (nl.item())->node()->inst()->index() << ",";
 						buf << ")";
 						outputGraph(execution_graph, bb->index(), context_index, case_index++, buf.toString());
@@ -867,13 +867,13 @@ void GraphBBTime<G>::configure(const PropList& props) {
 
 		List<PathContext *> *path_context_list = buildListOfPathContexts(bb);
 
-		for (List<PathContext *>::Iter ctxt(*path_context_list) ; ctxt ; ctxt++){
+		for (List<PathContext *>::Iter ctxt(*path_context_list) ; ctxt() ; ctxt++){
 			if(isVerbose()) {
 				log << "\n\t\t----- Considering context: ";
 				ctxt->dump(log);
 				log << "\n";
 			}
-			analyzePathContext(ctxt, context_index);   
+			analyzePathContext(*ctxt, context_index);
 			context_index ++;
 		}
 	}

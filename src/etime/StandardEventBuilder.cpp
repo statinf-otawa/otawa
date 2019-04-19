@@ -338,7 +338,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 			// simple case of default prediction
 			case branch::ALWAYS_D:
-				for(Block::EdgeIter out = bb->outs(); out; out++) {
+				for(Block::EdgeIter out = bb->outs(); out(); out++) {
 					occurrence_t occ;
 					if(out->isNotTaken())
 						occ = ALWAYS;
@@ -373,7 +373,7 @@ void StandardEventBuilder::handleVariableBranchPred(BasicBlock *bb, Block *wbb) 
 	c->addLeft(1, branch::MISSPRED_VAR(bb));
 
 	// traverse the successors
-	for(Block::EdgeIter out = bb->outs(); out; out++) {
+	for(Block::EdgeIter out = bb->outs(); out(); out++) {
 		string name;
 		if(_explicit)
 			name = _ << "x_mp_" << out->source()->index() << "_" << out->target()->index();

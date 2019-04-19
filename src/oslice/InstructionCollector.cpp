@@ -87,22 +87,22 @@ void InstCollector::collectInterestedInstructions(const CFGCollection& coll, int
 	for (int i = 0; i < coll.count(); i++) {
 		CFG *cfg = coll[i]; // current CFG
 		// for each BB in the CFG
-		for (CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for (CFG::BlockIter v = cfg->blocks(); v(); v++) {
 			if (!v->isBasic())
 				continue;
 			BasicBlock *bb = v->toBasic();
-			for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 				bool collecting = true;
 				if(FPTR_FOR_COLLECTING(workspace()) != &interestedInstruction)
-					collecting = (*FPTR_FOR_COLLECTING(workspace()))(inst);
+					collecting = (*FPTR_FOR_COLLECTING(workspace()))(*inst);
 				else
-					collecting = interested(inst);
+					collecting = interested(*inst);
 
 				if(collecting) {
 					DEBUGGING_MESSAGE(elm::cerr << __SOURCE_INFO__ << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;)
 					elm::cerr << "adding the interested instruction " << *inst << " @ " << inst->address() << io::endl;
 					// put the interested instructions in the bucket
-					InterestedInstruction* interestedInstruction = new InterestedInstruction(inst, bb);
+					InterestedInstruction* interestedInstruction = new InterestedInstruction(*inst, bb);
 					interestedInstructions->add(interestedInstruction);
 					interestedInstructionsLocal->add(interestedInstruction);
 				} // end of the checking interested instruction

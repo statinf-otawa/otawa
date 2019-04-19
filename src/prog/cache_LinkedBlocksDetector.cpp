@@ -121,16 +121,16 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 		int count = lbsets[i]->cacheBlockCount();
 		for (int j = 0; j < count; j++)
 			blockList.add(NULL);
-		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock; lblock++) {
+		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock(); lblock++) {
 			if ((lblock->id() == 0) || (lblock->id() == (lbsets[i]->count() - 1)))
 				continue; /* Skip first / last l-blocks */
-			if (cache::CATEGORY(lblock) == cache::FIRST_MISS) {
+			if (cache::CATEGORY(*lblock) == cache::FIRST_MISS) {
 				//BasicBlock *header = CATEGORY_HEADER(lblock);
 				int cbid = lblock->cacheblock();
 
 				if (blockList[cbid] == NULL)
 					blockList[cbid] = new LinkedBlockList();
-				blockList[cbid]->add(lblock);
+				blockList[cbid]->add(*lblock);
 			}
 		}
 
@@ -140,7 +140,7 @@ void LinkedBlocksDetector::processWorkSpace(otawa::WorkSpace *fw) {
 				Vector<LBlock*> equiv;
 				Block *old_header = NULL;
 				equiv.clear();
-				for (LinkedBlockList::Iter iter(*blockList[j]); iter; iter++) {
+				for (LinkedBlockList::Iter iter(*blockList[j]); iter(); iter++) {
 					/* We want to build another "equiv" set from scratch whenever the firstmiss-header changes */
 					Block *header = cache::CATEGORY_HEADER(*iter);
 					if ((old_header) && (old_header != header)) {
@@ -170,9 +170,9 @@ void LinkedBlocksDetector::recordBlocks(Vector<LBlock*> *equiv) {
 	if (equiv->length() == 1)
 		return;
 	Vector<LBlock*> *copy = new Vector<LBlock*>(*equiv);
-	for (Vector<LBlock*>::Iter lblock(*equiv); lblock; lblock++) {
-		ASSERT(cache::CATEGORY(lblock) == cache::FIRST_MISS);
-		LINKED_BLOCKS(lblock) = copy;
+	for (Vector<LBlock*>::Iter lblock(*equiv); lblock(); lblock++) {
+		ASSERT(cache::CATEGORY(*lblock) == cache::FIRST_MISS);
+		LINKED_BLOCKS(*lblock) = copy;
 	}
 	if(cstats)
 		cstats->addLinked();

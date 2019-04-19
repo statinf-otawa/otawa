@@ -95,10 +95,10 @@ void SubCFGBuilder::configure(const PropList &props) {
 	// look for stops
 	_stops.clear();
 	_stop_addrs.clear();
-	for(Identifier<location_t>::Getter stop(props, LOCATION_STOP); stop; stop++)
-		_stops.add(stop);
-	for(Identifier<Address>::Getter stop(props, CFG_STOP); stop; stop++)
-		_stop_addrs.add(stop);
+	for(Identifier<location_t>::Getter stop(props, LOCATION_STOP); stop(); stop++)
+		_stops.add(*stop);
+	for(Identifier<Address>::Getter stop(props, CFG_STOP); stop(); stop++)
+		_stop_addrs.add(*stop);
 }
 
 /**
@@ -111,7 +111,7 @@ void SubCFGBuilder::floodForward(void) {
 		Block *bb = todo.get();
 		IS_ON_FORWARD_PATH(*bb) = true;
 		if(!IS_STOP(*bb))
-			for(BasicBlock::EdgeIter next = bb->outs(); next; next++) {
+			for(BasicBlock::EdgeIter next = bb->outs(); next(); next++) {
 				Block *nextbb = next->sink();
 				if(!IS_ON_FORWARD_PATH(*nextbb) && !todo.contains(nextbb))
 					todo.put(nextbb);
@@ -124,13 +124,13 @@ void SubCFGBuilder::floodForward(void) {
  */
 void SubCFGBuilder::floodBackward() {
 	VectorQueue<Block *> todo;
-	for(auto stop = *_stops; stop; stop++)
+	for(auto stop = *_stops; stop(); stop++)
 		todo.put((*stop).fst);
 	while (todo){
 		Block *bb = todo.get();
 		IS_ON_BACKWARD_PATH(*bb) = true;
 		if(!IS_START(*bb))
-			for(Block::EdgeIter prev = bb->ins(); prev ; prev++){
+			for(Block::EdgeIter prev = bb->ins(); prev(); prev++){
 				Block *prevbb = prev->source();
 				if (!IS_ON_BACKWARD_PATH(*prevbb) && !todo.contains(prevbb))
 					todo.put(prevbb);
@@ -151,14 +151,14 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 	// record the start tag
 	if(!_start_addr.isNull()) {
 		bool done = false;
-		for(auto b = cfg->blocks(); b; b++) {
+		for(auto b = cfg->blocks(); b(); b++) {
 			if(!b->isBasic())
 				continue;
 			BasicBlock *bb = b->toBasic();
 			if(bb->address() <= _start_addr && _start_addr < bb->topAddress()) {
-				for(auto i = bb->insts(); i; i++)
+				for(auto i = bb->insts(); i(); i++)
 					if(i->address() <= _start_addr && _start_addr < i->topAddress()) {
-						_start = location_t(bb, i);
+						_start = location_t(bb, *i);
 						done = true;
 						break;
 					}
@@ -177,13 +177,13 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 
 	// record the stop tags
 	if(_stop_addrs) {
-		for(auto b = cfg->blocks(); b; b++) {
+		for(auto b = cfg->blocks(); b(); b++) {
 			if(!b->isBasic())
 				continue;
 			BasicBlock *bb = b->toBasic();
-			for(auto stop = *_stop_addrs; stop; stop++)
+			for(auto stop = *_stop_addrs; stop(); stop++)
 				if(bb->address() <= *stop && *stop < bb->topAddress()) {
-					for(auto i = bb->insts(); i; i++)
+					for(auto i = bb->insts(); i(); i++)
 						if(i->address() <= *stop && *stop < bb->topAddress()) {
 							_stops.add(location_t(bb, *i));
 							break;
@@ -193,11 +193,11 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 			}
 	}
 	else if(!_stops)
-		for(auto e = cfg->exit()->ins(); e; e++)
+		for(auto e = cfg->exit()->ins(); e(); e++)
 			_stops.add(location_t(e->source()->toBasic(), e->source()->toBasic()->last()));
 	if(!_stops)
 		throw ProcessorException(*this, "cannot find any stop address!");
-	for(auto stop = *_stops; stop; stop++) {
+	for(auto stop = *_stops; stop(); stop++) {
 		IS_STOP((*stop).fst) = true;
 		ADDR((*stop).fst) = (*stop).snd;
 		if(isVerbose())
@@ -210,21 +210,21 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 
 	// make all virtual BB
 	FragTable<Block *> orgs;
-	for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+	for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 
 		// is the block contained in sub-CFG?
 		if(v->isEnd())
 			continue;
-		if(!(IS_ON_FORWARD_PATH(v) && IS_ON_BACKWARD_PATH(v)))
+		if(!(IS_ON_FORWARD_PATH(*v) && IS_ON_BACKWARD_PATH(*v)))
 			continue;
 
 		// cutting required?
-		if(v->isBasic() && (IS_START(v) || IS_STOP(v))) {
+		if(v->isBasic() && (IS_START(*v) || IS_STOP(*v))) {
 			BasicBlock *bb = v->toBasic();
 
 			// determine start address
 			location_t start(bb, bb->first());
-			if(IS_START(v))
+			if(IS_START(*v))
 				start = _start;
 
 			// determine stop address
@@ -237,48 +237,48 @@ void SubCFGBuilder::transform(CFG *cfg, CFGMaker& maker) {
 			// build the split block
 			Vector<Inst *> is;
 			auto i = bb->insts();
-			while(i != start.snd) {
+			while(*i != start.snd) {
 				ASSERT(i);
 				i++;
 			}
-			while(i != stop.snd) {
-				ASSERT(i);
-				is.add(i);
+			while(*i != stop.snd) {
+				ASSERT(i());
+				is.add(*i);
 				i++;
 			}
-			is.add(i);
+			is.add(*i);
 			BasicBlock *vbb = CFGTransformer::build(is.detach());
 			map(bb, vbb);
-			orgs.add(v);
+			orgs.add(*v);
 		}
 
 		// just duplicate
 		else {
-			CFGTransformer::transform(v);
-			orgs.add(v);
+			CFGTransformer::transform(*v);
+			orgs.add(*v);
 		}
 	}
 
 	// build the virtual edges
-	for(FragTable<Block *>::Iter src(orgs); src; src++) {
-		Block *vsrc = get(src);
+	for(FragTable<Block *>::Iter src(orgs); src(); src++) {
+		Block *vsrc = get(*src);
 
 		// manage start
-		if(IS_START(src)) {
+		if(IS_START(*src)) {
 			build(maker.entry(), vsrc, 0);
-			IS_START(src).remove();
+			IS_START(*src).remove();
 		}
 
 		// manage stop
-		if(IS_STOP(src)) {
+		if(IS_STOP(*src)) {
 			build(vsrc, maker.exit(), 0);
-			IS_STOP(src).remove();
-			ADDR(src).remove();
+			IS_STOP(*src).remove();
+			ADDR(*src).remove();
 			continue;
 		}
 
 		// manage successors
-		for(Block::EdgeIter edge = src->outs(); edge; edge++)
+		for(Block::EdgeIter edge = src->outs(); edge(); edge++)
 			if(orgs.contains(edge->sink())){
 				Block *vtarget = get(edge->target());
 				build(vsrc, vtarget, 0);

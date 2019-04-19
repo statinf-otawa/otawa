@@ -144,7 +144,7 @@ int ParExeGraph::analyze() {
 
 int ParExeGraph::cost() {
 	int wcc = delta(_last_node, _resources[0]);
-	for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
+	for (Vector<Resource *>::Iter res(_resources) ; res() ; res++) {
 		if (res->type() != Resource::BLOCK_START){
 			//		if (res->type() != Resource::INTERNAL_CONFLICT) {											// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 			int r_id = res->index();
@@ -156,7 +156,7 @@ int ParExeGraph::cost() {
 					}
 				}
 			}
-			int diff = delta(_last_node,res);
+			int diff = delta(_last_node, *res);
 			if (diff > wcc) {
 				wcc = diff;
 			}
@@ -357,7 +357,7 @@ void ParExeGraph::analyzeContentions() {
 
 void ParExeGraph::initDelays() {
     int index = 0;
-    for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
+    for (Vector<Resource *>::Iter res(_resources) ; res() ; res++) {
 		switch ( res->type() ) {
 		case Resource::BLOCK_START: {
 			ParExeNode * node = _first_node;
@@ -384,8 +384,8 @@ void ParExeGraph::initDelays() {
 		}
 			break;
 		case Resource::REG : {
-			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst ; inst++) {
-				for (InstNodeIterator node(inst) ; node ; node++) {
+			for (RegResource::UsingInstIterator inst( (RegResource *) *res ) ; inst() ; inst++) {
+				for (InstNodeIterator node(*inst) ; node() ; node++) {
 					if (node->stage()->category() == ParExeStage::EXECUTE) {
 						node->setDelay(index,0);
 					}
@@ -430,8 +430,8 @@ void ParExeGraph::initDelays() {
 // -- clearDelays ------------------------------------------------------------------------------------------------
 
 void ParExeGraph::clearDelays() {
-    for (PreorderIterator node(this); node; node++) {
-		for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
+    for (PreorderIterator node(this); node(); node++) {
+		for (Vector<Resource *>::Iter resource(_resources) ; resource() ; resource++) {
 			int index = resource->index();
 			node->setDelay(index,-1);
 		}
@@ -441,13 +441,13 @@ void ParExeGraph::clearDelays() {
 // -----------------------------------------------------------------
 
 void ParExeGraph::propagate() {
-	for (PreorderIterator node(this); node; node++) {
-		for (Successor succ(node) ; succ ; succ++) {
+	for (PreorderIterator node(this); node(); node++) {
+		for (Successor succ(*node) ; succ() ; succ++) {
 			int latency = 0;
 			if (succ.edge()->type() == ParExeEdge::SOLID) {
 				latency = node->latency() + succ.edge()->latency();
 			}
-			for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
+			for (Vector<Resource *>::Iter resource(_resources) ; resource() ; resource++) {
 				int r_id = resource->index();
 				if (node->delay(r_id) != -1) {
 					int delay = node->delay(r_id) + latency;
@@ -464,7 +464,7 @@ void ParExeGraph::propagate() {
 // -- restoreDefaultLatencies ------------------------------------------------------------------------------------------------
 
 void ParExeGraph::restoreDefaultLatencies(){
-    for (PreorderIterator node(this); node; node++) {
+    for (PreorderIterator node(this); node(); node++) {
 		node->restoreDefaultLatency();
     }
 }
@@ -472,7 +472,7 @@ void ParExeGraph::restoreDefaultLatencies(){
 // -- setDefaultLatencies ------------------------------------------------------------------------------------------------
 
 void ParExeGraph::setDefaultLatencies(TimingContext *tctxt){
-    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl ; nl++){
+    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl() ; nl++){
 		nl->node()->setDefaultLatency(nl->latency());
     }
 }
@@ -480,7 +480,7 @@ void ParExeGraph::setDefaultLatencies(TimingContext *tctxt){
 // -- setLatencies ------------------------------------------------------------------------------------------------
 
 void ParExeGraph::setLatencies(TimingContext *tctxt){
-    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl ; nl++){
+    for (TimingContext::NodeLatencyIterator nl(*tctxt) ; nl() ; nl++){
 		nl->node()->setLatency(nl->latency());
     }
 }
@@ -503,7 +503,7 @@ void ParExeNode::buildContendersMasks(){
 		else {
 			BiDiList<elm::BitVector *> new_masks;
 			for (BiDiList<elm::BitVector *>::Iter mask(_contenders_masks_list) ;
-				 mask ; mask++) {
+				 mask() ; mask++) {
 				ASSERT(mask->size() == _possible_contenders->size());
 				elm::BitVector *new_mask = new elm::BitVector(**mask);
 				ASSERT(new_mask->size() == _possible_contenders->size());
@@ -511,8 +511,8 @@ void ParExeNode::buildContendersMasks(){
 				new_masks.addLast(new_mask);
 			}
 			for (BiDiList<elm::BitVector *>::Iter new_mask(new_masks) ;
-				 new_mask ; new_mask++)
-				_contenders_masks_list.addLast(new_mask);
+				 new_mask() ; new_mask++)
+				_contenders_masks_list.addLast(*new_mask);
 		}
     }
 }
@@ -534,7 +534,7 @@ void ParExeGraph::createSequenceResources(){
     	is_produced_by[j] = nullptr;
     }
 
-    for (InstIterator inst(_sequence) ; inst ; inst++) {
+    for (InstIterator inst(_sequence) ; inst() ; inst++) {
 
     		// for each read register, find and record the producer
      		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
@@ -544,7 +544,7 @@ void ParExeGraph::createSequenceResources(){
     			// not produced by an earlier instruction in the sequence
     			if(is_produced_by[read_reg] == nullptr){
     				is_input[read_reg] = true;
-    				is_input_for[read_reg] = inst;
+    				is_input_for[read_reg] = *inst;
      			}
 
     			// record the producer
@@ -556,7 +556,7 @@ void ParExeGraph::createSequenceResources(){
     		const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
     		for (int i = 0; i < writes.count(); i++) {
     			int written_reg = writes[i]->platformNumber();
-    			is_produced_by[written_reg] = inst;
+    			is_produced_by[written_reg] = *inst;
      		}
     }
 
@@ -638,13 +638,13 @@ void ParExeInst::addNode(ParExeNode * node)  {
  */
 void ParExeGraph::createNodes() {
 	ParExeNode *node;
-    for (InstIterator inst(_sequence) ; inst ; inst++)  {
-		for(ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+    for (InstIterator inst(_sequence) ; inst() ; inst++)  {
+		for(ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage() ; stage++) {
 
 			// generic case
 			if(stage->category() != ParExeStage::EXECUTE
 			|| static_cast<const hard::Stage *>(stage->unit())->getFUs().isEmpty()) {
-				node = new ParExeNode(this, stage, inst);
+				node = new ParExeNode(this, *stage, *inst);
 				// register the new node to the related instruction and pipeline stage
 				inst->addNode(node);
 				stage->addNode(node);
@@ -655,12 +655,12 @@ void ParExeGraph::createNodes() {
 			else {
 
 				// select the unit
-				ParExePipeline *fu = pipeline(stage, inst);
+				ParExePipeline *fu = pipeline(*stage, *inst);
 				ParExeNode *first = nullptr, *last = nullptr;
 				ASSERTP(fu != nullptr,
 					"cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
-				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
-					ParExeNode *fu_node = new ParExeNode(this, fu_stage, inst);
+				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++) {
+					ParExeNode *fu_node = new ParExeNode(this, *fu_stage, *inst);
 					if (!first)
 						first = fu_node;
 					last = fu_node;
@@ -686,12 +686,12 @@ void ParExeGraph::createNodes() {
  */
 void ParExeGraph::addEdgesForPipelineOrder(void) {
 	static string pipeline_order("pipeline order");
-    for (InstIterator inst(_sequence) ; inst ; inst++){
+    for (InstIterator inst(_sequence) ; inst() ; inst++){
     	ParExeNode *previous = NULL;
-    	for (ParExeInst::NodeIterator node(inst); node ; node++){
+    	for (ParExeInst::NodeIterator node(*inst); node() ; node++){
     		if (previous)
-    			new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, comment(pipeline_order));
-    		previous = node;
+    			new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(pipeline_order));
+    		previous = *node;
     	}
     }
 }
@@ -728,7 +728,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 		current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
 
 	ParExeNode *previous = nullptr;
-	for (ParExeStage::NodeIterator node(fetch_stage) ; node ; node++) {
+	for (ParExeStage::NodeIterator node(fetch_stage) ; node() ; node++) {
 		if (previous){
 
 			// branch case
@@ -736,17 +736,17 @@ void ParExeGraph::addEdgesForFetch(void) {
 
 				// look for the branch stage node
 				ParExeNode *branching_node = nullptr;
-				for(auto node = previous->inst()->nodes(); node; node++)
+				for(auto node = previous->inst()->nodes(); node(); node++)
 					if(node->stage() == branch_stage) {
-						branching_node = node;
+						branching_node = *node;
 						break;
 					}
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				new ParExeEdge(branching_node, node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
+				new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
 				if(_cache_line_size != 0)
-					new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
+					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
 			}
 
 			// no branch
@@ -755,7 +755,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 				// no cache
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
-						new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, comment(in_order));
+						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 				}
 
 				// cache bound edges
@@ -763,18 +763,18 @@ void ParExeGraph::addEdgesForFetch(void) {
 					Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
 					//elm::cout << node->name() << " addr " << hex(node->inst()->inst()->address().offset()) << ", cache line = " << hex(cache_line.offset()) << ", current_cache_line = " << hex(current_cache_line.offset()) << endl;
 					if(cache_line != current_cache_line) {
-						new ParExeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
+						new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
 						if(first_cache_line_node != previous)
-							new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
-						first_cache_line_node = node;
+							new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
+						first_cache_line_node = *node;
 						current_cache_line = cache_line;
 					}
 					else
-						new ParExeEdge(previous, node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg));
+						new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg));
 				}
 			}
 		}
-		previous = node;
+		previous = *node;
 	}
 }
 
@@ -796,26 +796,26 @@ void ParExeGraph::addEdgesForProgramOrder(List<ParExeStage *> *list_of_stages){
 		list = _microprocessor->listOfInorderStages();
 
 	// create the edges
-	for(StageIterator stage(list) ; stage ; stage++) {
+	for(StageIterator stage(list) ; stage() ; stage++) {
 		int count = 1;
 		ParExeNode *previous = NULL;
 		int prev_id = 0;
-		for(ParExeStage::NodeIterator node(stage); node; node++){
+		for(ParExeStage::NodeIterator node(*stage); node(); node++){
 			if(previous){
 				if(stage->width() == 1)
-					new ParExeEdge(previous, node, ParExeEdge::SOLID, 0, program_order);
+					new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, program_order);
 				else {
-					new ParExeEdge(previous, node, ParExeEdge::SLASHED, 0, stage->name());
+					new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, stage->name());
 					if (count == stage->width()){		// when stage width is reached, add edges to show precedence
 						ParExeNode *not_at_the_same_cycle = stage->node(prev_id);
-						new ParExeEdge(not_at_the_same_cycle,node,ParExeEdge::SOLID, 0, stage->name());
+						new ParExeEdge(not_at_the_same_cycle, *node, ParExeEdge::SOLID, 0, stage->name());
 						prev_id++;
 					}
 					else
 						count++;
 				}
 			}
-			previous = node;
+			previous = *node;
 		}
 	}
 }
@@ -848,9 +848,9 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous load
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
+				for (InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
 					if (last_node->stage()->category() == ParExeStage::FU)
-						previous_load = last_node;
+						previous_load = *last_node;
 			}
 
 			// found a store instruction
@@ -865,9 +865,9 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 					new ParExeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous store
-				for (InstNodeIterator last_node(node->inst()); last_node ; last_node++)
+				for (InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
 					if (last_node->stage()->category() == ParExeStage::FU)
-						previous_store = last_node;
+						previous_store = *last_node;
 			}
 		}
     }
@@ -959,7 +959,7 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 			ParExeInst *inst = node->inst();
 
 			// for each instruction producing a used data
-			for (ParExeInst::ProducingInstIterator prod(inst); prod; prod ++){
+			for (ParExeInst::ProducingInstIterator prod(inst); prod(); prod ++){
 
 				// create the edge
 				ParExeNode *producing_node = nullptr;
@@ -967,9 +967,9 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 					producing_node = prod->lastFUNode();
 				else {
 					producing_node = nullptr;
-					for(auto node = prod->nodes(); node; node++)
+					for(auto node = prod->nodes(); node(); node++)
 						if(node->stage() == _microprocessor->memStage())
-							producing_node = node;
+							producing_node = *node;
 				}
 				if(producing_node == nullptr)
 					throw NoMemFU();
@@ -988,7 +988,7 @@ void ParExeGraph::addEdgesForDataDependencies(void){
 void ParExeGraph::addEdgesForQueues(void){
 
     // build edges for queues with limited capacity */
-    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage() ; stage++) {
 		ParExeStage * prod_stage;
 		if (stage->sourceQueue() != NULL) {
 			ParExeQueue *queue = stage->sourceQueue();
@@ -1007,7 +1007,7 @@ void ParExeGraph::addEdgesForQueues(void){
 void ParExeGraph::findContendingNodes(){
 
     // search for contending nodes (i.e. pairs of nodes that use the same pipeline stage)
-    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage() ; stage++) {
 		if (stage->orderPolicy() == ParExeStage::OUT_OF_ORDER) {
 			if (stage->category() != ParExeStage::EXECUTE)  {
 				for (int i=0 ; i<stage->numNodes() ; i++)
@@ -1031,17 +1031,17 @@ void ParExeGraph::findContendingNodes(){
 // ----------------------------------------------------------------
 
 ParExeGraph::~ParExeGraph() {
-    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage ; stage++) {
+    for (ParExePipeline::StageIterator stage(_microprocessor->pipeline()) ; stage() ; stage++) {
 		stage->deleteNodes();
 		if (stage->category() == ParExeStage::EXECUTE) {
 			for (int i=0 ; i<stage->numFus() ; i++) {
 				ParExePipeline *fu = stage->fu(i);
-				for (ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++)
+				for (ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++)
 					fu_stage->deleteNodes();
 			}
 		}
     }
-    for (ParExeSequence::InstIterator inst(_sequence) ; inst ; inst++) {
+    for (ParExeSequence::InstIterator inst(_sequence) ; inst() ; inst++) {
 		inst->deleteNodes();
     }
 }
@@ -1143,7 +1143,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
 
     // display ressources
     dotFile << "\"legend\" [shape=record, label= \"{ ";
-    for (Vector<Resource *>::Iter res(_resources) ; res ; res++) {
+    for (Vector<Resource *>::Iter res(_resources) ; res() ; res++) {
 		if (i == 0) {
 			if (!first_line)
 				dotFile << " | ";
@@ -1170,7 +1170,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
     dotFile << "\"code\" [shape=record, label= \"";
     bool in_prologue = true;
     BasicBlock *bb = 0;
-    for (InstIterator inst(_sequence) ; inst ; inst++) {
+    for (InstIterator inst(_sequence) ; inst() ; inst++) {
 		if(inst->codePart() == BLOCK && in_prologue) {
 			in_prologue = false;
 			dotFile << "------\\l";
@@ -1202,7 +1202,7 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
     dotFile << io::endl;
 
     // display _prev_node if connected
-	for (Successor node(_first_node); node; ++node) {
+	for (Successor node(_first_node); node(); ++node) {
 		if (node->inst()->index() != -1)
 			continue;
 
@@ -1234,16 +1234,16 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
 	}
     
     // display nodes
-    for (InstIterator inst(_sequence) ; inst ; inst++) {
+    for (InstIterator inst(_sequence) ; inst() ; inst++) {
 		// dump nodes
 		dotFile << "{ rank = same ; ";
-		for (InstNodeIterator node(inst) ; node ; node++) {
+		for (InstNodeIterator node(*inst) ; node() ; node++) {
 			dotFile << "\"" << node->stage()->name();
 			dotFile << "I" << node->inst()->index() << "\" ; ";
 		}
 		dotFile << "}\n";
 		// again to specify labels
-		for (InstNodeIterator node(inst) ; node ; node++) {
+		for (InstNodeIterator node(*inst) ; node() ; node++) {
 			dotFile << "\"" << node->stage()->name();
 			dotFile << "I" << node->inst()->index() << "\"";
 			dotFile << " [group=" << node->stage()->index() << ", shape=record, ";
@@ -1286,11 +1286,11 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
     }
 
     // display _prev_node edges if connected
-	for (Successor node(_first_node); node; ++node) {
+	for (Successor node(_first_node); node(); ++node) {
 		if (node->inst()->index() != -1)
 			continue;
 
-		for (Successor next(node.item()); next; next++) {
+		for (Successor next(node.item()); next(); next++) {
 			// display edges
 			dotFile << "\"" << node->stage()->name() << "I"
 					<< node->inst()->index() << "\" -> \""
@@ -1346,11 +1346,11 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
     
     // display edges
     //int group_number = _microprocessor->pipeline()->numStages();
-    for (InstIterator inst(_sequence) ; inst ; inst++) {
+    for (InstIterator inst(_sequence) ; inst() ; inst++) {
 		// dump edges
-		for (InstNodeIterator node(inst) ; node ; node++) {
-			for (Successor next(node) ; next ; next++) {
-				if ( node != inst->firstNode()
+		for (InstNodeIterator node(*inst) ; node() ; node++) {
+			for (Successor next(*node) ; next() ; next++) {
+				if ( *node != inst->firstNode()
 					 ||
 					 (node->stage()->category() != ParExeStage::EXECUTE)
 					 || (node->inst()->index() == next->inst()->index()) ) {
@@ -1471,8 +1471,8 @@ ParExeGraph::ParExeGraph(
 	}
 	_props = props;
 	ASSERT(!hw_resources->isEmpty());
-	for (Vector<Resource *>::Iter res(*hw_resources) ; res ; res++) {
-		_resources.add(res);
+	for (Vector<Resource *>::Iter res(*hw_resources) ; res() ; res++) {
+		_resources.add(*res);
 	}
 }
 

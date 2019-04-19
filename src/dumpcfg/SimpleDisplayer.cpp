@@ -40,13 +40,13 @@ void SimpleDisplayer::processWorkSpace(WorkSpace *ws) {
 		cout << "!" << cfg->name() << io::endl;
 
 		// generate blocks
-		for(CFG::BlockIter v(cfg->blocks()); v; v++)
+		for(CFG::BlockIter v(cfg->blocks()); v(); v++)
 			if(v->isBasic()) {
 				BasicBlock *b = **v;
 				cout << (b->index() + off - 1) << ' ' << b->address() << ' ' << b->last()->address();
 
 				// look leaving edges
-				for(Block::EdgeIter e = b->outs(); e; e++) {
+				for(Block::EdgeIter e = b->outs(); e(); e++) {
 					Block *w = e->sink();
 					if(w->isBasic())
 						cout << ' ' << (w->index() + off - 1);
@@ -70,7 +70,7 @@ int SimpleDisplayer::offset(CFG *cfg) {
 
 		// count real BB
 		int cnt = 0;
-		for(CFG::BlockIter v(cfg->blocks()); v; v++)
+		for(CFG::BlockIter v(cfg->blocks()); v(); v++)
 			if(v->isBasic())
 				cnt++;
 

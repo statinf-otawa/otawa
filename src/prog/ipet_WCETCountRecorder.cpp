@@ -60,10 +60,10 @@ void WCETCountRecorder::processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
 		COUNT(bb) = (int)system->valueOf(var);
 
 	// Record out var count
-	for(BasicBlock::EdgeIter edge = bb->outs(); edge; edge++) {
-		ilp::Var *var = VAR(edge);
+	for(BasicBlock::EdgeIter edge = bb->outs(); edge(); edge++) {
+		ilp::Var *var = VAR(*edge);
 		if(var)
-			COUNT(edge) = (int)system->valueOf(var);
+			COUNT(*edge) = (int)system->valueOf(var);
 	}
 }
 

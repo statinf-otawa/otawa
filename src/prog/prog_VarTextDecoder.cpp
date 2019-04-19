@@ -78,10 +78,10 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 		log << "\tno entry to process\n";
 
 	// Look the function symbols
-	for(Process::FileIter file(ws->process()); file; file++)
-		for(File::SymIter sym(file); sym; sym++)
+	for(Process::FileIter file(ws->process()); file(); file++)
+		for(File::SymIter sym(*file); sym(); sym++)
 			if(sym->kind() == Symbol::FUNCTION) {
-				if(IGNORE_ENTRY(sym)) {
+				if(IGNORE_ENTRY(*sym)) {
 					if(logFor(LOG_CFG))
 						log << "\tignoring function symbol \"" << sym->name() << "\"\n";
 				}
@@ -98,9 +98,9 @@ void VarTextDecoder::processWorkSpace(WorkSpace *ws) {
 			}
 
 	// cleanup MARKER
-	for(Process::FileIter file(ws->process()); file; file++)
-		for(File::SegIter seg(file); seg; seg++)
-			for(Segment::ItemIter item(seg); item; item++)
+	for(Process::FileIter file(ws->process()); file(); file++)
+		for(File::SegIter seg(*file); seg(); seg++)
+			for(Segment::ItemIter item(*seg); item(); item++)
 				item->removeAllProp(&MARKER);
 }
 
@@ -249,10 +249,10 @@ void VarTextDecoder::processEntry(WorkSpace *ws, address_t address) {
 					id = &CALL_TARGET;
 				else
 					id = &BRANCH_TARGET;
-				for(Identifier<Address>::Getter target(inst, *id); target; target++) {
+				for(Identifier<Address>::Getter target(inst, *id); target(); target++) {
 					TRACE("otawa::VarTextDecoder::processEntry: indirect branch to " << *target);
 					one = true;
-					Inst *ti = getInst(ws, target, inst);
+					Inst *ti = getInst(ws, *target, inst);
 					if(!ti) {
 						log << "WARNING: broken target from " << inst->address() << " to " << *target << io::endl;
 						continue;

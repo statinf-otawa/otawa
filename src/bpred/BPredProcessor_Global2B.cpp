@@ -102,7 +102,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 	HashMap<Block*,elm::Vector<BCGNode*> > classes_of_BB;
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		elm::Vector<BCGNode*> list_nodes;
 		
 		for(int i = 0 ; i< graphs.length();++i) {
@@ -111,7 +111,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
-		if(list_nodes.length()>0) classes_of_BB.add(bb,list_nodes);
+		if(list_nodes.length()>0) classes_of_BB.add(*bb,list_nodes);
 	}
 
 
@@ -166,23 +166,23 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 	///////////////////////////////////////////////
 	// 2: Boucle sur tous les noeuds du CFG
 	///////////////////////////////////////////////
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		// Recuperation de la variable associee au BB
-		Var *Xi = ipet::VAR(bb);
+		Var *Xi = ipet::VAR(*bb);
 		ASSERT(Xi);
 
 #if G_1 > 0
 		{
-			if(classes_of_BB.exists(bb)) {
+			if(classes_of_BB.exists(*bb)) {
 				NEW_SPECIAL_CONSTRAINT(M_T,EQ,0);
 				NEW_SPECIAL_CONSTRAINT(M_NT,EQ,0);
-				for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+				for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 					Var *m0, *m1;
 					if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 						NEW_VAR_FROM_BUFF(m1,	"m" << bb->index() << "_" << edge->target()->index() );
 						system->addObjectFunction(5.0, m1);
 						M_T->addLeft(1,m1);
-						elm::Vector<BCGNode*> v = classes_of_BB.get(bb);
+						elm::Vector<BCGNode*> v = classes_of_BB.get(*bb);
 						for(int i = 0 ; i < v.length();++i) {
 							Var *m;
 							NEW_VAR_FROM_BUFF(m,"m" << bb->index() << "_" << edge->target()->index() << "A" << BitSet_to_String(v[i]->getHistory()))
@@ -193,7 +193,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 						NEW_VAR_FROM_BUFF(m0,	"m" << bb->index() << "_" << edge->target()->index() );
 						system->addObjectFunction(5.0, m0);
 						M_NT->addLeft(1,m0);
-						elm::Vector<BCGNode*> v = classes_of_BB.get(bb);
+						elm::Vector<BCGNode*> v = classes_of_BB.get(*bb);
 						for(int i = 0 ; i < v.length();++i) {
 							Var *m;
 							NEW_VAR_FROM_BUFF(m,"m" << bb->index() << "_" << edge->target()->index() << "A" << BitSet_to_String(v[i]->getHistory()))
@@ -206,8 +206,8 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 #endif
 		
 #if B_21>0
-		if(classes_of_BB.exists(bb)) {
-			elm::Vector<BCGNode*> v = classes_of_BB.get(bb);
+		if(classes_of_BB.exists(*bb)) {
+			elm::Vector<BCGNode*> v = classes_of_BB.get(*bb);
 			if(v.length()>0) {
 				//////////////////////////////////////////
 				// 2.1: Pour chacun des successeurs de br
@@ -221,9 +221,9 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 			
 					// on recherche l'edge ayant le meme 'd' que celui du bcg pour en extraire le nom de variable associe
 					Var *eb = NULL;
-					for(Block::EdgeIter edge = bb->outs(); edge ; edge++) {
+					for(Block::EdgeIter edge = bb->outs(); edge() ; edge++) {
 						if(edge->isTaken() == t) {
-							eb = ipet::VAR(edge);
+							eb = ipet::VAR(*edge);
 							ASSERT(edge);
 							break;
 						}
@@ -268,8 +268,8 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 
 
 
-		if(classes_of_BB.exists(bb)) {
-			elm::Vector<BCGNode*> v = classes_of_BB.get(bb);
+		if(classes_of_BB.exists(*bb)) {
+			elm::Vector<BCGNode*> v = classes_of_BB.get(*bb);
 			if(v.length()>0) {
 				for(int i=0;i<v.length();++i) {
 					BCGNode *br = v[i];
@@ -610,7 +610,7 @@ void BPredProcessor::CS__Global2b(WorkSpace *fw, CFG *cfg, BHG* bhg, elm::Vector
 						NEW_SPECIAL_CONSTRAINT(M_T,EQ,0);
 						NEW_SPECIAL_CONSTRAINT(M_NT,EQ,0);
 						Var *m0, *m1;
-						for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+						for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 							if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 								NEW_VAR_FROM_BUFF(m1,	"m" << bb->index() << "_" << edge->target()->index() << "A" << BitSet_to_String(br->getHistory()) )
 							}
@@ -694,7 +694,7 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 	HashMap<Block*,elm::Vector<BCGNode*> > classes_of_BB;
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		elm::Vector<BCGNode*> list_nodes;
 		
 		for(int i = 0 ; i< graphs.length();++i) {
@@ -703,23 +703,23 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
-		if(list_nodes.length()>0) classes_of_BB.add(bb,list_nodes);
+		if(list_nodes.length()>0) classes_of_BB.add(*bb,list_nodes);
 	}
 
 	//////////
 	// H11:
 	//////////
 #if H_11 > 0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(classes_of_BB.exists(bb)) {
-			Var *Xi = ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(classes_of_BB.exists(*bb)) {
+			Var *Xi = ipet::VAR(*bb);
 			ASSERT(Xi);
 			
 	
 			NEW_SPECIAL_CONSTRAINT(H11,EQ,0);
 	
 			H11->addLeft(1,Xi);
-			elm::Vector<BCGNode*> v=classes_of_BB.get(bb);
+			elm::Vector<BCGNode*> v=classes_of_BB.get(*bb);
 			for(int i = 0 ; i<v.length();++i) {
 				Var *XbApi;
 				NEW_VAR_FROM_BUFF(XbApi, Xi->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -736,27 +736,27 @@ void BPredProcessor::CS__Global2b_not_mitra(WorkSpace *fw, CFG *cfg, BHG* bhg, e
 #if H_12 > 0
 	HashMap<Block*, elm::Vector<BHGNode*> > BB_classes;
 	
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		elm::Vector<BHGNode*> v;
 		for(auto node: *bhg) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
 		}
-		if(v.length()>0)BB_classes.add(bb,v);
+		if(v.length()>0)BB_classes.add(*bb,v);
 	}
 
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(BB_classes.exists(bb)) {
-			Var *Xi = ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(BB_classes.exists(*bb)) {
+			Var *Xi = ipet::VAR(*bb);
 			ASSERT(Xi);
 			
 	
-			for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+			for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 				NEW_SPECIAL_CONSTRAINT(H12,EQ,0);
-				Var *Eb_s=ipet::VAR(edge);
+				Var *Eb_s=ipet::VAR(*edge);
 				H12->addLeft(1,Eb_s);
-				elm::Vector<BHGNode*> v=BB_classes.get(bb);
+				elm::Vector<BHGNode*> v=BB_classes.get(*bb);
 				for(int i = 0 ; i<v.length();++i) {
 					Var *XbApi;
 					int d= edge->isTaken();
@@ -897,7 +897,7 @@ Block* BPredProcessor::getFirstBranch(Block* bb,CFG* cfg) {
 	unsigned int nb_OE = 0;
 	if(bb==cfg->exit()) return NULL;
 	// Parcours des OutEdges
-	for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+	for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 		// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 		if(edge->isTaken()) nb_OE++;
 		else if(edge->isNotTaken()) nb_OE++;
@@ -908,7 +908,7 @@ Block* BPredProcessor::getFirstBranch(Block* bb,CFG* cfg) {
 		return bb;
 	}
 	else{
-		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 			return getFirstBranch(edge->target(),cfg);
 		}
@@ -926,7 +926,7 @@ Block* BPredProcessor::getFirstBranch(Block* bb,CFG* cfg) {
  * @param entryBr	First branch of the CFG.
  */
 void BPredProcessor::getBranches(Block* bb,dfa::BitSet history,elm::Vector<BHGNode* >& suivants,CFG* cfg,Block* entryBr) {
-	for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+	for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 		if(edge->isTaken()) {
 			dfa::BitSet h=lshift_BitSet(history,1,true);
 			Block *c_bb = getFirstBranch(edge->target(),cfg);

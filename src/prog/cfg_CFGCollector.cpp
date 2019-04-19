@@ -38,8 +38,8 @@ public:
 	CollectorCleaner(WorkSpace *ws, CFGCollection *coll): _ws(ws), _coll(coll) { }
 
 	virtual void clean(void) {
-		for(CFGCollection::Iter g(_coll); g; g++)
-			delete g;
+		for(CFGCollection::Iter g(_coll); g(); g++)
+			delete *g;
 		delete _coll;
 		INVOLVED_CFGS(_ws).remove();
 	}
@@ -224,7 +224,7 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 
 	// build the CFG collection and clean markers
 	coll = new CFGCollection();
-	for(Iter m(*this); m; m++) {
+	for(Iter m(*this); m(); m++) {
 		CFG *g = m->build();
 		coll->add(g);
 	}
@@ -271,9 +271,9 @@ void CFGCollector::configure(const PropList& props) {
 	}
 
 	// collect added CFGs
-	for(Identifier<Address>::Getter cfg(props, ADDED_CFG); cfg; cfg++)
-		added_cfgs.add(cfg);
-	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun; fun++)
+	for(Identifier<Address>::Getter cfg(props, ADDED_CFG); cfg(); cfg++)
+		added_cfgs.add(*cfg);
+	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun(); fun++)
 		added_funs.add(*fun);
 }
 

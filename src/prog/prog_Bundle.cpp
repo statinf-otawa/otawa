@@ -24,7 +24,7 @@
 namespace otawa {
 
 /**
- * @class Bundle
+ * @class BaseBundle
  * Bundles are group of instructions that are executed together and in parallel
  * inside VLIW microprocessors. This class allows grouping instructions
  * composing a bundle and handling it as a single instruction. This is useful
@@ -32,135 +32,106 @@ namespace otawa {
  * as a single one. For non-VLIW instruction set, the bundle will only match
  * one instruction.
  *
+ * Notice that this class is usually not used as is because an iterator
+ * on the instruction composing the bundle is required. Instead, one can use
+ * the class Bundle (for bundle anywhere in memory) or BasicBlock::Bundle
+ * to visit bundles in a BB (using BasicBlock::BundleIter).
+ *
+ * @param I	Type of the iterator to look up instructions of the bundle.
  * @ingroup prog
  */
 
 /**
- * @fn bundle::Bundle(Inst *inst);
+ * @fn BaseBundle::Bundle(const I& i);
  * Build a bundle from the first instruction of the bundle.
- * @param inst	First instructrion of the bundle.
+ * @param i	Iterator on the first instruction.
  */
 
 /**
- * @fn Address Bundle::address(void) const;
+ * @fn Address BaseBundle::address(void) const;
  * Get the starting address of the bundle.
  * @return	Bundle starting address.
  */
 
 /**
+ * @fn int BaseBundle::size(void) const;
  * Get the size of the bundle, that is, the sum of the sizes of instructions
  * composing the bundle.
  * @return	Bundle size.
  */
-int Bundle::size(void) const {
-	int s = 0;
-	for(Iter i(*this); i; i++)
-		s += i->size();
-	return s;
-}
 
 /**
- * @fn Address Bundle::topAddress(void) const;
+ * @fn Address BaseBundle::topAddress(void) const;
  * Get the address following the last byte of the bundle.
  * @return	Bundle top address.
  */
 
 /**
+ * @fn Inst::kind_t BaseBundle::kind(void) const;
  * Get the kind of the bundle, i.e. the bit-to-bit OR of
  * the kinds of the instructions composing the bundle.
  * @param	Bundle kind.
  */
-Inst::kind_t Bundle::kind(void) const {
-	Inst::kind_t k = 0;
-	for(Iter i(*this); i; i++)
-		k |= i->kind();
-	return k;
-}
 
 /**
+ * @fn Inst *BaseBundle::target(void) const;
  * Get the target of the bundle if it contains a branch
  * (the first found branch instruction) or null address if
  * the bundle doesn't contain branch or if the branch is indirect.
  * @return	Target branch.
  */
-Inst *Bundle::target(void) const {
-	for(Iter i(*this); i; i++)
-		if(i->isBranch()) {
-			if(i->isIndirect())
-				return null<Inst>();
-			else
-				return i->target();
-		}
-	return null<Inst>();
-}
 
 /**
+ * @fn void BaseBundle::readRegSet(RegSet& set) const;
  * Get the set of read registers, i.e. the union of registers
  * read by the instruction composing the bundle.
  * @param set	Register set to fill.
  */
-void Bundle::readRegSet(RegSet& set) const {
-	for(Iter i(*this); i; i++)
-		i->readRegSet(set);
-}
 
 /**
+ * @fn void BaseBundle::writeRegSet(RegSet& set) const;
  * Get the set of written registers, i.e. the union of registers
  * written by the instruction composing the bundle.
  * @param set	Register set to fill.
  */
-void Bundle::writeRegSet(RegSet& set) const {
-	for(Iter i(*this); i; i++)
-		i->writeRegSet(set);
-}
 
 /**
+ * @fn void BaseBundle::semInsts(sem::Block& block) const;
  * Get the semantic instructions of the bundle, that is, a composition
  * of the semantic instructions of the machine instructions composing
  * the bundle such that:
  * @li register read is performed in parallel,
  * @li register write is performed in parallel.
  */
-void Bundle::semInsts(sem::Block& block) const {
-	int tmp = -1;
-	for(Iter i(*this); i; i++)
-		tmp -= i->semInsts(block, tmp); // the tmp should keep descreasing as the more negative values means more temp registers are required
-	tmp = -1;
-	for(Iter i(*this); i; i++)
-		tmp -= i->semWriteBack(block, tmp);
-}
 
 
 /**
+ * @fn void BaseBundle::semKernel(sem::Block& block) const;
  * Get the kernel of semantics instructions of the bundle.
  * Only the computation kernel of semantic instructions is
  * provided without the code dedicated to the condition support.
  * @param block	To fill the semantic instructions in.
  */
-void Bundle::semKernel(sem::Block& block) const {
-	int tmp = -1;
-	for(Iter i(*this); i; i++)
-		tmp -= i->semKernel(block, tmp);
-	tmp = -1;
-	for(Iter i(*this); i; i++)
-		tmp -= i->semWriteBack(block, tmp);
-}
 
 
 /**
- * @class Bundle::Iter;
- * Iterator on the instructions composing the bundle.
- */
-
-/**
- * @fn Iter Bundle::insts(void) const;
+ * @fn Iter BaseBundle::insts(void) const;
  * Get an iterator on the bundle instructions.
  * @return	Bundle instruction iterator.
  */
 
 /**
- * @fn Iter Bundle::operator*(void) const;
+ * @fn Iter BaseBundle::operator*(void) const;
  * Same as insts().
  */
 
+
+/**
+ * @class Bundle
+ *
+ * This BaseBundle derived class works on bundles obtained from the traversal of instructions
+ * in the process.
+ *
+ * @ingroup prog
+ */
 }	// otawa

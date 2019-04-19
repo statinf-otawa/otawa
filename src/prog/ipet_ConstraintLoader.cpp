@@ -156,8 +156,8 @@ ConstraintLoader::ConstraintLoader(AbstractRegistration& r)
 Block *ConstraintLoader::getBB(address_t addr) {
 	BasicBlock *bb = bbs.get(addr, 0);
 	if(!bb) {
-		for (CFGCollection::Iter icfg(INVOLVED_CFGS(fw)); icfg; icfg++) {
-			for (CFG::BlockIter b = icfg->blocks(); b; b++)
+		for (CFGCollection::Iter icfg(INVOLVED_CFGS(fw)); icfg(); icfg++) {
+			for (CFG::BlockIter b = icfg->blocks(); b(); b++)
 				if(!b->isBasic()) {
 					BasicBlock *ibb = b->toBasic();
 					if(ibb->address() <= addr && addr < ibb->topAddress())
@@ -181,9 +181,9 @@ Block *ConstraintLoader::getBB(address_t addr) {
  */
 Block *ConstraintLoader::getBB(int index) {
 	const CFGCollection& coll = **INVOLVED_CFGS(fw);
-	for(CFG::BlockIter bb = coll[0]->blocks(); bb; bb++)
+	for(CFG::BlockIter bb = coll[0]->blocks(); bb(); bb++)
 		if(bb->index() == index)
-			return bb;
+			return *bb;
 	return 0;
 }
 
@@ -236,9 +236,9 @@ bool ConstraintLoader::newEdgeVar(CString name, address_t src, address_t dst) {
 		return false;
 
 	// Find edge
-	for(Block::EdgeIter edge = src_bb->outs(); edge; edge++) {
+	for(Block::EdgeIter edge = src_bb->outs(); edge(); edge++) {
 		if(edge->target() == dst_bb) {
-			ilp::Var *var = ipet::VAR(edge);
+			ilp::Var *var = ipet::VAR(*edge);
 			if(var) {
 				vars.put(name, var);
 				return var;

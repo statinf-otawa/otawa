@@ -174,7 +174,7 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 
 		// IN = union OUT of predecessors
 		prob.reset(ins[idx]);
-		for(Iter pred(bb); pred; pred++) {
+		for(Iter pred(bb); pred(); pred++) {
 			typename G::vertex_t *bb_pred = static_cast<typename G::vertex_t *>(*pred);
 			int pred_idx = bb_pred->index();
 			ASSERT(pred_idx >= 0);
@@ -199,7 +199,7 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 			comp = ex;
 
 			// add successors
-			for(typename Iter::Forward next(bb); next; next++)
+			for(typename Iter::Forward next(bb); next(); next++)
 				if(!present.bit(next->index())) {
 					OTAWA_IDFA_TRACE("DFA: push BB" << next->index());
 					todo.put(static_cast<typename G::vertex_t *>(*next));

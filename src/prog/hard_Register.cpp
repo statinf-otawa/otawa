@@ -252,8 +252,8 @@ RegBank::Make& RegBank::Make::gen(int count, const Register::Make& make) {
 	for(int i = 0; i < count; i++) {
 		Register::Make m(fname.make(i));
 		m.kind(make.getKind()).size(make.getSize());
-		for(auto a = *make.getAliases(); a; a++) {
-			RegisterFormatter f(a, base);
+		for(auto a = *make.getAliases(); a(); a++) {
+			RegisterFormatter f(*a, base);
 			m.alias(f.make(i));
 		}
 		Register *r = new Register(m);
@@ -335,7 +335,7 @@ RegBank::RegBank(void):
 /**
  */
 RegBank::~RegBank(void) {
-	for(auto r = *_alloc; r; r++)
+	for(auto r = *_alloc; r(); r++)
 		delete *r;
 }
 
@@ -354,10 +354,10 @@ void RegBank::init(const Make& make) {
 	// init register list
 	_regs = AllocArray<Register *>(make._regs.count());
 	int i = _regs.count() - 1;
-	for(auto r = *make._regs; r; r++, i--) {
+	for(auto r = *make._regs; r(); r++, i--) {
 		_regs[i] = *r;
 		r->_bank = this;
-		set(i, r);
+		set(i, *r);
 	}
 }
 

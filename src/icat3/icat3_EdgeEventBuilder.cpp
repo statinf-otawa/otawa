@@ -95,9 +95,9 @@ public:
 	virtual void estimate(ilp::Constraint *cons, bool on) {
 		ASSERT(on);
 		ASSERT(_cat == PE)
-		for(Block::EdgeIter i = _head->ins(); i; i++)
+		for(Block::EdgeIter i = _head->ins(); i(); i++)
 			if(!BACK_EDGE(*i))
-				cons->addLeft(1, ipet::VAR(i));
+				cons->addLeft(1, ipet::VAR(*i));
 	}
 
 	virtual rel_t related(void) const { return _rel; }
@@ -154,7 +154,7 @@ protected:
 	 */
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *v) {
 		used.clear();
-		for(Identifier<etime::Unit *>::Getter i(v, etime::TIME_UNIT); i; i++) {
+		for(Identifier<etime::Unit *>::Getter i(v, etime::TIME_UNIT); i(); i++) {
 			etime::Unit *tu = *i;
 			for(auto e: tu->path()) {
 				processAccesses(*tu, etime::PREFIX, e->source(), e->source(), e->source());
@@ -219,10 +219,10 @@ protected:
 			cat = AH;
 		else {
 			LoopIter h(cv);
-			for(int i = mustpers[lb->set()]->pers(acs).stack().length() - 1; i >= 0 && h; i--, h++) {
+			for(int i = mustpers[lb->set()]->pers(acs).stack().length() - 1; i >= 0 && h(); i--, h++) {
 				age = mustpers[lb->set()]->pers(acs).stack()[i][lb->index()];
 				if(0 <= age && age < A) {
-					ch = h;
+					ch = *h;
 					cat = PE;
 					break;
 				}

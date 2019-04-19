@@ -569,9 +569,9 @@ bool BasicBlock::contains(Inst *i) {
  * @return	Block control instruction.
  */
 Inst *BasicBlock::control(void) {
-	for(InstIter i(this); i; i++)
-		if(i->isControl() && !IGNORE_CONTROL(i))
-			return i;
+	for(InstIter i(this); i(); i++)
+		if(i->isControl() && !IGNORE_CONTROL(*i))
+			return *i;
 	return 0;
 }
 
@@ -582,8 +582,8 @@ Inst *BasicBlock::control(void) {
  */
 Inst *BasicBlock::last(void) {
 	Inst *r = 0;
-	for(InstIter i(this); i; i++)
-		r = i;
+	for(InstIter i(this); i(); i++)
+		r = *i;
 	return r;
 }
 
@@ -593,7 +593,7 @@ Inst *BasicBlock::last(void) {
  */
 int BasicBlock::count(void) const {
 	int c = 0;
-	for(InstIter i(this); i; i++)
+	for(InstIter i(this); i(); i++)
 		c++;
 	return c;
 }
@@ -613,12 +613,12 @@ int BasicBlock::count(void) const {
 /**
  */
 BasicBlock::BasicIns::BasicIns(BasicBlock *bb) {
-	for(EdgeIter i = bb->ins(); i; i++)
+	for(EdgeIter i = bb->ins(); i(); i++)
 		wl.push(pair(*i, *i));
 	e = BasicEdge(0, 0, bb);
 	next();
 	if(!e.sink())
-		e = BasicEdge(0, bb->ins(), bb);
+		e = BasicEdge(0, *bb->ins(), bb);
 }
 
 /**
@@ -636,14 +636,14 @@ void BasicBlock::BasicIns::next(void) {
 		// function entry
 		else if(p.fst->source()->isEntry())
 			for(auto c: p.fst->source()->cfg()->callers())
-				for(Block::EdgeIter i = c->ins(); i; i++)
+				for(Block::EdgeIter i = c->ins(); i(); i++)
 					wl.push(pair(*i, *i));
 
 		// function return
 		else {
 			SynthBlock *sb = p.fst->source()->toSynth();
 			if(sb->callee())
-				for(Block::EdgeIter i = sb->callee()->exit()->ins(); i; i++)
+				for(Block::EdgeIter i = sb->callee()->exit()->ins(); i(); i++)
 					wl.push(pair(*i, p.fst));
 		}
 	}
@@ -686,18 +686,18 @@ CFG::CFG(Inst *first, type_t type)
 CFG::~CFG(void) {
 
 	// delete edges
-	for(BlockIter b = this->vertices(); b; b++) {
+	for(BlockIter b = this->vertices(); b(); b++) {
 		Block::EdgeIter e = b->outs();
-		while(e) {
-			delete e;
+		while(e()) {
+			delete *e;
 			e = b->outs();
 		}
 	}
 
 	// delete nodes
-	for(BlockIter b = this->vertices(); b; b++) {
+	for(BlockIter b = this->vertices(); b(); b++) {
 		if(b->isVirtual())
-			delete b;
+			delete *b;
 		else if(b->isBasic()) {
 			BasicBlock *bb = **b;
 			delete bb;

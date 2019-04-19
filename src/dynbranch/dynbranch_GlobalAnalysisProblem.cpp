@@ -80,7 +80,7 @@ GlobalAnalysisProblem::GlobalAnalysisProblem(WorkSpace* workspace, bool v, Domai
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	bbCount = 0;
 	int bbCountTotal = 0;
-	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi(); cfgi++) {
 		if(cfgi->count() > bbCount)
 			bbCount = cfgi->count();
 		bbCountTotal = bbCountTotal + cfgi->count();
@@ -113,17 +113,17 @@ void GlobalAnalysisProblem::getStats(void) {
 	unsigned int totalProcessedInst = 0;
 	unsigned int totalProcessedSemInst = 0;
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
-	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi(); cfgi++) {
 		unsigned int numOfInstCFG = 0;
 		unsigned int numOfSemInstCFG = 0;
 		unsigned int numOfProcessedInstCFG = 0;
 		unsigned int numOfProcessedSemInstCFG = 0;
-		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi; bbi++) {
+		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi(); bbi++) {
 			unsigned int numOfInst = 0;
 			unsigned int numOfSemInst = 0;
 			if(bbi->isBasic()) {
 				numOfInst = bbi->toBasic()->count();
-				for(BasicBlock::InstIter insto(bbi->toBasic()) ; insto ; insto++) {
+				for(BasicBlock::InstIter insto(bbi->toBasic()) ; insto() ; insto++) {
 					sem::Block block;
 					insto->semInsts(block);
 					numOfSemInst = numOfSemInst + block.count();
@@ -213,14 +213,14 @@ void GlobalAnalysisProblem::update(Domain& out, const Domain& in, Block *b) {
 	BasicBlock *bb = b->toBasic();
 
 	// process each instruction in turn
-	for(BasicBlock::InstIter insto(bb) ; insto ; insto++) {
+	for(BasicBlock::InstIter insto(bb) ; insto() ; insto++) {
 
 		// get semantic instructions
 		sem::Block block;
 		insto->semInsts(block);
 
 		// process the semantic instruction
-		for(sem::Block::InstIter semi(block) ; semi ; semi++) {
+		for(sem::Block::InstIter semi(block) ; semi() ; semi++) {
 			processedSemInstCount++;
 
 			sem::inst inst = *semi ;

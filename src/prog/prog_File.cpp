@@ -141,7 +141,7 @@ Symbol *File::findSymbol(String name) {
  * @return			Found instruction or null.
  */
 Inst *File::findInstAt(address_t address) {
-	for(SegIter seg(this); seg; seg++) {
+	for(SegIter seg(this); seg(); seg++) {
 		if(seg->address() <= address && address < seg->topAddress()) {
 			Inst *inst = seg->findInstAt(address);
 			if(inst)
@@ -158,9 +158,9 @@ Inst *File::findInstAt(address_t address) {
  * @return			Found segment or null.
  */
 Segment *File::findSegmentAt(Address addr) {
-	for(SegIter seg(this); seg; seg++)
+	for(SegIter seg(this); seg(); seg++)
 		if(seg->contains(addr))
-			return seg;
+			return *seg;
 	return 0;
 }
 
@@ -171,7 +171,7 @@ Segment *File::findSegmentAt(Address addr) {
  * @return			Found program item or null.
  */
 ProgItem *File::findItemAt(address_t address) {
-	for(SegIter seg(this); seg; seg++) {
+	for(SegIter seg(this); seg(); seg++) {
 		ProgItem *item = seg->findItemAt(address);
 		if(item)
 			return item;
@@ -185,12 +185,12 @@ ProgItem *File::findItemAt(address_t address) {
 File::~File(void) {
 
 	// Free segments
-	for(SegIter seg(this); seg; seg++)
-		delete seg;
+	for(SegIter seg(this); seg(); seg++)
+		delete *seg;
 
 	// Free symbols
-	for(SymIter sym(this); sym; sym++)
-		delete sym;
+	for(SymIter sym(this); sym(); sym++)
+		delete *sym;
 }
 
 

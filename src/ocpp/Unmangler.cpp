@@ -39,7 +39,7 @@ namespace abi {
 class IA64Unmangler: public Unmangler {
 public:
 
-	virtual string unmangle(const string& name) throw(UnmanglingException) {
+	virtual string unmangle(const string& name) {
 		int status;
 		char *res = abi::__cxa_demangle(name.toCString(), 0, 0, &status);
 		switch(status) {
@@ -62,7 +62,7 @@ public:
 // unmangler switcher
 class BaseUnmangler: public Unmangler {
 public:
-	virtual string unmangle(const string& name) throw(UnmanglingException) {
+	virtual string unmangle(const string& name) {
 		if(name.startsWith("_Z"))
 			return ia64.unmangle(name);
 		else

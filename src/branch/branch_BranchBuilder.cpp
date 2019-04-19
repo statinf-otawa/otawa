@@ -180,8 +180,8 @@ void BranchBuilder::processWorkSpace(WorkSpace* ws) {
 		dfa::hai::HalfAbsInt<dfa::hai::FirstUnrollingFixPoint<dfa::hai::UnrollingListener<BranchProblem> > > hai(fixp, *ws);
 		hai.solve();
 
-		for (CFGCollection::Iter cfg(*INVOLVED_CFGS(ws)); cfg; cfg++) {
-			for(CFG::BlockIter b = cfg->blocks(); b; b++)
+		for (CFGCollection::Iter cfg(*INVOLVED_CFGS(ws)); cfg(); cfg++) {
+			for(CFG::BlockIter b = cfg->blocks(); b(); b++)
 				if(b->isBasic()) {
 					BasicBlock *bb = b->toBasic();
 					if ((COND_NUMBER(bb) != -1) && int(hard::BHT_CONFIG(ws)->line(bb->control()->address())) == row) {

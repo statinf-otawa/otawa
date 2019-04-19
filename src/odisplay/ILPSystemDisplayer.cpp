@@ -137,15 +137,15 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	typedef Vector<ilp::Constraint *> cons_list_t;
 	typedef HashMap<ilp::Var *, cons_list_t *> vars_t;
 	vars_t vars;
-	for(ilp::System::ConstIterator cons(system); cons; cons++)
-		for(ilp::Constraint::TermIterator term(cons); term; term++) {
+	for(ilp::System::ConstIterator cons(system); cons(); cons++)
+		for(ilp::Constraint::TermIterator term(*cons); term(); term++) {
 			ilp::Var *var = (*term).fst;
 			cons_list_t *list = vars.get(var, 0);
 			if(!list) {
 				list = new cons_list_t;
 				vars.put(var, list);
 			}
-			list->add(cons);
+			list->add(*cons);
 		}
 
 	// header
@@ -156,7 +156,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 			"\t\t\t\t<li><a href=\"#__objective\">objective function</a></li>\n"
 			"\t\t\t\t<li><a href=\"#__variables\">variables</a></li>\n"
 			"\t\t\t\t<li><a href=\"#__constraints\">constraints</a></li>\n";
-	for(Identifier<ILPSystemAddon *>::Getter addon(ws, ADDON); addon; addon++)
+	for(Identifier<ILPSystemAddon *>::Getter addon(ws, ADDON); addon(); addon++)
 		cout << "\t\t\t\t<li><a href=\"#" << (void *)*addon << "\"/>" << addon->title() << "</li>\n";
 	cout << "\t\t</ul>\n";
 
@@ -165,7 +165,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	cout << "\t\t\t<p><b>WCET</b> = " << ipet::WCET(ws) << "</p>\n"
 		 << "\t\t\t<p><b>function</b><br>\n\t\t\t";
 	bool first = true;
-	for(ilp::System::ObjTermIterator term(system); term; term++) {
+	for(ilp::System::ObjTermIterator term(system); term(); term++) {
 		if(first)
 			first = false;
 		else
@@ -180,29 +180,29 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	cout << "\t\t<h1><a name=\"__constraints\">Constraints</a></h1>\n";
 	typedef FragTable<ilp::Constraint *> cons_store_t;
 	HashMap<string, cons_store_t *> cons_map;
-	for(ilp::System::ConstIterator cons(system); cons; cons++) {
+	for(ilp::System::ConstIterator cons(system); cons(); cons++) {
 		string lab = cons->label();
 		cons_store_t *store = cons_map.get(lab, 0);
 		if(!store) {
 			store = new cons_store_t;
 			cons_map.put(lab, store);
 		}
-		store->add(cons);
+		store->add(*cons);
 	}
 
 	// display constraints
-	for(HashMap<string, cons_store_t *>::PairIter store(cons_map); store; store++) {
+	for(HashMap<string, cons_store_t *>::PairIter store(cons_map); store(); store++) {
 		const string& label = (*store).fst;
 		if(label)
 			cout << "\t\t\t\t<h2>" << label << "</h2>\n";
-		for(cons_store_t::Iter cons(*(*store).snd); cons; cons++)
+		for(cons_store_t::Iter cons(*(*store).snd); cons(); cons++)
 			displayCons(*cons);
 		delete (*store).snd;
 	}
 
 	// display variables
 	cout << "\t\t<h1><a name=\"__variables\">Variables</a></h1>\n";
-	for(vars_t::PairIter var(vars); var; var++) {
+	for(vars_t::PairIter var(vars); var(); var++) {
 		cout << "\t\t\t<h2><a name=\"" << nameOf((*var).fst) << "\">" << nameOf((*var).fst) << " variable</a></h2>\n";
 		cout << "\t\t\t\t<p>value = " << system->valueOf((*var).fst) << "</p>\n";
 		ASSERT((*var).snd);
@@ -211,7 +211,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// display content
-	for(Identifier<ILPSystemAddon *>::Getter addon(ws, ADDON); addon; addon++) {
+	for(Identifier<ILPSystemAddon *>::Getter addon(ws, ADDON); addon(); addon++) {
 		cout << "\t\t<h2><a name=\"" << (void *)*addon << "\">" << addon->title() << "</a></h2>\n";
 		addon->display(cout, ws, this);
 	}
@@ -235,7 +235,7 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons, bool with_label) {
 	// before the comparator
 	bool one = false;
 	cout << "\t\t\t\t";
-	for(ilp::Constraint::TermIterator term(cons); term; term++)
+	for(ilp::Constraint::TermIterator term(cons); term(); term++)
 		if((*term).snd >= 0) {
 			if(first)
 				first = false;
@@ -258,7 +258,7 @@ void ILPSystemDisplayer::displayCons(ilp::Constraint *cons, bool with_label) {
 
 	// after the comparator
 	one = false;
-	for(ilp::Constraint::TermIterator term(cons); term; term++)
+	for(ilp::Constraint::TermIterator term(cons); term(); term++)
 		if((*term).snd < 0) {
 			if(first)
 				first = false;

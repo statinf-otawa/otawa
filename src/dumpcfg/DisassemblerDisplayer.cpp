@@ -33,11 +33,11 @@ void DisassemblerDisplayer::processWorkSpace(WorkSpace *ws) {
 		cout << "# Function " << cfg->label() << '\n';
 
 		// display blocks
-		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 
 			// display header
 			cout << "BB " << v->index() << ": ";
-			for(Block::EdgeIter e = v->outs(); e; e++) {
+			for(Block::EdgeIter e = v->outs(); e(); e++) {
 				if(e->sink()->isSynth())
 					cout << " C(" << e->sink()->toSynth()->callee()->label() << ")";
 				else {
@@ -55,12 +55,12 @@ void DisassemblerDisplayer::processWorkSpace(WorkSpace *ws) {
 			// if needed, display code
 			if(v->isBasic()) {
 				BasicBlock *bb = **v;
-				for(BasicBlock::InstIter i(bb); i; i++) {
+				for(BasicBlock::InstIter i(bb); i(); i++) {
 
 					// Put the label
-					for(Identifier<String>::Getter label(i, FUNCTION_LABEL); label; label++)
+					for(Identifier<String>::Getter label(*i, FUNCTION_LABEL); label(); label++)
 						cout << '\t' << *label << ":\n";
-					for(Identifier<String>::Getter label(i, LABEL); label; label++)
+					for(Identifier<String>::Getter label(*i, LABEL); label(); label++)
 						cout << '\t' << *label << ":\n";
 
 					// Disassemble the instruction

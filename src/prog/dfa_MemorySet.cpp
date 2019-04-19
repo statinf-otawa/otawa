@@ -55,11 +55,11 @@ namespace otawa { namespace dfa {
 	// /\	forall a in m -> a.address < a.top
 	bool ordered(MemorySet::t m) {
 		MemorySet::Iter i(m);
-		if(i) {
+		if(i()) {
 			MemArea prev = *i;
 			if(prev.size() == 0)
 				return false;
-			for(i++; i; i++) {
+			for(i++; i(); i++) {
 				if((*i).size() == 0
 				|| prev.topAddress() >= (*i).address())
 					return false;
@@ -551,7 +551,7 @@ MemorySet::t MemorySet::meet(t m1, t m2) {
 io::Output& operator<<(io::Output& out, MemorySet::t mem) {
 	bool f = true;
 	out << "{ ";
-	for(MemorySet::Iter m = mem.areas(); m; m++) {
+	for(MemorySet::Iter m = mem.areas(); m(); m++) {
 		if(f)
 			f = false;
 		else

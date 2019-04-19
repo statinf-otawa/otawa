@@ -36,7 +36,7 @@ public:
 
 	void run(void) {
 		typename A::domain_t::t d;
-		while(_driver) {
+		while(_driver()) {
 			_adapter.update(*_driver, d);
 			_driver.check(d);
 			_driver.next();

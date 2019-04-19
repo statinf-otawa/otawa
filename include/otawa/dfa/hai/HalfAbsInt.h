@@ -171,8 +171,8 @@ inline HalfAbsInt<FixPoint>::~HalfAbsInt(void) {
 	cfgs.add(&entry_cfg);
 	while(cfgs.count()) { // for(int i = 0; i < cfgs.count(); i++)
 		CFG* cfg = cfgs.pop();
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-			for(BasicBlock::EdgeIter out = bb->outs(); out; out++) {
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+			for(BasicBlock::EdgeIter out = bb->outs(); out(); out++) {
 				this->fp.unmarkEdge(*out);
 				if(out->sink()->isSynth() && out->sink()->toSynth()->callee() && !cfgs.contains(out->sink()->toSynth()->callee()))
 					cfgs.addLast(out->sink()->toSynth()->callee());
@@ -252,7 +252,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
          */
 
     	// In any case, the values of the back-edges are not needed anymore
-    	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
+    	for(Block::EdgeIter inedge = current->ins(); inedge(); inedge++) {
     		// TODO no more needed case (isn't it?)
     		// REMOVED: if the header of the loop is a SynthBlock, this will not remove the states from the back edges.
     		//if(inedge->sink()->isSynth())
@@ -274,7 +274,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 
 			// TODO duplication with case above?
 			// The values of the entry edges are not needed anymore
-	    	for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
+	    	for(Block::EdgeIter inedge = current->ins(); inedge(); inedge++) {
 	    		// TODO no more needed
 //	    		if(inedge->sink()->isSynth())
 //					continue;
@@ -293,7 +293,7 @@ void HalfAbsInt<FixPoint>::inputProcessing(typename FixPoint::Domain &entdom) {
 	else {
 
 		// un-mark all the in-edges since the values are not needed.
-		for(Block::EdgeIter inedge = current->ins(); inedge; inedge++) {
+		for(Block::EdgeIter inedge = current->ins(); inedge(); inedge++) {
 			/* TODO fix when inlined virtualization will be re-activated
 			if (HAI_BYPASS_TARGET(current) && (inedge->kind() == Edge::VIRTUAL_RETURN))
 				continue;*/
@@ -326,7 +326,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			HAI_INFINITE_LOOP(current) = true;
 		}
 		else
-	        for (Vector<Edge*>::Iter iter(**EXIT_LIST(current)); iter; iter++) {
+	        for (Vector<Edge*>::Iter iter(**EXIT_LIST(current)); iter(); iter++) {
 	           	HAI_TRACE("\t\tpushing edge " << iter->source() << " -> " << iter->target());
 				if(!alreadyAdded.contains(iter->target()) && tryAddToWorkList(iter->target()))
 	           		alreadyAdded.add(iter->target());
@@ -362,8 +362,8 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 		// such edges could be created as a result of slicing
 		Block* b = edge->source();
 
-		for(Block::EdgeIter bei = b->outs(); bei; bei++) {
-			fp.markEdge(bei, out);
+		for(Block::EdgeIter bei = b->outs(); bei(); bei++) {
+			fp.markEdge(*bei, out);
 
 			tryAddToWorkList(bei->sink());
 		}
@@ -373,7 +373,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 	// from synthetic block
 	else if(current->isSynth()) {
 		// TODO		Support for multiple successors in leaving edge
-		Edge *return_edge = current->outs();
+		Edge *return_edge = *current->outs();
 
 		// unknown CFG
 		if(!current->toSynth()->callee()) {
@@ -382,7 +382,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			fp.markEdge(return_edge, out);
 			workList->push(return_edge->sink());
 		}
-		else if(current->toSynth()->callee()->exit()->ins() == 0) { // the CFG contains an endless loop such that it never returns
+		else if(!current->toSynth()->callee()->exit()->ins()) { // the CFG contains an endless loop such that it never returns
 			fp.assign(out, fp.bottom());
 			fp.markEdge(return_edge, out);
 			tryAddToWorkList(return_edge->target());
@@ -423,7 +423,7 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 template <class FixPoint>
 void HalfAbsInt<FixPoint>::addSuccessors() {
 
-	for(Block::EdgeIter outedge = current->outs(); outedge; outedge++) {
+	for(Block::EdgeIter outedge = current->outs(); outedge(); outedge++) {
 
 		/*if(outedge->sink()->isSynth())
 	    	continue;*/
@@ -519,7 +519,7 @@ int HalfAbsInt<FixPoint>::solve(otawa::CFG *main_cfg, typename FixPoint::Domain 
 
 		if(!current->isExit() && workList->isEmpty()) {
 			// now we need to check the out-going edge
-			for(Block::EdgeIter bei=current->outs(); bei; bei++) {
+			for(Block::EdgeIter bei=current->outs(); bei(); bei++) {
 				if(bei->target() != current)
 					if(!HAI_INFINITE_LOOP(current))
 						ASSERTP(false, "HalfAbsInt finishes at CFG " << current->cfg()->index() << ", " << current << ", does not end with the exit block. (iteration = " << iterations << ")");
@@ -546,7 +546,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(Block *bb) 
         	/* If this is the first iteration, the back edge union is Bottom. */
         	return(result);
         }
-        for(Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+        for(Block::EdgeIter inedge = bb->ins(); inedge(); inedge++) {
         		if(inedge->sink()->isSynth())
             			continue;
         		else if (Dominance::dominates(bb, inedge->source())) {
@@ -570,7 +570,7 @@ inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(Block *bb)
 	typename FixPoint::Domain result(fp.bottom());
 
 	HAI_TRACE("\t\tunion of input edges");
-	for(Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+	for(Block::EdgeIter inedge = bb->ins(); inedge(); inedge++) {
 		// REMOVED: this statement needs to be removed otherwise the state from the input edge to a SynthBlock will not be used.
 		//if (inedge->sink()->isSynth())
 		//	continue;
@@ -607,7 +607,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
     }
 
 	else { // for the other kinds of blocks
-		for (Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+		for (Block::EdgeIter inedge = bb->ins(); inedge(); inedge++) {
 			// 1. with program slicing, it is possible to have a synth block connecting to a synth block directly
 			// to be safe, we check every incoming edge to the block
 			// 2. the function isEdgeDone checks if the edge is the exit edge of a loop header, and see if the loop header reaches the fix-point. if it doesnt, then return false
@@ -628,7 +628,7 @@ inline bool HalfAbsInt<FixPoint>::tryAddToWorkList(Block *bb) {
 		}
     }
 	if(add)
-		for (Block::EdgeIter inedge = bb->ins(); inedge; inedge++) {
+		for (Block::EdgeIter inedge = bb->ins(); inedge(); inedge++) {
 #		ifdef WITHOUT_SLICING
 			if(inedge->sink()->isSynth())
 				continue;

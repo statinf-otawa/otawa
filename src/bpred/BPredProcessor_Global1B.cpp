@@ -100,7 +100,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 
 	// creation des classes d'appartenance des branchements A PARTIR DU BHG (indirectement depuis les BCG)
 	HashMap<Block*,elm::Vector<BCGNode*> > BB_classes;
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		elm::Vector<BCGNode*> list_nodes;
 		
 		for(int i = 0 ; i < bcgs.length();++i) {
@@ -109,27 +109,27 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 				if(n->getCorrespondingBBNumber() == bb->index()) { list_nodes.add(n);break; }
 		}
 		
-		if(list_nodes.length()>0) BB_classes.add(bb,list_nodes);
+		if(list_nodes.length()>0) BB_classes.add(*bb, list_nodes);
 	}
 
 	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes_BBHG;
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		elm::Vector<BBHGNode*> v;
 		for(auto node: *bbhg) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
 		}
-		BB_classes_BBHG.add(bb,v);
+		BB_classes_BBHG.add(*bb,v);
 	}
 	
 	
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		Var *Xb=ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		Var *Xb=ipet::VAR(*bb);
 		ASSERT(Xb);
 
-		if(BB_classes.exists(bb)) {
-			elm::Vector<BCGNode*> v = BB_classes.get(bb);
+		if(BB_classes.exists(*bb)) {
+			elm::Vector<BCGNode*> v = BB_classes.get(*bb);
 			
 			
 			for(int i = 0 ;  i < v.length() ; i++) {
@@ -245,15 +245,15 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	// C22:
 	////////				
 #if C22_1b>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		Var *Xb=ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		Var *Xb=ipet::VAR(*bb);
 		ASSERT(Xb);
-		if(BB_classes.exists(bb)) {
-			elm::Vector<BCGNode*> v = BB_classes.get(bb);
+		if(BB_classes.exists(*bb)) {
+			elm::Vector<BCGNode*> v = BB_classes.get(*bb);
 			
-			for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+			for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 				bool d = edge->isTaken();
-				Var *Eb_sd = ipet::VAR(edge);
+				Var *Eb_sd = ipet::VAR(*edge);
 				for(int i=0;i<v.length();i++) {
 					NEW_SPECIAL_CONSTRAINT(C22,EQ,0);
 					Var *Eb_sdApi;
@@ -314,17 +314,17 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	// P1:
 	///////
 #if P1_1b>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(!BB_classes.exists(bb)) {
-			elm::Vector<BBHGNode*> v = BB_classes_BBHG.get(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(!BB_classes.exists(*bb)) {
+			elm::Vector<BBHGNode*> v = BB_classes_BBHG.get(*bb);
 			for(int i=0;i<v.length();i++) {
-				for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+				for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 					Var* Mb_dApi;
 					NEW_SPECIAL_CONSTRAINT(P1,EQ,0);
 					NEW_VAR_FROM_BUFF(Mb_dApi, "m" << bb->index() << "_" << edge->target()->index() << "A" << BitSet_to_String(v[i]->getHistory()) );
 					P1->addRight(1,Mb_dApi);
 				}
-				if(bb == cfg->exit()) {
+				if(*bb == cfg->exit()) {
 					Var* Mb_endApi;
 					NEW_SPECIAL_CONSTRAINT(P1,EQ,0);
 					NEW_VAR_FROM_BUFF(Mb_endApi, "m" << bb->index() << "_endA" << BitSet_to_String(v[i]->getHistory()) );
@@ -340,10 +340,10 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	// P21_24:
 	///////////
 #if P21_24_1b>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(BB_classes.exists(bb)) {
-			elm::Vector<BCGNode*> v = BB_classes.get(bb);
-			Var *Xb=ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(BB_classes.exists(*bb)) {
+			elm::Vector<BCGNode*> v = BB_classes.get(*bb);
+			Var *Xb=ipet::VAR(*bb);
 			ASSERT(Xb);
 			for(int i = 0 ; i < v.length() ; i++ ) {
 				NEW_SPECIAL_CONSTRAINT(P21,LE,0);
@@ -351,7 +351,7 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 				NEW_SPECIAL_CONSTRAINT(P23,LE,0);
 				NEW_SPECIAL_CONSTRAINT(P24,LE,0);
 				Var *Mb_sApiD0, *Mb_sApiD1;
-				for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+				for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 
 					if(edge->isTaken()) {
 						NEW_VAR_FROM_BUFF(Mb_sApiD1, "m" << bb->index() << "_" << edge->target()->index() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -425,20 +425,20 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	// P3:
 	///////
 #if P3_1b>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		int cpt_e =0;
-		for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+		for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 			if(edge->isTaken() || edge->isNotTaken()) cpt_e++;
 		}
 		if(cpt_e==2) { // branchement 
-			for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+			for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 				NEW_SPECIAL_CONSTRAINT(P3,EQ,0);
 				if(edge->isTaken()) {
 					Var *Mb_s;
 					NEW_VAR_FROM_BUFF(Mb_s,"m" << bb->index() << "_" << edge->target()->index() );
 					P3->addLeft(1,Mb_s);
-					if(BB_classes.exists(bb)) {
-						elm::Vector<BCGNode*> v = BB_classes.get(bb);
+					if(BB_classes.exists(*bb)) {
+						elm::Vector<BCGNode*> v = BB_classes.get(*bb);
 						for(int i = 0 ; i<v.length();++i) {
 							Var *Mb_sApi;
 							NEW_VAR_FROM_BUFF(Mb_sApi,Mb_s->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -452,8 +452,8 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 					Var *Mb_s;
 					NEW_VAR_FROM_BUFF(Mb_s,"m" << bb->index() << "_" << edge->target()->index() );
 					P3->addLeft(1,Mb_s);
-					if(BB_classes.exists(bb)) {
-						elm::Vector<BCGNode*> v = BB_classes.get(bb);
+					if(BB_classes.exists(*bb)) {
+						elm::Vector<BCGNode*> v = BB_classes.get(*bb);
 						for(int i = 0 ; i<v.length();++i) {
 							Var *Mb_sApi;
 							NEW_VAR_FROM_BUFF(Mb_sApi,Mb_s->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -472,16 +472,16 @@ void BPredProcessor::CS__Global1b(WorkSpace *fw, CFG *cfg, BHG *bhg,BBHG *bbhg, 
 	// H5_mitra:
 	/////////////
 #if H5_mitra>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(BB_classes_BBHG.exists(bb)) {
-			Var *Xb=ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(BB_classes_BBHG.exists(*bb)) {
+			Var *Xb=ipet::VAR(*bb);
 			ASSERT(Xb);
 			
 		
-			elm::Vector<BBHGNode*> v=BB_classes_BBHG.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes_BBHG.get(*bb);
 	
 			for(int i=0;i<v.length();++i) {
-				for(Block::EdgeIter edge = v[i]->getCorrespondingBB()->outs();edge;edge++) {
+				for(Block::EdgeIter edge = v[i]->getCorrespondingBB()->outs();edge();edge++) {
 					NEW_SPECIAL_CONSTRAINT(H5,LE,0);
 					Var *XbApi, *MbApi;
 					NEW_VAR_FROM_BUFF(XbApi,Xb->name() << "A" << BitSet_to_String(v[i]->getHistory()));
@@ -513,14 +513,14 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 
 	
 	HashMap<Block*, elm::Vector<BBHGNode*> > BB_classes;
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		elm::Vector<BBHGNode*> v;
 		for(auto node: *bbhg) {
 			if(node->getCorrespondingBB()->index() == bb->index()) {
 				v.add(node);
 			}
 		}
-		BB_classes.add(bb,v);
+		BB_classes.add(*bb,v);
 	}
 	
 	
@@ -528,15 +528,15 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 	// H1_mitra:
 	/////////////
 #if H1_mitra>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 		NEW_SPECIAL_CONSTRAINT(H1,EQ,0);
-		Var *Xb=ipet::VAR(bb);
+		Var *Xb=ipet::VAR(*bb);
 		ASSERT(Xb);
 		
 		H1->addLeft(1,Xb);
 		
-		if(BB_classes.exists(bb)) {
-			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
+		if(BB_classes.exists(*bb)) {
+			elm::Vector<BBHGNode*> v=BB_classes.get(*bb);
 	
 			for(int i=0;i<v.length();++i) {
 				Var *XbApi;
@@ -556,13 +556,13 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 	// H41_mitra:
 	/////////////
 #if H41_mitra>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
 
-		if(BB_classes.exists(bb)) {
-			Var *Xb=ipet::VAR(bb);
+		if(BB_classes.exists(*bb)) {
+			Var *Xb=ipet::VAR(*bb);
 			ASSERT(Xb);
 
-			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes.get(*bb);
 	
 			for(int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H41,EQ,0);
@@ -595,12 +595,12 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 	// H42_mitra:
 	/////////////
 #if H42_mitra>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		if(BB_classes.exists(bb)) {
-			Var *Xb=ipet::VAR(bb);
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		if(BB_classes.exists(*bb)) {
+			Var *Xb=ipet::VAR(*bb);
 			ASSERT(Xb);
 
-			elm::Vector<BBHGNode*> v=BB_classes.get(bb);
+			elm::Vector<BBHGNode*> v=BB_classes.get(*bb);
 	
 			for(int i=0;i<v.length();++i) {
 				NEW_SPECIAL_CONSTRAINT(H42,EQ,0);
@@ -642,16 +642,16 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
 	// H2_mitra:
 	/////////////
 #if H2_mitra>0
-	for(CFG::BlockIter bb = cfg->blocks();bb;bb++) {
-		for(Block::EdgeIter edge = bb->outs();edge;edge++) {
+	for(CFG::BlockIter bb = cfg->blocks();bb();bb++) {
+		for(Block::EdgeIter edge = bb->outs();edge();edge++) {
 			NEW_SPECIAL_CONSTRAINT(H2,EQ,0);
-			Var *eb_s=ipet::VAR(edge);
+			Var *eb_s=ipet::VAR(*edge);
 			ASSERT(eb_s);
 			H2->addLeft(1,eb_s);
 			
 			
-			if(BB_classes.exists(bb)) {
-				elm::Vector<BBHGNode*> v=BB_classes.get(bb);
+			if(BB_classes.exists(*bb)) {
+				elm::Vector<BBHGNode*> v=BB_classes.get(*bb);
 				HashMap<Var* ,Var*> hist_done;
 				for(int i = 0 ; i<v.length();++i) {
 					for(auto s: v[i]->outEdges()) {
@@ -682,7 +682,7 @@ void BPredProcessor::CS__Global1b_mitra(WorkSpace *fw, CFG *cfg, BBHG* bbhg, Has
  */
 bool BPredProcessor::isBranch(Block* bb) {
 	int nb_edges=0;
-	for(Block::EdgeIter edge = bb->outs();edge;edge++)
+	for(Block::EdgeIter edge = bb->outs();edge();edge++)
 		if(edge->isTaken() || edge->isNotTaken())
 			nb_edges++;
 	
@@ -745,7 +745,7 @@ void BPredProcessor::generateBBHG(CFG* cfg,BBHG& bbhg) {
 	
 ////////////////////
 				bool isBr=isBranch(courant->getCorrespondingBB());
-				for(Block::EdgeIter edge = courant->getCorrespondingBB()->outs();edge;edge++) {
+				for(Block::EdgeIter edge = courant->getCorrespondingBB()->outs();edge();edge++) {
 					BBHGNode *n;
 					if(isBr) {
 						if(edge->isTaken()) {

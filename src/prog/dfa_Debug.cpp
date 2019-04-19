@@ -61,11 +61,11 @@ Debug::Debug(WorkSpace *ws, sys::Path path): saver(path), in_state(false), faile
 	saver.beginObject();
 	saver.addField("graph");
 	saver.beginArray();
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 			saver.beginObject();
 			saver.addField("id");
-			saver.put(id(cfg, bb));
+			saver.put(id(*cfg, *bb));
 			saver.addField("text");
 			saver.put(_ << *cfg << " / " << *bb);
 			saver.addField("to");
@@ -79,9 +79,9 @@ Debug::Debug(WorkSpace *ws, sys::Path path): saver(path), in_state(false), faile
 					cerr << "DEBUG: call from " << *call << io::endl;
 				}
 			else if(bb->isBasic())
-				for(Block::EdgeIter e = bb->outs(); e; e++) {
+				for(Block::EdgeIter e = bb->outs(); e(); e++) {
 					if(!e->sink()->isSynth())
-						saver.put(id(cfg, e->target()));
+						saver.put(id(*cfg, e->target()));
 					else {
 						SynthBlock *sb = e->sink()->toSynth();
 						saver.put(id(sb->callee(), sb->callee()->entry()));

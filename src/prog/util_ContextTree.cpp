@@ -47,10 +47,10 @@ public:
 protected:
 	virtual void clean() {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
-			if(CONTEXT_TREE(cfg).exists()) {
-				delete CONTEXT_TREE(cfg);
-				CONTEXT_TREE(cfg).remove();
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
+			if(CONTEXT_TREE(*cfg).exists()) {
+				delete CONTEXT_TREE(*cfg);
+				CONTEXT_TREE(*cfg).remove();
 			}
 		}
 	}
@@ -95,7 +95,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	_cfg(cfg),
 	_parent(parent)
 {
-	for(Block::EdgeIter ei=cfg->entry()->outs(); ei; ei++)
+	for(Block::EdgeIter ei=cfg->entry()->outs(); ei(); ei++)
 		_bb = ei->target()->toBasic();
 
 	ASSERT(cfg);
@@ -104,36 +104,36 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	/*
 	 * First, create a ContextTree for each loop.
 	 */
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-		if (LOOP_HEADER(bb)) {
-			OWNER_CONTEXT_TREE(bb) = new ContextTree(bb->toBasic(), cfg, this);
-			OWNER_CONTEXT_TREE(bb)->addBlock(bb, _inline);
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+		if (LOOP_HEADER(*bb)) {
+			OWNER_CONTEXT_TREE(*bb) = new ContextTree(bb->toBasic(), cfg, this);
+			OWNER_CONTEXT_TREE(*bb)->addBlock(*bb, _inline);
 		}
 	}
 	/*
 	 * Then, link each ContextTree to its parents.
 	 */
-	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-		if (LOOP_HEADER(bb)) {
+	for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+		if (LOOP_HEADER(*bb)) {
 			/* Loop header: add the ContextTree to its parent ContextTree */
-			if (!ENCLOSING_LOOP_HEADER(bb)) {
+			if (!ENCLOSING_LOOP_HEADER(*bb)) {
 				/* The loop is not in another loop: add to the root context tree. */
-				addChild(OWNER_CONTEXT_TREE(bb));
+				addChild(OWNER_CONTEXT_TREE(*bb));
 			} else {
 				/* The loop is in another loop, add to the outer loop's context tree. */
-				OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(bb))->addChild(OWNER_CONTEXT_TREE(bb));
+				OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(*bb))->addChild(OWNER_CONTEXT_TREE(*bb));
 			}
 		} else {
 			/* Not loop header: add the BasicBlock to its ContextTree */		
-			if (!ENCLOSING_LOOP_HEADER(bb)) {
+			if (!ENCLOSING_LOOP_HEADER(*bb)) {
 				/* bb is not in a loop: add bb to the root ContextTree */
-				addBlock(bb, _inline);
-				OWNER_CONTEXT_TREE(bb)=this;			
+				addBlock(*bb, _inline);
+				OWNER_CONTEXT_TREE(*bb)=this;
 			} else {
 				/* The bb is in a loop: add the bb to the loop's ContextTree. */
-				ContextTree *parent = OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(bb));
-				parent->addBlock(bb, _inline);
-				OWNER_CONTEXT_TREE(bb) = parent;
+				ContextTree *parent = OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(*bb));
+				parent->addBlock(*bb, _inline);
+				OWNER_CONTEXT_TREE(*bb) = parent;
 			}
 		}
 	}	

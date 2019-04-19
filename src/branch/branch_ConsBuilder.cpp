@@ -133,17 +133,17 @@ void OnlyConsBuilder::genAlwaysDefault(ilp::model& model, ilp::var x_mp, BasicBl
 		// if default = not-taken then x^mp_i = x_T,i
 		if(def == hard::PREDICT_NOT_TAKEN) {
 			ilp::cons c = model(ad_msg) + x_mp == 0;
-			for(Block::EdgeIter e = bb->outs(); e; e++)
+			for(Block::EdgeIter e = bb->outs(); e(); e++)
 				if(e->isTaken())
-					c += *VAR(e);
+					c += *VAR(*e);
 		}
 
 		// else (default = taken) x^mp_i = x_NT,i
 		else {
 			ilp::cons c = model(ad_msg) + x_mp == 0;
-			for(Block::EdgeIter e = bb->outs(); e; e++)
+			for(Block::EdgeIter e = bb->outs(); e(); e++)
 				if(e->isNotTaken())
-					c += *VAR(e);
+					c += *VAR(*e);
 		}
 
 	}
@@ -153,15 +153,15 @@ void OnlyConsBuilder::genAlwaysDefault(ilp::model& model, ilp::var x_mp, BasicBl
 
 		// x^mp >= x_T,F
 		cons c1 = model(ad_msg) + x_mp >= 0;
-		for(Block::EdgeIter e = bb->outs(); e; e++)
+		for(Block::EdgeIter e = bb->outs(); e(); e++)
 			if(e->isTaken() && e->isForward())
-				c1 += *VAR(e);
+				c1 += *VAR(*e);
 
 		// x^mp <= x_NT + x_T,F
 		cons c2 = model(ad_msg) + x_mp <= 0;
-		for(Block::EdgeIter e = bb->outs(); e; e++)
+		for(Block::EdgeIter e = bb->outs(); e(); e++)
 			if(e->isNotTaken() || e->isForward())
-				c2 += *VAR(e);
+				c2 += *VAR(*e);
 	}
 
 }
@@ -177,15 +177,15 @@ void OnlyConsBuilder::genAlwaysHit(ilp::model& model, ilp::var x_mp, BasicBlock 
 
 	// x_mp <= 2 x_T + 2
 	cons c1 = model(ah_msg) + x_mp <= 2;
-	for(Block::EdgeIter e = bb->outs(); e; e++)
+	for(Block::EdgeIter e = bb->outs(); e(); e++)
 		if(e->isTaken())
-			c1 += 2 * var(VAR(e));
+			c1 += 2 * var(VAR(*e));
 
 	// x_mp <= 2 x_NT + 2
 	cons c2 = model(ah_msg) + x_mp <= 2;
-	for(Block::EdgeIter e = bb->outs(); e; e++)
+	for(Block::EdgeIter e = bb->outs(); e(); e++)
 		if(e->isNotTaken())
-			c2 += 2 * var(VAR(e));
+			c2 += 2 * var(VAR(*e));
 
 	// x_mp <= x_i
 	model(ah_msg) + x_mp <= *VAR(bb);
@@ -204,21 +204,21 @@ void OnlyConsBuilder::genFirstUnknown(ilp::model& model, ilp::var x_mp, BasicBlo
 
 	// x_mp <= 2 x_T + 2 sum{(i,h) /\ h not-dom i} x_i,h
 	cons c1 = model(fu_msg) + x_mp <= 0;
-	for(Block::EdgeIter e = bb->outs(); e; e++)
+	for(Block::EdgeIter e = bb->outs(); e(); e++)
 		if(e->isTaken())
-			c1 += 2 * var(VAR(e));
-	for(Block::EdgeIter e = h->ins(); e; e++)
+			c1 += 2 * var(VAR(*e));
+	for(Block::EdgeIter e = h->ins(); e(); e++)
 		if(!Dominance::dominates(h, e->sink()))
-			c1 += 2 * var(VAR(e));
+			c1 += 2 * var(VAR(*e));
 
 	// x_mp <= 2 x_NT + + 2 sum{(i,h) /\ h not-dom i} x_i,h
 	cons c2 = model(fu_msg) + x_mp <= 0;
-	for(Block::EdgeIter e = bb->outs(); e; e++)
+	for(Block::EdgeIter e = bb->outs(); e(); e++)
 		if(e->isNotTaken())
-			c2 += 2 * var(VAR(e));
-	for(Block::EdgeIter e = h->ins(); e; e++)
+			c2 += 2 * var(VAR(*e));
+	for(Block::EdgeIter e = h->ins(); e(); e++)
 		if(!Dominance::dominates(h, e->sink()))
-			c2 += 2 * var(VAR(e));
+			c2 += 2 * var(VAR(*e));
 
 	// x_mp <= x_i
 	model(fu_msg) + x_mp <= *VAR(bb);

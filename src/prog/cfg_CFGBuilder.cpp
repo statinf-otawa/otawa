@@ -64,8 +64,8 @@ void CFGBuilder::setup(WorkSpace *ws) {
 		if(logFor(LOG_FUN))
 			log << "\tadded function for _start at " << start->address() << io::endl;
 	}
-	for(Process::FileIter file(ws->process()); file; file++)
-		for(File::SymIter sym(file); sym; sym++)
+	for(Process::FileIter file(ws->process()); file(); file++)
+		for(File::SymIter sym(*file); sym(); sym++)
 			if(sym->kind() == Symbol::FUNCTION) {
 				Inst *inst = ws->findInstAt(sym->address());
 				if(!inst)

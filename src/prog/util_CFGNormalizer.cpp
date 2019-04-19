@@ -90,15 +90,15 @@ void CFGNormalizer::transform(CFG *cfg, CFGMaker& maker) {
 		alive.add(b->index());
 
 		// propagate to predecessors
-		for(Block::EdgeIter e = b->ins(); e; e++)
+		for(Block::EdgeIter e = b->ins(); e(); e++)
 			if(!alive.contains(e->source()->index()))
 				wl.put(e->source());
 	}
 
 	// find block unreachable from exit in reversed CFG
-	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++)
 		if(alive.contains(b->index()))
-			for(Block::EdgeIter e = b->outs(); e; e++)
+			for(Block::EdgeIter e = b->outs(); e(); e++)
 				if(!alive.contains(e->sink()->index())) {
 					if(!force)
 						throw ProcessorException(*this, _ << "block " << e->sink() << " is the start of a dead-end. CFG will result in errors.");
@@ -108,15 +108,15 @@ void CFGNormalizer::transform(CFG *cfg, CFGMaker& maker) {
 				}
 
 	// clone alive blocks
-	for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++) {
 		if(!b->isEnd() && alive.contains(b->index()))
 			CFGTransformer::transform(*b);
 	}
 
 	// clone alive edges
-	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++)
 		if(alive.contains(b->index()))
-			for(Block::EdgeIter e = b->outs(); e; e++)
+			for(Block::EdgeIter e = b->outs(); e(); e++)
 				if(alive.contains(e->sink()->index()))
 					CFGTransformer::transform(*e);
 }

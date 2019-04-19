@@ -23,10 +23,11 @@
 
 #include <elm/assert.h>
 #include <elm/data/List.h>
+#include <elm/data/Range.h>
 #include <otawa/prog/Inst.h>
 #include <otawa/prop/PropList.h>
-#include "../graph/DiGraph.h"
-#include "../prog/Bundle.h"
+#include <otawa/graph/DiGraph.h>
+#include <otawa/prog/Bundle.h>
 
 using namespace elm;
 
@@ -159,17 +160,33 @@ public:
 	inline InstIter begin(void) const { return _insts.begin(); }
 	inline InstIter end(void) const { return _insts.end(); }
 
+	class BundleInstIter: public PreIterator<InstIter, Inst *> {
+	public:
+		inline BundleInstIter(): done(true) { }
+		inline BundleInstIter(const InstIter& _i): done(false), i(_i) { }
+		inline BundleInstIter(const BaseBundle<BundleInstIter>& b): done(false), i(b.iter().i) { }
+		inline bool ended(void) const { return done; }
+		inline Inst *item(void) const { return *i; }
+		inline void next(void) { done = i->isBundleEnd(); if(!done) i++; }
+		inline bool equals(const BundleInstIter& it) { return done == it.done && i == it.i; }
+	private:
+		bool done;
+		InstIter i;
+	};
+	typedef BaseBundle<BundleInstIter> Bundle;
+
 	class BundleIter: public PreIterator<BundleIter, Bundle> {
 	public:
 		inline BundleIter(void) { }
 		inline BundleIter(const BasicBlock *bb): _iter(bb) { }
-		inline Bundle item(void) const { return Bundle(_iter.item()); }
+		inline Bundle item(void) const { return Bundle(_iter); }
 		inline bool ended(void) const { return _iter.ended(); }
 		inline void next(void) { while(!ended() && _iter->isBundle()) _iter.next(); _iter.next(); }
 	private:
 		InstIter _iter;
 	};
-	inline BundleIter bundles(void) const { return BundleIter(this); }
+	//inline BundleIter bundles(void) const { return BundleIter(this); }
+	inline Range<BundleIter> bundles() const { return Range<BundleIter>(BundleIter(this), BundleIter()); }
 
 	class BasicEdge {
 	public:

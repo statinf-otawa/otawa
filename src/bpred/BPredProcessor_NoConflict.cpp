@@ -108,13 +108,13 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 
 		// edge
 			// creation des variables
-			for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+			for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 				if(edge->isTaken()) {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-					EdgeT = ipet::VAR( edge);
+					EdgeT = ipet::VAR(* edge);
 					ASSERT(EdgeT);
 				}
 				else {// WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
-					EdgeNT = ipet::VAR(edge);
+					EdgeNT = ipet::VAR(*edge);
 					ASSERT(EdgeNT);
 					//					NEW_VAR_FROM_BUFF(EdgeNT, 	"e" << bb->number() << "_" << edge->target()->number());
 				}
@@ -125,7 +125,7 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
 		
 		// wrong
 			// creation des variables
-			for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+			for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 				if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 					NEW_VAR_FROM_BUFF(WrongT,	"m" << bb->index() << "_" << edge->target()->index())
 				}
@@ -254,11 +254,11 @@ void BPredProcessor::CS__NoConflict_2bCounter(WorkSpace* fw,BasicBlock* bb) {
  * @param cfg	CFG to extract the branches from.
  */
 void BPredProcessor::processCFG__NoConflict_2bCounter(WorkSpace *fw, CFG *cfg) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 
 		unsigned int nb_OE = 0;
 		// Parcours des OutEdges
-		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 			if(edge->isTaken()) nb_OE++;
 			else nb_OE++;

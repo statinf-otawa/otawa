@@ -239,9 +239,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, must_entry ? must_entry->get(line) : 0);
 
 
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+					CACHE_ACS_MUST(*bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
 
 		} else {
 			dfa::hai::DefaultListener<MUSTProblem> mustList(fw, mustProb);
@@ -251,9 +251,9 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 
 
 			/* Store the resulting ACS into the properties */
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+					CACHE_ACS_MUST(*bb)->add(new MUSTProblem::Domain(*mustList.results[cfg->index()][bb->index()]));
 		}
 	} else {
 		if (unrolling) {
@@ -268,12 +268,12 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
 					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
-					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
+					CACHE_ACS_MUST(*bb)->add(new MUSTProblem::Domain(must));
+					CACHE_ACS_PERS(*bb)->add(new PERSProblem::Domain(pers));
 
 				}
 		} else {
@@ -289,12 +289,12 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard::C
 			mustHai.solve(0, &entry, 0);
 
 			/* Store. */
-			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-				for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 					const MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
 					const PERSProblem::Domain &pers= mustpersList.results[cfg->index()][bb->index()]->getPers();
-					CACHE_ACS_MUST(bb)->add(new MUSTProblem::Domain(must));
-					CACHE_ACS_PERS(bb)->add(new PERSProblem::Domain(pers));
+					CACHE_ACS_MUST(*bb)->add(new MUSTProblem::Domain(must));
+					CACHE_ACS_PERS(*bb)->add(new PERSProblem::Domain(pers));
 			}
 		}
 	}
@@ -321,11 +321,11 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 
 	FIRSTMISS_LEVEL(fw) = level;
 	// Build the vectors for receiving the ACS...
-	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
-		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-			CACHE_ACS_MUST(bb) = new Vector<MUSTProblem::Domain*>;
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
+		for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+			CACHE_ACS_MUST(*bb) = new Vector<MUSTProblem::Domain*>;
 			if (level != FML_NONE)
-				CACHE_ACS_PERS(bb) = new Vector<PERSProblem::Domain*>;
+				CACHE_ACS_PERS(*bb) = new Vector<PERSProblem::Domain*>;
 		}
 	}
 

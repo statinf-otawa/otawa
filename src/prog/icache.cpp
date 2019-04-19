@@ -106,7 +106,7 @@ protected:
 		BasicBlock::BundleIter bundle(bb);
 
 		// first bundle of the block (no last block)
-		if(bundle) {
+		if(bundle()) {
 			// First bundle access
 			accs.add(icache::Access(icache::FETCH, *bundle, (*bundle).address()));
 			last_block = icache->round((*bundle).address());
@@ -117,7 +117,7 @@ protected:
 		}
 
 		// process following bundle
-		for(; bundle; ++bundle) {
+		for(; bundle(); ++bundle) {
 
 			// Last bundle crossed cache block boundary
 			if(icache->round((*bundle).address() - 1) != last_block) {
@@ -209,7 +209,7 @@ protected:
 		BasicBlock::BundleIter bundle(bb);
 
 		// first bundle of the block (no last block)
-		if(bundle) {
+		if(bundle()) {
 			// First bundle access
 			accs.add(icache::Access(icache::FETCH, *bundle, (*bundle).address()));
 			last_block = icache->round((*bundle).address());
@@ -220,7 +220,7 @@ protected:
 		}
 
 		// process following bundle
-		for(; bundle; ++bundle) {
+		for(; bundle(); ++bundle) {
 
 			// Last bundle crossed cache block boundary
 			if(icache->round((*bundle).address() - 1) != last_block) {
@@ -249,8 +249,8 @@ protected:
 		}
 
 		// build the property
-		for(Block::EdgeIter e = bb->ins(); e; e++)
-			ACCESSES(e) = accs;
+		for(Block::EdgeIter e = bb->ins(); e(); e++)
+			ACCESSES(*e) = accs;
 		accs.clear();
 	}
 

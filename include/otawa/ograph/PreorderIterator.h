@@ -49,11 +49,11 @@ public:
 	void next(void) {
 		typename G::Vertex node = queue.get();
 		visited.set(_graph.indexOf(node));
-		for(typename G::OutIterator succ(_graph, node); succ; succ++)
+		for(typename G::OutIterator succ(_graph, node); succ(); succ++)
 			if(!queued.bit(_graph.indexOf(succ->target()))) {
 				ASSERT(!visited.bit(_graph.indexOf(succ->target())));
 				bool check = true;
-				for(typename G::InIterator pred(succ->target()); pred; pred++) {
+				for(typename G::InIterator pred(succ->target()); pred(); pred++) {
 					check = visited.bit(_graph.indexOf(pred->source()));
 					if(!check)
 						break;

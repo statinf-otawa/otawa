@@ -110,15 +110,15 @@ protected:
 		// traverse the program
 		const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 		ASSERT(cfgs);
-		for(CFGCollection::Iter cfg(cfgs); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgs); cfg(); cfg++) {
 			if(logFor(LOG_FUN))
 				log << "\tfunction " << *cfg << io::endl;
-			for(CFG::BlockIter b = cfg->blocks(); b; b++) {
+			for(CFG::BlockIter b = cfg->blocks(); b(); b++) {
 				if(b->hasProp(icache::ACCESSES))
-					collect(map, *icache::ACCESSES(b), vecs, cache);
-				for(Block::EdgeIter e = b->outs(); e; e++)
+					collect(map, *icache::ACCESSES(*b), vecs, cache);
+				for(Block::EdgeIter e = b->outs(); e(); e++)
 					if(e->hasProp(icache::ACCESSES))
-						collect(map, *icache::ACCESSES(e), vecs, cache);
+						collect(map, *icache::ACCESSES(*e), vecs, cache);
 			}
 		}
 

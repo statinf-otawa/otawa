@@ -79,8 +79,8 @@ protected:
 		WorkSpace *ws = workspace();
 
 		// put the symbols
-		for(Process::FileIter file(workspace()->process()); file; file++)
-			for(File::SymIter sym(file); sym; sym++) {
+		for(Process::FileIter file(workspace()->process()); file(); file++)
+			for(File::SymIter sym(*file); sym(); sym++) {
 				if(sym->kind() == Symbol::FUNCTION || sym->kind() == Symbol::LABEL) {
 					Inst *inst = workspace()->findInstAt(sym->address());
 					if(isVerbose())
@@ -112,10 +112,10 @@ protected:
 			cerr << "no entry to process\n";
 
 		// Look the function symbols
-		for(Process::FileIter file(ws->process()); file; file++)
-			for(File::SymIter sym(file); sym; sym++)
+		for(Process::FileIter file(ws->process()); file(); file++)
+			for(File::SymIter sym(*file); sym(); sym++)
 				if(sym->kind() == Symbol::FUNCTION) {
-					if(IGNORE_ENTRY(sym))
+					if(IGNORE_ENTRY(*sym))
 						cerr << "INFO: ignoring function symbol \"" << sym->name() << "\"\n";
 					else {
 						cerr << "ENTRY: processing function \"" << sym->name() << " at " << sym->address() << io::endl;
@@ -129,16 +129,16 @@ protected:
 				}
 
 		// dump the instructions
-		for(Process::FileIter file(workspace()->process()); file; file++) {
+		for(Process::FileIter file(workspace()->process()); file(); file++) {
 			cout << "FILE: " << file->name() << io::endl;
-			for(File::SegIter seg(file); seg; seg++) {
+			for(File::SegIter seg(*file); seg(); seg++) {
 				cout << "SEGMENT: " << seg->name();
-				for(Segment::ItemIter item(seg); item; item++) {
+				for(Segment::ItemIter item(*seg); item(); item++) {
 					Inst *inst = item->toInst();
 					if(inst) {
 						if(MARKER(inst))
 							cout << io::endl;
-						for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym; sym++)
+						for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym(); sym++)
 							cout << "\t" << sym->name() << ":\n";
 						cout << "\t\t" << inst->address() << "  ";
 						if(inst->isUnknown()) {
@@ -149,7 +149,7 @@ protected:
 							cout << inst;
 						if(MARKER(inst)) {
 							bool fst = true;
-							for(Identifier<Inst *>::Getter from(inst, FROM); from; from++) {
+							for(Identifier<Inst *>::Getter from(inst, FROM); from(); from++) {
 								cout << (fst ? "\tfrom " : ", ");
 								fst = false;
 								cout << from->address();
@@ -286,9 +286,9 @@ private:
 				}
 				else if(!target) {
 					bool one = false;
-					for(Identifier<Address>::Getter target(control, BRANCH_TARGET); target; target++) {
+					for(Identifier<Address>::Getter target(control, BRANCH_TARGET); target(); target++) {
 						one = true;
-						Inst *ti = getInst(ws, target, control);
+						Inst *ti = getInst(ws, *target, control);
 						if(!ti) {
 							cerr << "ERROR: broken target from " << control->address() << " to " << *target << io::endl;
 							continue;

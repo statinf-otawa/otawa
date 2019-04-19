@@ -277,7 +277,7 @@ Process::Process(Manager *manager, const PropList& props, File *program)
  */
 address_t Process::findLabel(const string& label) {
 	address_t result = Address::null;
-	for(FileIter file(this); file; file++) {
+	for(FileIter file(this); file(); file++) {
 		result = file->findLabel(label);
 		if(!result.isNull())
 			break;
@@ -392,8 +392,8 @@ void Process::addFile(File *file) {
 /**
  */
 Process::~Process(void) {
-	for(FileIter file(this); file; file++)
-		delete file;
+	for(FileIter file(this); file(); file++)
+		delete *file;
 	if(smap)
 		delete smap;
 }
@@ -405,7 +405,7 @@ Process::~Process(void) {
  * @return		Instruction at the given address or null if it cannot be found.
  */
 Inst *Process::findInstAt(address_t addr) {
-	for(FileIter file(this); file; file++) {
+	for(FileIter file(this); file(); file++) {
 		Inst *result = file->findInstAt(addr);
 		if(result != nullptr)
 			return result;
@@ -464,7 +464,7 @@ void Process::provide(AbstractFeature& feature) {
  */
 Symbol *Process::findSymbol(const String& name) {
 	Symbol *result = 0;
-	for(FileIter file(this); file; file++) {
+	for(FileIter file(this); file(); file++) {
 		result = file->findSymbol(name);
 		if(result)
 			break;
@@ -481,8 +481,8 @@ Symbol *Process::findSymbol(const String& name) {
 Symbol *Process::findSymbolAt(const Address& address) {
 	if(!smap) {
 		stree::SegmentBuilder<Address::offset_t, Symbol *> builder(0);
-		for(Process::FileIter file(this); file; file++)
-			for(File::SymIter sym(file); sym; sym++)
+		for(Process::FileIter file(this); file(); file++)
+			for(File::SymIter sym(*file); sym(); sym++)
 				if(sym->size())
 					switch(sym->kind()) {
 					case Symbol::DATA:

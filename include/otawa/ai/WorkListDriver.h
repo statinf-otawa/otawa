@@ -50,7 +50,7 @@ public:
 	WorkListDriver(D& dom, const G& graph, S& store)
 	: _dom(dom), _graph(graph), _store(store), wl_set(graph.count()), end(false) {
 		store.set(_graph.entry(), dom.init());
-		for(auto succ = graph.succs(graph.entry()); succ; succ++)
+		for(auto succ = graph.succs(graph.entry()); succ(); succ++)
 			push(graph.sinkOf(*succ));
 		next();
 	}
@@ -88,8 +88,8 @@ public:
 	 * (and successors must be updated).
 	 */
 	inline void change(void) {
-		for(auto succ = _graph.succs(cur); succ; succ++)
-			push(_graph.sinkOf(succ));
+		for(auto succ = _graph.succs(cur); succ(); succ++)
+			push(_graph.sinkOf(*succ));
 	}
 
 	/**

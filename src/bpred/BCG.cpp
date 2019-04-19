@@ -87,7 +87,7 @@ bool BCGNode::exitsWithNT() {
 bool BCGNode::isSuccessor(BCGNode* succ,bool& withT, bool& withNT) {
 	withT = false;
 	withNT = false;
-	for(auto s = outs();s ;s++) {
+	for(auto s = outs(); s() ;s++) {
 		if(s->sink()->getCorrespondingBBNumber() == succ->getCorrespondingBBNumber()) {
 			withT = withT || s->isTaken();
 			withNT = withNT || !(s->isTaken());

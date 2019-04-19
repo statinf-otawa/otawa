@@ -39,7 +39,7 @@ int main(void) {
 	ipet::VarAssignment var;
 	
 	// Display registrations
-	for(Registry::Iter reg; reg; reg++) {
+	for(Registry::Iter reg; reg(); reg++) {
 		cout << "REGISTRATION " << reg->name() << " " << reg->version() << io::endl;
 		
 		// base
@@ -49,13 +49,13 @@ int main(void) {
 
 		// Configuration
 		cout << "\tconfiguration\n";
-		for(ConfigIter config(**reg); config; config++)
+		for(ConfigIter config(**reg); config(); config++)
 			cout << "\t\t" << config->name() << ": "
 				 << config->type() << io::endl;
 		
 		// Features
 		cout << "\tfeatures\n";
-		for(FeatureIter feature(**reg); feature; feature++) {
+		for(FeatureIter feature(**reg); feature(); feature++) {
 			cout << "\t\t";
 			switch((*feature)->kind()) {
 			case FeatureUsage::none: ASSERT(false);

@@ -39,10 +39,10 @@ public:
 	inline int index(Vertex v) const { return v->index(); }
 	inline Vertex sourceOf(Edge edge) const { return edge->source(); }
 	inline Vertex sinkOf(Edge edge) const { return edge->target(); }
-	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s; s++) cnt++; return cnt; }
-	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s; s++) if(sinkOf(s) == succ) return true; return false; }
-	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s; s++) cnt++; return cnt; }
-	inline bool isPredecessorOf(Vertex pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
+	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s(); s++) cnt++; return cnt; }
+	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s(); s++) if(sinkOf(*s) == succ) return true; return false; }
+	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s(); s++) cnt++; return cnt; }
+	inline bool isPredecessorOf(Vertex pred, const Vertex& ref) { for(Predecessor s(*this, ref); s(); s++) if(sourceOf(*s) == pred) return true; return false; }
 	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
 	class Predecessor: public PreIterator<Predecessor, Edge> {
@@ -87,10 +87,10 @@ public:
 	inline int index(Vertex v) const { return v->index(); }
 	inline Vertex sourceOf(Edge edge) const { return edge->target(); }
 	inline Vertex sinkOf(Edge edge) const { return edge->source(); }
-	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s; s++) cnt++; return cnt; }
-	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s; s++) if(sinkOf(s) == succ) return true; return false; }
-	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s; s++) cnt++; return cnt; }
-	inline bool isPredecessorOf(const Vertex& pred, const Vertex& ref) { for(Predecessor s(*this, ref); s; s++) if(sourceOf(s) == pred) return true; return false; }
+	inline int outDegree(Vertex vertex) const { int cnt = 0; for(Successor s(*this, vertex); s(); s++) cnt++; return cnt; }
+	inline bool isSuccessorOf(Vertex succ, const Vertex& ref) { for(Successor s(*this, ref); s(); s++) if(sinkOf(*s) == succ) return true; return false; }
+	inline int inDegree(Vertex vertex) const { int cnt = 0; for(Predecessor s(*this, vertex); s(); s++) cnt++; return cnt; }
+	inline bool isPredecessorOf(const Vertex& pred, const Vertex& ref) { for(Predecessor s(*this, ref); s(); s++) if(sourceOf(*s) == pred) return true; return false; }
 	inline bool isLoopHeader(Vertex v) const { return LOOP_HEADER(v); }
 
 	class Predecessor: public PreIterator<Predecessor, Edge> {

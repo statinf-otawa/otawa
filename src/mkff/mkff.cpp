@@ -322,7 +322,7 @@ public:
 				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
-			for(Vector<Address>::Iter vai(*va); vai; vai++) {
+			for(Vector<Address>::Iter vai(*va); vai(); vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
 				if(*vai == va->last())
@@ -358,7 +358,7 @@ public:
 				<< "\t// 0x" << inst->address() << " (";
 			printSourceLine(out, inst->address());
 			out << ")\n";
-			for(Vector<Address>::Iter vai(*va); vai; vai++) {
+			for(Vector<Address>::Iter vai(*va); vai(); vai++) {
 				out << "\t";
 				addressOf(out, cfg, *vai);
 				if(*vai == va->last())
@@ -443,7 +443,7 @@ public:
 			if(contextual) {
 				out << "in";
 				bool first = true;
-				for(Vector<SynthBlock*>::Iter vsbi(callContext); vsbi; vsbi++) {
+				for(Vector<SynthBlock*>::Iter vsbi(callContext); vsbi(); vsbi++) {
 					if(first)
 						first = false;
 					else
@@ -502,7 +502,7 @@ public:
 
 	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		if(va)
-			for(Vector<Address>::Iter vai(*va); vai; vai++) {
+			for(Vector<Address>::Iter vai(*va); vai(); vai++) {
 				out << "\t\t<target ";
 				addressOf(out, cfg, *vai);
 				out << "/> ";
@@ -748,7 +748,7 @@ private:
  */
 void Command::generateCFGs(String path, int type) {
 	const CFGCollection& coll = **otawa::INVOLVED_CFGS(workspace()); // obtain the CFG Collection for outputing
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++) {
 		//display::AbstractGraph* ag;
 		display::Decorator* d;
 
@@ -770,7 +770,7 @@ void Command::generateCFGs(String path, int type) {
 #endif
 
 		// obtain the displayer
-		display::Displayer *disp = display::Provider::display(cfg, *d, display::OUTPUT_RAW_DOT);
+		display::Displayer *disp = display::Provider::display(*cfg, *d, display::OUTPUT_RAW_DOT);
 
 		// set up the path
 		Path dir;
@@ -824,7 +824,7 @@ void XMLOutput::processWorkSpace(WorkSpace *ws) {
 void XMLOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	// initial log
 	if(logFor(LOG_DEPS))
-		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id; id++)
+		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id(); id++)
 			log << "\tproperty " << id->name() << " include in the output\n";
 
 	// build the root node
@@ -883,7 +883,7 @@ void XMLOutput::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	}
 
 	// add the output edges
-	for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+	for(Block::EdgeIter edge = b->outs(); edge(); edge++) {
 		xom::Element *edge_node = new xom::Element("edge");
 		cfg_node->appendChild(edge_node);
 		string source = id(edge->source());
@@ -919,7 +919,7 @@ protected:
 
 			// add the each instruction
 			if(b->isBasic()) {
-				for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
+				for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst(); inst++) {
 					xom::Element *inst_node = new xom::Element("inst");
 					bb_node->appendChild(inst_node);
 					string addr = _ << "0x" << inst->address();
@@ -929,7 +929,7 @@ protected:
 		}
 
 		// add the output edges
-		for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+		for(Block::EdgeIter edge = b->outs(); edge(); edge++) {
 			xom::Element *edge_node = new xom::Element("edge");
 			cfg_node->appendChild(edge_node);
 			string source = id(edge->source());
@@ -1015,7 +1015,7 @@ void Command::work(PropList &props) {
 
 		// Build the checksums of the binary files
 		if(!ffl->checkSummed()) {
-			for(Process::FileIter file(workspace()->process()); file; file++) {
+			for(Process::FileIter file(workspace()->process()); file(); file++) {
 				checksum::Fletcher sum;
 				io::InFileStream stream(file->name());
 				sum.put(stream);
@@ -1105,9 +1105,9 @@ void Command::work(PropList &props) {
 					int sumCFG = 0;
 					int sumB = 0;
 					const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-					for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
+					for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
 						sumCFG++;
-						for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+						for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 							sumB++;
 							if(bi->isBasic())
 								sum = sum + bi->toBasic()->count();
@@ -1217,7 +1217,7 @@ void Command::work(PropList &props) {
 				if(va->count()) {
 					out << " to "
 						<< "\t// 0x" << inst->address() << "\n";
-					for(Vector<Address>::Iter vai(*va); vai; vai++) {
+					for(Vector<Address>::Iter vai(*va); vai(); vai++) {
 						out << "\t";
 						addressOf(out, cfg, *vai);
 						if(*vai == va->last())
@@ -1238,8 +1238,8 @@ void Command::work(PropList &props) {
 
 		Vector<Address> displayedInstructions;
 		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
-			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
+			for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 				// only treats BB
 				if(!bi->isBasic())
 					continue;
@@ -1253,7 +1253,7 @@ void Command::work(PropList &props) {
 
 				if(BRANCH_TARGET(lastInst).exists()) {
 					Vector<Address> va;
-					for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
+					for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target(); target++)
 						va.push(*target);
 					if(removeDuplicatedTarget) {
 						// to prevent same instruction printed twice
@@ -1262,11 +1262,11 @@ void Command::work(PropList &props) {
 						else if(va)
 							displayedInstructions.add(lastInst->address());
 					}
-					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
+					printer().printMulti(elm::cout, *cfg, lastInst, &va, workspace(), "multibranch");
 				}
 				else if(CALL_TARGET(lastInst).exists()) {
 					Vector<Address> va;
-					for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
+					for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target(); target++)
 						va.push(*target);
 					if(removeDuplicatedTarget) {
 						// to prevent same instruction printed twice
@@ -1275,14 +1275,14 @@ void Command::work(PropList &props) {
 						else if(va)
 							displayedInstructions.add(lastInst->address());
 					}
-					printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
+					printer().printMulti(elm::cout, *cfg, lastInst, &va, workspace(), "multicall");
 				}
 				else {
 					Vector<Address> va;
 					if(lastInst->isControl() && lastInst->isConditional())
-						printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multibranch");
+						printer().printMulti(elm::cout, *cfg, lastInst, &va, workspace(), "multibranch");
 					else
-						printer().printMulti(elm::cout, cfg, lastInst, &va, workspace(), "multicall");
+						printer().printMulti(elm::cout, *cfg, lastInst, &va, workspace(), "multicall");
 				}
 
 			} // for each BB
@@ -1348,7 +1348,7 @@ void FFOutput::processCFG(WorkSpace *ws, CFG *cfg) {
  * @param cfg The current working CFG
  */
 void FFOutput::scanTargets(CFG *cfg) {
-	for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+	for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 
 		// only treats BB
 		if(!bi->isBasic())
@@ -1359,7 +1359,7 @@ void FFOutput::scanTargets(CFG *cfg) {
 
 		if(BRANCH_TARGET(lastInst).exists()) {
 			Vector<Address> va;
-			for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target; target++)
+			for(Identifier<Address>::Getter target(lastInst, BRANCH_TARGET); target(); target++)
 				va.push(*target);
 
 			if(_removeDuplicatedTarget) {
@@ -1376,7 +1376,7 @@ void FFOutput::scanTargets(CFG *cfg) {
 		}
 		else if(CALL_TARGET(lastInst).exists()) {
 			Vector<Address> va;
-			for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target; target++)
+			for(Identifier<Address>::Getter target(lastInst, CALL_TARGET); target(); target++)
 				va.push(*target);
 
 			if(_removeDuplicatedTarget) {
@@ -1431,7 +1431,7 @@ void FFOutput::scanFun(ContextTree *ctree) {
 void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBlock*>& callContext) {
 	ASSERT(ctree);
 
-	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
+	for(ContextTree::ChildrenIterator child(ctree); child(); child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
 
 		// Process loop
@@ -1463,7 +1463,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 
 				if(vv[0].count() == 0) { // only main function
 					_printer.startLoop(out, cfg, child->bb()->first(), contextual, p);
-					scanLoop(cfg, child, indent + 1, p);
+					scanLoop(cfg, *child, indent + 1, p);
 					_printer.endLoop(out, contextual, p);
 				}
 				else {
@@ -1483,7 +1483,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 
 						if(vv[currLevel].count() == 0) { // reaches the end
 							_printer.startLoop(out, cfg, child->bb()->first(), contextual, p);
-							scanLoop(cfg, child, indent + 1, p);
+							scanLoop(cfg, *child, indent + 1, p);
 							_printer.endLoop(out, contextual, p);
 						}
 						while(vv[currLevel].count() == 0 && currLevel > 0) {
@@ -1496,7 +1496,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 			} // only need to find all the context at the top level loop
 			else {
 				_printer.startLoop(out, cfg, child->bb()->first(), contextual, callContext);
-				scanLoop(cfg, child, indent + 1, callContext);
+				scanLoop(cfg, *child, indent + 1, callContext);
 				_printer.endLoop(out, contextual, callContext);
 			}
 		}
@@ -1505,12 +1505,12 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 
 
 bool FFOutput::checkLoop(ContextTree *ctree) {
-	for(ContextTree::ChildrenIterator child(ctree); child; child++) {
+	for(ContextTree::ChildrenIterator child(ctree); child(); child++) {
 		ASSERT(child->kind() != ContextTree::FUNCTION);
 		if(child->kind() == ContextTree::LOOP) {
 			BasicBlock::InstIter inst(child->bb());
-			if((!RECORDED(inst) && MAX_ITERATION(inst) == -1)
-			|| checkLoop(child))
+			if((!RECORDED(*inst) && MAX_ITERATION(*inst) == -1)
+			|| checkLoop(*child))
 				return true;
 		}
 	}
@@ -1559,7 +1559,7 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 
 	// Look in BB
 	//for(CFG::BBIterator bb(cfg); bb; bb++)
-	for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+	for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 		if(!bi->isBasic())
 			continue;
 		BasicBlock* bb = bi->toBasic();

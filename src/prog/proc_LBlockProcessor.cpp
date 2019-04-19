@@ -61,8 +61,8 @@ void LBlockProcessor::processWorkSpace(WorkSpace *ws) {
  * @param set	Current LBlock set.
  */
 void LBlockProcessor::processLBlockSet(WorkSpace *ws, LBlockSet *set) {
-	for(LBlockSet::Iterator lb(*set); lb; lb++)
-		processLBlock(ws, set, lb);
+	for(LBlockSet::Iterator lb(*set); lb(); lb++)
+		processLBlock(ws, set, *lb);
 }
 
 /**

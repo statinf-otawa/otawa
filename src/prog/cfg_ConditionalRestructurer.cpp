@@ -138,16 +138,16 @@ ConditionalRestructurer::ConditionalRestructurer(p::declare& r)
 void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 
 	// split the basic blocks
-	for(CFG::BlockIter b(g->blocks()); b; b++)
-		split(b);
+	for(CFG::BlockIter b(g->blocks()); b(); b++)
+		split(*b);
 	BB(g->entry()) = pair(m.entry(), int(BOTH));
 	BB(g->exit()) = pair(m.exit(), int(BOTH));
 	if(g->unknown())
 		BB(g->unknown()) = pair(m.unknown(), int(BOTH));
 
 	// re-build the CFG
-	for(CFG::BlockIter b(g->blocks()); b; b++)
-		make(b);
+	for(CFG::BlockIter b(g->blocks()); b(); b++)
+		make(*b);
 }
 
 
@@ -297,7 +297,7 @@ void ConditionalRestructurer::split(Block *b) {
 
 		// no condition or final branch alone: just add the instruction
 		if(c.isEmpty() || (cases.length() == 1 && i == bb->control())) {
-			for(Vector<Case *>::Iter k(cases); k; k++)
+			for(Vector<Case *>::Iter k(cases); k(); k++)
 				k->add(i, wr);
 		}
 
@@ -401,7 +401,7 @@ Inst *ConditionalRestructurer::perform(Inst *i) {
  * @param b		Block to rebuild.
  */
 void ConditionalRestructurer::make(Block *b) {
-	for(Block::EdgeIter e = b->outs(); e; e++)
+	for(Block::EdgeIter e = b->outs(); e(); e++)
 		for(auto sb: BB.all(b))
 			if(e->flags() == 0
 			|| (e->isTaken() && (sb.snd & TAKEN))

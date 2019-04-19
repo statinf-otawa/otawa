@@ -386,10 +386,10 @@ protected:
 				ctx.displayBefore(out, bb);
 			if(ctx.insts)
 				ctx.start(bb);
-			for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 
 				// display symbols
-				for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym; sym++)
+				for(Identifier<Symbol *>::Getter sym(*inst, SYMBOL); sym(); sym++)
 					out << '\t' << sym->name() << io::endl;
 
 				// disassemble the instruction

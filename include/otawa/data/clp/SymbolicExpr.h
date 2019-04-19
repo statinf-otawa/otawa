@@ -606,10 +606,10 @@ namespace se{
 		FilterBuilder(BasicBlock *_bb, clp::ClpProblem& problem);
 	private:
 		void getFilters(void);
-		void iterateBranchPaths(const Bundle& branchBundle, const Vector<Bundle>& bundles);
+		void iterateBranchPaths(const BasicBlock::Bundle& branchBundle, const Vector<BasicBlock::Bundle>& bundles);
 		sem::cond_t reverseCond(sem::cond_t cond);
-		SECmp *makeFilters(SECmp *se, const Bundle& currentBundle, sem::Block& b, bool branch);
-		void addFilters(SECmp *se, const Vector<Bundle>& bundles);
+		SECmp *makeFilters(SECmp *se, const BasicBlock::Bundle& currentBundle, sem::Block& b, bool branch);
+		void addFilters(SECmp *se, const Vector<BasicBlock::Bundle>& bundles);
 
 		void prepareSemBlockPaths(Vector<sem::Block>& semBlocks, const sem::Block& b);
 

@@ -269,7 +269,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 
 	// generate the constraints
 	for (int i = 0 ; i < cache->rowCount(); i++) {
-		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock; lblock++) {
+		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock(); lblock++) {
 			if ((lblock->id() == 0) || (lblock->id() == (lbsets[i]->count() - 1)))
 				continue; /* Skip first / last l-blocks */
 
@@ -283,7 +283,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 						<< lblock->address() << "_" << lblock->countInsts();
 
 			// add the constraint depending on the lblock category
-			switch(cache::CATEGORY(lblock)) {
+			switch(cache::CATEGORY(*lblock)) {
 			case cache::ALWAYS_HIT: {
 				// Add constraint: xmiss = 0
 				Constraint *cons2 = system->newConstraint(ah_msg, Constraint::EQ,0);
@@ -327,25 +327,25 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					miss = system->newVar(name1);
 				}
 
-				Block *header = cache::CATEGORY_HEADER(lblock);
+				Block *header = cache::CATEGORY_HEADER(*lblock);
 
 				if(header == NULL) { // when the loop header is outside the current CFG
 					Constraint *consN = system->newConstraint(fm_msg, Constraint::LE);
 					consN->addRight(1, VAR(lblock->bb()->cfg()->entry()->outs()->target())); // first basic block of the current CFG
 					consN->addLeft(1, miss);
 				}
-				else if (LINKED_BLOCKS(lblock) != NULL) {
+				else if (LINKED_BLOCKS(*lblock) != NULL) {
 					/* linked l-blocks first-miss */
-					Vector<LBlock *> &linked = **LINKED_BLOCKS(lblock);
+					Vector<LBlock *> &linked = **LINKED_BLOCKS(*lblock);
 					/* We add constraints only once per group */
 					if (linked[linked.length() - 1] == *lblock) {
 
 						/* Add constraint: (sum of lblock l in list) xmiss_l <= sum of entry-edges of the loop */
 						Constraint *cons6 = system->newConstraint(fm_msg, Constraint::LE);
-						for (Vector<LBlock *>::Iter iter(linked); iter; iter++) {
-							cons6->addLeft(1, MISS_VAR(iter));
+						for (Vector<LBlock *>::Iter iter(linked); iter(); iter++) {
+							cons6->addLeft(1, MISS_VAR(*iter));
 						}
-						for (Block::EdgeIter inedge = header->ins(); inedge; inedge++) {
+						for (Block::EdgeIter inedge = header->ins(); inedge(); inedge++) {
 							if (!Dominance::dominates(header, inedge->source())) {
 								/* found an entry-edge */
 								cons6->addRight(1, VAR(*inedge));
@@ -358,7 +358,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					/* Add constraint: xmiss <= sum of entry-edges of the loop */
 					Constraint *cons5a = system->newConstraint(fm_msg, Constraint::LE);
 					cons5a->addLeft(1, miss);
-					for (BasicBlock::EdgeIter inedge = header->ins(); inedge; inedge++) {
+					for (BasicBlock::EdgeIter inedge = header->ins(); inedge(); inedge++) {
 						if (!Dominance::dominates(header, inedge->source())) {
 							/* found an entry-edge */
 							cons5a->addRight(1, VAR(*inedge));
@@ -377,7 +377,7 @@ void CAT2OnlyConstraintBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 				break;
 			}
 
-			MISS_VAR(lblock) = miss;
+			MISS_VAR(*lblock) = miss;
 		}
 	}
 }
@@ -430,10 +430,10 @@ void CAT2ConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 
 	// generate the constraints
 	for (int i = 0 ; i < cache->rowCount(); i++)
-		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock; lblock++)
+		for (LBlockSet::Iterator lblock(*lbsets[i]); lblock(); lblock++)
 
 			// add x_miss * t_miss
-			system->addObjectFunction(penalty, MISS_VAR(lblock));
+			system->addObjectFunction(penalty, MISS_VAR(*lblock));
 }
 
 }	// otawa

@@ -129,8 +129,8 @@ public:
 	inline store_t& store(void) { return _store; }
 
 	void update(const Bag<icache::Access>& accs, t& d) {
-		for(auto acc = *accs; acc; acc++)
-			_domain.update(acc, d);
+		for(auto acc = *accs; acc(); acc++)
+			_domain.update(*acc, d);
 	}
 
 	void update(Block *v, t& d) {
@@ -139,7 +139,7 @@ public:
 		t s;
 
 		// update and join along edges
-		for(auto e = _graph.preds(v); e; e++) {
+		for(auto e = _graph.preds(v); e(); e++) {
 			Block *w = e->source();
 			_domain.copy(s, _store.get(w));
 
@@ -152,7 +152,7 @@ public:
 
 			// apply edge
 			{
-				const Bag<icache::Access>& accs = icache::ACCESSES(e);
+				const Bag<icache::Access>& accs = icache::ACCESSES(*e);
 				if(accs.count() > 0)
 					update(accs, s);
 			}
@@ -197,8 +197,8 @@ protected:
 	void processWorkSpace(WorkSpace *ws) override {
 
 		// prepare containers
-		for(CFGCollection::BlockIter b(cfgs); b; b++)
-			(*MAY_IN(b)).configure(*coll);
+		for(CFGCollection::BlockIter b(cfgs); b(); b++)
+			(*MAY_IN(*b)).configure(*coll);
 
 		// compute ACS
 		for(int i = 0; i < coll->cache()->setCount(); i++) {
@@ -211,8 +211,8 @@ protected:
 	}
 
 	void destroy(WorkSpace *ws) override {
-		for(CFGCollection::BlockIter b(cfgs); b; b++)
-			MAY_IN(b).remove();
+		for(CFGCollection::BlockIter b(cfgs); b(); b++)
+			MAY_IN(*b).remove();
 	}
 
 private:
@@ -225,11 +225,11 @@ private:
 		ana.run();
 
 		// store the results
-		for(CFGCollection::BlockIter b(cfgs); b; b++)
+		for(CFGCollection::BlockIter b(cfgs); b(); b++)
 			if(b->isBasic()) {
-				ada.domain().copy((*MAY_IN(b))[i], ada.store().get(b));
+				ada.domain().copy((*MAY_IN(*b))[i], ada.store().get(*b));
 				if(logFor(LOG_BLOCK)) {
-					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(b)) << io::endl;
+					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(*b)) << io::endl;
 				}
 			}
 

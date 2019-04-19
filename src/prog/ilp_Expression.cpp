@@ -75,7 +75,7 @@ void Expression::add(coef_t coef, ilp::Var *var) {
  * @param coef	Multiplication coefficient.
  */
 void Expression::add(const Expression *expr, coef_t coef) {
-	for(Expression::Iter term(expr); term; term++)
+	for(Expression::Iter term(expr); term(); term++)
 		terms.add(Term((*term).fst, (*term).snd * coef));
 }
 
@@ -96,7 +96,7 @@ void Expression::sub(const Expression *expr, coef_t coef) {
  * @param e		Added expression.
  */
 void Expression::add(const Expression& e) {
-	for(Iter i(&e); i; i++)
+	for(Iter i(&e); i(); i++)
 		add(*i);
 }
 
@@ -106,7 +106,7 @@ void Expression::add(const Expression& e) {
  * @param e		Subtracted expression.
  */
 void Expression::sub(const Expression& e) {
-	for(Iter i(&e); i; i++)
+	for(Iter i(&e); i(); i++)
 		sub(*i);
 }
 
@@ -116,7 +116,7 @@ void Expression::sub(const Expression& e) {
  * @param coef	Coefficient to multiply with.
  */
 void Expression::mul(coef_t coef) {
-	for(Iter term(this); term; term++)
+	for(Iter term(this); term(); term++)
 		terms.set(term, Term((*term).fst, (*term).snd * coef));
 }
 
@@ -126,7 +126,7 @@ void Expression::mul(coef_t coef) {
  * @param coef	Coefficient to divide with.
  */
 void Expression::div(coef_t coef) {
-	for(Iter term(this); term; term++)
+	for(Iter term(this); term(); term++)
 		terms.set(term, Term((*term).fst, (*term).snd / coef));
 }
 
@@ -138,7 +138,7 @@ void Expression::div(coef_t coef) {
  */
 double Expression::eval(System *sys) {
 	double r = 0;
-	for(Iter term(this); term; term++)
+	for(Iter term(this); term(); term++)
 		r += sys->valueOf((*term).fst) * (*term).snd;
 	return r;
 }

@@ -64,21 +64,21 @@ void PCGBuilder::processWorkSpace(WorkSpace *ws) {
 	graph::GenDiGraphBuilder<PCGBlock, PCGEdge> builder(_pcg);
 
 	// make the entry node
-	_pcg->_entry = new PCGBlock(cfg);
+	_pcg->_entry = new PCGBlock(*cfg);
 	builder.add(_pcg->_entry);
-	map.put(cfg, _pcg->_entry);
+	map.put(*cfg, _pcg->_entry);
 
 	// build a block for each CFG
-	for(cfg++; cfg; cfg++) {
-		PCGBlock *b = new PCGBlock(cfg);
-		map.put(cfg, b);
+	for(cfg++; cfg(); cfg++) {
+		PCGBlock *b = new PCGBlock(*cfg);
+		map.put(*cfg, b);
 		builder.add(b);
 	}
 
 	// build the links
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++)
 		for(auto call: cfg->callers())
-			builder.add(map.get(call->caller()), map.get(cfg), new PCGEdge(call));
+			builder.add(map.get(call->caller()), map.get(*cfg), new PCGEdge(call));
 
 	// install all
 	builder.build();

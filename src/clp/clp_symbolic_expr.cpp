@@ -784,7 +784,7 @@ namespace se{
 	Output& operator<<(Output& o, Vector<SECmp *> const& exprs) {
 		bool fst = true;
 		o << "{";
-		for(Vector<SECmp *>::Iter vsei(exprs); vsei; vsei++) {
+		for(Vector<SECmp *>::Iter vsei(exprs); vsei(); vsei++) {
 			if(!fst)
 				o << ", ";
 			else
@@ -850,7 +850,7 @@ namespace se{
 		}
 	}
 
-	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, const Bundle &i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
+	SECmp *getFilterForAddr(SECmp *se, V addr, clp::ClpStatePack &pack, const BasicBlock::Bundle &i, int sem, Vector<V> &used_reg, Vector<V> &used_addr){
 		/* FIXME: this could be otptimized: we do a CLP analysis from the
 			beginning of the BB each time we replace an address by its value */
 		clp::State state = pack.state_before(i.address(), sem);
@@ -930,13 +930,13 @@ namespace se{
 	 *		ADDR_FILTERS for filters on memory addresses
 	*/
 	void FilterBuilder::getFilters(void){
-		Vector<Bundle> bundles;
-		Bundle branchBundle = 0;
-		for(BasicBlock::BundleIter bbbi(bb); bbbi; bbbi++) {
+		Vector<BasicBlock::Bundle> bundles;
+		BasicBlock::Bundle branchBundle;
+		for(BasicBlock::BundleIter bbbi(bb); bbbi(); bbbi++) {
 			// find the branch bundle
 			if((*bbbi).kind() & Inst::IS_CONTROL) {
-				for(Bundle::Iter bi(*bbbi); bi; bi++)
-					if(bi->isControl() && !IGNORE_CONTROL(bi))
+				for(BasicBlock::Bundle::Iter bi(*bbbi); bi(); bi++)
+					if(bi->isControl() && !IGNORE_CONTROL(*bi))
 						if(bi->isConditional())
 							branchBundle = *bbbi;
 			}
@@ -952,14 +952,14 @@ namespace se{
 		REG_FILTERS(bb) = reg_filters;
 		ADDR_FILTERS(bb) = addr_filters;
 
-		for(BasicBlock::EdgeIter bbei=bb->outs(); bbei; bbei++) {
+		for(BasicBlock::EdgeIter bbei=bb->outs(); bbei(); bbei++) {
 			if(bbei->isTaken()) {
-				REG_FILTERS(bbei) = reg_filters;
-				ADDR_FILTERS(bbei) = addr_filters;
+				REG_FILTERS(*bbei) = reg_filters;
+				ADDR_FILTERS(*bbei) = addr_filters;
 			}
 			else if(bbei->isNotTaken()) {
-				REG_FILTERS(bbei) = reg_filters_not;
-				ADDR_FILTERS(bbei) = addr_filters_not;
+				REG_FILTERS(*bbei) = reg_filters_not;
+				ADDR_FILTERS(*bbei) = addr_filters_not;
 			}
 		}
 	}
@@ -972,7 +972,7 @@ namespace se{
 	 * @param insts		Instructions of the block.
 	 */
 	//void FilterBuilder::addFilters(SECmp *se, const Vector<Inst *>& insts) {
-	void FilterBuilder::addFilters(SECmp *se, const Vector<Bundle>& bundles) {
+	void FilterBuilder::addFilters(SECmp *se, const Vector<BasicBlock::Bundle>& bundles) {
 		sem::Block block;
 		TRACEGF(String out);
 		for(int i = bundles.count() - 1; i >= 0; i--) {
@@ -999,7 +999,7 @@ namespace se{
 	 * @param branchBundle	The bundle which contains the brach sem inst as the starting point of making the filters.
 	 * @param bundles		The list of bundles to carry out filter making for each bundles in the processing BB after the branchBundle.
 	 */
-	void FilterBuilder::iterateBranchPaths(const Bundle& branchBundle, const Vector<Bundle>& bundles) {
+	void FilterBuilder::iterateBranchPaths(const BasicBlock::Bundle& branchBundle, const Vector<BasicBlock::Bundle>& bundles) {
 		ASSERT(branchBundle);
 
 		bool first = true;
@@ -1165,7 +1165,7 @@ namespace se{
 				sin = sin->getParent();
 			}
 		}
-		for(Vector<SemInstNode*>::Iter toClean(toCleanUp); toClean; toClean++)
+		for(Vector<SemInstNode*>::Iter toClean(toCleanUp); toClean(); toClean++)
 			delete *toClean;
 	}
 
@@ -1179,7 +1179,7 @@ namespace se{
 	 * @param bb			SemBlock to work on.
 	 * @param branch		Only true for the bundle that has the branching effect, as the first makeFilters call for a list of bundles.
 	 */
-	SECmp *FilterBuilder::makeFilters(SECmp *se_orig, const Bundle& currentBundle, sem::Block& bb, bool branch) {
+	SECmp *FilterBuilder::makeFilters(SECmp *se_orig, const BasicBlock::Bundle& currentBundle, sem::Block& bb, bool branch) {
 		typedef Vector<SECmp *> filters_t;
 		typedef Vector<V> regs_t;
 		typedef Vector<V> addrs_t;

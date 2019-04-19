@@ -131,7 +131,7 @@ AlternativeProcessor::AlternativeProcessor(AlternativeSet& alts, AbstractRegistr
 	set = alts;
 	for(int i = 0; i < set.length(); i++) {
 		const Alternative& alt = *set[i];
-		for(Vector<FeatureUsage>::Iter a(alt.features()); a; a++) {
+		for(Vector<FeatureUsage>::Iter a(alt.features()); a(); a++) {
 			IN_ASSERT(const AbstractFeature& f = (*a).feature());
 			ASSERTP(!r.requires(f) || !r.requires(f), "feature " << f.name() << " required in registration and in alternative");
 		}

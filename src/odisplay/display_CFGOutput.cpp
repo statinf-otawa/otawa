@@ -43,8 +43,8 @@ public:
 	}
 
 	void displayBody(CFG *graph, BasicBlock *block, Text& content) const override {
-		for(_viewer->start(block); *_viewer; (*_viewer)++)
-			_viewer->print(content);
+		//for(_viewer->start(block); *_viewer; (*_viewer)++)
+		//	_viewer->print(content);
 	}
 
 private:
@@ -425,9 +425,9 @@ void CFGOutput::genEdgeLabel(CFG *cfg, otawa::Edge *edge, Text& label, EdgeStyle
  */
 void CFGOutput::genBBInfo(CFG *graph, Block *block, Text& content) {
 	out << "---\n";
-	for(PropList::Iter prop(block); prop; prop++) {
+	for(PropList::Iter prop(block); prop(); prop++) {
 		out << prop->id()->name() << " = ";
-		prop->id()->print(out, prop);
+		prop->id()->print(out, *prop);
 		out << io::endl;
 	}
 }
@@ -441,9 +441,9 @@ void CFGOutput::genBBInfo(CFG *graph, Block *block, Text& content) {
  */
 void CFGOutput::genEdgeInfo(CFG *graph, otawa::Edge *edge, Text& label) {
 	out << "\n";
-	for(PropList::Iter prop(edge); prop; prop++) {
+	for(PropList::Iter prop(edge); prop(); prop++) {
 		out << prop->id()->name() << " = ";
-		prop->id()->print(out, prop);
+		prop->id()->print(out, *prop);
 		out << io::endl;
 	}
 }

@@ -60,12 +60,12 @@ namespace otawa{
 	    _resources.add(new_resource);
 
 	    // build resource for stages and FUs
-	    for (ParExePipeline::StageIterator stage(proc->pipeline()) ; stage ; stage++) {
+	    for (ParExePipeline::StageIterator stage(proc->pipeline()) ; stage() ; stage++) {
 			if (stage->category() != ParExeStage::EXECUTE) {
 				for (int i=0 ; i<stage->width() ; i++) {
 					StringBuffer buffer;
 					buffer << stage->name() << "[" << i << "]";
-					StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
+					StageResource * new_resource = new StageResource(buffer.toString(), *stage, i, resource_index++);
 					_resources.add(new_resource);
 				}
 			}
@@ -88,13 +88,13 @@ namespace otawa{
 	    }
 
 	    // build resources for queues
-	    for (ParExeProc::QueueIterator queue(proc) ; queue ; queue++) {
+	    for (ParExeProc::QueueIterator queue(proc) ; queue() ; queue++) {
 			int num = queue->size();
 			for (int i=0 ; i<num ; i++) {
 				StringBuffer buffer;
 				buffer << queue->name() << "[" << i << "]";
 				StageResource * upper_bound;
-				for (Vector<Resource *>::Iter resource(_resources) ; resource ; resource++) {
+				for (Vector<Resource *>::Iter resource(_resources) ; resource() ; resource++) {
 					if (resource->type() == Resource::STAGE) {
 						if (((StageResource *)(*resource))->stage() == queue->emptyingStage()) {
 							if (i < queue->size() - ((StageResource *)(*resource))->stage()->width() - 1) {
@@ -112,7 +112,7 @@ namespace otawa{
 				}
 				ASSERT(upper_bound);
 				// build the queue resource
-				QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, proc->pipeline()->numStages());
+				QueueResource * new_resource = new QueueResource(buffer.toString(), *queue, i, resource_index++, upper_bound, proc->pipeline()->numStages());
 				_resources.add(new_resource);
 			}
 	    }

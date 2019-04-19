@@ -182,7 +182,7 @@ namespace otawa {
 		};
 
 		TimingContext(TimingContext *ctxt){
-			for (NodeLatencyIterator nl(*ctxt) ; nl ; nl++){
+			for (NodeLatencyIterator nl(*ctxt) ; nl() ; nl++){
 				NodeLatency *new_nl = new NodeLatency(nl->node(), nl->latency());
 				_node_latencies_list.addLast(new_nl);
 			}
@@ -440,12 +440,12 @@ namespace otawa {
 	inline bool ParExeGraph::Predecessor::ended(void) const {return iter.ended();}
 	inline ParExeNode *ParExeGraph::Predecessor::item(void) const {return iter->source();}
 	inline void ParExeGraph::Predecessor::next(void) {iter.next();}
-	inline ParExeEdge *ParExeGraph::Predecessor::edge(void) const {return iter;}
+	inline ParExeEdge *ParExeGraph::Predecessor::edge(void) const {return *iter;}
 
 	inline bool ParExeGraph::Successor::ended(void) const {	return iter.ended();}
 	inline ParExeNode *ParExeGraph::Successor::item(void) const {return iter->target();}
 	inline void ParExeGraph::Successor::next(void) {iter.next();}
-	inline ParExeEdge *ParExeGraph::Successor::edge(void) const {return iter;}
+	inline ParExeEdge *ParExeGraph::Successor::edge(void) const {return *iter;}
 
 
 } // namespace otawa

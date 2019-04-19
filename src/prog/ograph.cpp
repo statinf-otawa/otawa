@@ -134,7 +134,7 @@ namespace otawa { namespace ograph {
 /**
  */
 void Graph::clear(void) {
-	for(Iter node(this); node; node++) {
+	for(Iter node(this); node(); node++) {
 		for(ograph::Edge *edge = node->outs, *next; edge; edge = next) {
 			next = edge->sedges;
 			delete edge;
@@ -219,7 +219,7 @@ void Graph::remove(ograph::Edge *edge) {
  */
 int Graph::outDegree(Node *vertex) const {
 	int cnt = 0;
-	for(OutIterator edge(*this, vertex); edge; edge++)
+	for(OutIterator edge(*this, vertex); edge(); edge++)
 		cnt++;
 	return cnt;
 }
@@ -232,8 +232,8 @@ int Graph::outDegree(Node *vertex) const {
  * @return		True if succ is successor, false else.
  */
 bool Graph::isSuccessorOf(Node *succ, Node *ref) const {
-	for(OutIterator edge(*this, ref); edge; edge++)
-		if(sinkOf(edge) == succ)
+	for(OutIterator edge(*this, ref); edge(); edge++)
+		if(sinkOf(*edge) == succ)
 			return true;
 	return false;
 }
@@ -246,7 +246,7 @@ bool Graph::isSuccessorOf(Node *succ, Node *ref) const {
  */
 int Graph::inDegree(Node *vertex) const {
 	int cnt = 0;
-	for(InIterator edge(*this, vertex); edge; edge++)
+	for(InIterator edge(*this, vertex); edge(); edge++)
 		cnt++;
 	return cnt;
 }
@@ -259,8 +259,8 @@ int Graph::inDegree(Node *vertex) const {
  * @return		True if pred is predecessor, false else.
  */
 bool Graph::isPredecessorOf(Node *pred, Node *ref) const {
-	for(OutIterator edge(*this, ref); edge; edge++)
-		if(sourceOf(edge) == pred)
+	for(OutIterator edge(*this, ref); edge(); edge++)
+		if(sourceOf(*edge) == pred)
 			return true;
 	return false;
 }

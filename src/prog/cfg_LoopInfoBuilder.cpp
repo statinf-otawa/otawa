@@ -47,9 +47,9 @@ public:
 protected:
 	virtual void clean() {
 		const CFGCollection* cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
-			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-				for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
+			for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+				for (BasicBlock::EdgeIter outedge = bb->outs(); outedge(); outedge++) {
 					if (LOOP_EXIT_EDGE(*outedge)) {
 						if (EXIT_LIST(LOOP_EXIT_EDGE(*outedge))) {
 							delete EXIT_LIST(LOOP_EXIT_EDGE(*outedge));
@@ -58,8 +58,8 @@ protected:
 						LOOP_EXIT_EDGE(*outedge).remove();
 					}
 				} // for each outedge
-				if(ENCLOSING_LOOP_HEADER(bb).exists())
-					ENCLOSING_LOOP_HEADER(bb).remove();
+				if(ENCLOSING_LOOP_HEADER(*bb).exists())
+					ENCLOSING_LOOP_HEADER(*bb).remove();
 			} // for each bb
 		}
 	}
@@ -209,12 +209,12 @@ LoopInfoProblem::LoopInfoProblem(CFG& cfg, DomInfo& info): d(info), dorder(info)
 		 * Find all the headers of the CFG
 		 * Adds them in a SORTED list
 		 */
-		for (CFG::BlockIter bb = cfg.blocks(); bb; bb++)
-			if(!bb->isEntry() && LOOP_HEADER(bb))
-				headersLList.add(bb);
+		for (CFG::BlockIter bb = cfg.blocks(); bb(); bb++)
+			if(!bb->isEntry() && LOOP_HEADER(*bb))
+				headersLList.add(*bb);
 
 		/* Converting to Vector, because a linked list is not very practical ... */
-		for(SortedList<Block*, CompareManager<Block *, DominanceOrder> >::Iter iter(headersLList); iter; iter++) {
+		for(SortedList<Block*, CompareManager<Block *, DominanceOrder> >::Iter iter(headersLList); iter(); iter++) {
 			hdrs.add(*iter);
 		}
 	}
@@ -225,7 +225,7 @@ inline dfa::BitSet* LoopInfoProblem::empty(void) const {
 
 dfa::BitSet* LoopInfoProblem::gen(Block *bb) const {
 		dfa::BitSet *result = empty();
-		for(Block::EdgeIter edge = bb->outs(); edge; edge++)
+		for(Block::EdgeIter edge = bb->outs(); edge(); edge++)
 			if(bb != edge->target()			// not for single BB loop
 			&& d.dom(edge->target(), bb))
 				result->add(hdrs.indexOf(edge->target()));
@@ -305,13 +305,13 @@ LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", V
  * Annotate each loop-header with the list of edges exiting the loop.
  */
  void LoopInfoBuilder::buildLoopExitList(otawa::CFG* cfg) {
- 	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
- 		for (BasicBlock::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+ 	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+ 		for (BasicBlock::EdgeIter outedge = bb->outs(); outedge(); outedge++) {
  			if (LOOP_EXIT_EDGE(*outedge)) {
  				if (!EXIT_LIST(LOOP_EXIT_EDGE(*outedge))) {
  					EXIT_LIST(LOOP_EXIT_EDGE(*outedge)) = new elm::Vector<Edge*>();
  				}
-				EXIT_LIST(LOOP_EXIT_EDGE(*outedge))->add(outedge);
+				EXIT_LIST(LOOP_EXIT_EDGE(*outedge))->add(*outedge);
  			}
  		}
  	}
@@ -328,15 +328,15 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	dfa.compute();
 
 	// compute enclosing loop header for each BB
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 
 		// enclosing loop header is the first element of set
 		// (headers are sorted according by increasing domination)
-		dfa::BitSet::Iterator bit(*dfa.outSet(bb));
+		dfa::BitSet::Iterator bit(*dfa.outSet(*bb));
 		if (bit) {
-			ENCLOSING_LOOP_HEADER(bb) = prob.get(*bit);
+			ENCLOSING_LOOP_HEADER(*bb) = prob.get(*bit);
 			if (logFor(LOG_BLOCK))
-				cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(bb) << io::endl;
+				cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(*bb) << io::endl;
 		}
 	}
 
@@ -345,14 +345,14 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 		dfa.outSet(prob.get(i))->add(i);
 
 	// compute loop exit edges
-	for (CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		// process block in loops
-		if (ENCLOSING_LOOP_HEADER(bb) || LOOP_HEADER(bb))
-			for(Block::EdgeIter outedge = bb->outs(); outedge; outedge++) {
+		if (ENCLOSING_LOOP_HEADER(*bb) || LOOP_HEADER(*bb))
+			for(Block::EdgeIter outedge = bb->outs(); outedge(); outedge++) {
 				// result = out set of edge source - out set of edge target
 				// result = { headers dominating source but not target }
 				dfa::BitSet *targetSet = dfa.outSet(outedge->target());
-				dfa::BitSet result(*dfa.outSet(bb));
+				dfa::BitSet result(*dfa.outSet(*bb));
 				result.remove(*targetSet);
 
 				// last bit is the left outermost header
@@ -360,7 +360,7 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 				for(dfa::BitSet::Iterator bit(result); bit; bit++)
 					h = bit;
 				if(h >= 0)
-					LOOP_EXIT_EDGE(outedge) = prob.get(h);
+					LOOP_EXIT_EDGE(*outedge) = prob.get(h);
 			}
 	}
 

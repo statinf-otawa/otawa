@@ -72,14 +72,14 @@ void BasicObjectFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 	if (!bb->isEntry() && !bb->isExit()) {
 		System *system = SYSTEM(ws);
 		int time;
-		for (Block::EdgeIter edge = bb->ins(); edge; edge++) {
-			if (TIME(edge) >= 0)
-				time = TIME(edge);
+		for (Block::EdgeIter edge = bb->ins(); edge(); edge++) {
+			if (TIME(*edge) >= 0)
+				time = TIME(*edge);
 			else
 				time = TIME(bb);
 			if (time < 0 && bb->isBasic())
 				throw ProcessorException(*this, _ << "no time on BB " << bb);
-			system->addObjectFunction(time, VAR(edge));
+			system->addObjectFunction(time, VAR(*edge));
 		}
 	}
 }

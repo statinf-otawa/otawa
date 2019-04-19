@@ -94,7 +94,7 @@ void Successor::setup(void) {
 			else {
 				CFG *cfg = i->sink()->toSynth()->callee();
 				i++;
-				if(i)
+				if(i())
 					todo.push(i);
 				i = cfg->entry()->outs();
 			}
@@ -106,11 +106,11 @@ void Successor::setup(void) {
 				break;
 			CFG::CallerIter c(i->sink()->cfg()->callers());
 			i++;
-			if(i)
+			if(i())
 				todo.push(i);
 			i = c->outs();
 			c++;
-			if(c)
+			if(c())
 				todo.push(c);
 		}
 
@@ -189,7 +189,7 @@ void Predecessor::setup(void) {
 			else {
 				CFG *cfg = i->source()->toSynth()->callee();
 				i++;
-				if(i)
+				if(i())
 					todo.push(i);
 				i = cfg->exit()->ins();
 			}
@@ -201,11 +201,11 @@ void Predecessor::setup(void) {
 				break;
 			CFG::CallerIter c(i->source()->cfg()->callers());
 			i++;
-			if(i)
+			if(i())
 				todo.push(i);
 			i = c->ins();
 			c++;
-			if(c)
+			if(c())
 				todo.push(c);
 		}
 

@@ -123,8 +123,8 @@ static void targets(Inst *i, Vector<Inst *>& t, WorkSpace *ws, Identifier<Addres
 	if(i->target())
 		t.add(i->target());
 	else {
-		for(Identifier<Address>::Getter a(i, id); a; a++) {
-			Inst *i = ws->findInstAt(a);
+		for(Identifier<Address>::Getter a(i, id); a(); a++) {
+			Inst *i = ws->findInstAt(*a);
 			if(i)
 				t.add(i);
 		}
@@ -200,11 +200,11 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
  * @param maker	Current CFG maker.
  */
 void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs) {
-	for(FragTable<Inst *>::Iter e(bbs); e; e++) {
+	for(FragTable<Inst *>::Iter e(bbs); e(); e++) {
 
 		// build list of instructions
 		Vector<Inst *> insts;
-		insts.add(e);
+		insts.add(*e);
 		if(!e->isControl())
 			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
 				insts.add(i);
@@ -227,7 +227,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 		// create the basic block
 		BasicBlock *v = new BasicBlock(insts.detach());
 		maker.add(v);
-		BB(e) = v;
+		BB(*e) = v;
 		if(logFor(LOG_BLOCK))
 			log << "\t\tmaking BB at " << e->address() << ":" << v->topAddress() << io::endl;
 	}
@@ -254,7 +254,7 @@ void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *b, Block *src) {
 void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 	Vector<Inst *> ts;
 	bool first = true;
-	for(CFG::BlockIter v(m.blocks()); v; v++)
+	for(CFG::BlockIter v(m.blocks()); v(); v++)
 
 		// nothing to do with entry
 		if(v->isEntry())
@@ -266,7 +266,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 			// first block: do not forget edge with entry!
 			if(first) {
 				first = false;
-				m.add(m.entry(), v, new Edge(Edge::NOT_TAKEN));
+				m.add(m.entry(), *v, new Edge(Edge::NOT_TAKEN));
 			}
 
 			// process basic block
@@ -298,8 +298,8 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 						// create edges
 						else
-							for(Vector<Inst *>::Iter t(ts); t; t++)
-								m.add(bb, BB(t), new Edge(Edge::TAKEN));
+							for(Vector<Inst *>::Iter t(ts); t(); t++)
+								m.add(bb, BB(*t), new Edge(Edge::TAKEN));
 					}
 
 					// a call
@@ -318,10 +318,10 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						// build call vertices
 						else {
 							bool one = false;
-							for(Vector<Inst *>::Iter c(ts); c; c++)
+							for(Vector<Inst *>::Iter c(ts); c(); c++)
 								if(!NO_CALL(*c)) {
 									SynthBlock *cb = new SynthBlock();
-									CFGMaker& cm = maker(c);
+									CFGMaker& cm = maker(*c);
 									m.call(cb, cm);
 									m.add(bb, cb, new Edge(Edge::TAKEN));
 									seq(m, bb, cb);

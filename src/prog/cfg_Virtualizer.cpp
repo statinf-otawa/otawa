@@ -242,7 +242,7 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 		bmap.put(cfg->unknown(), maker.unknown());
 
 	// add other blocks
-	for(CFG::BlockIter v = cfg->blocks(); v; v++)
+	for(CFG::BlockIter v = cfg->blocks(); v(); v++)
 
 		// process end block
 		if(v->isVirtual()) {
@@ -261,8 +261,8 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 		else if(v->isBasic()) {
 			BasicBlock *bb = v->toBasic();
 			Vector<Inst *> insts(bb->count());
-			for(BasicBlock::InstIter i = bb->insts(); i; i++)
-				insts.add(i);
+			for(BasicBlock::InstIter i = bb->insts(); i(); i++)
+				insts.add(*i);
 			BasicBlock *nv = new BasicBlock(insts.detach());
 			maker.add(nv);
 			bmap.add(*v, nv);
@@ -321,8 +321,8 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 		}
 
 	// add edges
-	for(CFG::BlockIter v = cfg->blocks(); v; v++)
-		for(BasicBlock::EdgeIter e = v->outs(); e; e++)
+	for(CFG::BlockIter v = cfg->blocks(); v(); v++)
+		for(BasicBlock::EdgeIter e = v->outs(); e(); e++)
 			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge(e->flags()));
 
 	// leaving call
@@ -372,7 +372,7 @@ CFGMaker& Virtualizer::newMaker(Inst *first) {
  */
 void Virtualizer::cleanup(WorkSpace *ws) {
 	coll = new CFGCollection();
-	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
+	for(FragTable<CFGMaker *>::Iter m(makers); m(); m++) {
 		coll->add(m->build());
 		delete *m;
 	}

@@ -39,7 +39,7 @@ public:
 class Unmangler {
 public:
 	static Unmangler& base;
-	virtual string unmangle(const string& name) throw(UnmanglingException) = 0;
+	virtual string unmangle(const string& name) = 0;
 };
 
 } } // otawa::cpp

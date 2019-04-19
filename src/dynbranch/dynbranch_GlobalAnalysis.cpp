@@ -116,8 +116,8 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 	hai->solve(cfg);
 
 	// Check the results
-	for(CFGCollection::Iter cfgi(*coll); cfgi; cfgi++) {
-		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi; bbi++) {
+	for(CFGCollection::Iter cfgi(*coll); cfgi(); cfgi++) {
+		for(otawa::CFG::BlockIter bbi = cfgi->blocks(); bbi(); bbi++) {
 			if(!bbi->isBasic())
 				continue;
 

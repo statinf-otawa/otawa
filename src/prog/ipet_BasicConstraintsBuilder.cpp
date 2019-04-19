@@ -128,16 +128,16 @@ void BasicConstraintsBuilder::processBB (WorkSpace *fw, CFG *cfg, Block *bb)
 	//		x_i = \sum{(j, i) in E /\ not call (j, i)} x_j,i (a)
 	if(!bb->isEntry()) {
 		cons c = m(input_label) + bbv == 0.;
-		for(Block::EdgeIter edge = bb->ins(); edge; edge++)
-				c += x(VAR(edge));
+		for(Block::EdgeIter edge = bb->ins(); edge(); edge++)
+				c += x(VAR(*edge));
 	}
 
 	// output constraint (why separating call from other and specially many calls?)
 	//		x_i = \sum{(i, j) in E /\ not call (i, j)} x_i,j
 	if(!bb->isExit()) {
 		cons c = m(output_label) + bbv == 0.;
-		for(Block::EdgeIter edge = bb->outs(); edge; edge++)
-			c += x(VAR(edge));
+		for(Block::EdgeIter edge = bb->outs(); edge(); edge++)
+			c += x(VAR(*edge));
 	}
 }
 

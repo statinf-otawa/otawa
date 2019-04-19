@@ -234,7 +234,7 @@ bool FlowFactLoader::scan(Block *v, Block *t, const ContextualPath& path) {
 		// Look in the first instruction of the BB
 		BasicBlock::InstIter iter(bb);
 		ASSERT(iter);
-		if(transfer(iter, t, path))
+		if(transfer(*iter, t, path))
 			return true;
 
 		// Attempt to look at the start of the matching source line
@@ -243,15 +243,15 @@ bool FlowFactLoader::scan(Block *v, Block *t, const ContextualPath& path) {
 
 		// Look all instruction in the header
 		// (in case of aggregation in front of the header)
-		for(BasicBlock::InstIter inst(bb); inst; inst++)
-			if(lookLineAt(inst, t, path))
+		for(BasicBlock::InstIter inst(bb); inst(); inst++)
+			if(lookLineAt(*inst, t, path))
 				return true;
 
 		// look in back edge in case of "while() ..." to "do ... while(...)" optimization
-		for(BasicBlock::EdgeIter edge(bb->ins()); edge; edge++)
-			if(dom->isBackEdge(edge) && edge->source()->isBasic()) {
-				for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst; inst++)
-					if(lookLineAt(inst, t, path))
+		for(BasicBlock::EdgeIter edge(bb->ins()); edge(); edge++)
+			if(dom->isBackEdge(*edge) && edge->source()->isBasic()) {
+				for(BasicBlock::InstIter inst(edge->source()->toBasic()); inst(); inst++)
+					if(lookLineAt(*inst, t, path))
 						return true;
 			}
 

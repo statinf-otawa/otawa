@@ -109,14 +109,14 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 	const CFGCollection *orig_coll = INVOLVED_CFGS(ws);
 
 	// make the makers
-	for(CFGCollection::Iter cfg(*orig_coll); cfg; cfg++) {
+	for(CFGCollection::Iter cfg(*orig_coll); cfg(); cfg++) {
 		CFGMaker *vcfg = new CFGMaker(cfg->first(), true);
 		vcfgvec.add(vcfg);
 	}
 
 	// reduce loops
 	int i = 0;
-	for(CFGCollection::Iter g(*orig_coll); g; g++, i++) {
+	for(CFGCollection::Iter g(*orig_coll); g(); g++, i++) {
 		//displayCFG(ws, cfg, "old");
 		if(logFor(LOG_FUN))
 			log << "\treducing function " << *g << io::endl;
@@ -124,11 +124,11 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 		// duplicate graph
 		CFGMaker& maker = *vcfgvec.get(i);
 		HashMap<Block *, Block *> map;
-		for(CFG::BlockIter v = g->blocks(); v; v++)
-			map.put(v, clone(maker, v));
-		for(CFG::BlockIter v = g->blocks(); v; v++)
-			for(Block::EdgeIter e = v->outs(); e; e++)
-				maker.add(map.get(v), map.get(e->sink()), new Edge(e->flags()));
+		for(CFG::BlockIter v = g->blocks(); v(); v++)
+			map.put(*v, clone(maker, *v));
+		for(CFG::BlockIter v = g->blocks(); v(); v++)
+			for(Block::EdgeIter e = v->outs(); e(); e++)
+				maker.add(map.get(*v), map.get(e->sink()), new Edge(e->flags()));
 
 		// iterate until irreducible loops are processed
 		Vector<dfa::BitSet *> L;
@@ -145,12 +145,12 @@ void LoopReductor::processWorkSpace(otawa::WorkSpace *ws) {
 	#		endif
 
 			// cleanup
-			for(CFG::BlockIter v = maker.blocks(); v; v++) {
-				delete IN_LOOPS(v);
+			for(CFG::BlockIter v = maker.blocks(); v(); v++) {
+				delete IN_LOOPS(*v);
 				v->removeProp(IN_LOOPS);
 			}
-			for(loops_t::Iter l(L); l; l++)
-				delete l;
+			for(loops_t::Iter l(L); l(); l++)
+				delete *l;
 
 			it++;
 			//if(it > 3)
@@ -213,8 +213,8 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 		BasicBlock *bb = b->toBasic();
 		Array<Inst *> insts(bb->count(), new Inst *[bb->count()]);
 		int j = 0;
-		for(BasicBlock::InstIter i = bb->insts(); i; i++, j++)
-			insts[j] = i;
+		for(BasicBlock::InstIter i = bb->insts(); i(); i++, j++)
+			insts[j] = *i;
 		BasicBlock *nbb = new BasicBlock(insts);
 		maker.add(nbb);
 		return nbb;
@@ -260,7 +260,7 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 	// for l ∈ L do
-	for(loops_t::Iter l(L); l; l++)
+	for(loops_t::Iter l(L); l(); l++)
 
 		// if |l| > 1 then
 		if(l->count() > 1) {
@@ -301,7 +301,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 					Block *v = W.pop();
 
 					// for (v, w) ∈ E do
-					for(Block::EdgeIter e = v->outs(); e; e++) {
+					for(Block::EdgeIter e = v->outs(); e(); e++) {
 						Block *w = e->sink();
 
 						// if w ∉ l ∧ w ∉ C ∧ IL(h) ⊆ IL(w) then
@@ -336,17 +336,17 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 			// perform the duplication	O(|BC|)
 			Block *map[G.count()];
-			for(CFG::BlockIter v = G.blocks(); v; v++)
-				map[v->index()] = v;
+			for(CFG::BlockIter v = G.blocks(); v(); v++)
+				map[v->index()] = *v;
 
 			// for v ∈  bs do
 			for(dfa::BitSet::Iterator v(*bs); v; v++) {
 
 				// let v' ← duplicate(v) in
 				// V' ← V' ∪ { v' }
-				Block *nv = clone(G, G.at(v), true);
+				Block *nv = clone(G, G.at(*v), true);
 				if(logFor(LOG_BLOCK))
-					log << "\t\t\t" << G.at(v) << " duplicated as " << nv << io::endl;
+					log << "\t\t\t" << G.at(*v) << " duplicated as " << nv << io::endl;
 
 				// σ ← λw . if w = v then v' else σ(w)
 				map[*v] = nv;
@@ -356,7 +356,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			for(dfa::BitSet::Iterator v(*bs); v; v++) {
 
 				// for (v, w)  ∈ E do
-				for(Block::EdgeIter e = G.at(v)->outs(); e; e++) {
+				for(Block::EdgeIter e = G.at(v)->outs(); e(); e++) {
 
 					// E' ← E' ∪ { (σ(v), σ(w)) }
 					G.add(map[e->source()->index()], map[e->sink()->index()], new Edge(e->flags()));
@@ -372,23 +372,23 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 				if(v != bh)
 
 					// for (w, v) ∈ E ∧ v ∉ IL(w) do
-					for(Block::EdgeIter e = v->ins(); e; e++)
+					for(Block::EdgeIter e = v->ins(); e(); e++)
 						if(!IN_LOOPS(e->source())->contains(v->index())) {
 							Block *w = e->source();
 
 							// E' ← E' ∪ { (σ(w), σ(v)) }; D ← D ∪ { (w, v) }
 							G.add(map[w->index()], map[v->index()], new Edge(e->flags()));
-							D.add(e);
+							D.add(*e);
 							if(logFor(LOG_BLOCK))
 								log << "\t\t\tadd edge " << map[w->index()] << " -> " << map[v->index()] << io::endl;
 						}
 			}
 
 			// E' ← E' \ D
-			for(Vector<Edge *>::Iter e(D); e; e++) {
+			for(Vector<Edge *>::Iter e(D); e(); e++) {
 				if(logFor(LOG_BLOCK))
 					log << "\t\t\tremove edge " << *e << io::endl;
-				delete e;
+				delete *e;
 			}
 
 			return true;
@@ -442,8 +442,8 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 	L.clear();
 
 	// for v ∈ V do IL(v) ← ∅
-	for(CFG::BlockIter v = G.blocks(); v; v++)
-		IN_LOOPS(v) = new dfa::BitSet(G.count());
+	for(CFG::BlockIter v = G.blocks(); v(); v++)
+		IN_LOOPS(*v) = new dfa::BitSet(G.count());
 
 	// while S ≠ [] do
 	while(S) {
@@ -562,17 +562,17 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 	}
 
 	// closure of headers
-	for(loops_t::Iter l(L); l; l++) {
+	for(loops_t::Iter l(L); l(); l++) {
 		for(dfa::BitSet::Iterator h(**l); h; h++)
 			IN_LOOPS(G.at(h))->add(**l);
 		if(logFor(LOG_BLOCK))
 			log << "\t\tloop headed by " << **l << io::endl;
 	}
-	for(CFG::BlockIter v = G.blocks(); v; v++) {
-		for(dfa::BitSet::Iterator h(**IN_LOOPS(v)); h; h++)
-			IN_LOOPS(v)->add(**IN_LOOPS(G.at(h)));
+	for(CFG::BlockIter v = G.blocks(); v(); v++) {
+		for(dfa::BitSet::Iterator h(**IN_LOOPS(*v)); h; h++)
+			IN_LOOPS(*v)->add(**IN_LOOPS(G.at(h)));
 		if(logFor(LOG_BLOCK))
-			log << "\t\t" << *v << " in " << **IN_LOOPS(v) << io::endl;
+			log << "\t\t" << *v << " in " << **IN_LOOPS(*v) << io::endl;
 	}
 }
 

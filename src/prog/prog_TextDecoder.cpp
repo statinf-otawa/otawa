@@ -107,8 +107,8 @@ void TextDecoder::processWorkSpace(WorkSpace *fw) {
 
 	// Put the labels
 	if(!LABELS_DONE(fw->process())) {
-		for(Process::FileIter file(fw->process()); file; file++)
-			for(File::SymIter sym(file); sym; sym++) {
+		for(Process::FileIter file(fw->process()); file(); file++)
+			for(File::SymIter sym(*file); sym(); sym++) {
 				ProgItem *item = file->findItemAt(sym->address());
 				if(item) {
 					Inst *inst = item->toInst();

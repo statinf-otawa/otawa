@@ -139,9 +139,9 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 			if(_explicit)
 				label = _ << "loop constraint on " << bb;
 			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::LE);
-			for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
+			for(Block::EdgeIter edge = bb->ins(); edge(); edge++) {
 				ASSERT(edge->source());
-				otawa::ilp::Var *var = VAR(edge);
+				otawa::ilp::Var *var = VAR(*edge);
 				if(Dominance::dominates(bb, edge->source()))
 					cons->addLeft(1, var);
 				else
@@ -166,9 +166,9 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 					label = _ << "unrolled loop constraint for " << bb;
 				otawa::ilp::Constraint *cons0 = system->newConstraint(label, otawa::ilp::Constraint::EQ);
 				for(int i = 0; i < (-min); i++) {
-					for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
+					for(Block::EdgeIter edge = bb->ins(); edge(); edge++) {
 						ASSERT(edge->source());
-						otawa::ilp::Var *var  = VAR(edge);
+						otawa::ilp::Var *var  = VAR(*edge);
 						cons0->addLeft(1, var);
 					}
 					bb2 = UNROLLED_FROM(bb2);
@@ -180,9 +180,9 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 			if(_explicit)
 				label = _ << "loop constraint on " << bb;
 			otawa::ilp::Constraint *cons = system->newConstraint(label, otawa::ilp::Constraint::GE);
-			for(Block::EdgeIter edge = bb->ins(); edge; edge++) {
+			for(Block::EdgeIter edge = bb->ins(); edge(); edge++) {
 				ASSERT(edge->source());
-				otawa::ilp::Var *var = VAR(edge);
+				otawa::ilp::Var *var = VAR(*edge);
 				if(Dominance::dominates(bb, edge->source()))
 					cons->addLeft(1, var);
 				else
@@ -213,22 +213,22 @@ void FlowFactConstraintBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 
 			// sum {h dom i} eih <= total
 			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
-			for(Block::EdgeIter edge =bb ->ins(); edge; edge++) {
+			for(Block::EdgeIter edge =bb ->ins(); edge(); edge++) {
 				ASSERT(edge->source());
 				if(Dominance::dominates(bb, edge->source())) {
-					cons->addLeft(1, VAR(edge));
-					zero->addLeft(1, VAR(edge));
+					cons->addLeft(1, VAR(*edge));
+					zero->addLeft(1, VAR(*edge));
 				}
 				else if(!Dominance::dominates(bb, edge->source()))
-					zero->addRight(total, VAR(edge));
+					zero->addRight(total, VAR(*edge));
 			}
 
 			// sum{h dom i} eih + sum {u in unrolled(h))} eiu <= total
 			// sum {h dom i} eih <= total * sum {(i, h) in V & h -dom i} eih
 			for(Block *hd = UNROLLED_FROM(bb); hd; hd = UNROLLED_FROM(hd))
-				for(Block::EdgeIter edge = hd->ins(); edge; edge++)
+				for(Block::EdgeIter edge = hd->ins(); edge(); edge++)
 					if(Dominance::dominates(edge->source(), hd))
-						cons->addLeft(1, VAR(edge));
+						cons->addLeft(1, VAR(*edge));
 		}
 	}
 }

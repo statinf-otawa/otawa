@@ -56,7 +56,7 @@ void MKFFDotDecorator::displayAssembly(CFG *graph, BasicBlock *block, display::T
 	cstring file;
 	int line = 0;
 
-	for(BasicBlock::InstIter i = block->insts(); i; i++) {
+	for(BasicBlock::InstIter i = block->insts(); i(); i++) {
 		// display source line
 		if(display_source_line) {
 			Option<Pair<cstring, int> > src = workspace()->process()->getSourceLine(i->address());
@@ -68,7 +68,7 @@ void MKFFDotDecorator::displayAssembly(CFG *graph, BasicBlock *block, display::T
 			}
 		}
 		// display labels
-		for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++)
+		for(Identifier<Symbol *>::Getter l(*i, SYMBOL); l(); l++)
 			content << display::begin(label_color) << l->name() << ":" << display::end(label_color)
 					<< display::left;
 		// adding the color indicating the instruction is sliced away

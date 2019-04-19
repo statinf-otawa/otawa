@@ -150,7 +150,7 @@ protected:
 		LBlockSet **lblocks = LBLOCKS(ws);
 		ASSERT(lblocks);
 		for(int i = 0; i < cache->setCount(); i++)
-			for(LBlockSet::Iterator lb(*lblocks[i]); lb; lb++)
+			for(LBlockSet::Iterator lb(*lblocks[i]); lb(); lb++)
 				if(lb->bb()) {
 					var x(ipet::VAR(lb->bb()));
 					ot::time miss_t = mem->readTime(lb->address());
@@ -220,7 +220,7 @@ protected:
 
 		// compute the time spent in memory accesses
 		ot::time time = 0;
-		for(BasicBlock::InstIter i = bb->insts(); i; i++)
+		for(BasicBlock::InstIter i = bb->insts(); i(); i++)
 			if(i->isMem()) {
 				if(i->isMulti()) {
 					if(i->isLoad() && i->isStore() && blocking_store)
@@ -308,9 +308,9 @@ protected:
 				if(!h)
 					sys += t_miss;
 				else {
-					for(Block::EdgeIter e = h->ins(); e; e++)
-						if(!otawa::BACK_EDGE(e))
-							sys += t_miss * var(ipet::VAR(e));
+					for(Block::EdgeIter e = h->ins(); e(); e++)
+						if(!otawa::BACK_EDGE(*e))
+							sys += t_miss * var(ipet::VAR(*e));
 				}
 			}
 			break;
@@ -329,10 +329,10 @@ protected:
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// process accesses of the input edges
-		for(Block::EdgeIter e = b->ins(); e; e++) {
-			const Bag<icache::Access>& accs = icache::ACCESSES(e);
+		for(Block::EdgeIter e = b->ins(); e(); e++) {
+			const Bag<icache::Access>& accs = icache::ACCESSES(*e);
 			for(int i = 0; i < accs.count(); i++)
-				processAccess(e, accs[i]);
+				processAccess(*e, accs[i]);
 		}
 
 		// process access of the block

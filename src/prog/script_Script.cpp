@@ -410,7 +410,7 @@ void Script::work(WorkSpace *ws) {
 	xom::Document *empty = new xom::Document(empty_root);
 
 	// build the parameter declaration
-	for(ItemIter item(*this); item; item++) {
+	for(ItemIter item(*this); item(); item++) {
 
 		// single parameter
 		if(!item->multi) {
@@ -423,7 +423,7 @@ void Script::work(WorkSpace *ws) {
 
 		// multi-parameter
 		else
-			for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++)
+			for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param(); param++)
 				if((*param).fst == item->name) {
 					xom::Element *param_elt = new xom::Element(item->name.toCString());
 					empty_root->appendChild(param_elt);
@@ -442,9 +442,9 @@ void Script::work(WorkSpace *ws) {
 	declareGlobals(xslt);
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
-	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param; param++) {
+	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param(); param++) {
 		bool found = false;
-		for(ItemIter item(*this); item; item++) {
+		for(ItemIter item(*this); item(); item++) {
 			if(!item->multi && item->name == (*param).fst) {
 				found = true;
 				xslt.setParameter((*param).fst, item->makeParam((*param).snd));

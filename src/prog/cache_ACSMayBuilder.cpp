@@ -131,9 +131,9 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 		FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > mayFp(mayList);
 		HalfAbsInt<FirstUnrollingFixPoint<UnrollingListener<MAYProblem> > > mayHai(mayFp, *fw);
 		mayHai.solve(NULL, may_entry ? may_entry->get(line) : NULL);
-		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-			for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-				CACHE_ACS_MAY(bb)->add(new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
+		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+			for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+				CACHE_ACS_MAY(*bb)->add(new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 	}
 
 	// analysis without unrolling
@@ -143,9 +143,9 @@ void ACSMayBuilder::processLBlockSet(WorkSpace *fw, LBlockSet *lbset, const hard
 		HalfAbsInt<DefaultFixPoint<DefaultListener<MAYProblem> > > mayHai(mayFp, *fw);
 		mayHai.solve(NULL, may_entry ? may_entry->get(line) : NULL);
 		/* Store the resulting ACS into the properties */
-		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++)
-			for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-				CACHE_ACS_MAY(bb)->add(new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
+		for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
+			for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+				CACHE_ACS_MAY(*bb)->add(new MAYProblem::Domain(*mayList.results[cfg->index()][bb->index()]));
 	}
 }
 
@@ -158,9 +158,9 @@ void ACSMayBuilder::configure(const PropList &props) {
 void ACSMayBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Build the vectors for receiving the ACS...
-	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg; cfg++) {
-		for (CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-			CACHE_ACS_MAY(bb) = new Vector<MAYProblem::Domain*>;
+	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
+		for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+			CACHE_ACS_MAY(*bb) = new Vector<MAYProblem::Domain*>;
 	}
 
 	LBlockSet **lbsets = LBLOCKS(fw);

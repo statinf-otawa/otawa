@@ -93,7 +93,7 @@ BCGNode* getBCGNode(int id,BCG* bcg) {
  * @return 		The BasicBlock found.
  */
 BasicBlock* BPredProcessor::getBB(int id,CFG* cfg) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 		if(bb->index() == id) return bb->toBasic();
 	}
@@ -198,9 +198,9 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				
 				// on recherche l'edge ayant le meme 'd' que celui du bcg pour en extraire le nom de variable associe
 				Var *eb = NULL;
-				for(Block::EdgeIter edge = bb->outs(); edge ; edge++) {
+				for(Block::EdgeIter edge = bb->outs(); edge() ; edge++) {
 					if(edge->isTaken() == t ) {
-						eb = ipet::VAR(edge);
+						eb = ipet::VAR(*edge);
 						ASSERT(edge);
 						break;
 					}
@@ -210,7 +210,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				B21->addRight(1,eb);
 
 				// recherche des membres de gauche à ajouter
-				for(auto s = br->outs(); s; s++) {
+				for(auto s = br->outs(); s(); s++) {
 					if( s->isTaken() == t ) {
 						Var *C00,*C01,*C10,*C11;
 						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00D" << cpt << "S" << s->sink()->getCorrespondingBBNumber());
@@ -255,7 +255,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				B22_pred->addLeft(1,Xi);
 				
 				// Recherche de tous les predecesseurs de br
-				for(auto p = br->ins(); p; p++) {
+				for(auto p = br->ins(); p(); p++) {
 					if(var_added[p->source()->getCorrespondingBBNumber()]==0) {
 						Var *C00,*C01,*C10,*C11;
 						BasicBlock* bb_pred=getBB(p->source()->getCorrespondingBBNumber(), cfg);
@@ -293,7 +293,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				NEW_SPECIAL_CONSTRAINT(B22_succ,EQ,0);
 				B22_succ->addLeft(1,Xi);
 				// Recherche de tous les successeurs de br
-				for(auto s = br->outs(); s ; s++ ) {
+				for(auto s = br->outs(); s() ; s++ ) {
 					if(var_added[s->sink()->getCorrespondingBBNumber()]==0) {
 						Var *C00,*C01,*C10,*C11;
 						NEW_VAR_FROM_BUFF(C00,Xi->name() << "A" << bcg->getClass() << "C00S" << s->sink()->getCorrespondingBBNumber());
@@ -333,7 +333,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				int var_added[cfg->count()];
 				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
-				for(auto s = br->outs(); s ; s++ ){
+				for(auto s = br->outs(); s() ; s++ ){
 					if(var_added[s->sink()->getCorrespondingBBNumber()]==0) {
 							
 						NEW_SPECIAL_CONSTRAINT(B23_00,EQ,0);
@@ -458,7 +458,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				int var_added[cfg->count()];
 				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
-				for(auto p = br->ins();p;p++) {
+				for(auto p = br->ins(); p(); p++) {
 					if(var_added[p->source()->getCorrespondingBBNumber()]==0) {
 						bool withT=false, withNT=false;
 						
@@ -507,7 +507,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				
 				// toujours pour l'unicité des contraintes
 				for(int i=0;i<cfg->count();++i) var_added[i]=0;
-				for(auto s = br->outs();s;s++) {
+				for(auto s = br->outs(); s(); s++) {
 					if(var_added[s->sink()->getCorrespondingBBNumber()]==0) {
 						bool withT=false, withNT=false;
 						br->isSuccessor(s->sink(),withT,withNT);
@@ -573,7 +573,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				NEW_SPECIAL_CONSTRAINT(M_T,EQ,0);
 				NEW_SPECIAL_CONSTRAINT(M_NT,EQ,0);
 				Var *m0 = nullptr, *m1 = nullptr;
-				for(BasicBlock::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+				for(BasicBlock::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 					if(edge->isTaken()) { // WARNING ces accolades sont IMPERATIVES car NEW_VAR_FROM_BUFF definit un bloc
 						NEW_VAR_FROM_BUFF(m1,	"m" << bb->index() << "_" << edge->target()->index())
 					}
@@ -590,7 +590,7 @@ void BPredProcessor::CS__BiModal(WorkSpace *fw, CFG *cfg, BSets& bs, elm::Vector
 				int var_added[cfg->count()];
 				for(int i=0;i<cfg->count();++i) var_added[i]=0;
 
-				for(auto s = br->outs();s;s++) {
+				for(auto s = br->outs(); s(); s++) {
 	
 					if(var_added[s->sink()->getCorrespondingBBNumber()]==0) {
 						bool withT, withNT;
@@ -755,7 +755,7 @@ void BPredProcessor::computePredecessors(CFG* cfg, Block* bb, elm::Vector<int> *
 		}
 		/////////
 
-		for(Block::EdgeIter edge = bb->outs(); edge ; edge++) {
+		for(Block::EdgeIter edge = bb->outs(); edge() ; edge++) {
 			Block *next_bb = edge->target();
 			
 			if(bs.get_addr(bb->index()) == addr ){
@@ -832,11 +832,11 @@ void BPredProcessor::computePredecessors(CFG* cfg, Block* bb, elm::Vector<int> *
  * @param bs	BSets structure to fill-in.
  */
 void BPredProcessor::generateClasses(CFG *cfg, BSets& bs) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		unsigned int nb_OE = 0;
 
 		// Parcours des OutEdges
-		for(Block::EdgeIter edge = bb->outs(); edge ; edge++ ) {
+		for(Block::EdgeIter edge = bb->outs(); edge() ; edge++ ) {
 			// on incremente que s'il s'agit d'un edge TAKEN ou NOT_TAKEN
 			if(edge->isTaken()) nb_OE++;
 			else if(edge->isNotTaken() == Edge::NOT_TAKEN) nb_OE++;
@@ -845,8 +845,8 @@ void BPredProcessor::generateClasses(CFG *cfg, BSets& bs) {
 		// Si un branchement a ete trouve ...
 		if(nb_OE == 2 ) {
 			Inst* inst = NULL;
-			for(BasicBlock::InstIter i(bb->toBasic()); i; i++) {
-				inst=i;
+			for(BasicBlock::InstIter i(bb->toBasic()); i(); i++) {
+				inst = *i;
 			}
 			bs.add((inst->address().offset() & (this->BHT)), bb->index());
 		}

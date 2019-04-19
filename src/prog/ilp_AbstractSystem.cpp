@@ -87,7 +87,7 @@ double AbstractConstraint::coefficient(Var *var) const {
 	if(!var)
 		return constant();
 	else {
-		for(Expression::Iter i(&_expr); i; i++)
+		for(Expression::Iter i(&_expr); i(); i++)
 			if((*i).fst == var)
 				return (*i).snd;
 			return 0;
@@ -175,12 +175,12 @@ AbstractSystem::~AbstractSystem(void) {
 	cleaning = true;
 
 	// free constraints
-	for(FragTable<AbstractConstraint *>::Iter i(conss); i; i++)
+	for(FragTable<AbstractConstraint *>::Iter i(conss); i(); i++)
 		if(*i)
 			delete *i;
 
 	// free variables
-	for(FragTable<AbstractVar *>::Iter i(vars); i; i++)
+	for(FragTable<AbstractVar *>::Iter i(vars); i(); i++)
 		if(*i)
 			delete *i;
 
@@ -273,7 +273,7 @@ void AbstractSystem::exportLP(io::Output& out) {
 /**
  */
 void AbstractSystem::dumpSolution(io::Output& out) {
-	for(FragTable<AbstractVar *>::Iter var(vars); var; var++)
+	for(FragTable<AbstractVar *>::Iter var(vars); var(); var++)
 		if(*var)
 			out << var->name() << " = " << valueOf(*var) << io::endl;
 }

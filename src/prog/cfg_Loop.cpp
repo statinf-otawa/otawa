@@ -255,8 +255,8 @@ void Loop::BlockIter::next(void) {
 			}
 	}
 	else
-		for(auto e = b->outs(); e; e++)
-			if(!isExit(e) && !isBack(e) && !_done.contains(e->sink()->index())) {
+		for(auto e = b->outs(); e(); e++)
+			if(!isExit(*e) && !isBack(*e) && !_done.contains(e->sink()->index())) {
 				_todo.push(e->sink());
 				_done.add(e->sink()->index());
 			}

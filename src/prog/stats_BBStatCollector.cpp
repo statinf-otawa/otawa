@@ -88,13 +88,13 @@ void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
 			collect(collector, cur.fst->toBasic(), cur.snd);
 
 		// add successors
-		for(Block::EdgeIter e = cur.fst->outs(); e; e++) {
+		for(Block::EdgeIter e = cur.fst->outs(); e(); e++) {
 
 			// update the context
 			ContextualPath p = cur.snd;
-				for(int i = 0; i < LEAVE(e); i++)
+				for(int i = 0; i < LEAVE(*e); i++)
 					p.pop();
-				for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
+				for(Identifier<ContextualStep>::Getter s(*e, ENTER); s(); s++)
 					p.push(*s);
 
 			// push the new vertex
@@ -145,7 +145,7 @@ int BBStatCollector::total(void) {
 		ASSERT(coll);
 		for(int i = 0; i < coll->count(); i++) {
 			_cfg = coll->get(i);
-			for(CFG::BlockIter bb = _cfg->blocks(); bb; bb++)
+			for(CFG::BlockIter bb = _cfg->blocks(); bb(); bb++)
 				if(bb->isBasic())
 					_total += total(bb->toBasic());
 		}

@@ -87,7 +87,7 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	// initialization
 	ContextualPath path = *CONTEXT(cfg);
 	path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
-	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge; edge++)
+	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge(); edge++)
 		todo.put(pair(edge->sink(), path));
 
 	// traverse until the end
@@ -99,13 +99,13 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 		done.set(it.fst->index());
 
 		// put next blocks
-		for(Block::EdgeIter e = it.fst->outs(); e; e++)
+		for(Block::EdgeIter e = it.fst->outs(); e(); e++)
 			if(!done[e->sink()->index()]) {
 				ContextualPath p = it.snd;
-				for(int i = 0; i < LEAVE(e); i++)
+				for(int i = 0; i < LEAVE(*e); i++)
 					p.pop();
-				for(Identifier<ContextualStep>::Getter s(e, ENTER); s; s++)
-					p.push(s);
+				for(Identifier<ContextualStep>::Getter s(*e, ENTER); s(); s++)
+					p.push(*s);
 				todo.put(pair(e->sink(), p));
 			}
 	}

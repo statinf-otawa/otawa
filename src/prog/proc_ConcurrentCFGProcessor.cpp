@@ -88,7 +88,7 @@ void ConcurrentCFGProcessor::nextCFG(void) {
 		// get the next CFG
 		mutex->lock();
 		CFG *cfg = 0;
-		if(it) {
+		if(it()) {
 			cfg = *it;
 			it++;
 		}

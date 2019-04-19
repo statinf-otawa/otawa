@@ -180,7 +180,7 @@ void CLPExport::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			bb_node->addAttribute(new xom::Attribute("size", &size));
 
 			// now for each instruction
-			for(BasicBlock::InstIter bbii(bb); bbii; bbii++) {
+			for(BasicBlock::InstIter bbii(bb); bbii(); bbii++) {
 				xom::Element *instNode = new xom::Element("inst");
 				bb_node->appendChild(instNode);
 				string addr = _ << "0x" << bbii->address();
@@ -256,7 +256,7 @@ void CLPExport::processState(xom::Element *parent, const clp::State& clpState) {
 	else
 		parent->addAttribute(new xom::Attribute("top", "false" ));
 
-	for(clp::State::Iter clpsi(clpState); clpsi; clpsi++) {
+	for(clp::State::Iter clpsi(clpState); clpsi(); clpsi++) {
 		clp::Value actualValue;
 		if(clpsi.id().kind() == clp::REG) {
 			if(*clpsi != clp::Value::top) {

@@ -206,7 +206,7 @@ Block *CFGTransformer::clone(Block *b) {
 	else {
 		BasicBlock *bb = b->toBasic();
 		Vector<Inst *> insts(bb->count());
-		for(BasicBlock::InstIter i = bb; i; i++)
+		for(BasicBlock::InstIter i = bb; i(); i++)
 			insts.add(*i);
 		return build(insts.detach());
 	}
@@ -234,20 +234,20 @@ Edge *CFGTransformer::clone(Block *src, Edge *edge, Block *snk) {
 void CFGTransformer::transform(CFG *g, CFGMaker& m) {
 
 	// transform blocks
-	for(CFG::BlockIter b = g->blocks(); b; b++) {
-		Block *nb = transform(b);
+	for(CFG::BlockIter b = g->blocks(); b(); b++) {
+		Block *nb = transform(*b);
 		if(nb)
-			bmap.put(b, nb);
+			bmap.put(*b, nb);
 	}
 
 	// clone edges
-	for(CFG::BlockIter src = g->blocks(); src; src++) {
-		Block *nsrc = bmap.get(src, 0);
+	for(CFG::BlockIter src = g->blocks(); src(); src++) {
+		Block *nsrc = bmap.get(*src, 0);
 		if(nsrc) {
-			for(Block::EdgeIter e = src->outs(); e; e++) {
+			for(Block::EdgeIter e = src->outs(); e(); e++) {
 				Block *nsnk = bmap.get(e->sink(), 0);
 				if(nsnk)
-					transform(e);
+					transform(*e);
 			}
 		}
 	}
@@ -350,7 +350,7 @@ void CFGTransformer::processWorkSpace(WorkSpace *ws) {
  */
 void CFGTransformer::cleanup(WorkSpace *ws) {
 	coll = new CFGCollection();
-	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
+	for(FragTable<CFGMaker *>::Iter m(makers); m(); m++) {
 		CFG *cfg = m->build();
 		coll->add(cfg);
 		delete *m;

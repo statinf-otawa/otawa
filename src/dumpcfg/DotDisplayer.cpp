@@ -63,19 +63,19 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 			break;
 
 		// traverse blocks
-		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 			if(display_all && v->isSynth())
 				continue;
 
 			// display block header
 			cout << "\t";
-			displayName(cfg, v);
+			displayName(cfg, *v);
 			cout << " [label=\"";
-			displayLabel(v);
+			displayLabel(*v);
 			cout << "\"];\n";
 
 			// display edges
-			for(Block::EdgeIter e = v->outs(); e; e++) {
+			for(Block::EdgeIter e = v->outs(); e(); e++) {
 
 				// case of a call with display of all
 				if(e->sink()->isSynth() && display_all && e->sink()->toSynth()->callee()) {
@@ -83,7 +83,7 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 
 					// call edge
 					cout << "\t";
-					displayName(cfg, v);
+					displayName(cfg, *v);
 					cout << " -> ";
 					displayName(sb->callee(), sb->callee()->entry());
 					cout << " [label=\"call\", style=dashed, weight=1];\n";
@@ -101,7 +101,7 @@ void DotDisplayer::processWorkSpace(WorkSpace *ws) {
 
 					// display edge header
 					cout << "\t";
-					displayName(cfg, v);
+					displayName(cfg, *v);
 					cout << " -> ";
 					displayName(cfg, e->sink());
 
@@ -164,18 +164,18 @@ void DotDisplayer::displayLabel(Block *v) {
 		if(display_assembly) {
 			cout << " | ";
 			bool first = true;
-			for(BasicBlock::InstIter inst(bb); inst; inst++) {
+			for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 				if(first)
 					first = false;
 				else
 					cout << "\\l";
 
 				// Display labels
-				for(Identifier<String>::Getter label(inst, FUNCTION_LABEL);
-				label; label++)
+				for(Identifier<String>::Getter label(*inst, FUNCTION_LABEL);
+				label(); label++)
 					cout << *label << ":\\l";
-				for(Identifier<String>::Getter label(inst, LABEL);
-				label; label++)
+				for(Identifier<String>::Getter label(*inst, LABEL);
+				label(); label++)
 					cout << *label << ":\\l";
 
 				// display the debug line

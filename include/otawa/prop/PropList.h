@@ -144,7 +144,7 @@ public:
 		Iter iter;
 		const AbstractIdentifier *_id;
 		inline void look(void)
-			{ for(; iter; iter++) if(iter->id() == _id) return; }
+			{ for(; iter(); iter++) if(iter->id() == _id) return; }
 	};
 
 	// GetterRange class

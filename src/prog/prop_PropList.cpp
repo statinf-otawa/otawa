@@ -668,7 +668,7 @@ void PropList::print(elm::io::Output& out) const {
 	else {
 		bool first = true;
 		out << "{ ";
-		for(Iter prop(this); prop; prop++) {
+		for(Iter prop(this); prop(); prop++) {
 			if(first)
 				first = false;
 			else

@@ -209,9 +209,9 @@ Provider *Provider::get(cstring name) {
 	if(name) {
 
 		// look in the list
-		for(List<Provider *>::Iter p(provs); p; p++)
+		for(List<Provider *>::Iter p(provs); p(); p++)
 			if(p->name() == name)
-				return p;
+				return *p;
 
 		// try to open it
 		AbstractIdentifier *id = ProcessorPlugin::getIdentifier(name);
@@ -244,9 +244,9 @@ Provider *Provider::get(output_mode_t out) {
 
 	// any provider available?
 	if(provs) {
-		for(List<Provider *>::Iter p(provs); p; p++)
+		for(List<Provider *>::Iter p(provs); p(); p++)
 			if(p->accepts(out))
-				return p;
+				return *p;
 		return 0;
 	}
 

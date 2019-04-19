@@ -510,9 +510,9 @@ protected:
 		if(!b->isBasic())
 			return;
 		BasicBlock *v = b->toBasic();
-		for(Block::EdgeIter e = v->ins(); e; e++) {
+		for(Block::EdgeIter e = v->ins(); e(); e++) {
 			Block *w = e->source();
-			lookBack(make(e), w);
+			lookBack(make(*e), w);
 		}
 	}
 

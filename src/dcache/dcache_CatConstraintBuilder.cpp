@@ -220,13 +220,13 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 			log << "\tprocess CFG " << cfg->label() << io::endl;
 
 		// traverse basic blocks
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 			if(logFor(LOG_BB))
 				log << "\t\tprocess BB " << bb->index()
 					<< " (" << ot::address(bb->address()) << ")\n";
 
 			// traverse blocks accesses
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
+			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
 				// Non-blocking WRITEs
@@ -264,7 +264,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 							}
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::LE);
     	            		cons3->addLeft(1, miss);
-        	        		cons3->addRight(1, ipet::VAR(bb));
+        	        		cons3->addRight(1, ipet::VAR(*bb));
 						}
 					break;
                 	case cache::ALWAYS_MISS: { // Add constraint: xmiss = x
@@ -275,7 +275,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
         					}
 							ilp::Constraint *cons3 = system->newConstraint(ilp::Constraint::EQ);
     	            		cons3->addLeft(1, miss);
-        	        		cons3->addRight(1, ipet::VAR(bb));
+        	        		cons3->addRight(1, ipet::VAR(*bb));
 						}
                 		break;
 					case cache::FIRST_MISS: {
@@ -290,13 +290,13 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 							// Add constraint: xmiss <= sum of entry-edges of the loop
 							ilp::Constraint *cons5a = system->newConstraint(ilp::Constraint::LE);
 						 	cons5a->addLeft(1, miss);
-						 	for(otawa::Block::EdgeIter inedge = header->ins(); inedge; inedge++)
+						 	for(otawa::Block::EdgeIter inedge = header->ins(); inedge(); inedge++)
 						 		if (!Dominance::dominates(header, inedge->source()))
 						 			cons5a->addRight(1, ipet::VAR(*inedge));
 
 						 	// Add constraint: xmiss <= x
 						 	ilp::Constraint *cons1 = system->newConstraint(ilp::Constraint::LE);
-							cons1->addRight(1, ipet::VAR(bb));
+							cons1->addRight(1, ipet::VAR(*bb));
 							cons1->addLeft(1, miss);
 						}
 						break;

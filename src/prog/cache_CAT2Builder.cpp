@@ -108,26 +108,26 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 		log << "\tSET " << lbset->line() << io::endl;
 
 	// Use the results to set the categorization
-	for (LBlockSet::Iterator lblock(*lbset); lblock; lblock++) {
+	for (LBlockSet::Iterator lblock(*lbset); lblock(); lblock++) {
 		if ((lblock->id() == 0) || (lblock->id() == lbset->count() - 1))
 			continue;
 
-		if (LBLOCK_ISFIRST(lblock)) {
+		if (LBLOCK_ISFIRST(*lblock)) {
 			MUSTProblem::Domain *must = CACHE_ACS_MUST(lblock->bb())->get(line);
 			MAYProblem::Domain *may = NULL;
 			if (CACHE_ACS_MAY(lblock->bb()) != NULL)
 				may = CACHE_ACS_MAY(lblock->bb())->get(line);
 			Block *header;
 			if (may) {
-				cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
+				cache::CATEGORY(*lblock) = cache::NOT_CLASSIFIED;
 			} else {
-				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+				cache::CATEGORY(*lblock) = cache::ALWAYS_MISS;
 			}
 
 			if (must->contains(lblock->cacheblock())) {
-				cache::CATEGORY(lblock) = cache::ALWAYS_HIT;
+				cache::CATEGORY(*lblock) = cache::ALWAYS_HIT;
 			} else if (may && !may->contains(lblock->cacheblock())) {
-				cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+				cache::CATEGORY(*lblock) = cache::ALWAYS_MISS;
 			} else if (firstmiss_level != FML_NONE) {
 				if (LOOP_HEADER(lblock->bb()))
 					header = lblock->bb();
@@ -163,20 +163,20 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 					}
 
 				if(is_pers) {
-					cache::CATEGORY(lblock) = cache::FIRST_MISS;
+					cache::CATEGORY(*lblock) = cache::FIRST_MISS;
 					if(header == nullptr)
 						header = lblock->bb()->cfg()->entry();
-					cache::CATEGORY_HEADER(lblock) = header;
+					cache::CATEGORY_HEADER(*lblock) = header;
 				}
 				else
-					cache::CATEGORY(lblock) = cache::NOT_CLASSIFIED;
+					cache::CATEGORY(*lblock) = cache::NOT_CLASSIFIED;
 			} /* of category condition test */
 		} else
-			cache::CATEGORY(lblock) = cache::ALWAYS_MISS;
+			cache::CATEGORY(*lblock) = cache::ALWAYS_MISS;
 
 		// record stats
 		total_cnt++;
-		switch(cache::CATEGORY(lblock)) {
+		switch(cache::CATEGORY(*lblock)) {
 		case cache::ALWAYS_HIT:		ah_cnt++; 		break;
 		case cache::ALWAYS_MISS:	am_cnt++; 		break;
 		case cache::FIRST_MISS:		pers_cnt++; 	break;
@@ -184,13 +184,13 @@ void CAT2Builder::processLBlockSet(otawa::CFG *cfg, LBlockSet *lbset, const hard
 		default:					ASSERT(false);	break;
 		}
 		if(logFor(LOG_BB)) {
-			log << "\t\t" << lblock->address() << ": " << *cache::CATEGORY(lblock);
-			if(cache::CATEGORY_HEADER(lblock))
-				log << " (" << *cache::CATEGORY_HEADER(lblock) << ")";
+			log << "\t\t" << lblock->address() << ": " << *cache::CATEGORY(*lblock);
+			if(cache::CATEGORY_HEADER(*lblock))
+				log << " (" << *cache::CATEGORY_HEADER(*lblock) << ")";
 			log << io::endl;
 		}
 		if(cstats)
-			cstats->add(cache::CATEGORY(lblock));
+			cstats->add(cache::CATEGORY(*lblock));
 	}
 
 

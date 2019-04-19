@@ -574,14 +574,14 @@ hard::Processor *Processor::load(xom::Element *element) {
 void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 	RegSet regs;
 	steps.clear();
-	for(Array<Stage *>::Iter stage(stages); stage; stage++) {
+	for(Array<Stage *>::Iter stage(stages); stage(); stage++) {
 
 		// add first cycle and select unit
 		Step step;
 		const PipelineUnit *unit;
 		if(stage->getType() != Stage::EXEC) {
-			unit = stage;
-			step = Step(stage);
+			unit = *stage;
+			step = Step(*stage);
 		}
 		else {
 			const PipelineUnit *fu = stage->select(inst);
@@ -591,13 +591,13 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 		steps.add(step);
 
 		// left queues
-		for(Array<Queue *>::Iter queue(queues); queue; queue++)
+		for(Array<Queue *>::Iter queue(queues); queue(); queue++)
 			if(queue->getOutput() == *stage)
 				steps.add(Step(Step::RELEASE, *queue));
 
 		// add read registers
 		inst->readRegSet(regs);
-		for(RegIter r(regs, _process->platform()); r; r++)
+		for(RegIter r(regs, _process->platform()); r(); r++)
 			steps.add(Step(Step::READ, *r));
 
 		// add other cycles
@@ -605,13 +605,13 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 			steps.add(step);
 
 		// entered queues
-		for(Array<Queue *>::Iter queue(queues); queue; queue++)
+		for(Array<Queue *>::Iter queue(queues); queue(); queue++)
 			if(queue->getInput() == *stage)
 				steps.add(Step(Step::RELEASE, *queue));
 
 		// add written registers
 		inst->writeRegSet(regs);
-		for(RegIter r(regs, _process->platform()); r; r++)
+		for(RegIter r(regs, _process->platform()); r(); r++)
 			steps.add(Step(Step::WRITE, *r));
 	}
 }

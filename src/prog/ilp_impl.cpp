@@ -63,7 +63,7 @@ ConstraintImpl::ConstraintImpl(comparator_t comparator, string label): comp(comp
  */
 double ConstraintImpl::coefficient(Var *var) const {
 	int c = 0;
-	for(Expression::Iter term(&expr); term; term++)
+	for(Expression::Iter term(&expr); term(); term++)
 		if((*term).fst == var)
 			c += (*term).snd;
 	return var ? c : -c;
@@ -74,7 +74,7 @@ double ConstraintImpl::coefficient(Var *var) const {
  */
 double ConstraintImpl::constant(void) const {
 	int c = 0;
-	for(Expression::Iter term(&expr); term; term++)
+	for(Expression::Iter term(&expr); term(); term++)
 		if(!(*term).fst)
 			c += (*term).snd;
 	return -c;

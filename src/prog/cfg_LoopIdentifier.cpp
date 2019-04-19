@@ -33,12 +33,12 @@ protected:
 
 	void processCFG(WorkSpace *ws, CFG *cfg) {
 		graph::LoopIdentifier id(*cfg, cfg->entry());
-		for(CFG::BlockIter b = cfg->blocks(); b; b++)
-			if(id.isHeader(b)) {
-				LOOP_HEADER(b) = true;
-				for(Block::EdgeIter e = b->ins(); e; e++)
-					if(id.isBack(e))
-						BACK_EDGE(e) = true;
+		for(CFG::BlockIter b = cfg->blocks(); b(); b++)
+			if(id.isHeader(*b)) {
+				LOOP_HEADER(*b) = true;
+				for(Block::EdgeIter e = b->ins(); e(); e++)
+					if(id.isBack(*e))
+						BACK_EDGE(*e) = true;
 			}
 
 	}

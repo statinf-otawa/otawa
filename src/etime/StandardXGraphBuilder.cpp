@@ -141,12 +141,12 @@ private:
 		ParExeNode *last_node = nullptr;
 
 		ParExeNode *node;
-	    for(ParExeGraph::InstIterator inst(seq); inst; inst++)  {
-			for(ParExePipeline::StageIterator stage(processor()->pipeline()) ; stage ; stage++) {
+	    for(ParExeGraph::InstIterator inst(seq); inst(); inst++)  {
+			for(ParExePipeline::StageIterator stage(processor()->pipeline()) ; stage() ; stage++) {
 
 				// generic case
 				if(stage->category() != ParExeStage::EXECUTE) {
-					node = factory()->makeNode(g, inst, stage);
+					node = factory()->makeNode(g, *inst, *stage);
 					// register the new node to the related instruction and pipeline stage
 					inst->addNode(node);
 					stage->addNode(node);
@@ -159,8 +159,8 @@ private:
 					ParExeNode *first = nullptr, *last = nullptr;
 					ASSERTP(fu != nullptr,
 						"cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
-					for(ParExePipeline::StageIterator fu_stage(fu); fu_stage; fu_stage++) {
-						ParExeNode *fu_node = factory()->makeNode(g, inst, fu_stage);
+					for(ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++) {
+						ParExeNode *fu_node = factory()->makeNode(g, *inst, *fu_stage);
 						if (!first)
 							first = fu_node;
 						last = fu_node;
@@ -184,12 +184,12 @@ private:
 	 */
 	void addEdgesForPipelineOrder(ParExeGraph *g, ParExeSequence *seq) {
 		static string pipeline_order("pipeline order");
-	    for(ParExeGraph::InstIterator inst(seq) ; inst ; inst++){
+	    for(ParExeGraph::InstIterator inst(seq) ; inst() ; inst++){
 	    	ParExeNode *previous = NULL;
-	    	for (ParExeInst::NodeIterator node(inst); node ; node++){
+	    	for (ParExeInst::NodeIterator node(*inst); node() ; node++){
 	    		if (previous)
-	    			factory()->makeEdge(previous, node, ParExeEdge::SOLID, 0, comment(pipeline_order));
-	    		previous = node;
+	    			factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(pipeline_order));
+	    		previous = *node;
 	    	}
 	    }
 
@@ -220,7 +220,7 @@ private:
 			current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
 
 		ParExeNode *previous = nullptr;
-		for (ParExeStage::NodeIterator node(fetch_stage) ; node ; node++) {
+		for (ParExeStage::NodeIterator node(fetch_stage) ; node() ; node++) {
 			if (previous){
 
 				// branch case
@@ -228,17 +228,17 @@ private:
 
 					// look for the branch stage node
 					ParExeNode *branching_node = nullptr;
-					for(auto node = previous->inst()->nodes(); node; node++)
+					for(auto node = previous->inst()->nodes(); node(); node++)
 						if(node->stage() == branch_stage) {
-							branching_node = node;
+							branching_node = *node;
 							break;
 						}
 					ASSERT(branching_node != nullptr);
 
 					// create the edges
-					factory()->makeEdge(branching_node, node, ParExeEdge::SOLID, 0, comment(branch_msg));
+					factory()->makeEdge(branching_node, *node, ParExeEdge::SOLID, 0, comment(branch_msg));
 					if(_cache_line_size != 0)
-						factory()->makeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
+						factory()->makeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
 				}
 
 				// no branch
@@ -247,25 +247,25 @@ private:
 					// no cache
 					if(_cache_line_size == 0) {
 						if(previous != nullptr)
-							factory()->makeEdge(previous, node, ParExeEdge::SOLID, 0, comment(in_order));
+							factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 					}
 
 					// cache bound edges
 					else {
 						Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
 						if(cache_line != current_cache_line) {
-							factory()->makeEdge(first_cache_line_node, node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
+							factory()->makeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
 							if(first_cache_line_node != previous)
-								factory()->makeEdge(previous, node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
-							first_cache_line_node = node;
+								factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
+							first_cache_line_node = *node;
 							current_cache_line = cache_line;
 						}
 						else
-							factory()->makeEdge(previous, node, ParExeEdge::SLASHED);
+							factory()->makeEdge(previous, *node, ParExeEdge::SLASHED);
 					}
 				}
 			}
-			previous = node;
+			previous = *node;
 		}
 	}
 
@@ -281,26 +281,26 @@ private:
 		List<ParExeStage *> *list = _proc->listOfInorderStages();
 
 		// create the edges
-		for(ParExeGraph::StageIterator stage(list) ; stage ; stage++) {
+		for(ParExeGraph::StageIterator stage(list) ; *stage ; stage++) {
 			int count = 1;
 			ParExeNode *previous = NULL;
 			int prev_id = 0;
-			for(ParExeStage::NodeIterator node(stage); node; node++){
+			for(ParExeStage::NodeIterator node(*stage); *node; node++){
 				if(previous){
 					if(stage->width() == 1)
-						factory()->makeEdge(previous, node, ParExeEdge::SOLID, 0, program_order);
+						factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, program_order);
 					else {
-						factory()->makeEdge(previous, node, ParExeEdge::SLASHED, 0, stage->name());
+						factory()->makeEdge(previous, *node, ParExeEdge::SLASHED, 0, stage->name());
 						if (count == stage->width()){		// when stage width is reached, add edges to show precedence
 							ParExeNode *not_at_the_same_cycle = stage->node(prev_id);
-							factory()->makeEdge(not_at_the_same_cycle,node,ParExeEdge::SOLID, 0, stage->name());
+							factory()->makeEdge(not_at_the_same_cycle,*node,ParExeEdge::SOLID, 0, stage->name());
 							prev_id++;
 						}
 						else
 							count++;
 					}
 				}
-				previous = node;
+				previous = *node;
 			}
 		}
 	}
@@ -333,9 +333,9 @@ private:
 						factory()->makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 					// current node becomes the new previous load
-					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node ; last_node++)
+					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
 						if (last_node->stage()->category() == ParExeStage::FU)
-							previous_load = last_node;
+							previous_load = *last_node;
 				}
 
 				// found a store instruction
@@ -350,9 +350,9 @@ private:
 						factory()->makeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 					// current node becomes the new previous store
-					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node ; last_node++)
+					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
 						if (last_node->stage()->category() == ParExeStage::FU)
-							previous_store = last_node;
+							previous_store = *last_node;
 				}
 			}
 	    }
@@ -377,7 +377,7 @@ private:
 				ParExeInst *inst = node->inst();
 
 				// for each instruction producing a used data
-				for(ParExeInst::ProducingInstIterator prod(inst); prod; prod ++){
+				for(ParExeInst::ProducingInstIterator prod(inst); prod(); prod ++){
 
 					// create the edge
 					ParExeNode *producing_node;
@@ -385,9 +385,9 @@ private:
 						producing_node = prod->lastFUNode();
 					else {
 						producing_node = nullptr;
-						for(auto node = prod->nodes(); node; node++)
+						for(auto node = prod->nodes(); node(); node++)
 							if(node->stage() == _proc->memStage())
-								producing_node = node;
+								producing_node = *node;
 						// TODO		propagate fix to parexegraph
 						if(producing_node == nullptr)
 							producing_node = prod->lastFUNode();
@@ -403,7 +403,7 @@ private:
 	 * queues of the microprocessor.
 	 */
 	void addEdgesForQueues(void){
-	    for (ParExePipeline::StageIterator stage(_proc->pipeline()) ; stage ; stage++) {
+	    for (ParExePipeline::StageIterator stage(_proc->pipeline()) ; stage() ; stage++) {
 			ParExeStage * prod_stage;
 			if (stage->sourceQueue() != NULL) {
 				ParExeQueue *queue = stage->sourceQueue();

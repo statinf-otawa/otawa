@@ -270,7 +270,7 @@ void EventCollector::make(ilp::System *sys) {
 				evt->name() ,
 				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
-			for(List<ilp::Var *>::Iter v(vars[c]); v; v++)
+			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++)
 				cons->addRight(1, *v);
 		}
 	}
@@ -373,7 +373,7 @@ void EdgeTimeBuilder::setup(WorkSpace *ws) {
 /**
  */
 void EdgeTimeBuilder::cleanup(WorkSpace *ws) {
-	for(HashMap<Event *, EventCollector *>::Iter coll(colls); coll; coll++) {
+	for(HashMap<Event *, EventCollector *>::Iter coll(colls); coll(); coll++) {
 		coll->make(sys);
 		delete *coll;
 	}
@@ -550,14 +550,14 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// fill the prefix
 		if(source)
-			for(BasicBlock::InstIter inst = source->insts(); inst; inst++) {
-				ParExeInst * par_exe_inst = new ParExeInst(inst, source, PROLOGUE, index++);
+			for(BasicBlock::InstIter inst = source->insts(); inst(); inst++) {
+				ParExeInst * par_exe_inst = new ParExeInst(*inst, source, PROLOGUE, index++);
 				seq->addLast(par_exe_inst);
 			}
 
 		// fill the current block
-		for(BasicBlock::InstIter inst = target->insts(); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
+		for(BasicBlock::InstIter inst = target->insts(); inst(); inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(*inst, target, otawa::BLOCK, index++);
 			seq->addLast(par_exe_inst);
 		}
 
@@ -575,8 +575,8 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// fill the current block
 		int index = 0;
-		for(BasicBlock::InstIter inst(target); inst; inst++) {
-			ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, index++);
+		for(BasicBlock::InstIter inst(target); inst(); inst++) {
+			ParExeInst * par_exe_inst = new ParExeInst(*inst, target, otawa::BLOCK, index++);
 			seq->addLast(par_exe_inst);
 		}
 
@@ -590,7 +590,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		if(logFor(LOG_BLOCK)) {
 			log << "\t\t\ttoo many dynamic events: " << countDynEvents(all_events) << ". Giving up. Sorry.\n";
 			// log used events
-			for(Vector<event_t>::Iter e(all_events); e; e++)
+			for(Vector<event_t>::Iter e(all_events); e(); e++)
 				if((*e).fst->occurrence() == SOMETIMES)
 					log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address() << " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") " << (*e).snd << io::endl;
 		}
@@ -683,7 +683,7 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// log used events
 	if(logFor(LOG_BB))
-		for(Vector<event_t>::Iter e(all_events); e; e++)
+		for(Vector<event_t>::Iter e(all_events); e(); e++)
 			log << "\t\t\t\t" << (*e).snd << ": " << (*e).fst->inst()->address()
 				<< " -> " << (*e).fst->name() << " (" << (*e).fst->detail() << ") "
 				<< (*e).snd << io::endl;
@@ -699,7 +699,7 @@ void EdgeTimeBuilder::processSequence(void) {
 	Vector<ParExeInst *> insts;
 	event_list_t always_events;
 	ParExeSequence::InstIterator inst(seq);
-	for(event_list_t::Iter event(all_events); event; event++) {
+	for(event_list_t::Iter event(all_events); event(); event++) {
 		Event *evt = (*event).fst;
 
 		// find the instruction
@@ -716,7 +716,7 @@ void EdgeTimeBuilder::processSequence(void) {
 		switch(evt->occurrence()) {
 		case NEVER:			continue;
 		case SOMETIMES:		events.add(*event); insts.add(*inst); break;
-		case ALWAYS:		apply(evt, inst); always_events.add(*event); break;
+		case ALWAYS:		apply(evt, *inst); always_events.add(*event); break;
 		default:			ASSERT(0); break;
 		}
 	}
@@ -834,7 +834,7 @@ void EdgeTimeBuilder::genForOneCost(ot::time cost, Edge *edge, event_list_t& eve
 	contributeConst();
 
 	// generate variable contribution
-	for(event_list_t::Iter event(events); event; event++)
+	for(event_list_t::Iter event(events); event(); event++)
 		if((*event).fst->occurrence() == SOMETIMES) {
 			get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), 0);
 			get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), 0);
@@ -870,19 +870,19 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
 	set_t set;
 
 	// events in the current block
-	for(Identifier<Event *>::Getter event(bb, EVENT); event; event++)
+	for(Identifier<Event *>::Getter event(bb, EVENT); event(); event++)
 		set.add(pair(*event, place));
 
 	//
 	if(place == IN_PREFIX)
-		for(Identifier<Event *>::Getter event(edge, PREFIX_EVENT); event; event++)
+		for(Identifier<Event *>::Getter event(edge, PREFIX_EVENT); event(); event++)
 			set.add(pair(*event, IN_PREFIX));
 	else
-		for(Identifier<Event *>::Getter event(edge, EVENT); event; event++)
+		for(Identifier<Event *>::Getter event(edge, EVENT); event(); event++)
 			set.add(pair(*event, IN_EDGE));
 
 	// generate the ordered list of events
-	for(set_t::Iterator e(set); e; e++)
+	for(set_t::Iterator e(set); e(); e++)
 		events.push(*e);
 }
 
@@ -942,7 +942,7 @@ void EdgeTimeBuilder::displayConfs(const Vector<ConfigSet>& confs, const event_l
 	if(confs) {
 		for(int i = 0; i < confs.length(); i++) {
 			log << "\t\t\t\t[" << i << "] cost = " << confs[i].time() << " with " << confs[i].count() << " confs" << " -> ";
-			for(ConfigSet::Iter conf(confs[i]); conf; conf++)
+			for(ConfigSet::Iter conf(confs[i]); conf(); conf++)
 				log << " " << (*conf).toString(events.length());
 			log << io::endl;
 		}
@@ -958,9 +958,9 @@ ParExeNode *EdgeTimeBuilder::getBranchNode(void) {
 	ASSERT(source);
 	if(!bnode) {
 		Inst *binst = source->control();
-		for(ParExeSequence::Iter pinst(*seq); pinst; pinst++)
+		for(ParExeSequence::Iter pinst(*seq); pinst(); pinst++)
 			if(pinst->inst() == binst) {
-				for(ParExeInst::NodeIterator node(*pinst); node; node++)
+				for(ParExeInst::NodeIterator node(*pinst); node(); node++)
 					if(node->stage()->unit()->isBranch()) {
 						bnode = *node;
 						break;
@@ -998,7 +998,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeInst
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it)
+			for(ParExeSequence::Iter inst_it(*seq); inst_it(); ++inst_it)
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1008,13 +1008,13 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeNode
 			bool found = false;
-			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node(); rel_node++)
 				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
 
 					// Add cost to the edge between the related node and the fetch code
 					bool edge_found = false;
-					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+					for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ)
 						if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
 							succ.edge()->setLatency(succ.edge()->latency() + event->cost());
 							edge_found = true;
@@ -1040,7 +1040,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 		bool found = false;
-		for(ParExeInst::NodeIterator node(inst); node; node++)
+		for(ParExeInst::NodeIterator node(inst); node(); node++)
 			if(node->stage()->unit()->isMem()) {
 				node->setLatency(node->latency() + event->cost() - 1);
 				found = true;
@@ -1050,7 +1050,7 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		if(!found && event->related().fst) {
 			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it) {
+			for(ParExeSequence::Iter inst_it(*seq); inst_it(); ++inst_it) {
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1058,13 +1058,13 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 			}
 			// ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
 
-			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node(); rel_node++)
 				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
 
 					// Add cost to the edge between the related node and the fetch code
 					IN_ASSERT(bool edge_found = false);
-					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+					for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ) {
 						if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 							succ.edge()->setLatency(succ.edge()->latency() + event->cost());
 							IN_ASSERT(edge_found = true);
@@ -1121,7 +1121,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeInst
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it)
+			for(ParExeSequence::Iter inst_it(*seq); inst_it(); ++inst_it)
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1131,13 +1131,13 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 			// Find the related ParExeNode
 			bool found = false;
-			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node(); rel_node++)
 				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
 
 					// Add cost to the edge between the related node and the fetch code
 					bool edge_found = false;
-					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+					for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ)
 						if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
 							succ.edge()->setLatency(succ.edge()->latency() - event->cost());
 							edge_found = true;
@@ -1162,7 +1162,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 		bool found = false;
-		for(ParExeInst::NodeIterator node(inst); node; node++)
+		for(ParExeInst::NodeIterator node(inst); node(); node++)
 			if(node->stage()->unit()->isMem()) {
 				node->setLatency(node->latency() - event->cost() + 1);
 				found = true;
@@ -1172,7 +1172,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 		if(!found && event->related().fst) {
 			ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 			ParExeInst *rel_inst = 0;
-			for(ParExeSequence::Iter inst_it(*seq); inst_it; ++inst_it) {
+			for(ParExeSequence::Iter inst_it(*seq); inst_it(); ++inst_it) {
 				if(inst_it->inst() == event->related().fst) {
 					rel_inst = *inst_it;
 					break;
@@ -1180,13 +1180,13 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 			}
 			ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
 
-			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+			for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node(); rel_node++)
 				if(rel_node->stage()->unit() == event->related().snd) {
 					found = true;
 
 					// Add cost to the edge between the related node and the fetch code
 					IN_ASSERT(bool edge_found = false);
-					for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+					for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ) {
 						if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 							succ.edge()->setLatency(succ.edge()->latency() - event->cost());
 							IN_ASSERT(edge_found = true);
@@ -1470,7 +1470,7 @@ void EdgeTimeBuilder::makeSplit(const config_list_t& confs, int p, ConfigSet& ht
 	if(isVerbose()) {
 		log << "\t\t\t\t" << "LTS time = " << lts_time << ", HTS time = " << hts_time << " for { ";
 		bool fst = true;
-		for(ConfigSet::Iter conf(hts); conf; conf++) {
+		for(ConfigSet::Iter conf(hts); conf(); conf++) {
 			if(fst)
 				fst = false;
 			else
@@ -1573,7 +1573,7 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 void EdgeTimeBuilder::contributeConst(void) {
 
 	// foreach e in always(e) do C^e_p += x_edge
-	for(event_list_t::Iter event(all_events); event; event++)
+	for(event_list_t::Iter event(all_events); event(); event++)
 		switch((*event).fst->occurrence()) {
 		case ALWAYS:	get((*event).fst)->contribute(make((*event).fst, (*event).snd, true), ipet::VAR(edge)); break;
 		case NEVER:		get((*event).fst)->contribute(make((*event).fst, (*event).snd, false), ipet::VAR(edge)); break;

@@ -210,9 +210,9 @@ public:
 	inline store_t& store(void) { return _store; }
 
 	void update(const Bag<icache::Access>& accs, t& d) {
-		for(auto acc = *accs; acc; acc++) {
+		for(auto acc = *accs; acc(); acc++) {
 			DEBUG("    " << *acc);
-			_domain.update(acc, d);
+			_domain.update(*acc, d);
 			DEBUG("    " << _domain.print(d));
 		}
 	}
@@ -224,7 +224,7 @@ public:
 
 		// update and join along edges
 		DEBUG("compute IN of " << v);
-		for(auto e = _graph.preds(v); e; e++) {
+		for(auto e = _graph.preds(v); e(); e++) {
 			Block *w = e->source();
 			_domain.copy(s, _store.get(w));
 			DEBUG("  by " << *e << " in " << v->cfg());
@@ -238,24 +238,24 @@ public:
 			}
 
 			// loop support
-			if(LOOP_EXIT_EDGE(e))
-				for(LoopIter h(e->source()); h; h++) {
+			if(LOOP_EXIT_EDGE(*e))
+				for(LoopIter h(e->source()); h(); h++) {
 					_domain.leaveLoop(s);
-					if(h == LOOP_EXIT_EDGE(e))
+					if(*h == LOOP_EXIT_EDGE(*e))
 						break;
 				}
-			if(LOOP_HEADER(e->target()) && !BACK_EDGE(e))
+			if(LOOP_HEADER(e->target()) && !BACK_EDGE(*e))
 				_domain.enterLoop(s);
 
 			// subprogram call support (PERS ACS level fix)
-			if(_graph.isReturn(e))
+			if(_graph.isReturn(*e))
 				_domain.doReturn(s, v);
-			if(_graph.isCall(e))
+			if(_graph.isCall(*e))
 				_domain.doCall(s, e->sink()->outs()->sink());
 
 			// apply edge
 			{
-				const Bag<icache::Access>& accs = icache::ACCESSES(e);
+				const Bag<icache::Access>& accs = icache::ACCESSES(*e);
 				if(accs.count() > 0)
 					update(accs, s);
 			}
@@ -303,10 +303,10 @@ protected:
 			return;
 
 		// prepare containers
-		for(CFGCollection::BlockIter b(cfgs); b; b++) {
-			(*MUST_IN(b)).configure(*coll);
-			(*PERS_IN(b)).configure(*coll);
-			track(MUST_PERS_ANALYSIS_FEATURE, MUST_IN(b));
+		for(CFGCollection::BlockIter b(cfgs); b(); b++) {
+			(*MUST_IN(*b)).configure(*coll);
+			(*PERS_IN(*b)).configure(*coll);
+			track(MUST_PERS_ANALYSIS_FEATURE, MUST_IN(*b));
 		}
 
 		// compute ACS
@@ -327,12 +327,12 @@ protected:
 		ana.run();
 
 		// store the results
-		for(CFGCollection::BlockIter b(cfgs); b; b++)
+		for(CFGCollection::BlockIter b(cfgs); b(); b++)
 			if(b->isBasic()) {
-				ada.domain().mustDomain().copy((*MUST_IN(b))[set], ada.store().get(b).must);
-				ada.domain().persDomain().copy((*PERS_IN(b))[set], ada.store().get(b).pers);
+				ada.domain().mustDomain().copy((*MUST_IN(*b))[set], ada.store().get(*b).must);
+				ada.domain().persDomain().copy((*PERS_IN(*b))[set], ada.store().get(*b).pers);
 				if(logFor(LOG_BLOCK)) {
-					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(b)) << io::endl;
+					log << "\t\t\t" << *b << ": " << ada.domain().print(ada.store().get(*b)) << io::endl;
 				}
 			}
 	}

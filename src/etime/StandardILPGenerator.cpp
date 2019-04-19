@@ -325,7 +325,7 @@ void StandardILPGenerator::EventCollector::make(ilp::System *sys) {
 				evt->name() ,
 				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
-			for(List<ilp::Var *>::Iter v(vars[c]); v; v++)
+			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++)
 				cons->addRight(1, *v);
 		}
 	}

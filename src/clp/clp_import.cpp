@@ -168,7 +168,7 @@ class EmptyContent: public Content {
 public:
 	virtual bool parse(Parser& parser) {
 		Parser::mark_t m = parser.mark();
-		for(; parser; parser++)
+		for(; parser(); parser++)
 			if(!isEmpty(*parser)) {
 				parser.backtrack(m);
 				return false;
@@ -254,7 +254,7 @@ public:
 	Optional(Content& content): con(content) { }
 
 	virtual bool parse(Parser& parser) {
-		if(parser)
+		if(parser())
 			con.parse(parser);
 		return true;
 	}
@@ -297,7 +297,7 @@ public:
 
 		// crop spaces
 		if(_crop) {
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 			if(!parser)
 				return parser.backtrack(m);
 		}
@@ -308,7 +308,7 @@ public:
 
 		// crop spaces
 		if(_crop) {
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 			if(!parser)
 				return parser.backtrack(m);
 		}
@@ -319,7 +319,7 @@ public:
 
 		// crop last spaces
 		if(_crop)
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 
 		// step on
 		return true;
@@ -340,7 +340,7 @@ public:
 
 			// crop spaces
 			if(_crop) {
-				for(; parser && isEmpty(*parser); parser++);
+				for(; parser() && isEmpty(*parser); parser++);
 				if(!parser)
 					break;
 			}
@@ -437,7 +437,7 @@ typedef Element::Make make;
 class GC {
 public:
 	~GC(void) {
-		for(List<Content *>::Iter con; con; con++)
+		for(List<Content *>::Iter con; con(); con++)
 			delete *con;
 	}
 	inline Content& add(Content *c) { to_free.add(c); return *c; }
@@ -719,10 +719,10 @@ void CLPImport::processWorkSpace(WorkSpace *ws) {
 
 		// checking if the CFG matches the address
 		// elm::cout << "CFG " << cfgIndex << " with address 0x" << hex(cfgAddr) << endl;
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
 			if(cfg->index() == cfgIndex) {
 				ASSERTP(Address(cfgAddr) == cfg->address(), "CFG " << cfgIndex << "does not match with address 0x" << hex(cfgAddr));
-				currentCFG = cfg;
+				currentCFG = *cfg;
 				break;
 			}
 		}
@@ -750,7 +750,7 @@ void CLPImport::processWorkSpace(WorkSpace *ws) {
 			if(bbAddress)
 				*bbAddress >> bbAddr;
 
-			for(CFG::BlockIter cfgbi = currentCFG->blocks(); cfgbi; cfgbi++) {
+			for(CFG::BlockIter cfgbi = currentCFG->blocks(); cfgbi(); cfgbi++) {
 				if(cfgbi->index() == bbIndex) {
 					currentBB = cfgbi->toBasic();
 					ASSERTP(Address(bbAddr) == cfgbi->address(), "BB " << bbIndex << " does not match with address 0x" << hex(bbAddr));

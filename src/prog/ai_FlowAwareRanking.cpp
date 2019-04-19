@@ -91,20 +91,20 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 		// propagate at subprogram return
 		else if(v->isExit())
 			for(auto c: v->cfg()->callers())
-				for(auto e = c->outs(); e; e++)
+				for(auto e = c->outs(); e(); e++)
 					if(r > RANK_OF(e->sink()))
 						wl.put(pair(e->sink(), r));
 
 		// propagate to successors
-		for(auto e = v->outs(); e; e++)
+		for(auto e = v->outs(); e(); e++)
 
 			// do not propagate along exit edge
-			if(LOOP_EXIT_EDGE(e))
+			if(LOOP_EXIT_EDGE(*e))
 				continue;
 
 			// back edge propagate to exit edges
-			else if(BACK_EDGE(e)) {
-				for(auto f = ***EXIT_LIST(e->sink()); f; f++)
+			else if(BACK_EDGE(*e)) {
+				for(auto f = ***EXIT_LIST(e->sink()); f(); f++)
 					if(r > RANK_OF(f->sink()))
 						wl.put(pair(f->sink(), r));
 			}
@@ -117,8 +117,8 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 	if(logFor(LOG_BLOCK)) {
 		for(auto g: *coll) {
 			log << "\tCFG " << *g << io::endl;
-			for(auto v = g->blocks(); v; v++)
-				log << "\t\t" << *v << ": " << *RANK_OF(v) << io::endl;
+			for(auto v = g->blocks(); v(); v++)
+				log << "\t\t" << *v << ": " << *RANK_OF(*v) << io::endl;
 		}
 	}
 }

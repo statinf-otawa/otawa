@@ -92,8 +92,8 @@ public:
 			bTop = false;
 			return;
 		}
-		for(PotentialValue::Iterator ita(a); ita; ita++)
-			for(PotentialValue::Iterator itb(b); itb; itb++)
+		for(PotentialValue::Iterator ita(a); ita(); ita++)
+			for(PotentialValue::Iterator itb(b); itb(); itb++)
 				insert(*ita + *itb);
 	}
 

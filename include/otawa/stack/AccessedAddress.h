@@ -95,8 +95,8 @@ public:
 		_size = coll.count();
 		addrs = new AccessedAddress *[_size];
 		int i = 0;
-		for(typename C::Iter aa(coll); aa; aa++, i++)
-			addrs[i] = aa;
+		for(typename C::Iter aa(coll); aa(); aa++, i++)
+			addrs[i] = *aa;
 	}
 
 	void clear(void) {

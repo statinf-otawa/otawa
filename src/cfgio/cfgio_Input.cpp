@@ -165,7 +165,7 @@ class EmptyContent: public Content {
 public:
 	virtual bool parse(Parser& parser) {
 		Parser::mark_t m = parser.mark();
-		for(; parser; parser++)
+		for(; parser(); parser++)
 			if(!isEmpty(*parser)) {
 				parser.backtrack(m);
 				return false;
@@ -251,7 +251,7 @@ public:
 	Optional(Content& content): con(content) { }
 
 	virtual bool parse(Parser& parser) {
-		if(parser)
+		if(parser())
 			con.parse(parser);
 		return true;
 	}
@@ -294,7 +294,7 @@ public:
 
 		// crop spaces
 		if(_crop) {
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 			if(!parser)
 				return parser.backtrack(m);
 		}
@@ -305,7 +305,7 @@ public:
 
 		// crop spaces
 		if(_crop) {
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 			if(!parser)
 				return parser.backtrack(m);
 		}
@@ -316,7 +316,7 @@ public:
 
 		// crop last spaces
 		if(_crop)
-			for(; parser && isEmpty(*parser); parser++);
+			for(; parser() && isEmpty(*parser); parser++);
 
 		// step on
 		return true;
@@ -337,7 +337,7 @@ public:
 
 			// crop spaces
 			if(_crop) {
-				for(; parser && isEmpty(*parser); parser++);
+				for(; parser() && isEmpty(*parser); parser++);
 				if(!parser)
 					break;
 			}
@@ -434,7 +434,7 @@ typedef Element::Make make;
 class GC {
 public:
 	~GC(void) {
-		for(List<Content *>::Iter con; con; con++)
+		for(List<Content *>::Iter con; con(); con++)
 			delete *con;
 	}
 	inline Content& add(Content *c) { to_free.add(c); return *c; }
@@ -681,7 +681,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 		// add basic block in order ...
 		// we don't add the Synth Blocks now because the id of the Synth Blocks are after the Basic Blocks
 		// to have the same fashion of id numbering of the original and reconstructed CFG, we add the BB first.
-		for(Vector<Block*>::Iter vbbi(basicBlocksInOrder); vbbi; vbbi++)
+		for(Vector<Block*>::Iter vbbi(basicBlocksInOrder); vbbi(); vbbi++)
 			maker->add(*vbbi);
 
 		bb_map->put(*exitID, maker->exit()); // put the exit in the map
@@ -709,9 +709,9 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 	// now we have all the CFGs, we can fill the info of CFGs to the Synth Blocks
 	int cfgIndex = 0;
-	for(bb_map_table_t::Iter bbmtti(bb_map_table); bbmtti; bbmtti++, cfgIndex++) { // for each CFG
+	for(bb_map_table_t::Iter bbmtti(bb_map_table); bbmtti(); bbmtti++, cfgIndex++) { // for each CFG
 		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
-		for(bb_map_t::Iterator bbmti(**bbmtti); bbmti; bbmti++) { // for each entry in the bb_map
+		for(bb_map_t::Iterator bbmti(**bbmtti); bbmti(); bbmti++) { // for each entry in the bb_map
 			if(bbmti->isSynth()) { // now process the synth block. basic block were processed previously
 				if(*SYNTH_TARGET(*bbmti)) { // if there is an ID of the caller
 					cfgMaker->call(*bbmti->toSynth(),**cfg_map.get(**SYNTH_TARGET(*bbmti))); // get the map ID from the cfg_map
@@ -726,10 +726,10 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 	// build the edges
 	cfgIndex = 0;
-	for(edge_list_table_t::Iter eltti(edge_list_table); eltti; eltti++, cfgIndex++) { // for each CFG
+	for(edge_list_table_t::Iter eltti(edge_list_table); eltti(); eltti++, cfgIndex++) { // for each CFG
 		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
 		bb_map_t* bb_map = bb_map_table[cfgIndex];
-		for(edge_list_t::Iter elti(**eltti); elti; elti++) {
+		for(edge_list_t::Iter elti(**eltti); elti(); elti++) {
 			Block* sourceBlock = 0;
 			if(bb_map->hasKey((*elti).fst))
 				sourceBlock = bb_map->get((*elti).fst);
@@ -761,9 +761,9 @@ void Input::processWorkSpace(WorkSpace *ws) {
 	} // For each CFG
 
 	// cleanup
-	for(bb_map_table_t::Iter i(bb_map_table); i; i++)
+	for(bb_map_table_t::Iter i(bb_map_table); i(); i++)
 		delete *i;
-	for(edge_list_table_t::Iter i(edge_list_table); i; i++)
+	for(edge_list_table_t::Iter i(edge_list_table); i(); i++)
 		delete *i;
 }
 

@@ -253,7 +253,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	// Output the objective function
 	out << "max:";
 	bool fst = true;
-	for (ObjTermIterator term(this); term; term++) {
+	for (ObjTermIterator term(this); term(); term++) {
 		out << ' ';
 		printTerm(out, *term, dumper, fst);
 		vars.add((*term).fst);
@@ -262,12 +262,12 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	out << ";\n";
 
 	// Output the constraints
-	for(dyndata::Iter<Constraint *> cons(constraints()); cons; cons++) {
+	for(dyndata::Iter<Constraint *> cons(constraints()); cons(); cons++) {
 
 		// print positives
 		bool pos = false;
 		fst = true;
-		for(dyndata::Iter<Term> term(cons->terms()); term; term++) {
+		for(dyndata::Iter<Term> term(cons->terms()); term(); term++) {
 			if((*term).snd > 0) {
 				if(!fst)
 					out << ' ';
@@ -293,7 +293,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 		// print negatives
 		bool neg = false;
 		fst = true;
-		for(dyndata::Iter<Term> term(cons->terms()); term; term++)
+		for(dyndata::Iter<Term> term(cons->terms()); term(); term++)
 			if((*term).snd < 0) {
 				out << ' ';
 				printTerm(out, Term((*term).fst, -(*term).snd), dumper, fst);
@@ -320,11 +320,11 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	}
 
 	// Output int constraints
-	for(avl::Set<Var *>::Iterator var(vars); var; var++)
+	for(avl::Set<Var *>::Iterator var(vars); var(); var++)
 		switch(var->type()) {
-		case Var::INT:		out << "int " << CID(dumper.name(var)) << ";\n"; break;
+		case Var::INT:		out << "int " << CID(dumper.name(*var)) << ";\n"; break;
 		case Var::FLOAT:	break;
-		case Var::BIN:		out << "bin " << CID(dumper.name(var)) << ";\n"; break;
+		case Var::BIN:		out << "bin " << CID(dumper.name(*var)) << ";\n"; break;
 		default:			break;
 		}
 }
@@ -341,7 +341,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the objective function
 	out << "[objective maximize 'obj']\n";
-	for (ObjTermIterator term(this); term; term++) {
+	for (ObjTermIterator term(this); term(); term++) {
 		t::int32 val = lrint((*term).snd);
 		if (!rename.hasKey((*term).fst)) {
 			rename.put((*term).fst, new String((_ << "x" << idx)));
@@ -364,11 +364,11 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the constraints
 	out << "[constraints]\n";
-	for (ConstIterator cons2(this); cons2; cons2++) {
+	for (ConstIterator cons2(this); cons2(); cons2++) {
 		out << "[con]";
 		//bool bound = true;
 		int numvar = 0;
-		for (Constraint::TermIterator term(cons2); term; term++) {
+		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			//if ((*term).snd != 1)
 			//	bound = false;
 			numvar++;
@@ -376,7 +376,7 @@ void System::dumpMOSEK(OutStream& _out) {
 		//if (numvar != 1)
 		//	bound = false;
 
-		for (Constraint::TermIterator term(cons2); term; term++) {
+		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			t::int32 val = lrint((*term).snd);
 			if (!rename.hasKey((*term).fst)) {
 				rename.put((*term).fst, new String((_ << "x" << idx)));
@@ -429,7 +429,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[variables]\n";
-	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item(); item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -441,7 +441,7 @@ void System::dumpMOSEK(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "[integer]\n";
-	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item(); item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -469,7 +469,7 @@ void System::dumpCPlex(OutStream& _out) {
 	out << "Maximize\n";
 	/* dump the objective function */
 
-	for (ObjTermIterator term(this); term; term++) {
+	for (ObjTermIterator term(this); term(); term++) {
 		t::int32 val = lrint((*term).snd);
 		if (!rename.hasKey((*term).fst)) {
 			rename.put((*term).fst, new String((_ << "x" << idx)));
@@ -493,10 +493,10 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the constraints
 	out << "\\* Constraints *\\\n";
 	out << "Subject To\n";
-	for (ConstIterator cons2(this); cons2; cons2++) {
+	for (ConstIterator cons2(this); cons2(); cons2++) {
 		bool bound = true;
 		int numvar = 0;
-		for (Constraint::TermIterator term(cons2); term; term++) {
+		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			if ((*term).snd != 1)
 				bound = false;
 			numvar++;
@@ -507,7 +507,7 @@ void System::dumpCPlex(OutStream& _out) {
 		if (bound)
 			continue;
 
-		for (Constraint::TermIterator term(cons2); term; term++) {
+		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			t::int32 val = lrint((*term).snd);
 			if (!rename.hasKey((*term).fst)) {
 				rename.put((*term).fst, new String((_ << "x" << idx)));
@@ -554,11 +554,11 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the bounds
 	out << "\\* Variable bounds *\\\n";
 	out << "Bounds\n";
-	for (ConstIterator cons2(this); cons2; cons2++) {
+	for (ConstIterator cons2(this); cons2(); cons2++) {
 		bool bound = true;
 		int numvar = 0;
 		Var *var;
-		for (Constraint::TermIterator term(cons2); term; term++) {
+		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			if ((*term).snd != 1)
 				bound = false;
 			numvar++;
@@ -599,7 +599,7 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the integer variable definition
 	out << "\\* Integer definitions *\\\n";
 	out << "Integer\n";
-	for(HashMap<Var*, String*>::Iter item(rename); item; item++) {
+	for(HashMap<Var*, String*>::Iter item(rename); item(); item++) {
 		String *str = *item;
 		out << " ";
 		out << *str;
@@ -658,7 +658,7 @@ void System::addObject(const Expression& e) {
  * @param e	Expression to subtract.
  */
 void System::subObject(const Expression& e) {
-	for(Expression::Iter i(&e); i; i++)
+	for(Expression::Iter i(&e); i(); i++)
 		subObject(*i);
 }
 

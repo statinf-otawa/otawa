@@ -270,7 +270,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					PotentialValue toget = find(bb,rega,clpin,globalin,semantics);
 
 					// Get the value in memory from each possible addresses
-					for(PotentialValue::Iterator it(toget); it; it++) {
+					for(PotentialValue::Iterator it(toget); it(); it++) {
 						if(istate && istate->isReadOnly(*it)) { // if this specific address is initialized (in the binary)
 							potential_value_type val = readFromMem(*it, i.type());// workspace()->process()->get(*it,val);
 							r.insert(val);
@@ -284,7 +284,7 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 					}
 
 					if(r == PotentialValue::bot) { // means couldn't be found from the memory, lets try CLP?
-						for(PotentialValue::Iterator it(toget); it; it++) {
+						for(PotentialValue::Iterator it(toget); it(); it++) {
 							clp::Value valueFromCLP = clpState[semantics.length()].get(clp::Value(clp::VAL, *it, 0,0));
 							if(valueFromCLP != clp::Value::top && valueFromCLP.mtimes() < POTENTIAL_VALUE_LIMIT) {
 								PotentialValue p = setFromClp(valueFromCLP);
@@ -412,10 +412,10 @@ void DynamicBranchingAnalysis::takingCLPValueIfNecessary(PotentialValue& pv, int
 void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 	// semantics is a vector containing the semantic instructions of a given basic block in a reverse order (in respect with the instruction order)
 	Vector<sem::inst> semantics;
-	for(BasicBlock::InstIter inst(bb); inst; inst++) {
+	for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 		sem::Block block;
 		inst->semInsts(block);
-		for(sem::Block::InstIter semi(block); semi; semi++)
+		for(sem::Block::InstIter semi(block); semi(); semi++)
 			semantics.push(*semi);
 	}
 
@@ -446,14 +446,14 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 		}
 	}*/
 
-	for(PotentialValue::Iterator pvi(addresses); pvi; pvi++) {
+	for(PotentialValue::Iterator pvi(addresses); pvi(); pvi++) {
 		Address targetAddr = Address(*pvi);
 
 		bool targetToAdd = true;
 		Inst* last = bb->last();
 
 		// Check if the found target has already been recorded for BRANCH TARGET
-		for(Identifier<Address>::Getter target(last, BRANCH_TARGET); target; target++) {
+		for(Identifier<Address>::Getter target(last, BRANCH_TARGET); target(); target++) {
 			if(*target == targetAddr) {
 				targetToAdd = false;
 				break;
@@ -461,7 +461,7 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 		}
 
 		// Check if the found target has already been recorded for CALL TARGET
-		for(Identifier<Address>::Getter target(last, CALL_TARGET); target; target++) {
+		for(Identifier<Address>::Getter target(last, CALL_TARGET); target(); target++) {
 			if(*target == targetAddr) {
 				targetToAdd = false;
 				break;
@@ -470,8 +470,8 @@ void DynamicBranchingAnalysis::addTargetToBB(BasicBlock* bb) {
 
 		// Check if the address found is in the program memory
 		bool isExecutable = false;
-		for(Process::FileIter pfi(workspace()->process()); pfi; pfi++) {
-			for(File::SegIter fsi(*pfi); fsi && !isExecutable; fsi++) {
+		for(Process::FileIter pfi(workspace()->process()); pfi(); pfi++) {
+			for(File::SegIter fsi(*pfi); fsi() && !isExecutable; fsi++) {
 				if(fsi->isExecutable() && (*pvi) >= fsi->address().offset() && (*pvi) <= fsi->topAddress().offset()) {
 					isExecutable = true;
 					break;
@@ -555,7 +555,7 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 	// if the BB has unknown target, that means the BB has not been through the analysis
 	// initialize the target count to 0 (from -1)
-	for(Block::EdgeIter ei = b->outs(); ei; ei++) {
+	for(Block::EdgeIter ei = b->outs(); ei(); ei++) {
 		if(ei->sink()->isUnknown()) {
 			DYNBRANCH_TARGET_COUNT(bb->last()) = 0; // from -1
 			break;

@@ -17,7 +17,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 //#define CATCH_STT
-//#define HAI_DEBUG
+#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
 #include <elm/data/HashMap.h>
@@ -63,7 +63,7 @@ using namespace otawa;
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	//t
+#define TRACESI(t)	t
 // Debug output with alarm of creation of T
 #define TRACEA(t)	//t
 // Debug only the join function
@@ -2458,7 +2458,7 @@ public:
 		State::Iter id(d), ia(a), ib(b);
 
 		// check the state
-		while(id && ia && ib) {
+		while(id() && ia() && ib()) {
 			Value idd = id.id(), ida = ia.id(), idb = ia.id();
 			if(idd.kind() == REG && ida.kind() == REG && ida.kind() == REG) {
 				if((*id).kind() == ALL && (*ia).kind() != ALL && (*ib).kind() != ALL) {
@@ -2493,7 +2493,7 @@ public:
 		}
 
 		// check the end
-		if(!id && ia && ib)
+		if(!id && ia() && ib())
 			cerr << "\t\t\tALARM! widening" << ia.id() << io::endl;
 	}
 
@@ -2992,7 +2992,7 @@ public:
 	 * @param inst	Instruction to interpret.
 	 */
 	//void prepare(Inst *inst) {
-	void prepare(const Bundle& bundle) {
+	void prepare(const BasicBlock::Bundle& bundle) {
 		b.clear();
 		//inst->semInsts(b);
 		bundle.semInsts(b);
@@ -3013,13 +3013,13 @@ public:
 
 		for(; index < map->count(); index++) {
 			if(inst->address() == map->get(index).inst->address()) {
-				for(dfa::State::RegIter r(map->get(index).state); r; r++) {
+				for(dfa::State::RegIter r(map->get(index).state); r(); r++) {
 					Value reg(REG, (*r).fst->platformNumber());
 					Value v(VAL, (*r).snd.base(), (*r).snd.delta(), (*r).snd.count());
 					out.set(reg, v);
 
 				}
-				for(dfa::State::MemIter m(map->get(index).state); m; m++) {
+				for(dfa::State::MemIter m(map->get(index).state); m(); m++) {
 					Value v(VAL, (*m).value().base(), (*m).value().delta(), (*m).value().count());
 					Value a(VAL, (*m).address().offset());
 					out.set(a, v);
@@ -3078,7 +3078,7 @@ public:
 #ifdef USE_INST
 		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
 #else // use bundle
-		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle; bundle++) {
+		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle(); bundle++) {
 			has_if = false;
 			has_branch = false;
 #endif
@@ -3088,7 +3088,7 @@ public:
 #else
 			this->currentInst = (*bundle).first();
 #endif
-			TRACESI(cerr << '\t' << inst->address() << ": "; inst->dump(cerr); cerr << io::endl);
+			TRACESI(cerr << '\t' << currentInst->address() << ": "; currentInst->dump(cerr); cerr << io::endl);
 			_nb_inst++; // statistics
 
 			// get semantic instructions
@@ -3294,21 +3294,21 @@ public:
 
 	virtual void clean(void) {
 		const CFGCollection *cfgc = INVOLVED_CFGS(ws);
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
-			for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
+			for(CFG::BlockIter bbi = cfg->blocks(); bbi(); bbi++){
 				clp::STATE_IN(*bbi).remove();
 				clp::STATE_OUT(*bbi).remove();
 
 				if(se::REG_FILTERS(*bbi).exists()) {
 					Vector<se::SECmp *> vse = se::REG_FILTERS(*bbi);
-					for(Vector<se::SECmp *>::Iter vsei(vse); vsei; vsei++)
+					for(Vector<se::SECmp *>::Iter vsei(vse); vsei(); vsei++)
 						delete *vsei;
 					se::REG_FILTERS(*bbi).remove();
 				}
 
 				if(se::ADDR_FILTERS(*bbi).exists()) {
 					Vector<se::SECmp *> vse = se::ADDR_FILTERS(*bbi);
-					for(Vector<se::SECmp *>::Iter vsei(vse); vsei; vsei++)
+					for(Vector<se::SECmp *>::Iter vsei(vse); vsei(); vsei++)
 						delete *vsei;
 					se::ADDR_FILTERS(*bbi).remove();
 				}
@@ -3414,11 +3414,11 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	if(istate) {
 
 		// initialize registers
-		for(dfa::State::RegIter r(istate); r; r++)
+		for(dfa::State::RegIter r(istate); r(); r++)
 			prob.initialize((*r).fst, (*r).snd);
 
 		// initialize memory
-		for(dfa::State::MemIter m(istate); m; m++)
+		for(dfa::State::MemIter m(istate); m(); m++)
 			prob.initialize((*m).address(), (*m).value());
 
 		prob.setInitialState(istate);
@@ -3461,9 +3461,17 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	cai.solve(cfg);
 
 	// the states actually stored in the listener!
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
-			STATE_IN(bb) = *(list.results[cfg->index()][bb->index()]);
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++) {
+		if(logFor(LOG_BB))
+			log << "\tCFG " << *cfg << io::endl;
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+			STATE_IN(*bb) = *(list.results[cfg->index()][bb->index()]);
+			if(logFor(LOG_BB)) {
+				log << "\t\t" << *bb << io::endl;
+				log << "\t\t\tS = ";
+				list.results[cfg->index()][bb->index()]->print(log, ws->process()->platform());
+				log << io::endl;
+			}
 		}
 	}
 
@@ -3497,8 +3505,8 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
  */
 void Analysis::configure(const PropList &props) {
 	Processor::configure(props);
-	for(Identifier<init_t>::Getter init(props, INITIAL); init; init++)
-		inits.add(init);
+	for(Identifier<init_t>::Getter init(props, INITIAL); init(); init++)
+		inits.add(*init);
 	verbose = VERBOSE(props);
 }
 
@@ -3629,7 +3637,7 @@ void ClpStatePack::InstPack::append(clp::State &state){
 *	@param instruction is the address of the instruction to get the state of.
 */
 clp::State ClpStatePack::state_after(address_t instruction){
-	for(PackIterator packs = getIterator(); packs; packs++){
+	for(PackIterator packs = getIterator(); packs(); packs++){
 		InstPack *ipack = (*packs);
 		if (ipack->inst_addr() == instruction)
 			return ipack->outputState();
@@ -3643,7 +3651,7 @@ clp::State ClpStatePack::state_after(address_t instruction){
 *		the block corresponding to the machine instruction.
 */
 clp::State ClpStatePack::state_after(address_t instruction, int sem){
-	for(PackIterator packs = getIterator(); packs; packs++){
+	for(PackIterator packs = getIterator(); packs(); packs++){
 		InstPack *ipack = (*packs);
 		if (ipack->inst_addr() == instruction)
 			return *(ipack->_states[sem]);
@@ -3655,7 +3663,7 @@ clp::State ClpStatePack::state_after(address_t instruction, int sem){
 */
 clp::State ClpStatePack::state_before(address_t instruction){
 	clp::State last_state = STATE_IN(_bb);
-	for(PackIterator packs = getIterator(); packs; packs++){
+	for(PackIterator packs = getIterator(); packs(); packs++){
 		InstPack *ipack = (*packs);
 		if (ipack->inst_addr() == instruction)
 			return last_state;
@@ -3671,7 +3679,7 @@ clp::State ClpStatePack::state_before(address_t instruction){
 */
 clp::State ClpStatePack::state_before(address_t instruction, int sem){
 	clp::State last_state = STATE_IN(_bb);
-	for(PackIterator packs = getIterator(); packs; packs++){
+	for(PackIterator packs = getIterator(); packs(); packs++){
 		InstPack *ipack = (*packs);
 		if (ipack->inst_addr() == instruction){
 			if ( sem == 0)
@@ -3716,21 +3724,21 @@ void DeadCodeAnalysis::processWorkSpace(WorkSpace *ws){
 	ASSERT(coll);
 	CFG *cfg = coll->get(0);
 	/* for each bb */
-	for(CFG::BlockIter bbi = cfg->blocks(); bbi; bbi++){
+	for(CFG::BlockIter bbi = cfg->blocks(); bbi(); bbi++){
 		clp::State st = clp::STATE_OUT(*bbi);
 		/* if the bb state is None : */
 		if (st == clp::State::EMPTY){
 			/* mark all (in|out) edges as never taken */
-			for(Block::EdgeIter edge = bbi->ins(); edge; edge++)
+			for(Block::EdgeIter edge = bbi->ins(); edge(); edge++)
 				NEVER_TAKEN(*edge) = true;
-			for(Block::EdgeIter edge = bbi->outs(); edge; edge++)
+			for(Block::EdgeIter edge = bbi->outs(); edge(); edge++)
 				NEVER_TAKEN(*edge) = true;
 		} else {
 			/* mark all (in|out) edges as not never taken */
-			for(Block::EdgeIter edge = bbi->ins(); edge; edge++)
+			for(Block::EdgeIter edge = bbi->ins(); edge(); edge++)
 				if (!NEVER_TAKEN.exists(*edge))
 					NEVER_TAKEN(*edge) = false;
-			for(Block::EdgeIter edge = bbi->outs(); edge; edge++)
+			for(Block::EdgeIter edge = bbi->outs(); edge(); edge++)
 				if (!NEVER_TAKEN.exists(*edge))
 					NEVER_TAKEN(*edge) = false;
 		}
@@ -3806,7 +3814,7 @@ Manager::step_t Manager::next(void) {
 			if(!mi)
 				return false;
 			cs = &s;
-			p->prepare(mi);
+			p->prepare(*mi);
 			p->insertInfo(*cs, b, (*mi).first());
 			i = 0;
 		}
@@ -3864,7 +3872,7 @@ Value Manager::getCurrentAccessAddress(void) {
 Manager::step_t Manager::rewind(State& rState) {
 	s = rState;
 	cs = &s;
-	p->prepare(mi);
+	p->prepare(*mi);
 	i = p->getPC();
 	step_t r = NEW_SEM | NEW_INST;
 	return r;

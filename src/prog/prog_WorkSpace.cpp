@@ -251,7 +251,7 @@ WorkSpace::WorkSpace(Process *_proc): proc(_proc), cancelled(false) {
 	TRACE(this << ".WorkSpace::WorkSpace(" << _proc << ')');
 	ASSERT(_proc);
 	const List<AbstractFeature *>& feats = _proc->features();
-	for(List<AbstractFeature *>::Iter i(feats); i; i++) {
+	for(List<AbstractFeature *>::Iter i(feats); i(); i++) {
 		Dependency *dep = new Dependency();
 		TRACE("added process feature " << dep << " for " << i->name());
 		dep_map.put(*i, dep);
@@ -268,7 +268,7 @@ WorkSpace::WorkSpace(const WorkSpace *ws): cancelled(false) {
 	ASSERT(ws);
 	proc = ws->process();
 	const List<AbstractFeature *>& feats = ws->process()->features();
-	for(List<AbstractFeature *>::Iter i(feats); i; i++) {
+	for(List<AbstractFeature *>::Iter i(feats); i(); i++) {
 		Dependency *dep = new Dependency();
 		TRACE("added process feature " << dep << " for " << i->name());
 		dep_map.put(*i, dep);
@@ -284,15 +284,15 @@ WorkSpace::~WorkSpace(void) {
 
 	// collect root dependencies
 	Vector<Dependency *> roots;
-	for(dep_map_t::Iter i(dep_map); i; i++)
+	for(dep_map_t::Iter i(dep_map); i(); i++)
 		if((*i)->_used.isEmpty() && !roots.contains(*i)) {
 			TRACE("ROOT: " << *i << " -> " << i->_proc << " for " << i.key()->name());
 			roots.add(*i);
 		}
 
 	// invalidate dependencies
-	for(Vector<Dependency *>::Iter i(roots); i; i++)
-		invalidate(i);
+	for(Vector<Dependency *>::Iter i(roots); i(); i++)
+		invalidate(*i);
 }
 
 
@@ -324,7 +324,7 @@ string WorkSpace::format(Address addr, bool with_address) {
 	if(!done) {
 		Inst *inst = findInstAt(addr);
 		while(inst && !done) {
-			for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym; sym++)
+			for(Identifier<Symbol *>::Getter sym(inst, SYMBOL); sym(); sym++)
 				/*if(sym->kind() == Symbol::FUNCTION)*/ {
 					done = true;
 					buf << '"' << sym->name() << '"';
@@ -502,12 +502,12 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 
 	// build the list of required features
 	Vector<const AbstractFeature *> required;
-	for(FeatureIter fuse(reg); fuse; fuse++)
+	for(FeatureIter fuse(reg); fuse(); fuse++)
 		if(fuse->kind() == FeatureUsage::require && !required.contains(&fuse->feature()))
 			required.add(&fuse->feature());
 
 	// remove non-used invalidated features
-	for(FeatureIter feature(reg); feature; feature++)
+	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& !reg.uses(feature->feature())) {
 			if(proc->logFor(Processor::LOG_DEPS))
@@ -518,7 +518,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 		}
 
 	// Get used feature
-	for(FeatureIter feature(reg); !isCancelled() && feature; feature++)
+	for(FeatureIter feature(reg); !isCancelled() && feature(); feature++)
 		if(feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use) {
 			if(proc->logFor(Processor::LOG_DEPS)) {
@@ -539,7 +539,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 		return;
 
 	// check before starting processor
-	for(FeatureIter feature(reg); feature; feature++)
+	for(FeatureIter feature(reg); feature(); feature++)
 		if((feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use)
 		&& !isProvided(feature->feature()))
@@ -552,7 +552,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	proc->flags |= Processor::IS_DONE;
 
 	// cleanup used invalidated features
-	for(FeatureIter feature(reg); feature; feature++)
+	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& reg.uses(feature->feature())) {
 			if(proc->logFor(Processor::LOG_DEPS))
@@ -564,7 +564,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	// create the dependency
 	proc->commit(this);
 	int provides = 0;
-	for(FeatureIter feature(reg); feature; feature++)
+	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::provide) {
 			provides++;
 			if(proc->logFor(Processor::LOG_DEPS))
@@ -584,7 +584,7 @@ void WorkSpace::add(Processor *proc, bool del_proc) {
 	ASSERT(proc);
 	Dependency *d = new Dependency(proc, del_proc);
 	TRACE("added " << d << " for " << proc->name());
-	for(FeatureIter fu(proc->registration()); fu; fu++)
+	for(FeatureIter fu(proc->registration()); fu(); fu++)
 		if(fu->kind() == FeatureUsage::provide) {
 			dep_map.put(&fu->feature(), d);
 			TRACE("\tfor " << fu->feature().name());
@@ -614,12 +614,12 @@ void WorkSpace::remove(Dependency *dep) {
 
 	// remove provided features
 	//for(List<FeatureUsage>::Iter fu(dep->_proc->registration().features()); fu; fu++)
-	for(FeatureIter fu(dep->_proc->registration()); fu; fu++)
+	for(FeatureIter fu(dep->_proc->registration()); fu(); fu++)
 		if(fu->kind() == FeatureUsage::provide)
 			dep_map.remove(&fu->feature());
 
 	// release its own dependencies
-	for(List<Dependency *>::Iter i(dep->_used); i; i++)
+	for(List<Dependency *>::Iter i(dep->_used); i(); i++)
 		i->_users.remove(dep);
 
 	// free the memory

@@ -53,10 +53,10 @@ FixedTextDecoder::FixedTextDecoder(void): Processor(reg) {
  */
 void FixedTextDecoder::processWorkSpace(WorkSpace *fw) {
 	ASSERT(fw);
-	for(Process::FileIter file(fw->process()); file; file++) {
+	for(Process::FileIter file(fw->process()); file(); file++) {
 		if(logFor(LOG_DEPS))
 			log << "\tProcessing file " << file->name() << io::endl;
-		for(File::SegIter seg(file); seg; seg++)
+		for(File::SegIter seg(*file); seg(); seg++)
 			if(seg->isExecutable()) {
 				if(logFor(LOG_CFG))
 					log << "\t\tProcessing segment " << seg->name() << io::endl;

@@ -264,7 +264,7 @@ void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
 	delete _builder;
 	delete _solver;
 	delete _proc;
-	for(auto res = resources_t::Iter(_resources); res; res++)
+	for(auto res = resources_t::Iter(_resources); res(); res++)
 		delete *res;
 	_resources.clear();
 }
@@ -283,14 +283,14 @@ void AbstractTimeBuilder::buildResources(void) {
     _resources.add(new_resource);
 
     // build resource for stages and FUs
-    for(ParExePipeline::StageIterator stage(_proc->pipeline()); stage; stage++) {
+    for(ParExePipeline::StageIterator stage(_proc->pipeline()); stage(); stage++) {
 
     	// all except execute stage
     	if(stage->category() != ParExeStage::EXECUTE) {
 			for(int i = 0; i < stage->width(); i++) {
 				StringBuffer buffer;
 				buffer << stage->name() << "[" << i << "]";
-				StageResource * new_resource = new StageResource(buffer.toString(), stage, i, resource_index++);
+				StageResource * new_resource = new StageResource(buffer.toString(), *stage, i, resource_index++);
 				_resources.add(new_resource);
 			}
 		}
@@ -315,7 +315,7 @@ void AbstractTimeBuilder::buildResources(void) {
     }
 
     // build resources for queues
-    for(ParExeProc::QueueIterator queue(_proc) ; queue ; queue++) {
+    for(ParExeProc::QueueIterator queue(_proc) ; queue() ; queue++) {
 		int num = queue->size();
 		for(int i = 0; i < num; i++) {
 			StringBuffer buffer;
@@ -339,7 +339,7 @@ void AbstractTimeBuilder::buildResources(void) {
 			ASSERT(upper_bound);
 
 			// build the queue resource
-			QueueResource * new_resource = new QueueResource(buffer.toString(), queue, i, resource_index++, upper_bound, _proc->pipeline()->numStages());
+			QueueResource * new_resource = new QueueResource(buffer.toString(), *queue, i, resource_index++, upper_bound, _proc->pipeline()->numStages());
 			_resources.add(new_resource);
 		}
     }

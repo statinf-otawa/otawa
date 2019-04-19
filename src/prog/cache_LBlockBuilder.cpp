@@ -175,15 +175,15 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
 	// Traverse instruction
 	int index = 0;
 	hard::Cache::set_t set = cache->set(bb->first()->address()) - 1;
-	for(BasicBlock::InstIter inst = bb->insts(); inst; inst++) {
+	for(BasicBlock::InstIter inst = bb->insts(); inst(); inst++) {
 		if(set != cache->set(inst->address())) {
 			set = cache->set(inst->address());
-			addLBlock(bb, inst, index, lblocks, inst->address());
+			addLBlock(bb, *inst, index, lblocks, inst->address());
 		}
 
 		if(set != cache->set(inst->address() + inst->size() - 1)) { // in case an instruction crosses cache-block
 			set = cache->set(inst->address() + inst->size() - 1);
-			addLBlock(bb, inst, index, lblocks, cache->round(inst->address().offset() + inst->size() - 1));
+			addLBlock(bb, *inst, index, lblocks, cache->round(inst->address().offset() + inst->size() - 1));
 		}
 	}
 	ASSERT(index == num_lblocks); // to make sure the last instruction falls to the last LBlock created

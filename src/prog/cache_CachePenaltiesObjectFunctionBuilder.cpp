@@ -84,8 +84,8 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 	System *system = SYSTEM(fw);
 	
 	// examine each input
-	for (Block::EdgeIter edge = bb->ins(); edge; edge++) {
-		CachePenalty * cache_penalty = ICACHE_PENALTY(edge);
+	for (Block::EdgeIter edge = bb->ins(); edge(); edge++) {
+		CachePenalty * cache_penalty = ICACHE_PENALTY(*edge);
 		
 		// process a cache penalty
 		if (cache_penalty) {
@@ -93,9 +93,9 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 			// only one header: add to objective function: t_miss * x_(h, j)
 			if (!cache_penalty->header(1)){
 				ASSERT(cache_penalty->header(0));
-				for(Block::EdgeIter h_edge = cache_penalty->header(0)->ins() ; h_edge ; h_edge++)
-					if (!dom->isBackEdge(h_edge))
-						system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS), VAR(h_edge));
+				for(Block::EdgeIter h_edge = cache_penalty->header(0)->ins() ; h_edge() ; h_edge++)
+					if (!dom->isBackEdge(*h_edge))
+						system->addObjectFunction(cache_penalty->penalty(CachePenalty::MISS), VAR(*h_edge));
 			}
 			
 			// more than one
@@ -125,13 +125,13 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				// c2: x_loop = sum{e_h0i not in back(h0)} e_h0i - sum{e_h0i not in back(h0)} e_h0i
 				Constraint *cons_loop = system->newConstraint("double FM header: sum of entering and backing", Constraint::EQ, 0);
 				cons_loop->addLeft(1, loop);
-				for (Block::EdgeIter edge = cache_penalty->header(0)->ins(); edge ; edge++){
-					if (!dom->isBackEdge(edge)){
-						cons_entry->addRight(1, VAR(edge));
-						cons_loop->addRight(-1, VAR(edge));
+				for (Block::EdgeIter edge = cache_penalty->header(0)->ins(); edge() ; edge++){
+					if (!dom->isBackEdge(*edge)){
+						cons_entry->addRight(1, VAR(*edge));
+						cons_loop->addRight(-1, VAR(*edge));
 					}
 					else {
-						cons_loop->addRight(1, VAR(edge));
+						cons_loop->addRight(1, VAR(*edge));
 					}
 				}
 				
@@ -155,12 +155,12 @@ void CachePenaltiesObjectFunctionBuilder::processBB(
 				}
 				cons_loop = system->newConstraint("double FM header: sum of entering", Constraint::EQ,0);
 				cons_loop->addLeft(1, loop);
-				for (Block::EdgeIter edge = cache_penalty->header(1)->ins() ; edge ; edge++){
-					if (!dom->isBackEdge(edge)){
-						cons_loop->addRight(-1, VAR(edge));
+				for (Block::EdgeIter edge = cache_penalty->header(1)->ins() ; edge() ; edge++){
+					if (!dom->isBackEdge(*edge)){
+						cons_loop->addRight(-1, VAR(*edge));
 					}
 					else {
-						cons_loop->addRight(1, VAR(edge));
+						cons_loop->addRight(1, VAR(*edge));
 					}
 				}
 				system->addObjectFunction(cache_penalty->penalty(CachePenalty::x_HIT), loop);

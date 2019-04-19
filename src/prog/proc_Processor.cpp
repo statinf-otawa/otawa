@@ -293,7 +293,7 @@ Processor::Processor(void): stats(0), ws(0), _progress(0) {
  */
 Processor::~Processor(void) {
 	if(flags & IS_TIED)
-		for(FeatureIter f(*_reg); f; f++)
+		for(FeatureIter f(*_reg); f(); f++)
 			if(f->kind() == FeatureUsage::provide) {
 				ws->invalidate(f->feature());
 				break;
@@ -558,7 +558,7 @@ void Processor::collectStats(WorkSpace *ws) {
  * The default implementation activates the clean list.
  */
 void Processor::destroy(WorkSpace *ws) {
-	for(List<Cleaner *>::Iter clean = *cleaners; clean; clean++)
+	for(List<Cleaner *>::Iter clean = *cleaners; clean(); clean++)
 		delete *clean;
 	cleaners.clear();
 }

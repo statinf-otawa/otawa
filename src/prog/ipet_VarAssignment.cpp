@@ -62,8 +62,8 @@ protected:
 		bb->removeProp(VAR);
 
 		// remove var of edges
-		for(Block::EdgeIter edge = bb->outs(); edge; edge++) {
-			ilp::Var *v = VAR(edge);
+		for(Block::EdgeIter edge = bb->outs(); edge(); edge++) {
+			ilp::Var *v = VAR(*edge);
 			if(v)
 				delete v;
 			edge->removeProp(VAR);
@@ -110,17 +110,17 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 	}
 
 	// Check out edges
-	for(Block::EdgeIter edge = bb->outs(); edge; edge++) {
-		if(!VAR(edge)) {
+	for(Block::EdgeIter edge = bb->outs(); edge(); edge++) {
+		if(!VAR(*edge)) {
 			String name = "";
 			if(_explicit) {
-			        if (FORCE_NAME(edge)) {
-			              name = **FORCE_NAME(edge);
+			        if (FORCE_NAME(*edge)) {
+			              name = **FORCE_NAME(*edge);
                                 } else {
-				      name = makeEdgeVar(edge, cfg);
+				      name = makeEdgeVar(*edge, cfg);
                                 }
                         }
-			VAR(edge) = sys->newVar(name);
+			VAR(*edge) = sys->newVar(name);
 		}
 	}
 

@@ -177,7 +177,7 @@ void LivenessChecker::initIdentifiersForEachBB(const CFGCollection& coll) {
 	for (int i = 0; i < coll.count(); i++) {
 		CFG *cfg = coll[i]; // current CFG
 		// for each BB in the CFG
-		for (CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for (CFG::BlockIter v = cfg->blocks(); v(); v++) {
 			if(!v->isBasic())
 				continue;
 			REG_BB_END_IN(*v) = BitVector(workspace()->platform()->regCount(), false);
@@ -196,7 +196,7 @@ void LivenessChecker::provideRegisters(Inst* inst, elm::BitVector& regsToModify,
 	else
 		regTable = inst->writtenRegs();
 
-	for(elm::genstruct::Table<hard::Register *>::Iterator currReg(regTable); currReg; ++currReg)
+	for(elm::genstruct::Table<hard::Register *>::Iterator currReg(regTable); currReg(); ++currReg)
 		regsToModify.set(currReg->platformNumber());
 }
 
@@ -294,7 +294,7 @@ void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 		// first we find the predecessors of the BB to process
 		Vector<Block *> predecessors;
 
-		for (Block::EdgeIter e = currentBB_wl->ins(); e; e++) {
+		for (Block::EdgeIter e = currentBB_wl->ins(); e(); e++) {
 			Block* b = e->source(); // find the source of the edge, the predecessor of current BB
 			if (b->isEntry()) {
 				// then get the set of the callers
@@ -302,7 +302,7 @@ void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 					if(_debugLevel & DISPLAY_LIVENESS_STAGES)
 						elm::cerr << __SOURCE_INFO__ << "Found a caller @ CFG " << caller->cfg()->index() << ", BB " << caller->index() << io::endl;
 
-					for(Block::EdgeIter bei = caller->ins(); bei; bei++) {
+					for(Block::EdgeIter bei = caller->ins(); bei(); bei++) {
 						if(_debugLevel & DISPLAY_LIVENESS_STAGES)
 							elm::cerr << __SOURCE_INFO__ << __TAB__ << __GREEN__ << "Adding the block @ CFG " << bei->source()->cfg()->index() << ", " << bei->source() << __RESET__ << io::endl;
 						predecessors.add(bei->source());
@@ -328,7 +328,7 @@ void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 					continue;
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
-				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
+				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit(); EdgeToExit++) {
 					Block* BB_BeforeReturn = EdgeToExit->source();
 					if(_debugLevel & DISPLAY_LIVENESS_STAGES)
 						elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding block CFG " << BB_BeforeReturn->cfg()->index() << ", " << BB_BeforeReturn << __RESET__ << io::endl;
@@ -353,16 +353,16 @@ void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
-		for(Vector<Block *>::Iter predecessor(predecessors); predecessor; ++predecessor) {
-			BitVector bv = REG_BB_END_IN(predecessor);
+		for(Vector<Block *>::Iter predecessor(predecessors); predecessor(); ++predecessor) {
+			BitVector bv = REG_BB_END_IN(*predecessor);
 			if(!bv.size()) {
 				bv = BitVector(workspace()->platform()->regCount(), false);
-				REG_BB_END_IN(predecessor) = bv;
+				REG_BB_END_IN(*predecessor) = bv;
 			}
-			dfa::MemorySet::t* memIn = MEM_BB_END_IN(predecessor);
+			dfa::MemorySet::t* memIn = MEM_BB_END_IN(*predecessor);
 			if(!memIn) {
 				memIn = new dfa::MemorySet::t(0);
-				MEM_BB_END_IN(predecessor) = memIn;
+				MEM_BB_END_IN(*predecessor) = memIn;
 			}
 
 			bool notContainsAllRegs = !bv.includes(currentRegs_wl);
@@ -378,14 +378,14 @@ void LivenessChecker::processWorkingList(Vector<WorkingElement*>& workingList) {
 				if(_debugLevel & DISPLAY_LIVENESS_STAGES)
 					elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding BB @ CFG " << predecessor->cfg()->index() << ", " << *predecessor << " to the working list." << __RESET__ << io::endl;
 				bv = bv | currentRegs_wl;
-				REG_BB_END_IN(predecessor) = bv;
+				REG_BB_END_IN(*predecessor) = bv;
 				//memIn->addAll(currentMems_wl);
 				*memIn = dfa::MemorySet().join(*memIn, currentMems_wl);
-				MEM_BB_END_IN(predecessor) = memIn;
+				MEM_BB_END_IN(*predecessor) = memIn;
 				Inst* lastInstruction = 0;
 				if(predecessor->isBasic())
 					lastInstruction = predecessor->toBasic()->last();
-				WorkingElement *we = new WorkingElement(predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
+				WorkingElement *we = new WorkingElement(*predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
 				workingList.add(we);
 			}
 			else
@@ -463,7 +463,7 @@ void LivenessChecker::identifyAddrs(BasicBlock* bb) {
 void LivenessChecker::updateAddrsFromInstruction(otawa::dfa::MemorySet::t & workingMem, otawa::dfa::MemorySet::t & readMem, otawa::dfa::MemorySet::t & writeMem, t::uint32 debugLevel) {
 	dfa::MemorySet ms;
 	dfa::MemorySet::t intersection = ms.meet(workingMem, writeMem);
-	for(dfa::MemorySet::Iter msi = intersection.areas(); msi; msi++) {
+	for(dfa::MemorySet::Iter msi = intersection.areas(); msi(); msi++) {
 		if(debugLevel & DISPLAY_LIVENESS_STAGES) {
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << __BLUE__ << "Removing " << *msi << " from the workingMems" << __RESET__ << io::endl;
 		}
@@ -475,8 +475,8 @@ void LivenessChecker::updateAddrsFromInstruction(otawa::dfa::MemorySet::t & work
 //bool LivenessChecker::containsAllAddrs(clp_value_set_t & a, clp_value_set_t & b) {
 bool LivenessChecker::containsAllAddrs(otawa::dfa::MemorySet::t & a, otawa::dfa::MemorySet::t & b) {
 	dfa::MemorySet ms;
-	for(dfa::MemorySet::Iter msi = b.areas(); msi; msi++)
-		if(!ms.contains(a, msi))
+	for(dfa::MemorySet::Iter msi = b.areas(); msi(); msi++)
+		if(!ms.contains(a, *msi))
 			return false;
 	return true;
 }
@@ -541,14 +541,14 @@ void LivenessChecker::buildReverseSynthLink(const CFGCollection& coll) {
 	for (int i = 0; i < coll.count(); i++) {
 		CFG *cfg = coll[i]; // current CFG
 		// for each BB in the CFG
-		for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+		for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 			if (v->isSynth()) {
 				if(!v->toSynth()->callee()) {
 					elm::cerr << __SOURCE_INFO__ << "Block " << v->cfg()->index() << ":" << v->index() << " of CFG " << v->cfg()->name() << " has no callee" << io::endl;
 					continue;
 				}
 				// find all the edge goes into the synth block, which are the callers of the block
-				for (Block::EdgeIter e = v->ins(); e; e++) {
+				for (Block::EdgeIter e = v->ins(); e(); e++) {
 					// the source of an edge is one caller
 					BasicBlock* caller = e->source()->toBasic();
 					// obtain the set of the callers from the entry block of the synth block

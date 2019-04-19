@@ -186,7 +186,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 		// make the list of instruction
 		if(b->isBasic() && !no_insts)
-			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
+			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst(); inst++) {
 				xom::Element *inst_node = new xom::Element("inst");
 				bb_node->appendChild(inst_node);
 				string addr = _ << "0x" << inst->address();
@@ -202,7 +202,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		// generate the line information
 		if(b->isBasic() && line_info) {
 			Pair<cstring, int> cur("", 0);
-			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst; inst++) {
+			for(BasicBlock::InstIter inst= b->toBasic()->insts(); inst(); inst++) {
 				Option<Pair<cstring, int> > line = ws->process()->getSourceLine(inst->address());
 				if(line && *line != cur) {
 					cur = line;
@@ -218,7 +218,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	}
 
 	// add the output edges
-	for(Block::EdgeIter edge = b->outs(); edge; edge++) {
+	for(Block::EdgeIter edge = b->outs(); edge(); edge++) {
 		xom::Element *edge_node = new xom::Element("edge");
 		cfg_node->appendChild(edge_node);
 		string source = id(edge->source());
@@ -237,7 +237,7 @@ void Output::configure(const PropList& props) {
 
 	// scan INCLUDE
 	all = true;
-	for(Identifier<cstring>::Getter name(props, INCLUDE); name; name++) {
+	for(Identifier<cstring>::Getter name(props, INCLUDE); name(); name++) {
 		AbstractIdentifier *id = ProcessorPlugin::getIdentifier(&*name);
 		if(!id)
 			log << "WARNING: cannot find identifier " << *name << ". Output will ignore it!";
@@ -260,7 +260,7 @@ void Output::processWorkSpace(WorkSpace *ws) {
 
 	// initial log
 	if(logFor(LOG_DEPS))
-		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id; id++)
+		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id(); id++)
 			log << "\tproperty " << id->name() << " include in the output\n";
 
 	// build the root node
@@ -300,7 +300,7 @@ void Output::processWorkSpace(WorkSpace *ws) {
  * @param props		Properties to output.
  */
 void Output::processProps(xom::Element *parent, const PropList& props) {
-	for(PropList::Iter prop(props); prop; prop++)
+	for(PropList::Iter prop(props); prop(); prop++)
 
 		if((all/* && prop->id()->name()*/) || ids.contains(prop->id())) {
 

@@ -34,14 +34,14 @@ public:
 protected:
 
 	virtual void processWorkSpace(WorkSpace *ws) {
-		for(Process::FileIter file(ws->process()); file; file++)
-			for(File::SymIter sym(file); sym; sym++)
+		for(Process::FileIter file(ws->process()); file(); file++)
+			for(File::SymIter sym(*file); sym(); sym++)
 				switch(sym->kind()) {
 				case Symbol::FUNCTION: {
 						Inst *i = ws->process()->findInstAt(sym->address());
 						if(i) {
 							FUNCTION_LABEL(i) = sym->name();
-							SYMBOL(i).add(sym);
+							SYMBOL(i).add(*sym);
 						}
 					}
 					break;
@@ -49,7 +49,7 @@ protected:
 						Inst *i = ws->process()->findInstAt(sym->address());
 						if(i) {
 							LABEL(i) = sym->name();
-							SYMBOL(i).add(sym);
+							SYMBOL(i).add(*sym);
 						}
 					}
 					break;

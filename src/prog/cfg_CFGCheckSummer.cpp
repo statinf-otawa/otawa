@@ -60,7 +60,7 @@ CFGCheckSummer::CFGCheckSummer(void): CFGProcessor("otawa::CFGCheckSummer", Vers
  */
 void CFGCheckSummer::processCFG(WorkSpace *ws, CFG *cfg) {
 	checksum::Fletcher sum;
-	for(CFG::BlockIter b = cfg->blocks(); b; b++)
+	for(CFG::BlockIter b = cfg->blocks(); b(); b++)
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
 			char buf[bb->size()];

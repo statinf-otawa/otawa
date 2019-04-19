@@ -176,7 +176,7 @@ protected:
 				file = file.setExtension("osx");
 			bool found = false;
 			string paths = MANAGER.buildPaths("../../share/Otawa/scripts", "");
-			for(Path::PathIter p(paths); p; p++) {
+			for(Path::PathIter p(paths); p(); p++) {
 				path = Path(*p) / file;
 				if(isVerbose())
 					cerr << "INFO: looking script in directory " << *p << io::endl;
@@ -206,7 +206,7 @@ protected:
 		// process the list option
 		if(list) {
 			cerr << "CONFIGURATION OF " << *script << io::endl;
-			for(script::Script::ItemIter item(*scr); item; item++) {
+			for(script::Script::ItemIter item(*scr); item(); item++) {
 				cerr << "* item " << item->name << ": " << script::ScriptItem::type_labels[item->type];
 				if(item->deflt)
 					cerr << " (" << item->deflt << ")";
@@ -239,7 +239,7 @@ protected:
 			bool found = false;
 
 			// traverse all stats
-			for(StatInfo::Iter stat(workspace()); stat; stat++) {
+			for(StatInfo::Iter stat(workspace()); stat(); stat++) {
 				found = true;
 				Summer s;
 				stat->collect(s);
@@ -265,7 +265,7 @@ protected:
 		}
 
 		// display detail of statistics
-		if(detailed_stats && StatInfo::Iter(workspace()))
+		if(detailed_stats && StatInfo::Iter(workspace())())
 			genDetails(entry, props);
 	}
 
@@ -307,7 +307,7 @@ private:
 			{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
 
 		// generate the statistics
-		for(StatInfo::Iter stat(workspace()); stat; stat++) {
+		for(StatInfo::Iter stat(workspace()); stat(); stat++) {
 			string id = string(stat->id()).replace("/", "-");
 			io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
 			Output out(*stream);

@@ -188,20 +188,20 @@ private:
 		// put BB in the right order
 		typedef elm::avl::Set<BasicBlock *, BasicBlockComparator> avl_t;
 		avl_t avl;
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
 			if(bb->isBasic())
 				avl.add(bb->toBasic());
 
 		// disassemble the BB
-		for(avl_t::Iterator bb(avl); bb; bb++)
-			for(BasicBlock::BundleIter bu(bb); bu; bu++) {
+		for(avl_t::Iterator bb(avl); bb(); bb++)
+			for(BasicBlock::BundleIter bu(*bb); bu(); bu++) {
 
 				// display specific to an instruction
-				for(Bundle::Iter i(bu); i; i++)
-					processInst(i);
+				for(BasicBlock::Bundle::Iter i(*bu); i(); i++)
+					processInst(*i);
 
 				// display common to bundle
-				processBundle(bu);
+				processBundle(*bu);
 			}
 	}
 
@@ -209,7 +209,7 @@ private:
 	 * Disassemble properties of a bundle.
 	 * @param bu	Bundle to display.
 	 */
-	void processBundle(const Bundle& bu) {
+	void processBundle(const BasicBlock::Bundle& bu) {
 
 		// display semantics
 		if(sem || ksem) {
@@ -243,9 +243,9 @@ private:
 	void processInst(Inst *inst) {
 
 		// disassemble labels
-		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label; label++)
+		for(Identifier<String>::Getter label(inst, FUNCTION_LABEL); label(); label++)
 			cout << '\t' << io::CYAN << *label << ":\n" << io::PLAIN;
-		for(Identifier<String>::Getter label(inst, LABEL); label; label++)
+		for(Identifier<String>::Getter label(inst, LABEL); label(); label++)
 			cout << '\t' << io::CYAN << *label << ":\n" << io::PLAIN;
 
 		// display the address
@@ -312,7 +312,7 @@ private:
 				srr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
 			cout << io::YELLOW << "\t\tread regs = " << io::PLAIN;
-			for(SortedList<string>::Iter r(srr); r; r++)
+			for(SortedList<string>::Iter r(srr); r(); r++)
 				cout << *r << " ";
 			cout << io::endl;
 
@@ -326,7 +326,7 @@ private:
 				swr.add(_ << reg->name() << " (" << reg->platformNumber() << ")");
 			}
 			cout << io::YELLOW << "\t\twritten regs = " << io::PLAIN;
-			for(SortedList<string>::Iter r(swr); r; r++)
+			for(SortedList<string>::Iter r(swr); r(); r++)
 				cout << *r << " ";
 			cout << io::endl;
 		}

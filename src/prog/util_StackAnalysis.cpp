@@ -585,8 +585,8 @@ public:
 		if(cur && cur->addr == addr)
 			return cur->val;
 		if(addr.kind() == CST)
-			for(Process::FileIter file(proc); file; file++)
-				for(File::SegIter seg(file); seg; seg++)
+			for(Process::FileIter file(proc); file(); file++)
+				for(File::SegIter seg(*file); seg(); seg++)
 					if(seg->contains(addr.value()))
 						return fromImage(addr.value(), proc, size);
 		return first.val;
@@ -615,16 +615,16 @@ public:
 
 		// execute process initialization
 		sem::PathIter i;
-		for(i.start(proc); i; i++)
-			update(_init, i);
+		for(i.start(proc); i(); i++)
+			update(_init, *i);
 
 		// install the initial state
 		dfa::State *s = dfa::INITIAL_STATE(ws);
 		if(s) {
-			for(dfa::State::RegIter r(s); r; r++)
+			for(dfa::State::RegIter r(s); r(); r++)
 				if((*r).snd.kind() == dfa::Value::CONST)
 					_init.set(stack::Value::reg((*r).fst->platformNumber()), stack::Value::cst((*r).snd.value()));
-			for(dfa::State::MemIter m(s); m; m++)
+			for(dfa::State::MemIter m(s); m(); m++)
 				if((*m).value().kind() == dfa::Value::CONST)
 					_init.set(stack::Value::addr((*m).address()), stack::Value::cst((*m).value().value()));
 		}
@@ -843,8 +843,8 @@ public:
 		if(bb->isBasic()) {
 			out.copy(in);
 			TRACEU(cerr << "update(BB" << bb->number() << ", " << in << ")\n");
-			for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++)
-				update(out, inst);
+			for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst(); inst++)
+				update(out, *inst);
 			TRACEU(cerr << "\tout = " << out << io::endl);
 		}
 		else
@@ -927,11 +927,11 @@ void StackAnalysis::processWorkSpace(WorkSpace *ws) {
 	// record the results
 	if(logFor(LOG_BLOCK))
 		log << "\tSTORING RESULTS\n";
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 			if(logFor(LOG_BLOCK))
 				log << "\t\t" << *bb << "[" << cfg->index() << "][" << cfg->index() << "]: " << *list.results[cfg->index()][bb->index()] << io::endl;
-			stack::STATE(bb) = new stack::State(*list.results[cfg->index()][bb->index()]);
+			stack::STATE(*bb) = new stack::State(*list.results[cfg->index()][bb->index()]);
 	}
 }
 
@@ -960,8 +960,8 @@ void StackAnalysis::cleanup(WorkSpace *ws) {
  */
 void StackAnalysis::configure(const PropList &props) {
 	Processor::configure(props);
-	for(Identifier<init_t>::Getter init(props, INITIAL); init; init++)
-		inits.add(init);
+	for(Identifier<init_t>::Getter init(props, INITIAL); init(); init++)
+		inits.add(*init);
 }
 
 
@@ -1124,7 +1124,7 @@ protected:
 
 		// collect addresses
 		Vector<AccessedAddress *> addrs;
-		for(i.start(bb->toBasic()); i; i++)
+		for(i.start(bb->toBasic()); i(); i++)
 			if((*i).op == sem::LOAD || (*i).op == sem::STORE) {
 				bool is_store = (*i).op == sem::STORE;
 				int r = (*i).addr();

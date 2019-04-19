@@ -349,9 +349,9 @@ protected:
 		const BlockCollection *colls = DATA_BLOCK_COLLECTION(ws);
 
 		// initialize the dirty sets
-		for(CFGCollection::Iter cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
-			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-				DIRTY(bb) = AllocArray<DirtyManager::t>(cache->rowCount());
+		for(CFGCollection::Iter cfg(otawa::INVOLVED_CFGS(ws)); cfg(); cfg++)
+			for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+				DIRTY(*bb) = AllocArray<DirtyManager::t>(cache->rowCount());
 
 		// perform the analysis
 		for(int i = 0; i < cache->rowCount(); i++)
@@ -369,9 +369,9 @@ protected:
 		hai.solve();
 
 		// put the results
-		for(CFGCollection::Iter cfg(otawa::INVOLVED_CFGS(ws)); cfg; cfg++)
-			for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-				(*DIRTY(bb))[coll.cacheSet()] = *listener.results[cfg->index()][bb->index()];
+		for(CFGCollection::Iter cfg(otawa::INVOLVED_CFGS(ws)); cfg(); cfg++)
+			for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+				(*DIRTY(*bb))[coll.cacheSet()] = *listener.results[cfg->index()][bb->index()];
 	}
 };
 

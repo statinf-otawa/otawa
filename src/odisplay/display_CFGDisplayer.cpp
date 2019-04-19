@@ -142,20 +142,20 @@ void CFGDecorator::displayBody(CFG *g, BasicBlock *b, Text& content) const {
 void CFGDecorator::displayAssembly(CFG *graph, BasicBlock *block, Text& content) const {
 	file = "";
 	line = 0;
-	for(BasicBlock::InstIter i = block->insts(); i; i++) {
+	for(BasicBlock::InstIter i = block->insts(); i(); i++) {
 
 		// display source line
 		if(display_source_line)
 			displaySourceLine(i->address(), content);
 
 		// display labels
-		displayLabels(i, content);
+		displayLabels(*i, content);
 
 		// display instruction
 		content << ot::address(i->address()) << "  ";
-		displayInst(i, content);
+		displayInst(*i, content);
 		content << display::left;
-		displayInfo(i, content);
+		displayInfo(*i, content);
 	}
 }
 
@@ -206,7 +206,7 @@ void CFGDecorator::displaySourceLine(Address addr, Text& content) const {
  * @param content	Formatted stream to display to.
  */
 void CFGDecorator::displayLabels(Inst *i, Text& content) const {
-	for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++)
+	for(Identifier<Symbol *>::Getter l(i, SYMBOL); l(); l++)
 		content << display::begin(label_color) << l->name() << ":" << display::end(label_color)
 				<< display::left;
 }
@@ -216,7 +216,7 @@ void CFGDecorator::displayLabels(Inst *i, Text& content) const {
  * Called to display the properties.
  */
 void CFGDecorator::displayProps(CFG *g, BasicBlock *b, Text& content) const {
-	for(PropList::Iter p(b); p; p++)
+	for(PropList::Iter p(b); p(); p++)
 		if(p->id()->name())
 			content << display::begin(display::BOLD) << p->id()->name() << display::end(display::BOLD)
 					<< "\t" << *p << display::left;

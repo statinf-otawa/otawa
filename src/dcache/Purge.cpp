@@ -115,8 +115,8 @@ private:
 		const CFGCollection *cfgs = otawa::INVOLVED_CFGS(ws);
 		State state(ws, cache, coll);
 		for(int i = 0; i < cfgs->count(); i++)
-			for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++)
-					processBB(coll.cacheSet(), bb, state);
+			for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++)
+					processBB(coll.cacheSet(), *bb, state);
 	}
 
 	/**

@@ -84,9 +84,9 @@ void CATBuilder::cleanup(WorkSpace *ws) {
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
 	ASSERT(cfgs);
 	for(int i = 0; i < cfgs->count(); i++) {
-		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++) {
+		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++) {
 			cerr << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
+			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
 				cerr << "\t\t" << b << " -> " << cat_names[dcache::CATEGORY(b)] << io::endl;
@@ -183,24 +183,24 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 		if(logFor(LOG_BB))
 			log << "\t\tCFG " << cfgs->get(i) << io::endl;
 
-		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb; bb++) {
+		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++) {
 			if(!bb->isBasic())
 				continue;
 			if(logFor(LOG_BB))
 				log << "\t\t\t" << *bb << io::endl;
 
 			// get the MUST ACS at block entry
-			acs_table_t *ins = MUST_ACS(bb); // get the entry ACS
+			acs_table_t *ins = MUST_ACS(*bb); // get the entry ACS
 			prob->setMust(dom, *ins->get(line)); // set the MUST domain
 
 			// get the PERS ACS at block entry
-			acs_table_t *pers = PERS_ACS(bb);
+			acs_table_t *pers = PERS_ACS(*bb);
 			has_pers = pers;
 			if(!has_pers)
 				prob->emptyPers(dom);
 			else {
 				acs_stack_t *stack;
-				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(bb);
+				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(*bb);
 				if(stack_table)
 					stack = &stack_table->get(line);
 				else
@@ -209,11 +209,11 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 			}
 
 			// get the MAY ACS at block entry
-			if(MAY_ACS(bb))
-				domMay = *(MAY_ACS(bb)->get(line));
+			if(MAY_ACS(*bb))
+				domMay = *(MAY_ACS(*bb)->get(line));
 
 			// traverse all accesses
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(bb);
+			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
 			for(int j = 0; j < ab.fst; j++) {
 				BlockAccess& b = ab.snd[j];
 
@@ -228,7 +228,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 				// for a single block: compute more precise category
 				else if(b.block().set() == line)
-					processLBlock(bb, b, dom, domMay);
+					processLBlock(*bb, b, dom, domMay);
 
 				// update ACSs
 				prob->update(dom, b);

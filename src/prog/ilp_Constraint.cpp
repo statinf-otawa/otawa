@@ -100,7 +100,7 @@ namespace otawa { namespace ilp {
  * @param e		Added expression.
  */
 void Constraint::add(const Expression& e) {
-	for(Expression::Iter i(&e); i; i++)
+	for(Expression::Iter i(&e); i(); i++)
 		add(*i);
 }
 
@@ -110,7 +110,7 @@ void Constraint::add(const Expression& e) {
  * @param e		Subtracted expression.
  */
 void Constraint::sub(const Expression& e) {
-	for(Expression::Iter i(&e); i; i++)
+	for(Expression::Iter i(&e); i(); i++)
 		sub(*i);
 }
 

@@ -66,10 +66,10 @@ BBProcessor::BBProcessor(cstring name, elm::Version version)
  * See @ref CFGProcessor::processCFG()
  */
 void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++) {
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		if(logFor(LOG_BB))
 			log << "\t\tprocess " << *bb << io::endl;
-		processBB(fw, cfg, bb);
+		processBB(fw, cfg, *bb);
 	}
 }
 
@@ -77,8 +77,8 @@ void BBProcessor::processCFG(WorkSpace *fw, CFG *cfg) {
 /**
  */
 void BBProcessor::cleanupCFG(WorkSpace *ws, CFG *cfg) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-		cleanupBB(ws, cfg, bb);
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+		cleanupBB(ws, cfg, *bb);
 }
 
 
@@ -99,8 +99,8 @@ void BBProcessor::cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 /**
  */
 void BBProcessor::destroyCFG(WorkSpace *ws, CFG *cfg) {
-	for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-		destroyBB(ws, cfg, bb);
+	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+		destroyBB(ws, cfg, *bb);
 }
 
 
@@ -130,9 +130,9 @@ void BBProcessor::destroyBB(WorkSpace *ws, CFG *cfg, Block *b) {
 void BBCleaner::clean(void) {
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
-	for(CFGCollection::Iter cfg(coll); cfg; cfg++)
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-			clean(ws, cfg, bb);
+	for(CFGCollection::Iter cfg(coll); cfg(); cfg++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+			clean(ws, *cfg, *bb);
 }
 
 /**

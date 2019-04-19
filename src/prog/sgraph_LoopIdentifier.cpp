@@ -76,7 +76,7 @@ Vertex *LoopIdentifier::DFS(Vertex *v, int p) {
 	setDFSP(v, p);
 
 	// process each successor
-	for(Vertex::EdgeIter e = v->outs(); e; e++) {
+	for(Vertex::EdgeIter e = v->outs(); e(); e++) {
 		Vertex *w = e->sink();
 
 		// case A: ¬traversed(c) ⟶ next node on DFSP

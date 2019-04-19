@@ -88,7 +88,7 @@ protected:
 
 		InstSet* setInst = SET_OF_REMAINED_INSTRUCTIONS(block);
 
-		for(BasicBlock::InstIter i = block->insts(); i; i++) {
+		for(BasicBlock::InstIter i = block->insts(); i(); i++) {
 			// display source line
 			if(display_source_line) {
 				Option<Pair<cstring, int> > src = workspace()->process()->getSourceLine(i->address());
@@ -100,16 +100,16 @@ protected:
 				}
 			}
 			// display labels
-			for(Identifier<Symbol *>::Getter l(i, SYMBOL); l; l++)
+			for(Identifier<Symbol *>::Getter l(*i, SYMBOL); l(); l++)
 				content << display::begin(label_color) << l->name() << ":" << display::end(label_color)
 						<< display::left;
 			// adding the color indicating the instruction is sliced away
-			if(showSlicing && !setInst->contains(i))
+			if(showSlicing && !setInst->contains(*i))
 				content << display::begin(display::Color(255,0,0));
 			// display instruction
 			content << ot::address(i->address()) << "  " << *i;
 			// end adding the color indicating the instruction is sliced away
-			if(showSlicing && !setInst->contains(i))
+			if(showSlicing && !setInst->contains(*i))
 				content << display::end(display::Color(255,0,255));
 
 			content << display::left;
@@ -117,7 +117,7 @@ protected:
 	}
 
 	virtual void displayProps(CFG *g, BasicBlock *b, display::Text& content) const {
-		for(PropList::Iter p(b); p; p++)
+		for(PropList::Iter p(b); p(); p++)
 			if(p->id()->name())
 				content << display::begin(display::BOLD) << p->id()->name() << display::begin(display::BOLD)
 						<< "\t!!!!!!" << *p;
@@ -195,9 +195,9 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		int sumCFG = 0;
 		int sumB = 0;
 		const CFGCollection* cfgc = INVOLVED_CFGS(workspace());
-		for(CFGCollection::Iter cfg(cfgc); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(cfgc); cfg(); cfg++) {
 			sumCFG++;
-			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+			for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 				sumB++;
 				if(bi->isBasic())
 					sum = sum + bi->toBasic()->count();
@@ -228,13 +228,13 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		warn(String(" ") << interestedInstructions->count() << " instructions to resolve");
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
 			elm::cerr << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
-			for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
+			for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII(); currentII++) {
 				elm::cerr << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
 			}
 		}
 
 		// now we look into each of these instructions
-		for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII; currentII++) {
+		for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII(); currentII++) {
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
 				elm::cerr << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
 			}
@@ -273,12 +273,12 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 
 	// now try to dump the CFG here
 	if(_outputCFG) {
-		for(CFGCollection::Iter cfg(coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(coll); cfg(); cfg++) {
 			// full program will use different abstract graph
 			// DotDisplayer(workspace(), slicingCFGOutputPath, 1).display(coll);
 			//display::DisplayedCFG ag(**cfg);
 			SlicingDecorator d(workspace(), 1);
-			display::Displayer *disp = display::Provider::display(cfg, d, display::OUTPUT_RAW_DOT);
+			display::Displayer *disp = display::Provider::display(*cfg, d, display::OUTPUT_RAW_DOT);
 			// set up the path
 			Path dir;
 			if(_slicingCFGOutputPath.length() == 0)
@@ -309,10 +309,10 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	elm::cerr << "CFG SLI takes " << clockWorkCFGReconstruction << " micro-seconds" << io::endl;
 
 	if(_outputCFG) {
-		for(CFGCollection::Iter cfg(sliced_coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(sliced_coll); cfg(); cfg++) {
 			//display::DisplayedCFG ag(**cfg);
 			SlicingDecorator d(workspace(), 0);
-			display::Displayer *disp = display::Provider::display(cfg, d, display::OUTPUT_RAW_DOT);
+			display::Displayer *disp = display::Provider::display(*cfg, d, display::OUTPUT_RAW_DOT);
 			// set up the path
 			Path dir;
 			if(_slicedCFGOutputPath.length() == 0)
@@ -343,9 +343,9 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		int sum = 0;
 		int sumCFG = 0;
 		int sumB = 0;
-		for(CFGCollection::Iter cfg(sliced_coll); cfg; cfg++) {
+		for(CFGCollection::Iter cfg(sliced_coll); cfg(); cfg++) {
 			sumCFG++;
-			for(CFG::BlockIter bi = cfg->blocks(); bi; bi++) {
+			for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
 				sumB++;
 				if(bi->isBasic())
 					sum = sum + bi->toBasic()->count();
@@ -375,7 +375,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 		 bmap.put(cfg->unknown(), maker.unknown());
 
 	// add other blocks
-	for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+	for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 		 if(v->isEnd())
 			  continue;
 		 else if(v->isBasic()) {
@@ -387,9 +387,9 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			  Vector<Inst *> insts(setInst->count());
 			  
 			  // only add the non-sliced instruction to the vector insts
-			  for(BasicBlock::InstIter i = bb->insts(); i; i++) {
-				   if(setInst->contains(i))
-					    insts.add(i);
+			  for(BasicBlock::InstIter i = bb->insts(); i(); i++) {
+				   if(setInst->contains(*i))
+					    insts.add(*i);
 			  }
 
 			  BasicBlock *nv = new BasicBlock(insts.detach());
@@ -414,7 +414,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 	}
 
 	// add edges
-	for(CFG::BlockIter v = cfg->blocks(); v; v++) {
+	for(CFG::BlockIter v = cfg->blocks(); v(); v++) {
 		if (_debugLevel & DISPLAY_CFG_CREATION)
 			elm::cerr << __SOURCE_INFO__<< "looking at the BB " << v->index() << " of CFG " << cfg->index() << io::endl;
 
@@ -434,7 +434,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 			continue;
 		}
 
-		for(BasicBlock::EdgeIter e = v->outs(); e; e++) {
+		for(BasicBlock::EdgeIter e = v->outs(); e(); e++) {
 			if(_debugLevel & DISPLAY_CFG_CREATION)
 			elm::cerr << __SOURCE_INFO__ << __TAB__ << e->source()->index() << " to " << e->sink()->index() << io::endl;
 			if(TO_REMOVE(*e)) {
@@ -451,7 +451,7 @@ void Slicer::make(CFG *cfg, CFGMaker& maker) {
 		 // linking the artificial edge
 		predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*v);
 		if(edgeSources) { // for each edge
-			for(predecessor_list_t::Iter plti(*edgeSources); plti; plti++) {
+			for(predecessor_list_t::Iter plti(*edgeSources); plti(); plti++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION) {
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "In CFG " << v->cfg() << ", " << (*plti).fst->index() << " to " << v->index() << io::endl;
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << __TAB__ << "this edge is created due to BB removal" << io::endl;
@@ -557,7 +557,7 @@ void Slicer::destroy(WorkSpace *ws) {
 void Slicer::initIdentifiersForEachBB(const CFGCollection& coll) {
 	// for each CFG
 	for (int i = 0; i < coll.count(); i++) {
-		for (CFG::BlockIter v = coll[i]->blocks(); v; v++) {
+		for (CFG::BlockIter v = coll[i]->blocks(); v(); v++) {
 			if(!v->isBasic())
 				continue;
 			SET_OF_REMAINED_INSTRUCTIONS(*v) = new InstSet();
@@ -677,7 +677,7 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 		// first we find the predecessors of the BB to process
 		elm::Vector<Block *> predecessors;
 
-		for (Block::EdgeIter e = currentBB_wl->ins(); e; e++) {
+		for (Block::EdgeIter e = currentBB_wl->ins(); e(); e++) {
 			Block* b = e->source(); // find the source of the edge, the predecessor of current BB
 
 			if (b->isEntry()) {
@@ -686,7 +686,7 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
 						elm::cerr << __SOURCE_INFO__ << "Found a caller @ CFG " << caller->cfg()->index() << ", BB " << caller->index() << io::endl;
 
-					for(Block::EdgeIter bei = caller->ins(); bei; bei++) {
+					for(Block::EdgeIter bei = caller->ins(); bei(); bei++) {
 						if(_debugLevel & DISPLAY_SLICING_STAGES)
 							elm::cerr << __SOURCE_INFO__ << __TAB__ << __GREEN__ << "Adding the block @ CFG " << bei->source()->cfg()->index() << ", " << bei->source() << __RESET__ << io::endl;
 						predecessors.add(bei->source());
@@ -709,7 +709,7 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 				}
 				Block* end = b->toSynth()->callee()->exit();
 				// each edge to the exit block is a possible BB which will goes to the current block
-				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit; EdgeToExit++) {
+				for (Block::EdgeIter EdgeToExit = end->ins(); EdgeToExit(); EdgeToExit++) {
 					Block* BB_BeforeReturn = EdgeToExit->source();
 					if(_debugLevel & DISPLAY_SLICING_STAGES)
 						elm::cerr << __SOURCE_INFO__ << __GREEN__ << "Adding block CFG " << BB_BeforeReturn->cfg()->index() << ", " << BB_BeforeReturn << __RESET__ << io::endl;
@@ -733,10 +733,10 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 
 		// process the collected BBs
 		// now we need to see if the input (register and memory uses) feed from the successor matches totally or a subset of the pred BB
-		for(elm::Vector<Block *>::Iter predecessor(predecessors); predecessor; ++predecessor) {
-			BitVector bv = SLICER_REG_BB_END(predecessor);
+		for(elm::Vector<Block *>::Iter predecessor(predecessors); predecessor(); ++predecessor) {
+			BitVector bv = SLICER_REG_BB_END(*predecessor);
 			//clp_value_set_t* memIn = SLICER_MEM_BB_END(predecessor);
-			otawa::dfa::MemorySet::t *memIn = SLICER_MEM_BB_END(predecessor);
+			otawa::dfa::MemorySet::t *memIn = SLICER_MEM_BB_END(*predecessor);
 
 			bool notContainsAllRegs = !bv.includes(currentRegs_wl);
 			bool notContainsAllMems = false;
@@ -758,15 +758,15 @@ void Slicer::processWorkingList(elm::Vector<WorkingElement*>& workingList) {
 				if(_debugLevel & DISPLAY_SLICING_STAGES)
 					elm::cerr << __SOURCE_INFO__ << __RED__ << "Adding BB @ " << predecessor->address() << " to the working list." << __RESET__ << io::endl;
 				bv = bv | currentRegs_wl;
-				SLICER_REG_BB_END(predecessor) = bv;
+				SLICER_REG_BB_END(*predecessor) = bv;
 				if(!_lightSlicing) {
 					*memIn = dfa::MemorySet().join(*memIn, currentMems_wl);
-					SLICER_MEM_BB_END(predecessor) = memIn;
+					SLICER_MEM_BB_END(*predecessor) = memIn;
 				}
 				Inst* lastInstruction = 0;
 				if(predecessor->isBasic())
 					lastInstruction = predecessor->toBasic()->last();
-				WorkingElement *we = new WorkingElement(predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
+				WorkingElement *we = new WorkingElement(*predecessor, lastInstruction, currentRegs_wl, currentMems_wl);
 				workingList.add(we);
 			}
 			else
@@ -803,8 +803,8 @@ void Slicer::slicing(void) {
 
 	// putting the block to remove in the working list
 	Vector<Block*> blocksToRemove;
-	for (CFGCollection::Iter c(coll); c; c++) {
-		for (CFG::BlockIter v = c->blocks(); v; v++) {
+	for (CFGCollection::Iter c(coll); c(); c++) {
+		for (CFG::BlockIter v = c->blocks(); v(); v++) {
 			if (v->isBasic()) {
 				BasicBlock *bb = v->toBasic();
 				InstSet* setInst = SET_OF_REMAINED_INSTRUCTIONS(bb);
@@ -829,7 +829,7 @@ void Slicer::slicing(void) {
 		Vector<Block*> successors;
 		// Collect the predecessors of the current block
 		// incoming edges exited in the original CFG
-		for (Block::EdgeIter in = b->ins(); in; in++) { // just to be safe not to remove the element during iter ops.
+		for (Block::EdgeIter in = b->ins(); in(); in++) { // just to be safe not to remove the element during iter ops.
 			// if the edge is not marked as removed, then we add the source of the edge to the list of predecessor
 			if(!TO_REMOVE(*in) && in->source() != b) {
 				predecessors.add(pair(in->source(),in->flags()));
@@ -846,7 +846,7 @@ void Slicer::slicing(void) {
 		// now processing the predecessor of the current block due to the removals of the other blocks
 		predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(b);
 		if(edgeSources) {
-			for(predecessor_list_t::Iter in(*edgeSources); in; in++) {
+			for(predecessor_list_t::Iter in(*edgeSources); in(); in++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an input edge from " << (*in).fst << " to " << b << io::endl;
 				if((*in).fst != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
@@ -862,7 +862,7 @@ void Slicer::slicing(void) {
 
 		// Collecting the successors of the current block
 		// now we process the out-going edges
-		for (Block::EdgeIter out = b->outs(); out; out++) { // just to be safe not to remove the element during iter ops.
+		for (Block::EdgeIter out = b->outs(); out(); out++) { // just to be safe not to remove the element during iter ops.
 			// if the edge is not yet marked removed, then we add the sink of the edge to sucessors
 			if(!TO_REMOVE(*out) && out->target() != b)
 				successors.add(out->sink());
@@ -873,16 +873,16 @@ void Slicer::slicing(void) {
 		// now we process the successors of the current block due to the removals of the other blocks
 		Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS(b);
 		if(edgeTargets) {
-			for(Vector<Block*>::Iter out(*edgeTargets); out; out++) {
+			for(Vector<Block*>::Iter out(*edgeTargets); out(); out++) {
 				if(_debugLevel & DISPLAY_CFG_CREATION)
 					elm::cerr << __SOURCE_INFO__ << __TAB__ << "Removing an output edge to BB " << out->index() << io::endl;
-				if(out != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
+				if(*out != b) // if there is a self looping edge on a removed BB, we will remove this edge too, hence the predecessor is not added
 					successors.add(*out);
 				// remove the current block from the list of the predecessors of its successor
 				predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*out);
 				if(edgeSources) {
 					//edgeSources->remove(b);
-					for(predecessor_list_t::Iter plti(*edgeSources); plti; plti++) { // scan through each predecessor
+					for(predecessor_list_t::Iter plti(*edgeSources); plti(); plti++) { // scan through each predecessor
 						if((*plti).fst == b)
 							edgeSources->remove(plti);
 					}
@@ -902,7 +902,7 @@ void Slicer::slicing(void) {
 		// ========= TO REMOVE =========
 		// actually this may not be necessary
 		// if the predecessor has the targets of the current block, remove the current block from the target
-		for (predecessor_list_t::Iter predecessor(predecessors); predecessor; predecessor++) {
+		for (predecessor_list_t::Iter predecessor(predecessors); predecessor(); predecessor++) {
 			Vector<Block* > *edgeTargets = ARTIFICIAL_SUCCESSORS((*predecessor).fst);
 			if(!edgeTargets)
 				continue;
@@ -914,12 +914,12 @@ void Slicer::slicing(void) {
 			}
 		}
 		// if the successor has predecessor of the current block, remove the current block from the source
-		for (Vector<Block*>::Iter successor(successors); successor; successor++) {
-			predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+		for (Vector<Block*>::Iter successor(successors); successor(); successor++) {
+			predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*successor);
 			if(!edgeSources)
 				continue;
 			//edgeSources->remove(b);
-			for(predecessor_list_t::Iter plti(*edgeSources); plti; plti++) { // scan through each predecessor
+			for(predecessor_list_t::Iter plti(*edgeSources); plti(); plti++) { // scan through each predecessor
 				if((*plti).fst == b) {
 					if(_debugLevel & DISPLAY_CFG_CREATION)
 						elm::cerr << __SOURCE_INFO__ << "successor BB " << successor->index() << " has a edge to current BB, removing...." << io::endl;
@@ -932,14 +932,14 @@ void Slicer::slicing(void) {
 
 		// now connect the predecessor with the successor
 		 // for each predecessor, need to wire the edge between the predecessor and its successor
-		for (predecessor_list_t::Iter predecessor(predecessors); predecessor; predecessor++) {
-			for (Vector<Block*>::Iter successor(successors); successor; successor++) {
+		for (predecessor_list_t::Iter predecessor(predecessors); predecessor(); predecessor++) {
+			for (Vector<Block*>::Iter successor(successors); successor(); successor++) {
 				// check if the successor is already linked with the predecessor
 				// first check the real link
 				bool foundRealEdge = false;
 				bool foundArtificialEdge = false;
 				Edge* realEdge = 0;
-				for(Block::EdgeIter ei = (*predecessor).fst->outs(); ei; ei++) {
+				for(Block::EdgeIter ei = (*predecessor).fst->outs(); ei(); ei++) {
 					if(ei->target() == *successor && (*TO_REMOVE(*ei)) == false) {
 						foundRealEdge = true;
 						realEdge = *ei;
@@ -970,13 +970,13 @@ void Slicer::slicing(void) {
 						edgeTargets = new Vector<Block* >();
 						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
 					}
-					edgeTargets->add(successor);
+					edgeTargets->add(*successor);
 
 					// similarly we add the predecessor with the desired exiting flag
-					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*successor);
 					if(!edgeSources) {
 						edgeSources = new predecessor_list_t();
-						ARTIFICIAL_PREDECESSORS(successor) = edgeSources;
+						ARTIFICIAL_PREDECESSORS(*successor) = edgeSources;
 					}
 					existingFlag = existingFlag | (*predecessor).snd;
 					edgeSources->add(pair((*predecessor).fst, existingFlag));
@@ -984,8 +984,8 @@ void Slicer::slicing(void) {
 				else if(foundArtificialEdge) {
 					t::uint32 existingFlag = 0;
 					// we need to find the predecessor!
-					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
-					for (predecessor_list_t::Iter edgeSource(*edgeSources); edgeSource; edgeSource++) {
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*successor);
+					for (predecessor_list_t::Iter edgeSource(*edgeSources); edgeSource(); edgeSource++) {
 						if((*edgeSource).fst == (*predecessor).fst) {
 							if(_debugLevel & DISPLAY_CFG_CREATION) {
 								elm::cerr << __SOURCE_INFO__ <<__TAB__ << "Already existing a artificial edge between CFG " << (*predecessor).fst->cfg()->index() << ", BB " << (*predecessor).fst->index() << " to BB " << successor->index() << ", need to remove" << io::endl;
@@ -1010,24 +1010,24 @@ void Slicer::slicing(void) {
 						edgeTargets = new Vector<Block* >();
 						ARTIFICIAL_SUCCESSORS((*predecessor).fst) = edgeTargets;
 					}
-					edgeTargets->add(successor);
-					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(successor);
+					edgeTargets->add(*successor);
+					predecessor_list_t *edgeSources = ARTIFICIAL_PREDECESSORS(*successor);
 					if(!edgeSources) {
 						edgeSources = new predecessor_list_t();
-						ARTIFICIAL_PREDECESSORS(successor) = edgeSources;
+						ARTIFICIAL_PREDECESSORS(*successor) = edgeSources;
 					}
-					edgeSources->add(predecessor);
+					edgeSources->add(*predecessor);
 				}
 			}
 		} // finish linking the predecessors and successors of the removal BB
 	} // end of the working list
 
-	for(CFGCollection::Iter c(coll); c; c++) {
-		makeCFG(c);
+	for(CFGCollection::Iter c(coll); c(); c++) {
+		makeCFG(*c);
 	}
 
 	sliced_coll = new CFGCollection();
-	for(FragTable<CFGMaker *>::Iter m(makers); m; m++) {
+	for(FragTable<CFGMaker *>::Iter m(makers); m(); m++) {
 	        sliced_coll->add(m->build());
 	        delete *m;
 	}

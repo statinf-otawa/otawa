@@ -67,8 +67,8 @@ XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 	// Compute CFG offsets
 	int i = 0;
 	offs[0] = 0;
-	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++) {
-		INDEX(cfg) = i++;
+	for(CFGCollection::Iter cfg(cfgs); cfg(); cfg++) {
+		INDEX(*cfg) = i++;
 		offs[i] = offs[i - 1] + cfg->count();
 	}
 	nodes.alloc(offs[i]);

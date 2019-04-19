@@ -104,7 +104,7 @@ public:
 		bb_cnt++;
 
 		// Count instructions
-		for(BasicBlock::InstIter inst(bb); inst; inst++) {
+		for(BasicBlock::InstIter inst(bb); inst(); inst++) {
 			//if(!inst->isPseudo()) {
 				insts++;
 				if(inst->isMem())
@@ -196,8 +196,8 @@ protected:
 class CFGStatistics: public Statistics {
 public:
 	CFGStatistics(CFG *cfg): _cfg(cfg) {
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++)
-			addBB(bb);
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++)
+			addBB(*bb);
 	}
 	inline CFG *cfg(void) { return _cfg; };
 
@@ -265,7 +265,7 @@ public:
 
 		// display the statistics
 		bool fst = true;
-		for(HashMap<Address, Statistics *>::Iter it(stats); it; it++) {
+		for(HashMap<Address, Statistics *>::Iter it(stats); it(); it++) {
 
 			// accumulate if needed
 			if(*overall_option)

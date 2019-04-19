@@ -83,13 +83,13 @@ public:
 	inline bool hasPred(void) const { return ins; }
 	inline int countSucc(void) const {
 		int cnt = 0;
-		for(Successor edge(this); edge; edge++)
+		for(Successor edge(this); edge(); edge++)
 			cnt++;
 		return cnt;
 	}
 	inline int countPred(void) const {
 		int cnt = 0;
-		for(Predecessor edge(this); edge; edge++)
+		for(Predecessor edge(this); edge(); edge++)
 			cnt++;
 		return cnt;
 	}
@@ -245,14 +245,14 @@ inline Node::Node(Graph *graph)
 }
 
 inline bool Node::isPredOf(const Node *node) {
-	for(Successor succ(this); succ; succ++)
+	for(Successor succ(this); succ(); succ++)
 		if(*succ == node)
 			return true;
 	return false;
 }
 	
 inline bool Node::isSuccOf(const Node *node) {
-	for(Predecessor pred(this); pred; pred++)
+	for(Predecessor pred(this); pred(); pred++)
 		if(*pred == node)
 			return true;
 	return false;

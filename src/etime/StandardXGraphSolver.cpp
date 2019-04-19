@@ -143,10 +143,10 @@ public:
 		// applying static events (always, never)
 		Vector<ParExeInst *> insts;
 		ParExeSequence::InstIterator inst(g->getSequence());
-		for(auto evt = *all_events; evt; evt++) {
+		for(auto evt = *all_events; evt(); evt++) {
 
 			// find the instruction
-			while(!(inst->inst() == (*evt).event()->inst() && partOf(inst) == (*evt).part())) {
+			while(!(inst->inst() == (*evt).event()->inst() && partOf(*inst) == (*evt).part())) {
 				inst++;
 				ASSERTP(inst, "no instruction for event " << *evt);
 			}
@@ -154,8 +154,8 @@ public:
 			// apply the event
 			switch(evt->occurrence()) {
 			case NEVER:			continue;
-			case SOMETIMES:		events.add(evt); insts.add(*inst); break;
-			case ALWAYS:		apply((*evt).event(), inst, g); always_events.add(evt); break;
+			case SOMETIMES:		events.add(*evt); insts.add(*inst); break;
+			case ALWAYS:		apply((*evt).event(), *inst, g); always_events.add(*evt); break;
 			default:			ASSERT(0); break;
 			}
 		}
@@ -243,7 +243,7 @@ public:
 			else {
 				bool done = false;
 				List<ConfigSet *>::Iter prev;
-				for(auto cur = times.begin(); cur; prev = cur, cur++) {
+				for(auto cur = times.begin(); cur(); prev = cur, cur++) {
 					if(cur->time() == cost) {
 						cur->add(Config(event_mask));
 						done = true;
@@ -317,7 +317,7 @@ public:
 
 				// Find the related ParExeInst
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it)
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it(); ++inst_it)
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -327,13 +327,13 @@ public:
 
 				// Find the related ParExeNode
 				bool found = false;
-				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node(); rel_node++)
 					if(rel_node->stage()->unit() == event->related().snd) {
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
 						bool edge_found = false;
-						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+						for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ)
 							if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() + event->cost());
 								edge_found = true;
@@ -359,9 +359,9 @@ public:
 
 		case MEM: {
 			bool found = false;
-			for(ParExeInst::NodeIterator node(inst); node; node++)
+			for(ParExeInst::NodeIterator node(inst); node(); node++)
 				if(node->stage()->unit()->isMem()) {
-					addLatency(node, event->cost());
+					addLatency(*node, event->cost());
 					found = true;
 					break;
 				}
@@ -369,7 +369,7 @@ public:
 			if(!found && event->related().fst) {
 				ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it) {
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it(); ++inst_it) {
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -377,13 +377,13 @@ public:
 				}
 				// ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
 
-				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node(); rel_node++)
 					if(rel_node->stage()->unit() == event->related().snd) {
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
 						IN_ASSERT(bool edge_found = false);
-						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+						for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ) {
 							if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() + event->cost());
 								IN_ASSERT(edge_found = true);
@@ -423,15 +423,15 @@ public:
 	 * @return		Node of resolution.
 	 */
 	ParExeNode *getBranchNode(ParExeGraph *g) {
-		for(ParExeSequence::Iter pinst(*g->getSequence()); pinst && pinst->codePart() == PROLOGUE; pinst++)
+		for(ParExeSequence::Iter pinst(*g->getSequence()); pinst() && pinst->codePart() == PROLOGUE; pinst++)
 			if(pinst->inst()->isControl()) {
-				for(ParExeInst::NodeIterator node(*pinst); node; node++)
+				for(ParExeInst::NodeIterator node(*pinst); node(); node++)
 					if(node->stage()->unit()->isBranch())
-						return node;
+						return *node;
 				ParExeStage *stage = g->getMicroprocessor()->execStage()->findFU(pinst->inst()->kind())->lastStage();
-				for(ParExeInst::NodeIterator node(*pinst); node; node++)
+				for(ParExeInst::NodeIterator node(*pinst); node(); node++)
 					if(node->stage() == stage)
-						return node;
+						return *node;
 			}
 		return nullptr;
 	}
@@ -459,7 +459,7 @@ public:
 
 				// Find the related ParExeInst
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it)
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it(); ++inst_it)
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -469,13 +469,13 @@ public:
 
 				// Find the related ParExeNode
 				bool found = false;
-				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node; rel_node++)
+				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_node(); rel_node++)
 					if(rel_node->stage()->unit() == event->related().snd) {
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
 						bool edge_found = false;
-						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ)
+						for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ)
 							if (*succ == inst->fetchNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() - event->cost());
 								edge_found = true;
@@ -500,9 +500,9 @@ public:
 
 		case MEM: {
 			bool found = false;
-			for(ParExeInst::NodeIterator node(inst); node; node++)
+			for(ParExeInst::NodeIterator node(inst); node(); node++)
 				if(node->stage()->unit()->isMem()) {
-					removeLatency(node, event->cost());
+					removeLatency(*node, event->cost());
 					found = true;
 					break;
 				}
@@ -510,7 +510,7 @@ public:
 			if(!found && event->related().fst) {
 				ParExeEdge::edge_type_t_t edge_type = event->type() == AFTER ? ParExeEdge::SOLID : ParExeEdge::SLASHED;
 				ParExeInst *rel_inst = 0;
-				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it; ++inst_it) {
+				for(ParExeSequence::Iter inst_it(*g->getSequence()); inst_it(); ++inst_it) {
 					if(inst_it->inst() == event->related().fst) {
 						rel_inst = *inst_it;
 						break;
@@ -518,13 +518,13 @@ public:
 				}
 				ASSERTP(rel_inst, "related instruction (" << event->related().fst->address() << ") not found in the sequence");
 
-				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node; rel_node++)
+				for(ParExeInst::NodeIterator rel_node(rel_inst); rel_inst && rel_node(); rel_node++)
 					if(rel_node->stage()->unit() == event->related().snd) {
 						found = true;
 
 						// Add cost to the edge between the related node and the fetch code
 						IN_ASSERT(bool edge_found = false);
-						for (ParExeGraph::Successor succ(*rel_node); succ; ++succ) {
+						for (ParExeGraph::Successor succ(*rel_node); succ(); ++succ) {
 							if (*succ == inst->execNode() && succ.edge()->type() == edge_type) {
 								succ.edge()->setLatency(succ.edge()->latency() - event->cost());
 								IN_ASSERT(edge_found = true);
@@ -565,7 +565,7 @@ public:
 		StringBuffer out;
 		out << "events|";
 		bool first = true;
-		for(auto e = *all_events; e; e++) {
+		for(auto e = *all_events; e(); e++) {
 
 			// display separator
 			if(first)
@@ -637,15 +637,15 @@ public:
 
 		// count dynamic events
 		int dyn_cnt = 0;
-		for(auto e = *all_events; e; e++)
+		for(auto e = *all_events; e(); e++)
 			if((*e).event()->occurrence() == SOMETIMES)
 				dyn_cnt++;
 		ASSERTP(times.count() <= (1 << dyn_cnt), times.count() << " events");
 
 		// put all configurations in a vector
 		Vector<ConfigSet *> confs;
-		for(auto conf = *times; conf; conf++)
-			confs.add(conf);
+		for(auto conf = *times; conf(); conf++)
+			confs.add(*conf);
 		class ConfigSetCompare {
 		public:
 			static int compare(const ConfigSet *cs1, const ConfigSet *cs2) {
@@ -680,12 +680,12 @@ public:
 			ot::time x_hts = 0;
 
 			// x^c_hts = sum{e in E_i /\ (\E c in HTS /\ e in c) /\ (\E c in HTS /\ e not in c)} w_e
-			for(auto ev = *all_events; ev; ev++)
+			for(auto ev = *all_events; ev(); ev++)
 				if((*ev).index() >= 0 && (split.com & (1 << (*ev).index())) != 0)
 					x_hts += (*ev).event()->weight();
 
 			// x^p_hts = max{e in E_i /\ (\A c in HTS -> e in c)} w_e
-			for(auto ev = *all_events; ev; ev++)
+			for(auto ev = *all_events; ev(); ev++)
 				if((*ev).index() >= 0 && (split.pos & (1 << (*ev).index())) != 0)
 					x_hts = max(x_hts, ot::time((*ev).event()->weight()));
 			// x_hts = max(x^c_hts, x^p_hts)
@@ -758,7 +758,7 @@ public:
 		if(logFor(LOG_BLOCK)) {
 			log << "\t\t\t" << "LTS time = " << split.lts_time << ", HTS time = " << split.hts_time << " for { ";
 			bool fst = true;
-			for(ConfigSet::Iter conf(hts); conf; conf++) {
+			for(ConfigSet::Iter conf(hts); conf(); conf++) {
 				if(fst)
 					fst = false;
 				else
@@ -786,16 +786,16 @@ public:
 		contributeTime(split.hts_time - split.lts_time);
 
 		// build effects of events
-		for(auto ev = *events; ev; ev++)
+		for(auto ev = *events; ev(); ev++)
 			if((*ev).event()->occurrence() == SOMETIMES) {
 
 			// positive contribution
 			if((split.pos & (1 << ev.index())) != 0)
-				contributePositive(ev, false);
+				contributePositive(*ev, false);
 
 			// else if e in neg_events then C^e_p += x_edge - x_hts / p = prefix if e in prefix, block
 			else if((split.neg & (1 << ev.index())) != 0)
-				contributeNegative(ev, false);
+				contributeNegative(*ev, false);
 		}
 
 	}
@@ -810,7 +810,7 @@ public:
 			int i = 0;
 			for(auto t: times) {
 				log << "\t\t\t[" << i << "] cost = " << t->time() << " -> ";
-				for(ConfigSet::Iter conf(*t); conf; conf++)
+				for(ConfigSet::Iter conf(*t); conf(); conf++)
 					log << " " << (*conf).toString(events.length());
 				log << io::endl;
 				i++;

@@ -53,11 +53,11 @@ CHECK_BEGIN("otawa_props")
 
 		// Iterator getter
 		int cnt = 0;
-		for(Identifier<int>::Getter prop(cprops, ID1); prop; prop++)
+		for(Identifier<int>::Getter prop(cprops, ID1); prop(); prop++)
 			cnt++;
 		CHECK(cnt == 1);
 		cnt = 0;
-		for(Identifier<int>::Getter prop(cprops, ID2); prop; prop++)
+		for(Identifier<int>::Getter prop(cprops, ID2); prop(); prop++)
 			cnt++;
 		CHECK(cnt == 0);
 
@@ -74,11 +74,11 @@ CHECK_BEGIN("otawa_props")
 		CHECK(ID1(cprops) == 666);
 		CHECK(ID2(cprops) == 0);
 		cnt = 0;
-		for(Identifier<int>::Getter prop(cprops, ID1); prop; prop++)
+		for(Identifier<int>::Getter prop(cprops, ID1); prop(); prop++)
 			cnt++;
 		CHECK(cnt == 1);
 		cnt = 0;
-		for(Identifier<int>::Getter prop(cprops, ID2); prop; prop++)
+		for(Identifier<int>::Getter prop(cprops, ID2); prop(); prop++)
 			cnt++;
 		CHECK(cnt == 0);
 

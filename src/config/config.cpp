@@ -228,7 +228,7 @@ protected:
 
 		// close the dependencies
 		for(int i = 0; i < plugs.length(); i++)
-			for(sys::Plugin::DepIter dep(plugs[i]->dependencies()); dep; dep++)
+			for(sys::Plugin::DepIter dep(plugs[i]->dependencies()); dep(); dep++)
 				if(!plugs.contains(*dep))
 					plugs.add(*dep);
 
@@ -249,7 +249,7 @@ protected:
 			cout << "-L" << getLibDir() << " -lotawa -lelm -lgel";
 
 			// output dependencies
-			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++)
+			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p(); p++)
 				cout << ' ' << p->path();
 
 			// output RPath
@@ -258,8 +258,8 @@ protected:
 				Path lpath = rpathFor(getLibDir(), ipath);
 				rpaths.add(lpath);
 				cout << " -Wl,-rpath -Wl," << lpath;
-				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p; p++) {
-					Path rpath = rpathFor(p, ipath);
+				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p(); p++) {
+					Path rpath = rpathFor(*p, ipath);
 					if(!rpaths.contains(rpath)) {
 						rpaths.add(rpath);
 						if(make_app)
@@ -317,13 +317,11 @@ private:
 			plugger.setQuiet(true);
 
 		// get the initial directories
-		elm::Vector<sys::Directory *> paths;
-		for(sys::Plugger::PathIterator path(plugger); path; path++) {
-			sys::FileItem *item = sys::FileItem::get(*path);
-			if(item && item->toDirectory()) {
+		elm::Vector<LockPtr<sys::Directory> > paths;
+		for(sys::Plugger::PathIterator path(plugger); path(); path++) {
+			LockPtr<sys::FileItem> item = sys::FileItem::get(*path);
+			if(item && item->toDirectory())
 				paths.add(item->toDirectory());
-				item->toDirectory()->use();
-			}
 		}
 		int builtin = paths.length();
 
@@ -331,20 +329,17 @@ private:
 		while(paths) {
 			bool is_builtin = builtin == paths.length();
 			builtin--;
-			sys::Directory *dir = paths.pop();
+			LockPtr<sys::Directory> dir = paths.pop();
 			if(!is_builtin)
 				plugger.addPath(dir->path());
-			for(sys::Directory::Iterator child(dir); child; child++)
-				if(child->toDirectory()) {
+			for(sys::Directory::Iter child(dir); child; child++)
+				if(child->toDirectory())
 					paths.add(child->toDirectory());
-					child->toDirectory()->use();
-				}
-			dir->release();
 		}
 
 		// look plugins
 		elm::Vector<sys::Plugin *> found;
-		for(elm::sys::Plugger::Iterator plugin(plugger); plugin; plugin++) {
+		for(elm::sys::Plugger::Iter plugin(plugger); plugin(); plugin++) {
 			if(verbose)
 				cerr << "INFO: plugging " << plugin.path() << io::endl;
 			sys::Plugin *handle = plugin.plug();
@@ -387,12 +382,12 @@ private:
 	}
 
 	void listScripts(void) {
-		sys::FileItem *item = sys::FileItem::get(getScriptDir());
-		sys::Directory *dir = item->toDirectory();
+		LockPtr<sys::FileItem> item = sys::FileItem::get(getScriptDir());
+		LockPtr<sys::Directory> dir = item->toDirectory();
 		if(!dir)
 			cerr << "ERROR: script directory \"" << getScriptDir() << "\" is not a directory !\n";
 		else
-			for(sys::Directory::Iterator file(dir); file; file++)
+			for(sys::Directory::Iter file(dir); file; file++)
 				if(file->path().extension() == "osx")
 					cout << file->path().basePart().namePart() << io::endl;
 	}
