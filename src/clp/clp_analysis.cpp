@@ -17,10 +17,11 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 //#define CATCH_STT
-#define HAI_DEBUG
+//#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
 #include <elm/data/HashMap.h>
+#include <elm/debug.h>
 #include <otawa/prog/File.h>
 #include <otawa/prog/Process.h>
 #include <otawa/prog/Segment.h>
@@ -63,7 +64,7 @@ using namespace otawa;
 // Debug output for instructions in the update function
 #define TRACEI(t)	//t
 // Debug output with only the values handled by an instruction
-#define TRACESI(t)	t
+#define TRACESI(t)	//t
 // Debug output with alarm of creation of T
 #define TRACEA(t)	//t
 // Debug only the join function
@@ -72,6 +73,9 @@ using namespace otawa;
 #define ALARM_STORE_TOP(t)	t
 //#define STATE_MULTILINE
 #define TRACE_INTERSECT(t) // t
+
+// uncomment to use instruction instead of bundles
+//#define USE_INST
 
 #define DISPLAY_MEMORY 1
 
@@ -2646,7 +2650,11 @@ public:
 	 */
 	void update(State *state) {
 		_nb_clp_bb_count++;
-		TRACEI(cerr << "\t\t" << i << io::endl);
+#		if USE_INST
+			TRACEI(cerr << "\t\t" << i << io::endl);
+#		else
+			TRACEI(cerr << "\t\t" << this->currentInst << io::endl);
+#		endif
 		sem::inst& i = b[pc];
 		if(state->equals(Domain::EMPTY)) { // handles the bottom state input (possibly infeasible path)
 			pc++;
@@ -2668,6 +2676,9 @@ public:
 		case sem::CONT:
 			pc = b.length(); // goes to the end of the semantic instruction block of the whole BB
 			TRACESI(cerr << "\t\tcont\n");
+			break;
+		case sem::ASSUME:
+			TRACESI(cerr << "\t\t\tif(" << i.sr() << ", " << i.cond() << ")\n");
 			break;
 		case sem::IF:
 			TRACESI(cerr << "\t\t\tif(" << i.sr() << ", " << i.cond() << ", " << i.jump() << ")\n");
@@ -2992,6 +3003,7 @@ public:
 	 * @param inst	Instruction to interpret.
 	 */
 	//void prepare(Inst *inst) {
+#ifndef USE_INST
 	void prepare(const BasicBlock::Bundle& bundle) {
 		b.clear();
 		//inst->semInsts(b);
@@ -3000,6 +3012,15 @@ public:
 		pc = 0;
 		listOfIFsToDo.clear();
 	}
+#else
+	void prepare(Inst *i) {
+		b.clear();
+		i->semInsts(b);
+		currentInst = i;
+		pc = 0;
+		listOfIFsToDo.clear();
+	}
+#endif
 
 
 	void insertInfo(Domain& out, BasicBlock* bb, Inst* inst) {
@@ -3047,18 +3068,16 @@ public:
 			// UNKOWN_BLOCK_EVALUATION is an identifier associated with the process, if it is set to true
 			// the unknown block will be evaluated to bottom. This is to prevent the unknown block brings the
 			// state to top to wipe out the useful state....
-			if(UNKOWN_BLOCK_EVALUATION(_process)) {
+			if(UNKOWN_BLOCK_EVALUATION(_process))
 				out = bottom();
-			}
-			else {
+			else
 				out = top();
-			}
 			return;
 		}
 
 		this->bb = bb;
 
-		Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
+		//Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
 		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
@@ -3071,40 +3090,40 @@ public:
 			clp::STATE_IN(bb) = in;
 		}
 
-		if(out.equals(Domain::EMPTY)) { // if the in state is bottom, then we don't have to evaluate this...
+		// if the in state is bottom, then we don't have to evaluate this...
+		if(out.equals(Domain::EMPTY))
 			return;
-		}
 
-#ifdef USE_INST
-		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst; inst++) {
-#else // use bundle
+#	ifdef USE_INST
+		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst(); inst++) {
+#	else // use bundle
 		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle(); bundle++) {
 			has_if = false;
 			has_branch = false;
-#endif
+#	endif
 
-#ifdef USE_INST
-			this->currentInst = inst;
-#else
+#	ifdef USE_INST
+			this->currentInst = *inst;
+#	else
 			this->currentInst = (*bundle).first();
-#endif
+#	endif
 			TRACESI(cerr << '\t' << currentInst->address() << ": "; currentInst->dump(cerr); cerr << io::endl);
 			_nb_inst++; // statistics
 
 			// get semantic instructions
-#ifdef USE_INST
-			prepare(inst);
-#else
+#	ifdef USE_INST
+			prepare(*inst);
+#	else
 			b.clear();
 			(*bundle).semInsts(b);
 			pc = 0;
 			listOfIFsToDo.clear();
-#endif
+#	endif
 
 			// use the provided states associated with the first instruction of the bundle
 			insertInfo(out, bb->toBasic(), currentInst);
 
-			state = &out;
+			Domain *state = &out;
 
 			// initialize the InstPack for the current instruction/bundle
 			ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
@@ -3182,12 +3201,15 @@ public:
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
 		// if the block has an IF instruction
+		// !!DEBUG!! seems to cause crash
+//#	if 0
 		if(has_branch /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
 			//TODO: delete 'old' reg_filters if needed
 			//use Symbolic Expressions to get filters for this basic block
 			TRACEP(cerr << "> IF+BRANCH detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
+//#	endif
 	}
 
 	/**
@@ -3781,7 +3803,11 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
-	p->prepare(*mi);
+#	if USE_INST
+		p->prepare((*mi).first());
+#	else
+		p->prepare(*mi);
+#	endif
 	p->insertInfo(*cs, b, (*mi).first());
 	i = 0;
 	//p->update(cs);
@@ -3814,7 +3840,11 @@ Manager::step_t Manager::next(void) {
 			if(!mi)
 				return false;
 			cs = &s;
-			p->prepare(*mi);
+#			if USE_INST
+				p->prepare((*mi).first());
+#			else
+				p->prepare(*mi);
+#			endif
 			p->insertInfo(*cs, b, (*mi).first());
 			i = 0;
 		}
@@ -3852,7 +3882,7 @@ sem::inst Manager::sem(void) {
  * @return	Current machine instruction.
  */
 Inst *Manager::inst(void) {
-	return *mi;
+	return (*mi).first();
 }
 
 
@@ -3872,7 +3902,11 @@ Value Manager::getCurrentAccessAddress(void) {
 Manager::step_t Manager::rewind(State& rState) {
 	s = rState;
 	cs = &s;
-	p->prepare(*mi);
+#	if USE_INST
+		p->prepare((*mi).first());
+#	else
+		p->prepare(*mi);
+#	endif
 	i = p->getPC();
 	step_t r = NEW_SEM | NEW_INST;
 	return r;

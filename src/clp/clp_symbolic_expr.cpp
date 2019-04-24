@@ -930,28 +930,41 @@ namespace se{
 	 *		ADDR_FILTERS for filters on memory addresses
 	*/
 	void FilterBuilder::getFilters(void){
+
+		// collect bundles and identify branch
 		Vector<BasicBlock::Bundle> bundles;
 		BasicBlock::Bundle branchBundle;
-		for(BasicBlock::BundleIter bbbi(bb); bbbi(); bbbi++) {
+		bool branch_set = false;
+		//for(BasicBlock::BundleIter bbbi(bb); bbbi(); bbbi++) {
+		for(auto bbbi: bb->bundles()) {
+
 			// find the branch bundle
-			if((*bbbi).kind() & Inst::IS_CONTROL) {
-				for(BasicBlock::Bundle::Iter bi(*bbbi); bi(); bi++)
+			if(bbbi.kind() & Inst::IS_CONTROL) {
+				//for(BasicBlock::Bundle::Iter bi(bbbi); bi(); bi++)
+				for(auto bi: bbbi.insts()) {
 					if(bi->isControl() && !IGNORE_CONTROL(*bi))
-						if(bi->isConditional())
-							branchBundle = *bbbi;
+						if(bi->isConditional()) {
+							branchBundle = bbbi;
+							branch_set = true;
+						}
+				}
 			}
+
 			// add every bundle besides the branching bundle
-			if(	(branchBundle == 0) ||
-				((branchBundle != 0)  && (branchBundle.address() != (*bbbi).address())) ) {
-				bundles.add(*bbbi);
-			}
+			if(	!branch_set
+			|| branchBundle.address() != bbbi.address())
+				bundles.add(bbbi);
 		}
 
-		iterateBranchPaths(branchBundle, bundles); // create the filters, starting with the bundle that contains the branch
+		 // create the filters, starting with the bundle that contains the branch
+		ASSERT(branch_set);
+		iterateBranchPaths(branchBundle, bundles);
 
+		// attach filters to BB
 		REG_FILTERS(bb) = reg_filters;
 		ADDR_FILTERS(bb) = addr_filters;
 
+		// attach filters to edges
 		for(BasicBlock::EdgeIter bbei=bb->outs(); bbei(); bbei++) {
 			if(bbei->isTaken()) {
 				REG_FILTERS(*bbei) = reg_filters;
@@ -1000,7 +1013,6 @@ namespace se{
 	 * @param bundles		The list of bundles to carry out filter making for each bundles in the processing BB after the branchBundle.
 	 */
 	void FilterBuilder::iterateBranchPaths(const BasicBlock::Bundle& branchBundle, const Vector<BasicBlock::Bundle>& bundles) {
-		ASSERT(branchBundle);
 
 		bool first = true;
 		bool first_not = true;
@@ -1220,6 +1232,7 @@ namespace se{
 				// build the matching SE
 				switch(i.op) {
 
+				case sem::ASSUME:
 				case sem::IF: { // If inst is a if:
 						// create a new symbexpr
 						op_t log_op = NONE;
@@ -1238,7 +1251,7 @@ namespace se{
 						//default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << cur_inst->address()); break;
 						default:			ASSERTP(false, "unsupported condition " << i.cond() << " at " << currentBundle.address()); break;
 						}
-						if(log_op) {
+						if(log_op != NONE) {
 							temp_known_reg[bi].clear();
 							temp_known_addr[bi].clear();
 							// FIXME
@@ -1422,7 +1435,7 @@ namespace se{
 							for(int i = 0; i < used_reg.length(); i++) {
 								if(!curr_known_reg.contains(used_reg[i]) && !temp_known_reg[bi].contains(used_reg[i])) { // one register can only be added once
 									// get the filter
-									SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, currentBundle, pc, used_reg, used_addr);
+									SECmp *newfilter = getFilterForReg(se->copy(), used_reg[i], pack, currentBundle.first(), pc, used_reg, used_addr);
 									if (newfilter){
 										TRACEGF(tmpout = _ << "\t\t\tNew filter: " << newfilter->asString() << '\n' << tmpout);
 										temp_reg_filters[bi].add(newfilter);

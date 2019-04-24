@@ -30,50 +30,66 @@ template <class I>
 class BaseBundle {
 public:
 	inline BaseBundle() {}
-	inline BaseBundle(const BaseBundle& b) { f = b.f; }
 	inline BaseBundle(const I& i): f(i) { }
+
+	class Iter: public PreIterator<Iter, Inst *> {
+	public:
+		inline Iter(const BaseBundle<I>& b): e(false), i(b.f)  { }
+		inline bool ended() const { return e; };
+		inline Inst *item() const { ASSERT(!i.ended()); return i.item(); }
+		inline void next()
+			{ ASSERT(!i.ended()); e = i->isBundleEnd(); i.next(); }
+		inline bool equals(const Iter& ii) const { return i.equals(ii.i); }
+	private:
+		bool e;
+		I i;
+	};
 
 	inline Address address(void) const { return f->address(); }
 
 	inline int size() const
-		{ int s = 0; for(I i(f); i; i++) s += i->size(); return s; }
+		{ int s = 0; for(Iter i(*this); i(); i++) s += i->size(); return s; }
 
 	inline Address topAddress(void) const { return address() + size(); }
 
 	inline Inst::kind_t kind(void) const
-		{ Inst::kind_t k = 0; for(I i(f); i(); i++) k |= i->kind(); return k; }
+		{ Inst::kind_t k = 0; for(Iter i(*this); i(); i++) k |= i->kind(); return k; }
 
 	Inst *target(void) const
-	 { for(I i(f); i; i++) if(i->isBranch()) {
+	 { for(Iter i(*this); i(); i++) if(i->isBranch()) {
 		 if(i->isIndirect()) return null<Inst>(); else return i->target(); } return null<Inst>(); }
 
 	void readRegSet(RegSet& set) const
-	 	 { for(I i(f); i; i++) i->readRegSet(set); }
+	 	 { for(Iter i(*this); i(); i++) i->readRegSet(set); }
 
 	void writeRegSet(RegSet& set) const
-		{ for(I i(f); i; i++) i->writeRegSet(set); }
+		{ for(Iter i(*this); i(); i++) i->writeRegSet(set); }
 
 	void semInsts(sem::Block& block) const
-		{ int tmp = -1; for(I i(f); i(); i++) tmp -= i->semInsts(block, tmp);
-		  tmp = -1; for(I i(f); i(); i++) tmp -= i->semWriteBack(block, tmp); }
+		{ int tmp = -1; for(Iter i(*this); i(); i++) tmp -= i->semInsts(block, tmp);
+		  tmp = -1; for(Iter i(*this); i(); i++) tmp -= i->semWriteBack(block, tmp); }
 
 	void semKernel(sem::Block& block) const
-		{ int tmp = -1; for(I i(f); i(); i++) tmp -= i->semKernel(block, tmp);
-		  tmp = -1; for(I i(f); i(); i++) tmp -= i->semWriteBack(block, tmp); }
+		{ int tmp = -1; for(Iter i(*this); i(); i++) tmp -= i->semKernel(block, tmp);
+		  tmp = -1; for(Iter i(*this); i(); i++) tmp -= i->semWriteBack(block, tmp); }
 
-	typedef I Iter;
-	inline const I& iter() const { return f; }
-	inline Range<I> insts(void) const { return Range<I>(f, I()); }
-	inline Range<I> operator*(void) const { return insts(); }
+	inline Iter begin() const { return Iter(*this); }
+	inline Iter end() const
+		{	I i = f; while(i->isBundle()) { ASSERT(!i.ended()); i.next(); }
+			ASSERT(!i.ended()); i.next(); return Iter(i); }
+
+	inline const Iter& iter() const { return Iter(f); }
+	inline const BaseBundle<I>& insts(void) const { return *this; }
+	inline const BaseBundle<I>& operator*(void) const { return insts(); }
 
 	inline Inst *first(void) const { return *f; }
-	inline operator Inst *(void) const { return *f; }
+	//inline operator Inst *(void) const { return *f; }
 
 private:
 	I f;
 };
 
-/*class BundleInstIter: public PreIterator<BundleInstIter, Inst *> {
+class BundleInstIter: public PreIterator<BundleInstIter, Inst *> {
 public:
 	inline BundleInstIter(): done(true), i(nullptr) { }
 	inline BundleInstIter(Inst *_i): done(false), i(_i) { }
@@ -88,7 +104,7 @@ private:
 class Bundle: public BaseBundle<BundleInstIter> {
 public:
 	inline Bundle(Inst *i): BaseBundle<BundleInstIter>(i) { };
-};*/
+};
 
 }	// otawa
 

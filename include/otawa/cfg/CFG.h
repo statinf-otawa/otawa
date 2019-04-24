@@ -148,6 +148,7 @@ public:
 	inline bool contains(Inst *i) const
 		{ return address() <= i->address() && i->address() < topAddress(); }
 
+	class BundleIter;
 	class InstIter: public AllocArray<Inst *>::Iter {
 		friend class BasicBlock;
 	public:
@@ -160,33 +161,24 @@ public:
 	inline InstIter begin(void) const { return _insts.begin(); }
 	inline InstIter end(void) const { return _insts.end(); }
 
-	class BundleInstIter: public PreIterator<InstIter, Inst *> {
-	public:
-		inline BundleInstIter(): done(true) { }
-		inline BundleInstIter(const InstIter& _i): done(false), i(_i) { }
-		inline BundleInstIter(const BaseBundle<BundleInstIter>& b): done(false), i(b.iter().i) { }
-		inline bool ended(void) const { return done; }
-		inline Inst *item(void) const { return *i; }
-		inline void next(void) { done = i->isBundleEnd(); if(!done) i++; }
-		inline bool equals(const BundleInstIter& it) { return done == it.done && i == it.i; }
-	private:
-		bool done;
-		InstIter i;
-	};
-	typedef BaseBundle<BundleInstIter> Bundle;
+	typedef BaseBundle<InstIter> Bundle;
 
 	class BundleIter: public PreIterator<BundleIter, Bundle> {
+		friend class BasicBlock;
 	public:
 		inline BundleIter(void) { }
 		inline BundleIter(const BasicBlock *bb): _iter(bb) { }
 		inline Bundle item(void) const { return Bundle(_iter); }
 		inline bool ended(void) const { return _iter.ended(); }
-		inline void next(void) { while(!ended() && _iter->isBundle()) _iter.next(); _iter.next(); }
+		inline void next(void)
+			{ while(!ended() && _iter->isBundle()) _iter.next(); if(!ended()) _iter.next(); }
+		inline bool equals(const BundleIter& i) const { return _iter.equals(i._iter); }
 	private:
+		inline BundleIter(const InstIter& i): _iter(i) { }
 		InstIter _iter;
 	};
 	//inline BundleIter bundles(void) const { return BundleIter(this); }
-	inline Range<BundleIter> bundles() const { return Range<BundleIter>(BundleIter(this), BundleIter()); }
+	inline Range<BundleIter> bundles() const { return Range<BundleIter>(BundleIter(begin()), BundleIter(end())); }
 
 	class BasicEdge {
 	public:
