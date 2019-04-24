@@ -279,8 +279,8 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			dfa::BitSet *bs = &s1, *cs = &s2;
 
 			// for h ∈ l do
-			for(dfa::BitSet::Iterator hi(**l); hi; hi++) {
-				Block *h = G.at(hi);
+			for(dfa::BitSet::Iterator hi(**l); hi(); hi++) {
+				Block *h = G.at(*hi);
 
 				// C ← ∅
 				dfa::BitSet& C = *cs;
@@ -288,10 +288,10 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 				// W ← l \ h; C ← l \ h
 				Vector<Block *> W;
-				for(dfa::BitSet::Iterator ch(**l); ch; ch++)
+				for(dfa::BitSet::Iterator ch(**l); ch(); ch++)
 					if(*hi != *ch) {
-						W.add(G.at(ch));
-						C.add(ch);
+						W.add(G.at(*ch));
+						C.add(*ch);
 					}
 
 				// while W ≠ ∅ ∧ |C| < |bc| do
@@ -340,7 +340,7 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 				map[v->index()] = *v;
 
 			// for v ∈  bs do
-			for(dfa::BitSet::Iterator v(*bs); v; v++) {
+			for(dfa::BitSet::Iterator v(*bs); v(); v++) {
 
 				// let v' ← duplicate(v) in
 				// V' ← V' ∪ { v' }
@@ -353,10 +353,10 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 			}
 
 			// for v ∈ bs do
-			for(dfa::BitSet::Iterator v(*bs); v; v++) {
+			for(dfa::BitSet::Iterator v(*bs); v(); v++) {
 
 				// for (v, w)  ∈ E do
-				for(Block::EdgeIter e = G.at(v)->outs(); e(); e++) {
+				for(Block::EdgeIter e = G.at(*v)->outs(); e(); e++) {
 
 					// E' ← E' ∪ { (σ(v), σ(w)) }
 					G.add(map[e->source()->index()], map[e->sink()->index()], new Edge(e->flags()));
@@ -367,8 +367,8 @@ bool LoopReductor::reduce(CFGMaker& G, loops_t& L) {
 
 			// for v ∈ l \ { bh } do
 			Vector<Edge *> D;
-			for(dfa::BitSet::Iterator vi(**l); vi; vi++) {
-				Block *v = G.at(vi);
+			for(dfa::BitSet::Iterator vi(**l); vi(); vi++) {
+				Block *v = G.at(*vi);
 				if(v != bh)
 
 					// for (w, v) ∈ E ∧ v ∉ IL(w) do
@@ -563,14 +563,14 @@ void LoopReductor::computeInLoops(CFGMaker& G, loops_t &L) {
 
 	// closure of headers
 	for(loops_t::Iter l(L); l(); l++) {
-		for(dfa::BitSet::Iterator h(**l); h; h++)
-			IN_LOOPS(G.at(h))->add(**l);
+		for(dfa::BitSet::Iterator h(**l); h(); h++)
+			IN_LOOPS(G.at(*h))->add(**l);
 		if(logFor(LOG_BLOCK))
 			log << "\t\tloop headed by " << **l << io::endl;
 	}
 	for(CFG::BlockIter v = G.blocks(); v(); v++) {
-		for(dfa::BitSet::Iterator h(**IN_LOOPS(*v)); h; h++)
-			IN_LOOPS(*v)->add(**IN_LOOPS(G.at(h)));
+		for(dfa::BitSet::Iterator h(**IN_LOOPS(*v)); h(); h++)
+			IN_LOOPS(*v)->add(**IN_LOOPS(G.at(*h)));
 		if(logFor(LOG_BLOCK))
 			log << "\t\t" << *v << " in " << **IN_LOOPS(*v) << io::endl;
 	}

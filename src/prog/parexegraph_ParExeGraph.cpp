@@ -490,7 +490,7 @@ void ParExeNode::buildContendersMasks(){
 		elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
 		_contenders_masks_list.addLast(mask);
     }
-    for (elm::BitVector::OneIterator one(*_possible_contenders) ; one ; one++) {
+    for (elm::BitVector::OneIterator one(*_possible_contenders) ; one() ; one++) {
 		if (_contenders_masks_list.isEmpty()) {
 			elm::BitVector *mask = new elm::BitVector(_possible_contenders->size());
 			ASSERT(mask->size() == _possible_contenders->size());

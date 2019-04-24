@@ -376,7 +376,7 @@ void ACSBuilder::processLBlockSet(WorkSpace *fw, const BlockCollection& coll, co
 			for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++) {
 				if(logFor(LOG_CFG))
 					log << "\t\tCFG " << *cfg << io::endl;
-				for (CFG::BlockIter bb = cfg->blocks(); *bb; bb++) {
+				for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 					if(!bb->isBasic())
 						continue;
 					MUSTProblem::Domain &must= mustpersList.results[cfg->index()][bb->index()]->getMust();
@@ -426,7 +426,7 @@ void ACSBuilder::processWorkSpace(WorkSpace *fw) {
 
 	// Build the vectors for receiving the ACS...
 	for (CFGCollection::Iter cfg(INVOLVED_CFGS(fw)); cfg(); cfg++)
-		for (CFG::BlockIter bb = cfg->blocks(); *bb; bb++) {
+		for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 			MUST_ACS(*bb) = new acs_result_t(temp);
 			if(level != DFML_NONE) {
 				PERS_ACS(*bb) = new acs_result_t(temp);

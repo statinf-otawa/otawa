@@ -108,9 +108,9 @@ protected:
 		// first bundle of the block (no last block)
 		if(bundle()) {
 			// First bundle access
-			accs.add(icache::Access(icache::FETCH, *bundle, (*bundle).address()));
+			accs.add(icache::Access(icache::FETCH, (*bundle).first(), (*bundle).address()));
 			last_block = icache->round((*bundle).address());
-			last_bundle = *bundle;
+			last_bundle = (*bundle).first();
 			bundle++;
 			if(logFor(LOG_BLOCK))
 				log << "\t\t\t" << accs.top() << io::endl;
@@ -130,12 +130,12 @@ protected:
 			// Bundle starts in a new block
 			if(icache->round((*bundle).address()) != last_block) {
 				last_block = icache->round((*bundle).address());
-				accs.add(icache::Access(icache::FETCH, *bundle, last_block));
+				accs.add(icache::Access(icache::FETCH, (*bundle).first(), last_block));
 				if (logFor(LOG_BLOCK))
 					log << "\t\t\t" << accs.top() << io::endl;
 			}
 
-			last_bundle = *bundle;
+			last_bundle = (*bundle).first();
 		}
 
 		// Last bundle of the BB crossed cache block boundary
@@ -211,9 +211,9 @@ protected:
 		// first bundle of the block (no last block)
 		if(bundle()) {
 			// First bundle access
-			accs.add(icache::Access(icache::FETCH, *bundle, (*bundle).address()));
+			accs.add(icache::Access(icache::FETCH, (*bundle).first(), (*bundle).address()));
 			last_block = icache->round((*bundle).address());
-			last_bundle = *bundle;
+			last_bundle = (*bundle).first();
 			bundle++;
 			if(logFor(LOG_BLOCK))
 				log << "\t\t\t" << accs.top() << io::endl;
@@ -233,12 +233,12 @@ protected:
 			// Bundle starts in a new block
 			if(icache->round((*bundle).address()) != last_block) {
 				last_block = icache->round((*bundle).address());
-				accs.add(icache::Access(icache::FETCH, *bundle, last_block));
+				accs.add(icache::Access(icache::FETCH, (*bundle).first(), last_block));
 				if (logFor(LOG_BLOCK))
 					log << "\t\t\t" << accs.top() << io::endl;
 			}
 
-			last_bundle = *bundle;
+			last_bundle = (*bundle).first();
 		}
 
 		// Last bundle of the BB crossed cache block boundary

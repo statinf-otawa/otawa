@@ -62,7 +62,6 @@ void MultipleDotDisplayer::processWorkSpace(WorkSpace *ws) {
 	display::CFGOutput::ASSEMBLY(props) = display_assembly;
 	display::CFGOutput::SEM(props) = display_sem;
 	display::CFGOutput::IKIND(props) = display_kind;
-	cerr << "DEBUG: display_kind = " << display_kind << io::endl;
 	display::CFGOutput::REGS(props) = display_regs;
 	display::CFGOutput::TARGET(props) = display_target;
 	display::CFGOutput::BYTES(props) = display_bytes;

@@ -333,7 +333,7 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 		// enclosing loop header is the first element of set
 		// (headers are sorted according by increasing domination)
 		dfa::BitSet::Iterator bit(*dfa.outSet(*bb));
-		if (bit) {
+		if (bit()) {
 			ENCLOSING_LOOP_HEADER(*bb) = prob.get(*bit);
 			if (logFor(LOG_BLOCK))
 				cerr << "\t\t\tloop of " << *bb << " is " << ENCLOSING_LOOP_HEADER(*bb) << io::endl;
@@ -357,8 +357,8 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 
 				// last bit is the left outermost header
 				int h = -1;
-				for(dfa::BitSet::Iterator bit(result); bit; bit++)
-					h = bit;
+				for(dfa::BitSet::Iterator bit(result); bit(); bit++)
+					h = *bit;
 				if(h >= 0)
 					LOOP_EXIT_EDGE(*outedge) = prob.get(h);
 			}

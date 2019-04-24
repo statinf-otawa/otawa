@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CFGOutput class implementation
  *
  *	This file is part of OTAWA
@@ -289,7 +288,6 @@ void CFGOutput::configure(const PropList &props) {
 	rawInfo = RAW_BLOCK_INFO(props);
 	_view = VIEW(props);
 	_sem = SEM(props);
-	cerr << "DEBUG: _sem = " << _sem << io::endl;
 	_source = SOURCE(props);
 	_props = PROPS(props);
 	_ass = ASSEMBLY(props);
