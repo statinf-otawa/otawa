@@ -169,8 +169,10 @@ public:
 	}
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
-		if(on)
-			cons->addLeft(1, dcache::MISS_VAR(_bb));
+		if(on) {
+			ASSERT(*dcache::MISS_VAR(_acc) != nullptr);
+			cons->addLeft(1, dcache::MISS_VAR(_acc));
+		}
 	}
 
 private:

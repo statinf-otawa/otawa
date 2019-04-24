@@ -267,11 +267,13 @@ void EventCollector::make(ilp::System *sys) {
 	for(int c = 0; c < SIZE; ++c) {
 		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
 			ilp::Constraint *cons = sys->newConstraint(
-				evt->name() ,
+				_ << "!!!" << evt->name() ,
 				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
-			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++)
+			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++) {
+				ASSERT(*v != nullptr);
 				cons->addRight(1, *v);
+			}
 		}
 	}
 }
@@ -349,7 +351,8 @@ EdgeTimeBuilder::EdgeTimeBuilder(p::declare& r)
  	bedge(0),
  	source(0),
  	target(0),
-	record(false)
+	record(false),
+	event_mask(0)
 { }
 
 
@@ -1207,7 +1210,7 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case BRANCH:
 		ASSERT(bedge);
-		cerr << "DEBUG: rollbacking " << (void *)bedge << io::endl;
+		//cerr << "DEBUG: rollbacking " << (void *)bedge << io::endl;
 		graph->remove(bedge);
 		bedge = 0;
 		break;
