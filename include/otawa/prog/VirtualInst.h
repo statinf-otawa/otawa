@@ -38,25 +38,26 @@ public:
 	VirtualInst(VirtualInstManager& man, Inst *inst);
 	inline Inst *inst(void) const { return _inst; }
 
-	virtual Address address(void) const;
-	virtual t::uint32 size(void) const;
-	virtual void dump(io::Output& out);
-	virtual kind_t kind(void);
-	virtual Inst *target(void);
-	virtual Type *type(void);
-	virtual void semInsts(sem::Block& block);
-	virtual int semInsts(sem::Block& block, int temp);
-	virtual void semKernel(sem::Block& block);
-	virtual int semWriteBack(sem::Block& block, int temp);
-	virtual delayed_t delayType(void);
-	virtual int delaySlots(void);
-	virtual void readRegSet(RegSet& set);
-	virtual void writeRegSet(RegSet& set);
-	virtual Inst *toInst(void);
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
-	virtual int multiCount(void);
-	virtual Condition condition(void);
+	Address address(void) const override;
+	t::uint32 size(void) const override;
+	void dump(io::Output& out) override;
+	kind_t kind(void) override;
+	Inst *target(void) override;
+	Type *type(void) override;
+	void semInsts(sem::Block& block) override;
+	int semInsts(sem::Block& block, int temp) override;
+	void semKernel(sem::Block& block) override;
+	int semKernel(sem::Block& block, int t) override;
+	int semWriteBack(sem::Block& block, int temp) override;
+	delayed_t delayType(void) override;
+	int delaySlots(void) override;
+	void readRegSet(RegSet& set) override;
+	void writeRegSet(RegSet& set) override;
+	Inst *toInst(void) override;
+	const elm::genstruct::Table<hard::Register *>& readRegs(void) override;
+	const elm::genstruct::Table<hard::Register *>& writtenRegs(void) override;
+	int multiCount(void) override;
+	Condition condition(void) override;
 
 protected:
 	~VirtualInst(void);

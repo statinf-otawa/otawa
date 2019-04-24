@@ -38,7 +38,7 @@ private:
 	void split(Block *bb);
 	Inst *nop(Inst *i, const Condition& cond = Condition());
 	Inst *guard(Inst *i, const Condition& cond);
-	Inst *perform(Inst *i);
+	Inst *cond(Inst *i);
 	void make(Block *bb);
 
 	Inst *_nop, *_anop;

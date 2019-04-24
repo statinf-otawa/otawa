@@ -121,6 +121,9 @@ int VirtualInst::semInsts(sem::Block& block, int temp) { return _inst->semInsts(
  */
 void VirtualInst::semKernel(sem::Block& block) { return _inst->semKernel(block); }
 
+///
+int VirtualInst::semKernel(sem::Block& b, int t) { return _inst->semKernel(b, t); }
+
 /**
  */
 int VirtualInst::semWriteBack(sem::Block& block, int temp) { return _inst->semWriteBack(block, temp); }

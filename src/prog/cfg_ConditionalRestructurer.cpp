@@ -22,6 +22,8 @@
 #include <otawa/cfg/ConditionalRestructurer.h>
 #include <otawa/prog/VirtualInst.h>
 
+//#define DO_DEBUG
+
 namespace otawa {
 
 /*
@@ -46,10 +48,21 @@ class GuardNOP: public NOP {
 public:
 	GuardNOP(WorkSpace *ws, Inst *i, const Condition& cond): NOP(ws, i), _cond(cond) { }
 
-	void semInsts(sem::Block &block) override {
+	int semInsts(sem::Block &block, int t) override {
 		if(!_cond.isEmpty())
 			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
+		return t;
 	}
+
+#	ifdef DO_DEBUG
+	void dump(io::Output &out) override {
+		if(!_cond.isEmpty())
+			out << "(G)  ";
+		else
+			out << "(C) ";
+		NOP::dump(out);
+	}
+#	endif
 
 private:
 	Condition _cond;
@@ -63,12 +76,21 @@ class GuardInst: public VirtualInst {
 public:
 	GuardInst(WorkSpace *ws, Inst *i, const Condition& cond): VirtualInst(ws, i), _cond(cond) { }
 
-	void semInsts(sem::Block &block) override {
-		if(!_cond.isEmpty()) {
+	int semInsts(sem::Block &block, int t) override {
+		if(!_cond.isEmpty())
 			block.add(sem::assume(_cond.semCond(), _cond.reg()->platformNumber()));
-			VirtualInst::semKernel(block);
-		}
+		return VirtualInst::semKernel(block, t);
 	}
+
+#	ifdef DO_DEBUG
+	void dump(io::Output &out) override {
+		if(!_cond.isEmpty())
+			out << "(G)  ";
+		else
+			out << "(C) ";
+		VirtualInst::dump(out);
+	}
+#	endif
 
 private:
 	Condition _cond;
@@ -81,7 +103,18 @@ private:
 class CondInst: public VirtualInst {
 public:
 	CondInst(WorkSpace *ws, Inst *i): VirtualInst(ws, i) { }
-	void semInsts(sem::Block& block) override { VirtualInst::semKernel(block); }
+
+	int semInsts(sem::Block& block, int t) override {
+		return VirtualInst::semKernel(block, t);
+	}
+
+#	ifdef DO_DEBUG
+	void dump(io::Output &out) override {
+		out << "(C)  ";
+		VirtualInst::dump(out);
+	}
+#	endif
+
 };
 
 
@@ -323,9 +356,9 @@ void ConditionalRestructurer::split(Block *b) {
 					cases[k]->add(guard(i, c), wr, c);
 				}
 
-				// c subset of cc => add instruction
+				// cc subset of c => add instruction
 				else if(cc <= c)
-					cases[k]->add(perform(i), wr, i->isControl() ? TAKEN : NONE);
+					cases[k]->add(cond(i), wr, i->isControl() ? TAKEN : NONE);
 
 				// cc subset of c => split
 				else if(c & cc) {
@@ -391,7 +424,7 @@ Inst *ConditionalRestructurer::guard(Inst *i, const Condition& cond) {
  * @param i		Condition instruction.
  * @return		Corresponding condition instruction.
  */
-Inst *ConditionalRestructurer::perform(Inst *i) {
+Inst *ConditionalRestructurer::cond(Inst *i) {
 	return new CondInst(workspace(), i);
 }
 
