@@ -27,6 +27,7 @@
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/dcache/MUSTPERS.h>
 #include <otawa/dcache/ACSMayBuilder.h>
+#include <otawa/hard/Memory.h>
 
 using namespace otawa::cache;
 
@@ -43,10 +44,15 @@ io::Output& operator<<(io::Output& out, purge_t purge) {
 	return out;
 }
 
+/**
+ * Compute purge categories based on dirtyness analysis for write-back caches.
+ *
+ * @ingroup dcache
+ */
 class PurgeAnalysis: public Processor {
 public:
 	static p::declare reg;
-	PurgeAnalysis(p::declare& r = reg): Processor(r), cache(0) { }
+	PurgeAnalysis(p::declare& r = reg): Processor(r), cache(nullptr), mem(nullptr) { }
 
 protected:
 
@@ -57,6 +63,10 @@ protected:
 		ASSERT(conf);
 		cache = conf->dataCache();
 		ASSERT(cache);
+
+		// get the memory
+		mem = hard::MEMORY_FEATURE.get(ws);
+		ASSERT(mem);
 
 		// get the block collection
 		const BlockCollection *colls = DATA_BLOCK_COLLECTION(ws);
@@ -167,27 +177,28 @@ private:
 			log << "\t\t\t" << access << " as ";
 
 		// look for the category
+		ot::time time = 0;
 		purge_t purge = INV_PURGE;
 		switch(dcache::CATEGORY(access)) {
 		case ALWAYS_HIT:
 			purge = NO_PURGE;
 			break;
 		case FIRST_MISS:
-			if(mayPurge(access, state))
+			if(mayPurge(access, state, time))
 				purge = PERS_PURGE;
 			else
 				purge = NO_PURGE;
 			break;
 		case ALWAYS_MISS:
-			if(!mayPurge(access, state))
+			if(!mayPurge(access, state, time))
 				purge = NO_PURGE;
-			else if(!mustPurge(access, state))
+			else if(!mustPurge(access, state, time))
 				purge = MAY_PURGE;
 			else
 				purge = MUST_PURGE;
 			break;
 		case NOT_CLASSIFIED:
-			if(mayPurge(access, state))
+			if(mayPurge(access, state, time))
 				purge = MAY_PURGE;
 			else
 				purge = NO_PURGE;
@@ -201,6 +212,7 @@ private:
 		// apply it
 		if(purge >= PURGE(access)) {
 			PURGE(access) = purge;
+			PURGE_TIME(access) = time;
 			if(logFor(LOG_INST))
 				cerr << purge << io::endl;
 		}
@@ -210,33 +222,51 @@ private:
 	 * Look if a dirty block must be purged.
 	 * @param access	Current access.
 	 * @param state		Current state.
+	 * @param time		Purge time.
 	 * @return			True if a block must purged, false else.
 	 */
-	bool mustPurge(const BlockAccess& access, State& state) {
+	bool mustPurge(const BlockAccess& access, State& state, ot::time& time) {
+		bool purged = false;
 		for(int i = 0; i < state.coll.cacheSet(); i++)
-			if((access.isAny() || !access.inRange(state.coll[i].index()))
-			&& state.must_dom.getAge(i) == cache->blockCount() - 1
-			&& state.dstate.mustBeDirty(i))
-				return true;
-		return false;
+			if(state.must_dom.getAge(i) == cache->blockCount() - 1
+			&& state.dstate.mustBeDirty(i)
+			&& (access.isAny()|| !access.inRange(state.coll[i].index()))) {
+				purged = true;
+				time = max(time, mem->writeTime(state.coll[i].address()));
+				if(time == mem->worstWriteTime())
+					break;
+			}
+		return purged;
 	}
 
 	/**
 	 * Look if a dirty block may be purged.
 	 * @param access	Current access.
 	 * @param state		Current state.
+	 * @param time		Purge time
 	 * @return			True if a block must purged, false else.
 	 */
-	bool mayPurge(const BlockAccess& access, State& state) {
-		for(int i = 0; i < state.coll.count(); i++)
-			if((access.isAny() || !access.in(state.coll[i]))
-			&& state.may_dom.getAge(i) == cache->blockCount() - 1
-			&& state.dstate.mayBeDirty(i))
-				return true;
-		return false;
+	bool mayPurge(const BlockAccess& access, State& state, ot::time& time) {
+		bool purged = false;
+		if(state.may_dom.containsAny()) {
+			purged = true;
+			time = mem->worstWriteTime();
+		}
+		else
+			for(int i = 0; i < state.coll.count(); i++)
+				if((access.isAny() || !access.in(state.coll[i]))
+				&& state.may_dom.getAge(i) == cache->blockCount() - 1
+				&& state.dstate.mayBeDirty(i)) {
+					purged = true;
+					time = max(time, mem->writeTime(state.coll[i].address()));
+					if(time == mem->worstWriteTime())
+						break;
+				}
+		return purged;
 	}
 
 	const hard::Cache *cache;
+	const hard::Memory *mem;
 };
 
 p::declare PurgeAnalysis::reg = p::init("otawa::dcache::PurgeAnalysis", Version(1, 0, 0))
@@ -247,10 +277,48 @@ p::declare PurgeAnalysis::reg = p::init("otawa::dcache::PurgeAnalysis", Version(
 	.require(DATA_BLOCK_FEATURE)
 	.require(DIRTY_FEATURE)
 	.require(CATEGORY_FEATURE)
+	.require(hard::MEMORY_FEATURE)
 	.provide(PURGE_FEATURE);
 
+
+/**
+ * The purge features use the dirtyness analysis for a write-back cache to categorize cache
+ * miss in order to know if a write back to memory of the cache block content is needed.
+ * The categories are must purge, may purge and persistant purge (only on first access in a loop).
+ *
+ * @par Processors
+ *	* PurgeAnalysis (default)
+ *
+ * @par Properties
+ *	* PURGE
+ *	* PURGE_TIME
+ *
+ * @ingroup dcache
+ */
 p::feature PURGE_FEATURE("otawa::dcache::PURGE_FEATURE", new Maker<PurgeAnalysis>());
 
+
+/**
+ * This property is set to data cache cache (BlockAccess) to inform if the corresponding data cache
+ * block needs to be written-back or not.
+ *
+ * @par Features
+ *	* PURGE_FEATURE
+ *
+ * @ingroup dcache
+ */
 p::id<purge_t> PURGE("otawa::dcache::PURGE", INV_PURGE);
+
+
+/**
+ * For memory accesses not categorized as NO_PURGE, gives the a pair <M, m>
+ * where M is the maximum purge time and m the minimum purge time.
+ *
+ * @par Features
+ *	* PURGE_FEATURE
+ *
+ * @ingroup dcache
+ */
+p::id<ot::time> PURGE_TIME("otawa::dcache::PURGE_TIME", -1);
 
 } }		// otawa::dcache

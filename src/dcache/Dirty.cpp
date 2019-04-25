@@ -35,7 +35,8 @@ namespace otawa { namespace dcache {
 using namespace otawa::dfa::hai;
 
 /*
- * ABSTRACT DOMAIN
+ * ABSTRACT DOMAIN (applied to one cache set)
+ * 		B = set of blocks
  * 		S: B -> m: B x M: B where
  * 			m: may be dirty
  * 			M: must be dirty
@@ -46,8 +47,8 @@ using namespace otawa::dfa::hai;
  * 			1, 1	must be dirty
  * 		the join function is:
  * 		J: m1: B x M1: B x m2: B x M2: B -> m: B x M: B s.t.
- * 			m = m1 \/ m2 /\ M = M1 /\ M2
- * 		therefore J(m, M, 0, 1) = m \/ 0 = m, M /\ 1 = M
+ * 			m = (m1 \/ m2) /\ M = (M1 /\ M2)
+ * 		therefore J(m, M, 0, 1) = (m \/ 0) = m, (M /\ 1) = M
  *
  * 		The order is:
  * 			1, 0 > 0, 0
@@ -92,6 +93,8 @@ private:
  * 	if(man.mayBeDirty(d, my_cache_block)) ...;
  * }
  * @endcode
+ *
+ * @ingroup dcache
  */
 
 
@@ -332,6 +335,8 @@ private:
  *
  * @p Provided Features
  * @li @ref DIRTY_FEATURE
+ *
+ * @ingroup dcache
  */
 class DirtyAnalysis: public Processor {
 public:
@@ -397,6 +402,8 @@ p::declare DirtyAnalysis::reg = p::init("otawa::dcache::DirtyAnalysis", Version(
  *
  * @p Default Processor
  * @li @ref DirtyAnalysis
+ *
+ * @ingroup dcache
  */
 p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis>());
 
@@ -409,6 +416,8 @@ p::feature DIRTY_FEATURE("otawa::dcache::DIRTY_FEATURE", new Maker<DirtyAnalysis
  *
  * @p Hook
  * @li @ref otawa::BasicBlock
+ *
+ * @ingroup dcache
  */
 p::id<AllocArray<DirtyManager::t> > DIRTY("otawa::dcache::DIRTY", AllocArray<DirtyManager::t>::null);
 

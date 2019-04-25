@@ -42,7 +42,7 @@ public:
 	static CacheConfiguration *load(elm::xom::Element *element);
 	static CacheConfiguration *load(const elm::sys::Path& path);
 
-	inline CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0);
+	CacheConfiguration(const Cache *inst_cache = 0, const Cache *data_cache = 0);
 	virtual ~CacheConfiguration(void);
 
 	inline const Cache *instCache(void) const { return icache; }

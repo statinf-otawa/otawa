@@ -272,6 +272,7 @@ typedef enum {
 io::Output& operator<<(io::Output& out, purge_t purge);
 extern p::feature PURGE_FEATURE;
 extern p::id<purge_t> PURGE;
+extern p::id<ot::time> PURGE_TIME;
 
 // WCET builder
 extern p::feature WCET_FUNCTION_FEATURE;

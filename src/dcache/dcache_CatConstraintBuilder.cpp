@@ -24,6 +24,7 @@
 #include <otawa/cache/features.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/CatConstraintBuilder.h>
+#include <otawa/etime/features.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>

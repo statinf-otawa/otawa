@@ -125,7 +125,7 @@ CacheConfiguration *CacheConfiguration::load(const elm::sys::Path& path) {
  * @param dcache	Data cache.
  * @note	To get an unified cache, use the same value for icache and dcache.
  */
-inline CacheConfiguration::CacheConfiguration(const Cache *inst_cache, const Cache *data_cache): icache(inst_cache), dcache(data_cache) {
+CacheConfiguration::CacheConfiguration(const Cache *inst_cache, const Cache *data_cache): icache(inst_cache), dcache(data_cache) {
 }
 
 

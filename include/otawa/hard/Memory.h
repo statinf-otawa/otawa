@@ -194,6 +194,10 @@ public:
 	ot::time worstWriteTime(void) const;
 	ot::time worstAccessTime(void) const;
 
+	ot::time bestReadTime(void) const;
+	ot::time bestWriteTime(void) const;
+	ot::time bestAccessTime(void) const;
+
 	ot::time readTime(Address a) const;
 	ot::time writeTime(Address a) const;
 	ot::time accessTime(Address a) const;
@@ -207,6 +211,7 @@ private:
 	AllocArray<const Bank *> _banks;
 	AllocArray<const Bus *> _buses;
 	mutable ot::time _waccess, _wread, _wwrite;
+	mutable ot::time _baccess, _bread, _bwrite;
 };
 
 // features

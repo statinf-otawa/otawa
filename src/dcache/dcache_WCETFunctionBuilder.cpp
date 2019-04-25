@@ -33,14 +33,16 @@ namespace otawa { namespace dcache {
  * @li @ref WCET_FUNCTION_FEATURE
  *
  * @par Required Features
- * @li @ref CONSTRAINTS_FEATURE
+ *	* dcache::CONSTRAINTS_FEATURE
+ *	* hard::MEMORY_FEATURE
  */
 
 p::declare WCETFunctionBuilder::reg = p::init("otawa::dcache::WCETFunctionBuilder", Version(1, 0, 0))
 	.base(BBProcessor::reg)
 	.maker<WCETFunctionBuilder>()
 	.provide(WCET_FUNCTION_FEATURE)
-	.require(CONSTRAINTS_FEATURE);
+	.require(CONSTRAINTS_FEATURE)
+	.require(hard::MEMORY_FEATURE);
 
 /**
  */
@@ -118,6 +120,8 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
  * This feature provides an easy and naive way to add data cache time to the WCET computation
  * by adding to the objective function representing the WCET the miss time multiplied
  * by the number of occurrences of the miss.
+ *
+ * @ingroup dcache
  */
 p::feature WCET_FUNCTION_FEATURE("otawa::dcache::WCET_FUNCTION_FEATURE", new Maker<WCETFunctionBuilder>());
 

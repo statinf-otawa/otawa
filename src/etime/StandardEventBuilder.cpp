@@ -182,6 +182,62 @@ private:
 };
 
 
+class DataPurgeEvent: public Event {
+public:
+	DataPurgeEvent(Inst *inst, dcache::BlockAccess& acc, BasicBlock *bb)
+	: Event(inst), _acc(acc), _bb(bb) { }
+
+	virtual kind_t kind(void) const { return MEM; }
+	virtual ot::time cost(void) const { return dcache::PURGE_TIME(_acc); }
+	virtual type_t type(void) const { return LOCAL; }
+
+	virtual occurrence_t occurrence(void) const {
+		switch(dcache::PURGE(_acc)) {
+		case dcache::NO_PURGE:		return NEVER;
+		case dcache::MAY_PURGE:
+		case dcache::PERS_PURGE:	return SOMETIMES;
+		case dcache::MUST_PURGE:	return ALWAYS;
+		default:					ASSERT(0); return SOMETIMES;
+		}
+	}
+
+	virtual cstring name(void) const { return "L1 data cache purge"; }
+	virtual string detail(void) const { return _ << *dcache::PURGE(_acc) << " L1-D"; }
+
+	virtual int weight(void) const {
+		switch(dcache::PURGE(_acc)) {
+		case dcache::NO_PURGE:		return 0;
+		case dcache::MAY_PURGE:
+		case dcache::MUST_PURGE:	return WEIGHT(_bb);
+		case dcache::PERS_PURGE:	{
+										Block *parent = otawa::ENCLOSING_LOOP_HEADER(_bb);
+										if(!parent)
+											return 1;
+										else
+											return WEIGHT(parent);
+									}
+		case dcache::INV_PURGE:		ASSERTP(false, "unsupported invalid purge"); return 0;
+		default:					ASSERT(0); return 0;
+		}
+	}
+
+	virtual bool isEstimating(bool on) {
+		return on;	// only when on = true!
+	}
+
+	virtual void estimate(ilp::Constraint *cons, bool on) {
+		if(on) {
+			ASSERT(*dcache::MISS_VAR(_acc) != nullptr);
+			cons->addLeft(1, dcache::MISS_VAR(_acc));
+		}
+	}
+
+private:
+	dcache::BlockAccess& _acc;
+	BasicBlock *_bb;
+};
+
+
 /**
  * @class StandardEventBuilder
  * Build standard events.
@@ -205,8 +261,17 @@ private:
 /**
  */
 StandardEventBuilder::StandardEventBuilder(p::declare& r)
-: BBProcessor(r), mem(0), cconf(0), bht(0), has_il1(false), has_dl1(false), has_branch(false), bank(0), _explicit(false) {
-}
+:	BBProcessor(r),
+	mem(nullptr),
+	cconf(nullptr),
+	bht(nullptr),
+	has_il1(false),
+	has_dl1(false),
+	has_branch(false),
+	bank(nullptr),
+	_explicit(false),
+	wb(false)
+{ }
 
 
 void StandardEventBuilder::configure(const PropList& props) {
@@ -229,6 +294,12 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 	// look if instruction cacheL1 is available
 	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
 	has_dl1 = ws->isProvided(dcache::CONSTRAINTS_FEATURE);
+	if(has_dl1) {
+		const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
+		wb = caches->dataCache()->writePolicy() == hard::Cache::WRITE_BACK;
+		if(wb && !ws->isProvided(dcache::PURGE_FEATURE))
+			throw ProcessorException(*this, "write-back L1 data cache but no purge analysis provided (dcache::PURGE_FEATURE)!");
+	}
 
 	// look if branch prediction is available
 	has_branch = ws->isProvided(branch::CONSTRAINTS_FEATURE);
@@ -327,6 +398,14 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			if(logFor(LOG_BB))
 				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
 			EVENT(bb).add(event);
+
+			// for write-back, take into account the purge
+			if(wb && dcache::CATEGORY(acc) != cache::ALWAYS_HIT) {
+				Event *pevt = new DataPurgeEvent(acc.instruction(), acc, bb);
+				if(logFor(LOG_BB))
+					log << "\t\t\t\tadded " << pevt->inst()->address() << "\t" << pevt->name() << io::endl;
+				EVENT(bb).add(pevt);
+			}
 		}
 
 	}

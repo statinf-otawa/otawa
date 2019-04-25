@@ -435,7 +435,14 @@ Memory *Memory::load(const elm::sys::Path& path) {
 /**
  * Memory constructor.
  */
-Memory::Memory(bool full): _waccess(0), _wread(0), _wwrite(0) {
+Memory::Memory(bool full):
+	_waccess(0),
+	_wread(0),
+	_wwrite(0),
+	_baccess(0),
+	_bread(0),
+	_bwrite(0)
+{
 	if(full) {
 		_banks = AllocArray<const Bank *>(1);
 		_banks[0] = &Bank::full;
@@ -480,6 +487,44 @@ ot::time Memory::worstWriteTime(void) const {
 		for(int i = 0; i < _banks.count(); i++)
 			_wwrite = max(_wwrite, _banks[i]->writeLatency());
 	return _wwrite;
+}
+
+/**
+ * Compute the best access latency.
+ * @return Worst access latency.
+ */
+ot::time Memory::bestAccessTime(void) const {
+	if(_baccess == 0)
+		_baccess = min(bestReadTime(), bestWriteTime());
+	return _baccess;
+}
+
+
+/**
+ * Compute the best read access latency.
+ * @return Worst read access latency.
+ */
+ot::time Memory::bestReadTime(void) const {
+	if(_bread == 0) {
+		_bread = worstReadTime();
+		for(int i = 0; i < _banks.count(); i++)
+			_wread = min(_bread, _banks[i]->latency());
+	}
+	return _bread;
+}
+
+
+/**
+ * Compute the best read access latency.
+ * @return Worst read access latency.
+ */
+ot::time Memory::bestWriteTime(void) const {
+	if(_bwrite == 0) {
+		_bwrite = bestWriteTime();
+		for(int i = 0; i < _banks.count(); i++)
+			_bwrite = min(_bwrite, _banks[i]->writeLatency());
+	}
+	return _bwrite;
 }
 
 /**

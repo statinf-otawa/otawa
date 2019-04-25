@@ -41,12 +41,15 @@ public:
 
 	class Domain: public ACS {
 	public:
-		inline Domain(const int _size, const int _A, int init = -1): ACS(_size, _A, init) { }
-		inline Domain(const Domain &source) : ACS(source) { }
-		inline Domain(const ACS& source): ACS(source) { }
+		inline Domain(const int _size, const int _A, int init = -1, int _any_age = 0): ACS(_size, _A, init), any_age(_any_age) { }
+		inline Domain(const Domain &source) : ACS(source), any_age(source.any_age) { }
+		inline Domain(const ACS& source, int _any_age = 0): ACS(source), any_age(_any_age) { }
 
-		inline Domain& operator=(const Domain &src) { ACS::operator=(src); return *this; }
-		inline Domain& operator=(const ACS& src)  { ACS::operator=(src); return *this; }
+		inline int anyAge() const { return any_age; }
+		inline bool containsAny() const { return any_age < A; }
+
+		inline Domain& operator=(const Domain &src) { ACS::operator=(src); any_age = src.any_age; return *this; }
+		inline Domain& operator=(const ACS& src)  { ACS::operator=(src); any_age = 0; return *this; }
 
 		inline void glb(const Domain &dom) { ASSERT(false); }
 
@@ -55,6 +58,7 @@ public:
 			for (int i = 0; i < size; i++)
 				if (((age[i] > dom.age[i]) && (dom.age[i] != -1)) || (age[i] == -1))
 					age[i] = dom.age[i];
+			any_age = min(any_age, dom.any_age);
 		}
 
 		inline void addDamage(const int id, const int damage) {
@@ -64,6 +68,7 @@ public:
 			age[id] += damage;
 			if (age[id] >= A)
 				age[id] = -1;
+			any_age = min(A, any_age + damage);
 		}
 
 		inline void inject(const int id) {
@@ -80,6 +85,7 @@ public:
 						age[i] = -1;
 				}
 			age[id] = 0;
+			any_age = min(A, any_age + 1);
 		}
 
 		inline void injectWriteThrough(const int id) {
@@ -99,6 +105,7 @@ public:
 				if (age[i] == A)
 					age[i] = -1;
 			}
+			any_age = min(A, any_age + 1);
 		}
 
 		inline void refreshAll() {
@@ -111,6 +118,9 @@ public:
 				if(age[i] != -1)
 					age[i] = 0;
 		}
+
+	private:
+		int any_age;
 	};
 
 public:

@@ -58,6 +58,7 @@ private:
 	bool has_branch;
 	const hard::Bank *bank;
 	bool _explicit;
+	bool wb;
 };
 
 } }	// otawa::etime
