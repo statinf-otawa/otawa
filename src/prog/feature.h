@@ -422,17 +422,17 @@
  *
  * @par Instruction Cache features
  *
- * @li @ref otawa::ccg::FEATURE
- * @li @ref otawa::ccg::COLLECTED_LBLOCKS_FEATURE
- * @li @ref otawa::ICACHE_ACS_FEATURE
- * @li @ref otawa::ICACHE_ACS_MAY_FEATURE
- * @li @ref otawa::ICACHE_CATEGORY_FEATURE
- * @li @ref otawa::ICACHE_CATEGORY2_FEATURE
- * @li @ref otawa::ICACHE_CONSTRAINT2_FEATURE;
- * @li @ref otawa::ICACHE_EDGE_ACS_FEATURE
- * @li @ref otawa::ICACHE_EDGE_CATEGORY2_FEATURE
- * @li @ref otawa::ICACHE_FIRSTLAST_FEATURE
- * @li @ref otawa::ICACHE_ONLY_CONSTRAINT2_FEATURE
+ *  * otawa::cache::COLLECTED_LBLOCKS_FEATURE
+ *  * otawa::cache::ICACHE_CATEGORY_FEATURE
+ *
+ *  * otawa::ICACHE_ACS_FEATURE
+ *  * otawa::ICACHE_ACS_MAY_FEATURE
+ *  * otawa::ICACHE_CATEGORY2_FEATURE
+ *  * otawa::ICACHE_CONSTRAINT2_FEATURE;
+ *  * otawa::ICACHE_EDGE_ACS_FEATURE
+ *  * otawa::ICACHE_EDGE_CATEGORY2_FEATURE
+ *  * otawa::ICACHE_FIRSTLAST_FEATURE
+ *  * otawa::ICACHE_ONLY_CONSTRAINT2_FEATURE
  *
  * @par Process Features
  *

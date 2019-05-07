@@ -63,14 +63,16 @@ private:
 };
 io::Output& operator<<(io::Output& out, const CategoryStats& stats);
 
-// stats
+// L-block collection
+extern p::feature COLLECTED_LBLOCKS_FEATURE;
+extern p::id<LBlockSet **> LBLOCKS;
+extern p::id<AllocArray<LBlock* >* > BB_LBLOCKS;
+
+// categories assignments
 extern p::id<category_t> CATEGORY;
 extern p::id<Block *> CATEGORY_HEADER;
 extern p::id<CategoryStats *> CATEGORY_STATS;
 extern p::feature ICACHE_CATEGORY_FEATURE;
-
-// Features
-extern p::feature COLLECTED_LBLOCKS_FEATURE;
 
 } } // otawa::cache
 

@@ -128,6 +128,35 @@ p::id<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 
 
 /**
+ * @typedef category_t
+ * Represents the categories associated to cache blocks to qualify
+ * its behavior in cache.
+ */
+
+/**
+ * @var INVALID_CATEGORY;
+ * Special invalid value for a category.
+ *
+ * @var ALWAYS_HIT
+ * Category set when a block access always results in a hit.
+ *
+ * @var FIRST_HIT
+ * Category to qualify a block access that results first to a hit
+ * and which following access have an unknown behavior (rarely used).
+ *
+ * @var FIRST_MISS
+ * This category name is misleading: in fact, it qualifies a block which
+ * first access result is unknown and following accesses are hits.
+ *
+ * @var ALWAYS_MISS
+ * Category set to a cache block which access always results in a miss.
+ *
+ * @var NOT_CLASSIFIED
+ * Category set to a cache block which accesses cannot be assigned to
+ * another category.
+ */
+
+/**
  */
 io::Output& operator<<(io::Output& out, category_t cat) {
 	static cstring names[] = {

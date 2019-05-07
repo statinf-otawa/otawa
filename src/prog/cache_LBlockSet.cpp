@@ -31,7 +31,7 @@ namespace otawa { namespace cache {
  * @par Hooks
  * @li @ref FrameWork
  */
-Identifier<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
+p::id<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
 
 /**
  * This property is used for storing the list of L-Blocks of a BasicBlock.
@@ -40,7 +40,7 @@ Identifier<LBlockSet **> LBLOCKS("otawa::LBLOCKS", 0);
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<AllocArray<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS", 0);
+p::id<AllocArray<LBlock* >* > BB_LBLOCKS("otawa::BB_LBLOCKS", 0);
 
 
 /**

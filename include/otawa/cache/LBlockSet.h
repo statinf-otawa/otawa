@@ -67,10 +67,6 @@ private:
 	const hard::Cache *_cache;
 };
 
-// Properties
-extern Identifier<LBlockSet **> LBLOCKS;
-extern Identifier<AllocArray<LBlock* >* > BB_LBLOCKS;
-
 } }	// otawa::cache
 
 #endif // OTAWA_CACHE_LBLOCKSET_H

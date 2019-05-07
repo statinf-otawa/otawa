@@ -145,7 +145,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray
 	// Build the lblock
 	LBlock *lblock = new LBlock(lbset, bb, inst, top - addr, cid, addr);
 	lblocks->set(index, lblock);
-	if(isVerbose())
+	if(logFor(LOG_BB))
 		log << "\t\t\t\tblock at " << addr << " size " << top-addr
 			<< " (cache block " << cache->round(addr)
 			<< ", cid = " << cid << ")\n";

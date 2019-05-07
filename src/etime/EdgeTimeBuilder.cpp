@@ -1350,7 +1350,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 		if(x_hts > weight)
 			x_hts = weight;
 		ot::time cost = x_hts * confs.top().time() + (weight - x_hts) * confs[p - 1].time();
-		if (isVerbose())
+		if (logFor(LOG_BB))
 			log << "\t\t\t\tHTS [" << p << " - " << (confs.length() - 1) << "], cost = " << cost << " (" << x_hts << "/" << weight << ")\n";
 
 		// look for best cost
@@ -1368,7 +1368,7 @@ void EdgeTimeBuilder::applyWeightedSplit(const config_list_t& confs) {
 	makeSplit(confs, best_p, hts, lts_time, hts_time);
 	t::uint32 pos, neg, unu, com;
 	hts.scan(pos, neg, unu, com, events.length());
-	if(isVerbose())
+	if(logFor(LOG_BB))
 		log << "\t\t\t\t"
 			<< "pos = " << maskToString(pos, events.length())
 			<< ", neg = " << maskToString(neg, events.length())
@@ -1470,7 +1470,7 @@ void EdgeTimeBuilder::makeSplit(const config_list_t& confs, int p, ConfigSet& ht
 	hts = ConfigSet(hts_time);
 	for(int i = p; i < confs.length(); i++)
 		hts.add(confs[i]);
-	if(isVerbose()) {
+	if(logFor(LOG_BB)) {
 		log << "\t\t\t\t" << "LTS time = " << lts_time << ", HTS time = " << hts_time << " for { ";
 		bool fst = true;
 		for(ConfigSet::Iter conf(hts); conf(); conf++) {
