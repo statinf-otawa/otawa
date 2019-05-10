@@ -36,7 +36,7 @@ class PCGBlock;
 class PCGEdge: public PropList, public graph::GenEdge<PCGBlock, PCGEdge>::GenEdge {
 public:
 	PCGEdge(SynthBlock *block);
-	inline SynthBlock *block(void) const { return _block; }
+	inline SynthBlock *call(void) const { return _block; }
 	inline PCGBlock *caller(void) const { return source(); }
 	inline PCGBlock *callee(void) const { return sink(); }
 private:
@@ -46,11 +46,15 @@ private:
 class PCGBlock: public PropList, public graph::GenVertex<PCGBlock, PCGEdge> {
 public:
 	PCGBlock(CFG *cfg);
-	virtual ~PCGBlock(void);
+	~PCGBlock();
 
-	inline address_t getAddress(void) { return _cfg->address(); }
-	inline String getName(void) { return _cfg->label(); }
-	inline CFG *cfg(void) const { return _cfg; }
+	bool isUndef() const;
+	address_t address() const;
+	string name() const;
+	CFG *cfg() const;
+
+	inline address_t getAddress() const { return address(); }
+	inline string getName() const { return name(); }
 
 private:
 	CFG *_cfg;
@@ -65,6 +69,9 @@ public:
 private:
 	PCGBlock *_entry;
 };
+
+io::Output& operator<<(io::Output& out, PCGBlock *b);
+io::Output& operator<<(io::Output& out, PCGEdge *b);
 
 }	// otawa
 

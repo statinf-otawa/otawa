@@ -27,8 +27,15 @@
 
 namespace otawa {
 
+class PCGBlock;
+
 extern p::feature PCG_FEATURE;
 extern p::id<PCG *> PROGRAM_CALL_GRAPH;
+
+extern p::feature RECURSIVITY_ANALYSIS;
+extern p::id<PCGBlock *> RECURSE_HEAD;
+extern p::id<bool> RECURSE_ENTRY;
+extern p::id<bool> RECURSE_BACK;
 
 } // otawa
 
