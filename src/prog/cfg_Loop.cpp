@@ -200,10 +200,13 @@ Address Loop::address() const {
  * @param il	Loop to test for inclusion.
  */
 bool Loop::includes(Loop *il) const {
-	for(Loop *l = il; !l->isTop(); l = l->parent())
+	Loop *l = il;
+	while(!l->isTop()) {
 		if(l == this)
 			return true;
-	return false;
+		l = l->parent();
+	}
+	return l == this;
 }
 
 /**

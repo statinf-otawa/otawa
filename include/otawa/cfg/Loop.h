@@ -42,7 +42,7 @@ public:
 	Loop(CFG *cfg);
 	Address address() const;
 	inline Block *header(void) const { return _h; }
-	inline bool isTop(void) const { return !_h; }
+	inline bool isTop(void) const { return _h == _h->cfg()->entry(); }
 	inline Loop *parent(void) const { return _p; }
 	inline CFG *cfg(void) const { return _h->cfg(); }
 	inline bool isLeaf() const { return _c.isEmpty(); }
