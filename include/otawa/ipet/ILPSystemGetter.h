@@ -38,11 +38,15 @@ namespace ipet {
 // SystemGetter class
 class ILPSystemGetter: public Processor {
 public:
+	static p::declare reg;
 	ILPSystemGetter(void);
 protected:
 	string plugin_name;
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void configure(const PropList &props);
+	void configure(const PropList &props) override;
+	void processWorkSpace(WorkSpace *ws) override;
+	void destroy(WorkSpace *ws) override;
+private:
+	bool max;
 };
 
 } } // otawa::ipet

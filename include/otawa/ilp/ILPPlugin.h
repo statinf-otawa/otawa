@@ -17,7 +17,7 @@ class System;
 // Definitions
 #define OTAWA_ILP_HOOK		ilp_plugin
 #define OTAWA_ILP_NAME		"ilp_plugin"
-#define OTAWA_ILP_VERSION	"1.2.0"
+#define OTAWA_ILP_VERSION	"1.3.0"
 #define OTAWA_ILP_ID(name, version, date)	ELM_PLUGIN_ID(OTAWA_ILP_NAME, name " V" version " (" date ") [" OTAWA_ILP_VERSION "]")
 
 // ILPPlugin class
@@ -28,7 +28,7 @@ public:
 		elm::CString name,
 		const elm::Version& version,
 		const elm::Version& plugger_version);
-	virtual System *newSystem(void) = 0;
+	virtual System *newSystem(bool max = true) = 0;
 };
 
 } } // otawa::ilp

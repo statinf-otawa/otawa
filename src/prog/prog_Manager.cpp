@@ -499,9 +499,10 @@ WorkSpace *Manager::load(const PropList& props) {
  * Make an ILP system from the given plugin or from a named plugin.
  * @param name	Name of the plugin to use or an empty string for the
  * default plugin.
+ * @param max	True to get a maximized system, false for a minimized one.
  * @return		A new ILP system ready to use or null (plugin not available).
  */
-ilp::System *Manager::newILPSystem(string name) {
+ilp::System *Manager::newILPSystem(string name, bool max) {
 	ilp::ILPPlugin *plugin;
 
 	// select "default" if required
@@ -524,7 +525,7 @@ ilp::System *Manager::newILPSystem(string name) {
 		return 0;
 	}
 	else
-		return plugin->newSystem();
+		return plugin->newSystem(max);
 }
 
 

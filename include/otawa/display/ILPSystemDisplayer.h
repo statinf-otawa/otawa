@@ -52,7 +52,7 @@ class ILPSystemDisplayer: public Processor {
 public:
 	static p::declare reg;
 	ILPSystemDisplayer(AbstractRegistration& r = reg);
-	virtual void configure(const PropList& props);
+	void configure(const PropList& props) override;
 
 	// Configuration
 	static Identifier<Path> PATH;
@@ -66,8 +66,8 @@ public:
 	string nameOf(ilp::Var *var);
 
 protected:
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void setup (WorkSpace *fw);
+	void processWorkSpace(WorkSpace *ws) override;
+	void setup(WorkSpace *fw) override;
 
 private:
 	HashMap<ilp::Var *, string> names;
@@ -75,6 +75,7 @@ private:
 	ilp::System *system;
 	io::Output cout;
 	Path path;
+	bool max;
 };
 
 } } // display

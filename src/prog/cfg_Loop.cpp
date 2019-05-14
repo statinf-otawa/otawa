@@ -154,6 +154,14 @@ Address Loop::address() const {
 
 
 /**
+ * @fn bool Loop::isLeaf() const;
+ * Test if the current loop is a leaf loop, that is, does not contain any
+ * sub-loop.
+ * @return	True if the loop does not contain any sub-loop , false else.
+ */
+
+
+/**
  * @fn Block *Loop::header(void) const;
  * Get the header block of the loop. Notice that the top loop
  * has no header.
@@ -281,6 +289,25 @@ io::Output& operator<<(io::Output& out, const Loop *l) {
  *
  */
 p::id<Loop *> Loop::ID("");
+
+
+/**
+ * Iterate on the current loop and its sub-loops and call f on each loop.
+ * @param f	Function to apply on each loop.
+ */
+void Loop::iterSub(std::function<void(Loop *)> f) {
+	f(this);
+	for(auto sl: subLoops())
+		sl->iterSub(f);
+}
+
+
+/**
+ * @fn void Loop::iterSub(CFG *g, std::function<void(Loop *)> f);
+ * Apply the given function f on all loops of the CFG g.
+ * @param g		CFG for which loops has to be iterated.
+ * @param f		Function to apply to each loop.
+ */
 
 
 /**

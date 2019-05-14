@@ -158,6 +158,13 @@ string System::lastErrorMessage(void) {
 
 
 /**
+ * @fn void System::remove(ilp::Constraint *c);
+ * Remove a constraint from the system (interface 1.3.0).
+ * @param c		Constraint to remove.
+ */
+
+
+/**
  * Return the owner plugin. As a default, return null.
  * @return	Owner plugin.
  */
@@ -661,6 +668,26 @@ void System::subObject(const Expression& e) {
 	for(Expression::Iter i(&e); i(); i++)
 		subObject(*i);
 }
+
+/**
+ * Copy the object function in the given expression.
+ * @param e		Expression to copy into.
+ */
+void System::copyObject(Expression& e) {
+	e.reset();
+	for(typename ilp::System::ObjTermIterator t(this); t(); t++)
+		e.add(*t);
+}
+
+/**
+ * change the objective function with the given expression.
+ * @param e		Expression for the new object function.
+ */
+void System::setObject(const Expression& e) {
+	resetObjectFunction();
+	addObject(e);
+}
+
 
 /**
  * @fn int System::countVars(void);

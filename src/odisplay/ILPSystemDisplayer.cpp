@@ -67,7 +67,8 @@ namespace otawa { namespace display {
  * @li @ref otawa::ILP_SYSTEM_FEATURE
  *
  * @par Configuration
- * @li @ref ILPSystemDisplayer::PATH
+ *	* @ref ILPSystemDisplayer::PATH
+ *	* @ref ipet::MAXIMIZE
  */
 
 
@@ -80,7 +81,7 @@ p::declare ILPSystemDisplayer::reg = p::init("otawa::display::ILPSystemDisplayer
 /**
  */
 ILPSystemDisplayer::ILPSystemDisplayer(AbstractRegistration& r)
-: Processor(r) {
+: Processor(r), cnt(0), system(nullptr), max(true) {
 }
 
 
@@ -105,6 +106,7 @@ Identifier<ILPSystemAddon *> ILPSystemDisplayer::ADDON(
 void ILPSystemDisplayer::configure(const PropList& props) {
 	Processor::configure(props);
 	path = PATH(props);
+	max = ipet::MAXIMIZE(props);
 }
 
 
@@ -162,7 +164,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// display objective function
 	cout << "\t\t<h1><a name=\"__objective\">Objective function</a></h1>\n";
-	cout << "\t\t\t<p><b>WCET</b> = " << ipet::WCET(ws) << "</p>\n"
+	cout << "\t\t\t<p><b>" << (max ? "WCET" : "BCET") << "</b> = " << ipet::WCET(ws) << "</p>\n"
 		 << "\t\t\t<p><b>function</b><br>\n\t\t\t";
 	bool first = true;
 	for(ilp::System::ObjTermIterator term(system); term(); term++) {

@@ -123,8 +123,9 @@ ILPPlugin::ILPPlugin(make& maker): Plugin(maker.hook(OTAWA_ILP_NAME)) {
 
 
 /**
- * @fn System *ILPPLugin::newSystem(void);
+ * @fn System *ILPPLugin::newSystem(bool max);
  * Build a new system ready for use.
+ * @param max	True to maximize the system, false to minimize (default to true).
  * @return	New ILP system.
  */
 

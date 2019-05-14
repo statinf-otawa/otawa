@@ -69,6 +69,7 @@ extern p::feature FLOW_FACTS_CONSTRAINTS_FEATURE;
 
 extern p::feature FLOW_FACTS_FEATURE;
 
+extern p::id<bool> MAXIMIZE;
 extern p::feature ILP_SYSTEM_FEATURE;
 extern Identifier<ilp::System *> SYSTEM;
 

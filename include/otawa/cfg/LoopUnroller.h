@@ -43,6 +43,7 @@ protected:
 
 private:
 	void unroll(CFG *cfg, Block *header, CFGMaker *vcfg);
+	bool unrolls(Block *v);
 
 	elm::HashMap<void *, Block *> map;
 	CFGCollection *coll;

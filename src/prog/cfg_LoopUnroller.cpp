@@ -52,12 +52,26 @@ static Identifier<List<Pair<Block *, Edge *> > > DELAYED_EDGE("");
 /**
  * This feature that the loops have been unrolled at least once.
  *
+ * @par Configuration
+ *	* @ref UNROLL_THIS -- mark loops to unroll
+ *
  * @par Properties
  * @li @ref UNROLLED_FROM
  *
  * @ingroup cfg
  */
 p::feature UNROLLED_LOOPS_FEATURE ("otawa::UNROLLED_LOOPS_FEATURE", new Maker<LoopUnroller>());
+
+
+/**
+ * This property is used by @ref UNROLLED_LOOPS_FEATURE and has to be put on
+ * header blocks of loops to select if the corresponding loop has to be
+ * unrolled or not. Its default value is true to unroll all loops.
+ *
+ * @par Feature
+ *	* @ref UNROLLED_LOOPS_FEATURE
+ */
+p::id<bool> UNROLL_THIS("otawa::UNROLL_THIS", true);
 
 
 /**
@@ -97,7 +111,7 @@ Identifier<Block *> UNROLLED_FROM("otawa::UNROLLED_FROM", 0);
  * @ingroup cfg
  */
 
-p::declare LoopUnroller::reg = p::init("otawa::LoopUnroller", Version(2, 1, 0))
+p::declare LoopUnroller::reg = p::init("otawa::LoopUnroller", Version(2, 2, 0))
 	.base(CFGTransformer::reg)
 	.maker<LoopUnroller>()
 	.use(DOMINANCE_FEATURE)
@@ -116,8 +130,19 @@ LoopUnroller::LoopUnroller(p::declare& r): CFGTransformer(r), coll(new CFGCollec
 /**
  */
 void LoopUnroller::transform(CFG *cfg, CFGMaker& maker) {
-	unroll(cfg, 0, &maker);
+	unroll(cfg, nullptr, &maker);
 }
+
+
+/**
+ * Test if the given loop has to be unrolled.
+ * @param h		Header of the loop.
+ * @return		True if the loop has to be unrolled, false else.
+ */
+bool LoopUnroller::unrolls(Block *h) {
+	return *UNROLL_THIS(h);
+}
+
 
 
 /**
@@ -126,57 +151,45 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 	if(logFor(LOG_FUN))
 		log << "\tunrolling " << cfg << " for " << (header ? header : cfg->entry()) << io::endl;
 
-	// workList := { }
-	VectorQueue<Block*> workList;
-	// loopList := { }
-	VectorQueue<Block*> loopList;
-	// doneList := { }
-	Vector<Block*> doneList;
-	// backEdges := { }
-	typedef Vector<Pair<Block *, Edge *> > BackEdgePairVector;
+	VectorQueue<Block*> workList;								// workList := { }
+	VectorQueue<Block*> loopList;								// loopList := { }
+	Vector<Block*> doneList;									// doneList := { }
+	typedef Vector<Pair<Block *, Edge *> > BackEdgePairVector;	// backEdges := { }
+
 	BackEdgePairVector backEdges;
 	bool dont_unroll = false;
 	Block *unrolled_from = nullptr;
 	int start;
 
 	// avoid unrolling loops with LOOP_COUNT of 0, since it would create a LOOP_COUNT of -1 for the non-unrolled part of the loop
-	// dont_unroll ::= header && MAX(header) = 0
-	if(header && (MAX_ITERATION(header) == 0))
-		dont_unroll = true;
-	// start := dont_unroll ? 1 : 0
+	if(header != nullptr)
+		dont_unroll = !unrolls(header) || MAX_ITERATION(header) == 0;
 	start = dont_unroll ? 1 : 0;
 
 	// duplicate the loop body
 	// for in in [start, 1] do
-	for(int i = start; ((i < 2) && header) || (i < 1); i++) {
+	for(int i = start; (i < 2 && header != nullptr) || i < 1; i++) {
 		ASSERT(workList.isEmpty());
 		ASSERT(loopList.isEmpty());
 
-		// bbs := {}
-		Vector<Block*> bbs;
-		// workList := { header if any, entry else }
-		workList.put(header ? header : cfg->entry());
-		// doneList := { header if any, entry else }
+		Vector<Block*> bbs;											// bbs := {}
+		workList.put(header != nullptr ? header : cfg->entry());	// workList := { header if any, entry else }
 		doneList.clear();
-		doneList.add(header ? header : cfg->entry());
+		doneList.add(header != nullptr ? header : cfg->entry());	// doneList := { header if any, entry else }
 
 		// duplicate the blocks
-		// while workList /= { } do
-		while (!workList.isEmpty()) {
+		while (!workList.isEmpty()) {		// while workList /= { } do
 
 			// current::workList := workList
 			Block *current = workList.get();
 
 			// record sub-loop headers
-			// if LOOP_HEADER(current) /\ current != header
-			if (LOOP_HEADER(current) && current != header) {
+			if(LOOP_HEADER(current) && current != header) {
 
 				// save current
-				// loopList U= { current }
 				loopList.put(current);
 
 				// add exit edges destinations to the worklist
-				// workList U= EXIT_LIST(current)
 				for (Vector<Edge*>::Iter exitedge(**EXIT_LIST(current)); exitedge(); exitedge++)
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
@@ -186,8 +199,6 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 
 			// clone the block
 			else {
-
-				// new_bb := clone(current)
 				Block *new_bb = clone(current);
 
 				// add delayed edge
@@ -197,7 +208,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 					current->removeProp(DELAYED_EDGE);
 				}
 
-				// if current = header /\ not(dont_unroll)
+				// for header, record origin
 				if (current == header && !dont_unroll) {
 					if (i == 0)
 						unrolled_from = new_bb;
@@ -205,9 +216,8 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 						UNROLLED_FROM(new_bb) = unrolled_from;
 				}
 
-				// map[current] := new_bb
+				// record mapping
 				map.put(current, new_bb);
-				// bbs U= { new_bb }
 				bbs.add(current);
 
 				// add successors which are in loop (including possible sub-loop headers)

@@ -74,6 +74,8 @@ private:
 	List<Term> terms;
 };
 
+io::Output& operator<<(io::Output& out, const Expression& e);
+
 } }		// otawa::ilp
 
 #endif /* OTAWA_ILP_EXPRESSION_H_ */

@@ -118,6 +118,7 @@ extern Identifier<const CFGInfo *> CFG_INFO;
 extern p::feature REDUCED_LOOPS_FEATURE;
 
 // UNROLLED_LOOPS_FEATURE
+extern p::id<bool> UNROLL_THIS;
 extern p::feature UNROLLED_LOOPS_FEATURE;
 extern Identifier<Block*> UNROLLED_FROM;
 

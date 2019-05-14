@@ -143,5 +143,27 @@ double Expression::eval(System *sys) {
 	return r;
 }
 
+///
+io::Output& operator<<(io::Output& out, const Expression& e) {
+	bool f = true;
+	bool one = false;
+	for(auto t: e)
+		if(t.snd != 0 ){
+			if(f) {
+				f = false;
+				one = true;
+				out << t;
+			}
+			else {
+				if(t.snd > 0)
+					out << " + ";
+				out << t;
+				one = true;
+			}
+	}
+	if(!one)
+		out << '0';
+	return out;
+}
 
 } }		// otawa::ilp

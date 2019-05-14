@@ -77,7 +77,7 @@ public:
 	~Manager(void);
 	Loader *findLoader(elm::CString name);
 	WorkSpace *load(const elm::sys::Path& path, const PropList& props = PropList::EMPTY);
-	ilp::System *newILPSystem(String plugin = "");
+	ilp::System *newILPSystem(String plugin = "", bool max = true);
 
 	// deprecated
 	sim::Simulator *findSimulator(elm::CString name);

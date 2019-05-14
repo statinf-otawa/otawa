@@ -69,11 +69,16 @@ public:
 	// 1.2.1 interface
 	virtual void resetObjectFunction(void) = 0;
 
-	// shortcuts
+	// 1.3 interface
+	virtual void remove(ilp::Constraint *c) = 0;
+
+	// object function
 	inline void addObject(const Term& t) { addObjectFunction(t.snd, t.fst); }
 	inline void subObject(const Term& t) { addObjectFunction(-t.snd, t.fst); }
 	void addObject(const Expression& e);
 	void subObject(const Expression& e);
+	void copyObject(Expression& e);
+	void setObject(const Expression& e);
 
 	// output methods
 	bool hasDump(format_t fmt);
@@ -83,19 +88,15 @@ public:
 	void dumpMOSEK(elm::io::OutStream& out = elm::io::out);
 
 	class ConstIterator: public dyndata::Iter<Constraint *> {
-		public:
-
+	public:
 		inline ConstIterator(dyndata::AbstractIter<Constraint*> *_inst):
 			dyndata::Iter<Constraint *>(_inst) { }
-		inline ConstIterator(System *_sys): dyndata::Iter<Constraint *>(_sys->constraints()) {
-
-		}
-
+		inline ConstIterator(System *_sys): dyndata::Iter<Constraint *>(_sys->constraints())
+			{ }
 	};
 
 	class ObjTermIterator: public dyndata::Iter<Constraint::Term> {
-		public:
-
+	public:
 		inline ObjTermIterator(dyndata::AbstractIter<Constraint::Term> *_inst):
 			dyndata::Iter<Constraint::Term>(_inst) { }
 		inline ObjTermIterator(System *_sys):

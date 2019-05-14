@@ -21,6 +21,8 @@
 #ifndef INCLUDE_OTAWA_CFG_LOOP_H_
 #define INCLUDE_OTAWA_CFG_LOOP_H_
 
+#include <functional>
+
 #include <elm/data/List.h>
 #include <elm/data/Range.h>
 #include <otawa/dfa/BitSet.h>
@@ -43,6 +45,7 @@ public:
 	inline bool isTop(void) const { return !_h; }
 	inline Loop *parent(void) const { return _p; }
 	inline CFG *cfg(void) const { return _h->cfg(); }
+	inline bool isLeaf() const { return _c.isEmpty(); }
 
 	inline int depth(void) const { return _d; }
 	bool includes(Loop *il) const;
@@ -75,6 +78,10 @@ public:
 	};
 
 	inline BlockRange blocks() const { return BlockRange(this); }
+
+	void iterSub(std::function<void(Loop *)> f);
+	inline static void iterSub(CFG *g, std::function<void(Loop *)> f)
+		{ top(g)->iterSub(f); }
 
 	static p::id<Loop *> ID;
 private:

@@ -100,19 +100,23 @@ Identifier<bool> VERBOSE("otawa::clp::VERBOSE", false);
  * #include <otawa/data/clp/features.h>
  * @endcode
  *
- * Circular-Linear Progression analysis is a data flow analysis that attempts to assign to each register
- * or to each memory cell a triplet (b, d, n) with b, d, n integers. This triplet represent the set if values
- * {b + k d / 0 <= k <= n }. Such a representation fits well the cases of array addresses where b is the base
- * address of the array, d the size of the array elements and n the number of elements. Therefore, it provides
- * interesting result when processing machine language.
+ * Circular-Linear Progression (CLP) analysis is a data flow analysis that
+ * assigns to each register and to each memory cell a triplet (b, d, n) with
+ * b, d, n integers. This triplet represent the set of values
+ * {b + k d | 0 <= k <= n }. Such a representation fits well the use case of
+ * array addresses where b is the base address of the array, d the size of the
+ * array elements and n the number of elements.
  *
- * Ensuring it has been performed needs only a requirement on @ref otawa::clp::CLP_ANALYSIS_FEATURE.
+ * Requiring otawa::clp::CLP_ANALYSIS_FEATURE ensures that the CLP analysis
+ * has been performed.
  *
- * This analysis is performed on the semantic (@ref sem) representation of language machine.
- * To use  the result of the analysis requires to handle @ref otawa::clp::State at the entry
- * (@ref otawa::clp::STATE_IN) or at the exit (@ref otawa::clp::STATE_OUT) of a basic block.
- * To get a more precise few of the program state inside the basic block, you have to declare
- * @ref otawa::clp::Manager and to use it to traverse semantic instructions paths as in the example
+ * Notice that this analysis is performed on the semantic (@ref sem)
+ * representation of machine instructions. Using the results of the analysis
+ * requires to get @ref otawa::clp::State at the entry
+ * (@ref otawa::clp::STATE_IN) or at the exit (@ref otawa::clp::STATE_OUT) of
+ * each basic block. To get a more precise values inside a basic block, one
+ * has to declare @ref otawa::clp::Manager and to use it to traverse
+ * instructions and semantic instructions paths as in the example
  * below:
  *
  * @code
@@ -125,6 +129,10 @@ Identifier<bool> VERBOSE("otawa::clp::VERBOSE", false);
  * } while(man.next());
  * @endcode
  *
+ * To help the CLP analysis, different configuration properties exists:
+ *	* clp::Analysis::INITIAL -- select the initial of register (before program
+ *	  execution),
+ *	*
  */
 
 /**

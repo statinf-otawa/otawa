@@ -43,12 +43,16 @@ namespace otawa { namespace ipet {
  */
 
 
+///
+p::declare ILPSystemGetter::reg = p::init("otawa::ipet::ILPSystemGetter", Version(1, 1, 0))
+	.make<ILPSystemGetter>()
+	.provide(ILP_SYSTEM_FEATURE);
+
+
 /**
  * Build the processor.
  */
-ILPSystemGetter::ILPSystemGetter(void)
-: Processor("otawa::ipet::ILPSystemGetter", Version(1, 0, 0)) {
-	provide(ILP_SYSTEM_FEATURE);
+ILPSystemGetter::ILPSystemGetter(void): Processor(reg), max(true) {
 }
 
 
@@ -56,15 +60,19 @@ ILPSystemGetter::ILPSystemGetter(void)
  */
 void ILPSystemGetter::processWorkSpace(WorkSpace *ws) {
 	ASSERT(ws);
-	ilp::System *sys = ws->process()->manager()->newILPSystem(plugin_name);
-	if(logFor(LOG_DEPS))
+	ilp::System *sys = ws->process()->manager()->newILPSystem(plugin_name, max);
+	if(logFor(LOG_DEPS)) {
 		log << "\tmaking an ILP system from \""
 			<< (plugin_name ? plugin_name : "default")
 			<< "\" plugin\n";
+		if(max)
+			log << "\tfor maximization\n";
+		else
+			log << "\tfor minimization\n";
+	}
 	if(!sys)
 		throw otawa::Exception("no ILP solver available !");
-	//ws->addDeletable(SYSTEM, sys);
-	ws->addProp(new DeletableProperty<ilp::System *>(SYSTEM, sys));
+	SYSTEM(ws) = sys;
 }
 
 
@@ -73,6 +81,16 @@ void ILPSystemGetter::processWorkSpace(WorkSpace *ws) {
 void ILPSystemGetter::configure(const PropList &props) {
 	plugin_name = ILP_PLUGIN_NAME(props);
 	Processor::configure(props);
+	max = MAXIMIZE(props);
+}
+
+
+///
+void ILPSystemGetter::destroy(WorkSpace *ws) {
+	ilp::System *sys = SYSTEM(ws);
+	ASSERT(sys);
+	SYSTEM(ws).remove();
+	delete sys;
 }
 
 
@@ -86,21 +104,43 @@ Identifier<string> ILP_PLUGIN_NAME("otawa::ipet::ILP_PLUGIN_NAME", "default");
 
 /**
  * Link the curerently ILP system.
+ *
  * @par Hooks
- * @li @ref WorkSpace
+ *	* @ref WorkSpace
+ *
  * @par Features
- * @li @ref ILP_SYSTEM_FEATURE
+ *	* @ref ILP_SYSTEM_FEATURE
+ *
+ * @ingroup ipet
  */
 Identifier<ilp::System *> SYSTEM("otawa::ipet::SYSTEM", 0);
 
 
 /**
  * This feature assert that an ILP is available for IPET computation.
+ *
  * @par Properties
- * @li @ref SYSTEM
- * @par Default Processor
- * @ref @ref ILPSystemGetter
+ *	* @ref SYSTEM
+ *
+ * @par Processors
+ *	* @ref ILPSystemGetter (default)
+ *
+ * @par Configuration
+ *	* @ref MAXIMIZE
+ *
+ * @ingroup ipet
  */
 p::feature ILP_SYSTEM_FEATURE("otawa::ipet::ILP_SYSTEM_FEATURE", new Maker<ILPSystemGetter>());
+
+/**
+ * This property is used to configure @ref ILP_SYSTEM_FEATURE. If set to true
+ * (default), the ILP system will be maximized. Else it will be minimized.
+ *
+ * @par Features
+ *	* @ref ILP_SYSTEM_FEATURE
+ *
+ * @ingroup ipet
+ */
+p::id<bool> MAXIMIZE("otawa::ipet::MAXIMIZE", true);
 
 } } // otawa::ipet
