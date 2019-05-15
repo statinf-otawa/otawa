@@ -298,17 +298,25 @@ p::id<Loop *> Loop::ID("");
  * Iterate on the current loop and its sub-loops and call f on each loop.
  * @param f	Function to apply on each loop.
  */
-void Loop::iterSub(std::function<void(Loop *)> f) {
+void Loop::forSubLoops(std::function<void(Loop *)> f) {
 	f(this);
 	for(auto sl: subLoops())
-		sl->iterSub(f);
+		sl->forSubLoops(f);
 }
 
 
 /**
- * @fn void Loop::iterSub(CFG *g, std::function<void(Loop *)> f);
+ * @fn void Loop::forSubLoops(CFG *g, std::function<void(Loop *)> f);
  * Apply the given function f on all loops of the CFG g.
  * @param g		CFG for which loops has to be iterated.
+ * @param f		Function to apply to each loop.
+ */
+
+
+/**
+ * @fn void Loop::forSubLoops(WorkSpace *ws, std::function<void(Loop *)> f);
+ * Apply the given function f on all loops of the workspace task.
+ * @param ws	Current workspace.
  * @param f		Function to apply to each loop.
  */
 

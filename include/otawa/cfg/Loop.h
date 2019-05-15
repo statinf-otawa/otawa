@@ -79,9 +79,11 @@ public:
 
 	inline BlockRange blocks() const { return BlockRange(this); }
 
-	void iterSub(std::function<void(Loop *)> f);
-	inline static void iterSub(CFG *g, std::function<void(Loop *)> f)
-		{ top(g)->iterSub(f); }
+	void forSubLoops(std::function<void(Loop *)> f);
+	inline static void forSubLoops(CFG *g, std::function<void(Loop *)> f)
+		{ top(g)->forSubLoops(f); }
+	inline static void forSubLoops(WorkSpace *ws, std::function<void(Loop *)> f)
+		{ for(auto g: *CFGCollection::get(ws)) forSubLoops(g, f); }
 
 	static p::id<Loop *> ID;
 private:
