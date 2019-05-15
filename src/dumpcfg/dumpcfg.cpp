@@ -27,9 +27,9 @@
 #include <otawa/app/CFGApplication.h>
 #include <otawa/manager.h>
 #include <otawa/cfg/CFGCollector.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/proc/DynProcessor.h>
 #include <otawa/prog/features.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 #include "SimpleDisplayer.h"
 #include "DisassemblerDisplayer.h"

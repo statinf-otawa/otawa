@@ -39,7 +39,6 @@
 #include <otawa/data/clp/ClpPack.h>
 #include <otawa/data/clp/DeadCodeAnalysis.h>
 #include <otawa/data/clp/SymbolicExpr.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/hard/Platform.h>
 #include <elm/data/quicksort.h>
@@ -49,6 +48,7 @@
 #include <otawa/dfa/State.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <elm/log/Log.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace elm;
 using namespace otawa;

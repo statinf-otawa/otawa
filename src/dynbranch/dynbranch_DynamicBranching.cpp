@@ -25,12 +25,12 @@
 #include <otawa/data/clp/features.h>
 #include <otawa/data/clp/SymbolicExpr.h>
 #include <elm/data/quicksort.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/display/CFGOutput.h>
 #include <otawa/dynbranch/features.h>
 #include <otawa/data/clp/SymbolicExpr.h> // to use the filters
 #include <elm/log/Log.h> // to use the debugging messages
 
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 #include "GlobalAnalysisProblem.h" // for GC.h to see the Problem class
 #include "GC.h"
 

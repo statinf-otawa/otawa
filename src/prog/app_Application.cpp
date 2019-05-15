@@ -23,9 +23,9 @@
 #include <elm/sys/System.h>
 #include <otawa/app/Application.h>
 #include <otawa/proc/ProcessorPlugin.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/util/SymAddress.h>
 #include <otawa/prog/Manager.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa {
 

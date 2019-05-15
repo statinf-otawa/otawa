@@ -22,7 +22,7 @@
 #include <elm/data/VectorQueue.h>
 #include <otawa/app/Application.h>
 #include <otawa/program.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace elm;
 using namespace otawa;

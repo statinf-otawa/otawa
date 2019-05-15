@@ -124,7 +124,6 @@ set(libotawa_SOURCES
 	"ai_FlowAwareRanking.cpp"
 
 #    utility module
-	"util_FlowFactLoader.cpp"
 	"util_CFGNormalizer.cpp"
 	"util_MemBlockMap.cpp"
 	"util_ContextTree.cpp"
@@ -139,6 +138,7 @@ set(libotawa_SOURCES
 
 #	flow facts
 	"flowfact_ContextualLoopBound.cpp"
+	"flowfact_FlowFactLoader.cpp"
 
 #   script module
 	"util_XSLTScript.cpp"

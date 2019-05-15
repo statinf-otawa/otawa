@@ -37,7 +37,7 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/script/Script.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace elm;
 

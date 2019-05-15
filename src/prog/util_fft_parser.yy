@@ -21,7 +21,7 @@
  */
 %{
 #include <stdio.h>
-#include <otawa/util/FlowFactLoader.h>
+#include <otawa/flowfact/FlowFactLoader.h>
 #include <elm/io.h>
 #include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
@@ -33,10 +33,11 @@ static Vector<otawa::Address> addresses;
 static otawa::ContextualPath path;
 
 // Loop counting
-static int loop_max = -1, loop_total = -1;
+static int loop_max = -1, loop_total = -1, loop_min = -1;
 static void reset_counts(void) {
 	loop_max = -1;
 	loop_total = -1;
+	loop_min = -1;
 }
 
 otawa::Address checked_add(otawa::Address a, elm::t::int32 off) {
@@ -82,6 +83,7 @@ otawa::Address checked_add(otawa::Address a, elm::t::int32 off) {
 %token KW_LIBRARY
 %token KW_MAX
 %token KW_MEMORY
+%token KW_MIN
 %token KW_MULTIBRANCH
 %token KW_MULTICALL
 %token KW_NO
@@ -114,10 +116,10 @@ commands:
 
 command:
 	LOOP full_address INTEGER opt_in ';'
-		{ loader->onLoop(*$2, $3, -1, path); delete $2; path.clear(); }
+		{ loader->onLoop(*$2, $3, -1, -1, path); delete $2; path.clear(); }
 |	LOOP full_address counts opt_in ';'
 		{
-			loader->onLoop(*$2, loop_max, loop_total, path);
+			loader->onLoop(*$2, loop_max, loop_total, loop_min, path);
 			delete $2;
 			path.clear();
 			reset_counts();
@@ -193,16 +195,23 @@ count:
 	KW_MAX INTEGER
 		{
 			if(loop_max >= 0)
-				loader->onError(elm::_ << "several 'max' keywords");
+				loader->onError(elm::_ << "several 'max' specifications");
 			else
 				loop_max = $2;
 		}
 |	KW_TOTAL INTEGER
 		{
 			if(loop_total >= 0)
-				loader->onError(elm::_ << "several 'total' keywords");
+				loader->onError(elm::_ << "several 'total' specifications");
 			else
 				loop_total = $2;
+		}
+|	KW_MIN INTEGER
+		{
+			if(loop_min >= 0)
+				loader->onError(elm::_ << "several 'min' specifications");
+			else
+				loop_min = $2;			
 		}
 ;
 

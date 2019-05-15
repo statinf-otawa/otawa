@@ -31,7 +31,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/ipet/VarAssignment.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa { namespace ipet {
 

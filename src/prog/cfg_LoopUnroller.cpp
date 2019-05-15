@@ -35,7 +35,7 @@
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/cfg/features.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace otawa;
 using namespace elm;

@@ -21,7 +21,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 #include <stdlib.h>
-#include <otawa/util/FlowFactLoader.h>
+#include <otawa/flowfact/FlowFactLoader.h>
 #include <otawa/dfa/State.h>
 #include "util_fft_parser.h"
 
@@ -79,6 +79,7 @@ SYM [?;,+-/:@=\[\]()]
 "library"		return KW_LIBRARY;
 "loop"			return LOOP;
 "max"			return KW_MAX;
+"min"			return KW_MIN;
 "memory"		return KW_MEMORY;
 "multibranch"	return KW_MULTIBRANCH;
 "multicall"		return KW_MULTICALL;

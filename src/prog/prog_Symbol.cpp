@@ -7,7 +7,7 @@
 
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/File.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa {
 

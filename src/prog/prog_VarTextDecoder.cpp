@@ -26,7 +26,7 @@
 #include <otawa/proc/Registry.h>
 #include <elm/data/VectorQueue.h>
 #include <otawa/program.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace elm;
 

@@ -35,7 +35,7 @@
 #include <otawa/prog/File.h>
 #include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 // Externals
 extern FILE *util_fft_in;
@@ -435,6 +435,12 @@ extern int fft_line;
  *
  * @par Syntactic items
  *
+ * COUNT may be a combination of:
+ *	* INTEGER -- represent the maximum number of iteration of the loop,
+ *	* <b><tt>max</tt></b> INTEGER -- represent the maximum number of iteration of the loop (for each loop startup),
+ *	* <b><tt>total</tt></b> INTEGER -- represent the total number of iteration of the loop (for the complete task execution),
+ *	* <b><tt>min</tt></b> INTEGER -- represent the minimum number of iteration of the loop (for each loop startup).
+ *
  * FUNCTION_ADDRESS may have one of the following form:
  * @li INTEGER: integer address,
  * @li STRING: double-quoted string that must match a program label,
@@ -495,7 +501,6 @@ extern int fft_line;
  *
  * @par To Come
  * @li "branch ADDRESS to ADDRESS ;"
- * @li "loop ADDRESS max COUNT min COUNT ;"
  * @li "recursive ADDRESS max COUNT min COUNT ;"
  * @li "entry ADDRESS ;"
  * @li "entry NAME ;"
@@ -749,7 +754,7 @@ void FlowFactLoader::onIgnoreEntry(string name) {
  * @param addr	Address of the header of the loop.
  * @param count	Bound on the loop iterations.
  */
-void FlowFactLoader::onLoop(address_t addr, int count, int total, const ContextualPath& path) {
+void FlowFactLoader::onLoop(address_t addr, int count, int total, int min, const ContextualPath& path) {
 	if(addr.isNull())
 		return;
 
@@ -773,6 +778,13 @@ void FlowFactLoader::onLoop(address_t addr, int count, int total, const Contextu
 		path.ref(TOTAL_ITERATION, inst) = total;
 		if(logFor(LOG_BB))
 			log << "\t" << path << "(TOTAL_ITERATION," << inst->address() << ") = " << total << io::endl;
+	}
+
+	// put the min iteration
+	if(min >= 0) {
+		path.ref(MIN_ITERATION, inst) = min;
+		if(logFor(LOG_BB))
+			log << "\t" << path << "(MIN_ITERATION," << inst->address() << ") = " << min << io::endl;
 	}
 
 }
@@ -1775,9 +1787,10 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 	// get the information
 	Option<long> max = scanBound(element, "maxcount");
 	Option<long> total = scanBound(element, "totalcount");
+	Option<long> min = scanBound(element, "mincount");
 	if(!max && !total)
 		warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
-	onLoop(addr, (max ? *max : -1), (total ? *total : -1), path);
+	onLoop(addr, (max ? *max : -1), (total ? *total : -1), (min ? *min : -1), path);
 
 	// look for content
 	scanXContent(element, path);

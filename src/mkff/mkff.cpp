@@ -47,14 +47,13 @@
 #include <otawa/proc/DynFeature.h>
 #include <otawa/proc/DynProcessor.h>
 #include <otawa/prop/DynIdentifier.h>
-#include <otawa/util/FlowFactLoader.h>
-
 #include "display_MultipleDotDisplayer.h"
 #include "display_MKFFDotDisplayer.h"
 #include <time.h>
 #include <otawa/cfgio/Output.h>
 #include "../../include/otawa/cfg/ContextTree.h"
 #include "../../include/otawa/display/CFGDecorator.h"
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 
 using namespace elm;

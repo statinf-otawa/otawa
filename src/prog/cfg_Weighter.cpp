@@ -21,8 +21,8 @@
 
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/cfg/features.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/ipet/features.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa {
 

@@ -29,7 +29,7 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prop/info.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace otawa;
 using namespace elm;

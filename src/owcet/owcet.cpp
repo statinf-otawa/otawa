@@ -31,7 +31,7 @@
 #include <otawa/script/Script.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/util/BBRatioDisplayer.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 using namespace otawa;
 using namespace elm::option;

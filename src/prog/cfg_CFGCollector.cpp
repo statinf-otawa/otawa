@@ -27,8 +27,8 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
-#include <otawa/util/FlowFactLoader.h>
 #include <otawa/view/features.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa {
 

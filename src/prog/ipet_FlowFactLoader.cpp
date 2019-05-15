@@ -29,7 +29,7 @@
 #include <otawa/ipet/IPET.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/prog/Inst.h>
-#include <otawa/util/FlowFactLoader.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa { namespace ipet {
 

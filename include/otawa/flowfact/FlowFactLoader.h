@@ -68,7 +68,7 @@ protected:
 
 	virtual void onCheckSum(const String& name, t::uint32 sum);
 	virtual void onLibrary(void);
-	virtual void onLoop(address_t addr, int count, int total, const ContextualPath& path);
+	virtual void onLoop(address_t addr, int count, int total, int min, const ContextualPath& path);
 	virtual void onReturn(address_t addr);
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
