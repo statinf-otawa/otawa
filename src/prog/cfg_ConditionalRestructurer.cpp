@@ -324,7 +324,7 @@ void ConditionalRestructurer::split(Block *b) {
 	// synthetic block
 	if(b->isSynth()) {
 		Block *cb = build(b->toSynth()->callee());
-		BB(b) = pair(cb, 0);
+		BB(b) = pair(cb, int(BOTH));
 		return;
 	}
 
