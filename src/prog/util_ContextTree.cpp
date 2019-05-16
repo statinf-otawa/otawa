@@ -110,6 +110,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 			OWNER_CONTEXT_TREE(*bb)->addBlock(*bb, _inline);
 		}
 	}
+
 	/*
 	 * Then, link each ContextTree to its parents.
 	 */

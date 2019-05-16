@@ -118,11 +118,12 @@ public:
 };
 
 
+/// Flags which branch edges needs to be generated.
 static const t::uint8
-	NONE		= 0b00,
-	TAKEN		= 0b01,
-	NOT_TAKEN	= 0b10,
-	BOTH		= 0b11;
+	NONE		= 0b00,		// no branch edge generated
+	TAKEN		= 0b01,		// taken branch edge generated
+	NOT_TAKEN	= 0b10,		// not-taken branch edge generated
+	BOTH		= 0b11;		// taken and not-taken branch edges generated
 
 /**
  * Attached to a block to represent the different versions.
@@ -188,6 +189,11 @@ void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 class Case {
 public:
 	inline Case(void): _bra(BOTH) { }
+
+	/**
+	 * Get the branch mask.
+	 * @return	Branch mask.
+	 */
 	inline t::uint8 branch(void) const { return _bra; }
 
 	/**
@@ -289,6 +295,10 @@ public:
 		return nc;
 	}
 
+	/**
+	 * Take the instructions composing the case.
+	 * @return	Instruction composing the case.
+	 */
 	inline Array<Inst *> insts(void) { return _insts.detach(); }
 
 private:
@@ -329,7 +339,7 @@ void ConditionalRestructurer::split(Block *b) {
 		i->writeRegSet(wr);
 
 		// no condition or final branch alone: just add the instruction
-		if(c.isEmpty() || (cases.length() == 1 && i == bb->control())) {
+		if(c.isEmpty() /*|| (cases.length() == 1 && i == bb->control())*/) {
 			for(Vector<Case *>::Iter k(cases); k(); k++)
 				k->add(i, wr);
 		}
@@ -351,14 +361,23 @@ void ConditionalRestructurer::split(Block *b) {
 
 				// cc = no condition => split
 				if(cc.isEmpty()) {
-					Condition ic = c.inverse();
-					cases.add(cases[k]->split(nop(i, ic), wr, ic));
-					cases[k]->add(guard(i, c), wr, c);
+
+					// keep it as is for final control
+					if(i == bb->control() && i == bb->last())
+						cases[k]->add(i, wr);
+
+					// new condition: duplicate
+					else {
+						Condition ic = c.inverse();
+						cases.add(cases[k]->split(nop(i, ic), wr, ic, i->isControl() ? NOT_TAKEN : NONE));
+						cases[k]->add(guard(i, c), wr, c, i->isControl() ? TAKEN : NONE);
+					}
 				}
 
 				// cc subset of c => add instruction
-				else if(cc <= c)
+				else if(cc <= c) {
 					cases[k]->add(cond(i), wr, i->isControl() ? TAKEN : NONE);
+				}
 
 				// cc subset of c => split
 				else if(c & cc) {
@@ -368,8 +387,9 @@ void ConditionalRestructurer::split(Block *b) {
 				}
 
 				// cc is out of c => not executed
-				else
+				else {
 					cases[k]->add(nop(i), wr, i->isControl() ? NOT_TAKEN : NONE);
+				}
 			}
 		}
 
@@ -435,16 +455,18 @@ Inst *ConditionalRestructurer::cond(Inst *i) {
  */
 void ConditionalRestructurer::make(Block *b) {
 	for(Block::EdgeIter e = b->outs(); e(); e++)
-		for(auto sb: BB.all(b))
-			if(e->flags() == 0
-			|| (e->isTaken() && (sb.snd & TAKEN))
-			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN))) {
+		for(auto sb: BB.all(b)) {
+			if( e->flags() == 0								// not conditional
+			|| (e->isTaken() && (sb.snd & TAKEN))			// taken and taken generated
+			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN)))	// not-taken and not-taken generated
+			{
 				if(HD(e->sink()) != nullptr)
 					build(sb.fst, HD(e->sink()), e->flags());
 				else
 					for(auto tb: BB.all(e->sink()))
 						build(sb.fst, tb.fst, e->flags());
 			}
+		}
 }
 
 } // otawa
