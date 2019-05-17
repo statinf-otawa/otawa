@@ -423,7 +423,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 			// synthetic case
 			else {
-				SynthBlock *sb = b->toSynth();
+				SynthBlock *sb = p->toSynth();
 				if(sb->callee() != nullptr
 				&& sb->callee()->exit()->countIns() == 1)
 					p = sb->callee()->exit()->inEdges().begin()->source();
