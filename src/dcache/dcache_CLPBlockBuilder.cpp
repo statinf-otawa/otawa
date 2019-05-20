@@ -134,7 +134,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 		}
 
 		// add the access
-		if(action && (i.memIndex() != 0)) {
+		if(action != BlockAccess::NONE && (i.memIndex() != 0)) {
 			// clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr())); // if LOAD T1, T1, uint32, then T1 is already over-written
 			clp::Value addr = man->getCurrentAccessAddress();
 			while(addrs.length() <= man->ipc())
@@ -142,7 +142,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 			addr.join(addrs[man->ipc()].fst);
 			addrs[man->ipc()] = pair(addr, action);
 			if(logFor(LOG_INST))
-				log << "\t\t\tMemAccess:" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()] << io::endl;
+				log << "\t\t\t" << man->inst()->address() << ": " << man->ipc() << ": " << addrs[man->ipc()].snd << " access to " << addrs[man->ipc()].fst << io::endl;
 		}
 
 		// next step
@@ -152,19 +152,28 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 			for(int i = 0; i < addrs.length(); i++) {
 				Pair<clp::Value, BlockAccess::action_t> p = addrs[i];
 				if(p.snd) {
+
+					// ALL access
 					if(p.fst == clp::Value::all)
 						accs.add(BlockAccess(inst, p.snd));
+
+					// constant access
 					else if(p.fst.isConst()) { // constant address
 						clp::uintn_t l = p.fst.lower(); // the actual address
 						const hard::Bank *bank = mem->get(l);
 						if(!bank)
 							throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 									<< " accessed from " << man->inst()->address());
-						if(!bank->isCached())
+						if(!bank->isCached()) {
+							if(logFor(LOG_INST))
+								log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 							continue;
+						}
 						const Block& block = colls[cache->set(l)].obtain(cache->round(l));
 						accs.add(BlockAccess(inst, p.snd, block));
 					}
+
+					// range access
 					else {
 						bool over; // see if the memory range is limited (without overflow)
 						t::uint32 m = elm::mult(elm::abs(p.fst.delta()), p.fst.mtimes(), over);
@@ -177,8 +186,11 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 							if(!bank)
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
-							else if(!bank->isCached())
+							else if(!bank->isCached()) {
+								if(logFor(LOG_INST))
+									log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 								continue;
+							}
 							else if(cache->block(l) == cache->block(h)) { // if all the access addresses are in the same cached block
 								const Block& block = colls[cache->set(l)].obtain(cache->round(l));
 								accs.add(BlockAccess(inst, p.snd, block));
