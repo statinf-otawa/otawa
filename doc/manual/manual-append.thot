@@ -1,0 +1,38 @@
+====== Appendix ======
+
+===== Compiling with CMake =====
+@label append:cmake
+
+[[https://cmake.org/|CMake]] is popular wrapper around Make to build applications. Below is a sample of ''CMakeLists.txt'' to build a @(OTAWA) application with CMake.
+
+<code cmake>
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+# configuration
+set(PLUGINS	"")
+set(APP		"myapp")
+set(SOURCES	"myapp.cpp")
+
+project(${PLUGIN})
+
+# look for OTAWA
+if(NOT OTAWA_CONFIG)
+    find_program(OTAWA_CONFIG otawa-config DOC "path to otawa-config")
+    if(NOT OTAWA_CONFIG)
+        message(FATAL_ERROR "ERROR: otawa-config is required !")
+    endif()
+endif()
+message(STATUS "otawa-config found at ${OTAWA_CONFIG}")
+execute_process(COMMAND "${OTAWA_CONFIG}" --cflags ${PLUGINS}               OUTPUT_VARIABLE OTAWA_CFLAGS  OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --libs  ${PLUGINS} -r    OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# C++ flags
+add_compile_options("-Wall")
+set(CMAKE_CXX_STANDARD 11)
+
+# target definition
+include_directories("${CMAKE_SOURCE_DIR}" ".")
+add_executable(${app} ${SOURCES})
+set_property(TARGET "${PLUGIN}" PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
+target_link_libraries(${APP} "${OTAWA_LDFLAGS}")
+</code>

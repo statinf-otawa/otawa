@@ -146,6 +146,7 @@ In fact, the loop bounding is a main issue we will encounter when we have to com
 
 
 ==== Specifying the Flow Facts by Hand ====
+@label flowfacts
 
 The first choice, to provide loop bounds (or more generally //flow facts//), is to fulfill a flow fact file suffixed by ''.ff''. Writing such a file is not very easy so that @(OTAWA) provides a tool, ''mkff'', to help you a bit. Let execute it on our binary file:
 <code sh>

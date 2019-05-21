@@ -6,6 +6,8 @@
 @ENCODING=utf-8
 @HTML_STYLES=../css/manual.css
 
+@use latexmath
+
 @OTAWA_SITE={{http://www.otawa.fr}}
 @OTAWA=**OTAWA**
 
@@ -23,3 +25,4 @@
 @include manual-refs.thot
 @include manual-formats.thot
 @include manual-gloss.thot
+@include manual-append.thot
