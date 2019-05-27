@@ -79,6 +79,7 @@ namespace otawa {
  * ownership to the prefix or the processed sequence (type @ref ParExeInst::code_part_t).
  */
 
+Identifier<int> DEFAULT_BRANCH_PENALTY("otawa::DEFAULT_BRANCH_PENALTY", 2);
 
 /**
  * @class ParExeException
@@ -1474,6 +1475,7 @@ ParExeGraph::ParExeGraph(
 	for (Vector<Resource *>::Iter res(*hw_resources) ; res() ; res++) {
 		_resources.add(*res);
 	}
+	_branch_penalty = DEFAULT_BRANCH_PENALTY(props);
 }
 
 

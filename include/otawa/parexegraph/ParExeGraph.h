@@ -40,6 +40,7 @@
 
 
 namespace otawa {
+	extern Identifier<int> DEFAULT_BRANCH_PENALTY;
 
 	class ParExeNode;
 	class ParExeEdge;

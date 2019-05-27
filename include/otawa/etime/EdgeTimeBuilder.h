@@ -103,6 +103,8 @@ private:
 	void displayConfs(const Vector<ConfigSet>& confs, const event_list_t& events);
 	int countDynEvents(const event_list_t& events);
 
+	PropList _props;
+
 	// ILP state
 	bool _explicit;
 	ilp::System *sys;

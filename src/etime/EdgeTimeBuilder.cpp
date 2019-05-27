@@ -362,6 +362,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
 	predump = PREDUMP(props);
 	event_th = EVENT_THRESHOLD(props);
 	record = RECORD_TIME(props);
+	_props = props;
 }
 
 
@@ -513,8 +514,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
  * @return		Built graph.
  */
 EdgeTimeGraph *EdgeTimeBuilder::make(ParExeSequence *seq) {
-	PropList props;
-	EdgeTimeGraph *graph = new EdgeTimeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, props);
+	EdgeTimeGraph *graph = new EdgeTimeGraph(this->workspace(), _microprocessor, &_hw_resources, seq, _props);
 	if(_do_output_graphs)
 		graph->setExplicit(true);
 	graph->build();
