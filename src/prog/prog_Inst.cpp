@@ -27,7 +27,7 @@ namespace otawa {
 /**
  * A table containing no sets.
  */
-const elm::genstruct::Table<hard::Register *> Inst::no_regs;
+const Array<hard::Register *> Inst::no_regs;
 
 
 /**
@@ -374,7 +374,7 @@ Inst *Inst::target(void) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 void Inst::readRegSet(RegSet& set) {
-	const elm::genstruct::Table<hard::Register *>&tab = readRegs();
+	const Array<hard::Register *>&tab = readRegs();
 	for(int i = 0; i < tab.count(); i++)
 		set.add(tab[i]->platformNumber());
 }
@@ -387,7 +387,7 @@ void Inst::readRegSet(RegSet& set) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  */
 void Inst::writeRegSet(RegSet& set) {
-	const elm::genstruct::Table<hard::Register *>&tab = writtenRegs();
+	const Array<hard::Register *>&tab = writtenRegs();
 	for(int i = 0; i < tab.count(); i++)
 		set.add(tab[i]->platformNumber());
 }
@@ -400,7 +400,7 @@ void Inst::writeRegSet(RegSet& set) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  * @deprecated	Use readRegSet() instead.
  */
-const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
+const Array<hard::Register *>& Inst::readRegs(void) {
 	// TODO (remove the null reference)
 	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
@@ -413,7 +413,7 @@ const elm::genstruct::Table<hard::Register *>& Inst::readRegs(void) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  * @deprecated	Use writeRegSet() instead.
  */
-const elm::genstruct::Table<hard::Register *>& Inst::writtenRegs(void) {
+const Array<hard::Register *>& Inst::writtenRegs(void) {
 	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
 

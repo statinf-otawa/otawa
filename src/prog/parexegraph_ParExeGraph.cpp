@@ -537,7 +537,7 @@ void ParExeGraph::createSequenceResources(){
     for (InstIterator inst(_sequence) ; inst() ; inst++) {
 
     		// for each read register, find and record the producer
-     		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
+     		const Array<hard::Register *>& reads = inst->inst()->readRegs();
     		for (int i = 0; i < reads.count(); i++) {
     			int read_reg = reads[i]->platformNumber();
 
@@ -553,7 +553,7 @@ void ParExeGraph::createSequenceResources(){
     		}
 
     		// for each written, record the current instruction as the writer
-    		const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
+    		const Array<hard::Register *>& writes = inst->inst()->writtenRegs();
     		for (int i = 0; i < writes.count(); i++) {
     			int written_reg = writes[i]->platformNumber();
     			is_produced_by[written_reg] = *inst;

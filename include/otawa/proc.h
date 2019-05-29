@@ -1,8 +1,8 @@
 /*
- *	properties module interface
+ *	prop module interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2006-10, IRIT UPS.
+ *	Copyright (c) 2019, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,11 +18,10 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_PROPERTIES_H
-#define OTAWA_PROPERTIES_H
+#ifndef OTAWA_PROC_H_
+#define OTAWA_PROC_H_
 
-#include <otawa/prop/Identifier.h>
-#include <otawa/prop/Property.h>
-#include <otawa/prop/PropList.h>
+#include <otawa/proc/AbstractFeature.h>
+#include <otawa/proc/Processor.h>
 
-#endif		// PROJECT_PROPERTIES_H
+#endif /* OTAWA_PROC_H_ */

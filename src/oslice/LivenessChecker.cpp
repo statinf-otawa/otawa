@@ -190,13 +190,13 @@ void LivenessChecker::initIdentifiersForEachBB(const CFGCollection& coll) {
 
 void LivenessChecker::provideRegisters(Inst* inst, elm::BitVector& regsToModify, int readOrWrite) {
 	// find out the registers to read/write
-	elm::genstruct::Table<hard::Register *> regTable;
+	Array<hard::Register *> regTable;
 	if(readOrWrite == 0)
 		regTable = inst->readRegs();
 	else
 		regTable = inst->writtenRegs();
 
-	for(elm::genstruct::Table<hard::Register *>::Iterator currReg(regTable); currReg(); ++currReg)
+	for(Array<hard::Register *>::Iter currReg(regTable); currReg(); ++currReg)
 		regsToModify.set(currReg->platformNumber());
 }
 

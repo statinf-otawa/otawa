@@ -54,8 +54,8 @@ public:
 	void readRegSet(RegSet& set) override;
 	void writeRegSet(RegSet& set) override;
 	Inst *toInst(void) override;
-	const elm::genstruct::Table<hard::Register *>& readRegs(void) override;
-	const elm::genstruct::Table<hard::Register *>& writtenRegs(void) override;
+	const Array<hard::Register *>& readRegs(void) override;
+	const Array<hard::Register *>& writtenRegs(void) override;
 	int multiCount(void) override;
 	Condition condition(void) override;
 
@@ -82,8 +82,8 @@ public:
 	virtual int delaySlots(void);
 	virtual void readRegSet(RegSet& set);
 	virtual void writeRegSet(RegSet& set);
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
+	virtual const Array<hard::Register *>& readRegs(void);
+	virtual const Array<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
 	virtual Condition condition(void);
 };

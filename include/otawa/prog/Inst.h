@@ -23,7 +23,6 @@
 
 #include <elm/string.h>
 #include <elm/io.h>
-#include <elm/genstruct/Table.h>
 #include <elm/data/Vector.h>
 #include <otawa/prog/ProgItem.h>
 #include <otawa/prog/features.h>
@@ -179,13 +178,13 @@ public:
 	virtual Inst *toInst(void);
 
 	// deprecated
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
+	virtual const Array<hard::Register *>& readRegs(void);
+	virtual const Array<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
 	inline bool isConditional(void)	{ return getKind().isConditional(); }
 
 protected:
-	static const elm::genstruct::Table<hard::Register *> no_regs;
+	static const Array<hard::Register *> no_regs;
 	virtual ~Inst(void) { };
 };
 

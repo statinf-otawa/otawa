@@ -150,11 +150,11 @@ Inst *VirtualInst::toInst(void) { return this; }
 
 /**
  */
-const elm::genstruct::Table<hard::Register *>& VirtualInst::readRegs(void) { return _inst->readRegs(); }
+const Array<hard::Register *>& VirtualInst::readRegs(void) { return _inst->readRegs(); }
 
 /**
  */
-const elm::genstruct::Table<hard::Register *>& VirtualInst::writtenRegs(void) { return _inst->writtenRegs(); }
+const Array<hard::Register *>& VirtualInst::writtenRegs(void) { return _inst->writtenRegs(); }
 
 /**
  */
@@ -244,14 +244,14 @@ void NOP::writeRegSet(RegSet& set) {
 
 /**
  */
-const elm::genstruct::Table<hard::Register *>& NOP::readRegs(void) {
-	return elm::genstruct::Table<hard::Register *>::EMPTY;
+const Array<hard::Register *>& NOP::readRegs(void) {
+	return Array<hard::Register *>::null;
 }
 
 /**
  */
-const elm::genstruct::Table<hard::Register *>& NOP::writtenRegs(void) {
-	return elm::genstruct::Table<hard::Register *>::EMPTY;
+const Array<hard::Register *>& NOP::writtenRegs(void) {
+	return Array<hard::Register *>::null;
 }
 
 /**
