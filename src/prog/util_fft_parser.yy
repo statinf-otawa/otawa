@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <otawa/flowfact/FlowFactLoader.h>
 #include <elm/io.h>
-#include <elm/genstruct/Vector.h>
 #include <otawa/prop/ContextualProperty.h>
 #include <otawa/dfa/State.h>
 using namespace elm;
