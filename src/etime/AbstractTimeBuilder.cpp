@@ -87,7 +87,7 @@ Factory::~Factory(void) {
 }
 
 /**
- * @fn ParExeGraph *Factory::make(ParExeProc *proc,  elm::genstruct::Vector<Resource *> *hw_resources, ParExeSequence *seq);
+ * @fn ParExeGraph *Factory::make(ParExeProc *proc,  Vector<Resource *> *hw_resources, ParExeSequence *seq);
  * TODO
  */
 
