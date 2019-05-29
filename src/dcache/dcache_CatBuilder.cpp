@@ -62,6 +62,7 @@ CATBuilder::CATBuilder(p::declare& r)
 	firstmiss_level(DFML_NONE),
 	prob(nullptr),
 	probMay(nullptr),
+	wt_def_cat(cache::INVALID_CATEGORY),
 	has_pers(false)
 {
 }
@@ -296,6 +297,9 @@ p::feature CATEGORY_FEATURE("otawa::dcache::CATEGORY_FEATURE", new Maker<CATBuil
  * to configure category as @ref ALWAYS_MISS.
  */
 p::id<cache::category_t> WRITETHROUGH_DEFAULT_CAT("otawa::dcache::WRITETHROUGH_DEFAULT_CAT", cache::ALWAYS_HIT);
+// !!TODO!! This default value presumes that the architecture uses also a write buffer:
+// it is not always true and the right value should be INVALID and a WriteBuffer description
+// should be added to the cache description.
 
 
 /**

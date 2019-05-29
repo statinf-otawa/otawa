@@ -4,12 +4,11 @@ set(MANUALS
 	manual-cfg.thot
 	manual-dfa.thot
 	manual-elm.thot
-	manual-features.thot
 	manual-formats.thot
 	manual-gloss.thot
 	manual-graph.thot
 	manual-install.thot
-	manual-procs.thot
+	manual-prog.thot
 	manual-props.thot
 	manual-refs.thot
 	manual.thot

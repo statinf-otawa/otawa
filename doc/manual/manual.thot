@@ -6,16 +6,20 @@
 @ENCODING=utf-8
 @HTML_STYLES=../css/manual.css
 
+@LATEXMATH=mathjax
+@use latexmath
+@use lexicon
+
 @OTAWA_SITE={{http://www.otawa.fr}}
 @OTAWA=**OTAWA**
 
 @include manual-install.thot
 @include manual-wcet.thot
 @include manual-appli.thot
-@include manual-cfg.thot
 @include manual-props.thot
-@include manual-procs.thot
-@include manual-features.thot
+@include manual-prog.thot
+
+
 @include manual-graph.thot
 @include manual-elm.thot
 @include manual-dfa.thot
@@ -23,3 +27,4 @@
 @include manual-refs.thot
 @include manual-formats.thot
 @include manual-gloss.thot
+@include manual-append.thot

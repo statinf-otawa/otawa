@@ -538,7 +538,7 @@ void ParExeGraph::createSequenceResources(){
     for (InstIterator inst(_sequence) ; inst() ; inst++) {
 
     		// for each read register, find and record the producer
-     		const elm::genstruct::Table<hard::Register *>& reads = inst->inst()->readRegs();
+     		const Array<hard::Register *>& reads = inst->inst()->readRegs();
     		for (int i = 0; i < reads.count(); i++) {
     			int read_reg = reads[i]->platformNumber();
 
@@ -554,7 +554,7 @@ void ParExeGraph::createSequenceResources(){
     		}
 
     		// for each written, record the current instruction as the writer
-    		const elm::genstruct::Table<hard::Register *>& writes = inst->inst()->writtenRegs();
+    		const Array<hard::Register *>& writes = inst->inst()->writtenRegs();
     		for (int i = 0; i < writes.count(); i++) {
     			int written_reg = writes[i]->platformNumber();
     			is_produced_by[written_reg] = *inst;
@@ -910,7 +910,7 @@ void ParExeGraph::findDataDependencies() {																						// ======= THIS 
 ////		}
 //
 //		// check for data dependencies
-//		const elm::genstruct::Table<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
+//		const Array<hard::Register *>& reads = first_fu_node->inst()->inst()->readRegs();
 //		for(int i = 0; i < reads.count(); i++) {
 //			for (int b=0 ; b<reg_bank_count ; b++) {
 //				if (rename_tables[b].reg_bank == reads[i]->bank()) {
@@ -923,7 +923,7 @@ void ParExeGraph::findDataDependencies() {																						// ======= THIS 
 //		}
 //
 //		// fu_node is the last FU node
-//		const elm::genstruct::Table<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
+//		const Array<hard::Register *>& writes = last_fu_node->inst()->inst()->writtenRegs();
 //		for(int i = 0; i < writes.count(); i++) {
 //			for (int b=0 ; b<reg_bank_count ; b++) {
 //				if (rename_tables[b].reg_bank == writes[i]->bank()) {

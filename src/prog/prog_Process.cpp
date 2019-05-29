@@ -1121,7 +1121,7 @@ void Identifier<delayed_t>::print (elm::io::Output &out, const Property *prop) c
 /* Nop instruction */
 class NopInst: public Inst {
 public:
-	typedef elm::genstruct::Table<hard::Register * > reg_t;
+	typedef Array<hard::Register * > reg_t;
 	NopInst(Address address, t::uint32 size): addr(address), _size(size) { }
 
 	virtual void dump (io::Output &out) { out << "<nop>"; }
@@ -1129,8 +1129,8 @@ public:
 	virtual Inst *toInst(void) { return this; }
 	virtual Address address(void) const { return addr; }
 	virtual t::uint32	size(void) const { return _size; }
-	virtual const reg_t& readRegs(void) { return reg_t::EMPTY; }
-	virtual const reg_t& writtenRegs(void) { return reg_t::EMPTY; }
+	virtual const reg_t& readRegs(void) { return reg_t::null; }
+	virtual const reg_t& writtenRegs(void) { return reg_t::null; }
 private:
 	Address addr;
 	t::uint32 _size;

@@ -23,7 +23,6 @@
 
 #include <elm/string.h>
 #include <elm/io.h>
-#include <elm/genstruct/Table.h>
 #include <elm/data/Vector.h>
 #include <otawa/prog/ProgItem.h>
 #include <otawa/prog/features.h>
@@ -97,25 +96,29 @@ public:
 		inline bool oneOf(kind_t mask) { return kind & mask; }
 		inline bool noneOf(kind_t mask) { return !oneOf(mask); }
 
-		inline bool isIntern(void)		{ return oneOf(IS_INTERN); }
-		inline bool isMem(void)			{ return oneOf(IS_MEM); }
-		inline bool isControl(void)		{ return oneOf(IS_CONTROL); }
-		inline bool isLoad(void)		{ return oneOf(IS_LOAD); }
-		inline bool isStore(void)		{ return oneOf(IS_STORE); }
-		inline bool isBranch(void)
-			{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
-		inline bool isCall(void)		{ return oneOf(IS_CALL); }
-		inline bool isReturn(void)		{ return oneOf(IS_RETURN); }
-		inline bool isConditional(void)	{ return oneOf(IS_COND); }
-		inline bool isMulti(void)		{ return meets(IS_MEM | IS_MULTI); }
-		inline bool isSpecial(void)		{ return oneOf(IS_SPECIAL); }
-		inline bool isMul(void)			{ return oneOf(IS_MUL); }
-		inline bool isDiv(void)			{ return oneOf(IS_DIV); }
-		inline bool isIndirect(void)	{ return oneOf(IS_INDIRECT); }
-		inline bool isUnknown(void)		{ return oneOf(IS_UNKNOWN); }
-		inline bool isAtomic(void)		{ return oneOf(IS_ATOMIC); }
-		inline bool isBundle(void)		{ return oneOf(IS_BUNDLE); }
-		inline bool isBundleEnd(void)	{ return !oneOf(IS_BUNDLE); }
+		inline bool isAtomic()		{ return oneOf(IS_ATOMIC); }
+		inline bool isBranch()		{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
+		inline bool isBundle()		{ return oneOf(IS_BUNDLE); }
+		inline bool isBundleEnd()	{ return !oneOf(IS_BUNDLE); }
+		inline bool isCall()		{ return oneOf(IS_CALL); }
+		inline bool isCond()		{ return oneOf(IS_COND); }
+		inline bool isControl()		{ return oneOf(IS_CONTROL); }
+		inline bool isDiv()			{ return oneOf(IS_DIV); }
+		inline bool isFloat()		{ return oneOf(IS_FLOAT); }
+		inline bool isIndirect()	{ return oneOf(IS_INDIRECT); }
+		inline bool isInt()			{ return oneOf(IS_INT); }
+		inline bool isIntern()		{ return oneOf(IS_INTERN); }
+		inline bool isLoad()		{ return oneOf(IS_LOAD); }
+		inline bool isMem()			{ return oneOf(IS_MEM); }
+		inline bool isMul()			{ return oneOf(IS_MUL); }
+		inline bool isMulti()		{ return meets(IS_MEM | IS_MULTI); }
+		inline bool isReturn()		{ return oneOf(IS_RETURN); }
+		inline bool isSpecial()		{ return oneOf(IS_SPECIAL); }
+		inline bool isStore()		{ return oneOf(IS_STORE); }
+		inline bool isUnknown()		{ return oneOf(IS_UNKNOWN); }
+
+		// deprecated
+		inline bool isConditional()	{ return oneOf(IS_COND); }
 
 		kind_t kind;
 	};
@@ -134,24 +137,26 @@ public:
 	virtual kind_t kind(void) = 0;
 	inline Kind getKind(void) { return kind(); }
 
-	inline bool isIntern(void)		{ return getKind().isIntern(); }
-	inline bool isMem(void) 		{ return getKind().isMem(); }
-	inline bool isControl(void) 	{ return getKind().isControl(); }
-	inline bool isLoad(void)		{ return getKind().isLoad(); }
-	inline bool isStore(void)		{ return getKind().isStore(); }
-	inline bool isBranch(void)		{ return getKind().isBranch(); }
-	inline bool isCall(void)		{ return getKind().isCall(); }
-	inline bool isReturn(void)		{ return getKind().isReturn(); }
-	inline bool isConditional(void)	{ return getKind().isConditional(); }
-	inline bool isMulti(void) 		{ return getKind().isMulti(); }
-	inline bool isSpecial(void)		{ return getKind().isSpecial(); }
-	inline bool isMul(void)			{ return getKind().isMul(); }
-	inline bool isDiv(void)			{ return getKind().isDiv(); }
-	inline bool isIndirect(void)	{ return getKind().isIndirect(); }
-	inline bool isUnknown(void)		{ return getKind().isUnknown(); }
-	inline bool isAtomic(void)		{ return getKind().isAtomic(); }
-	inline bool isBundle(void)		{ return getKind().isBundle(); }
-	inline bool isBundleEnd(void)	{ return getKind().isBundleEnd(); }
+	inline bool isAtomic()		{ return getKind().isAtomic(); }
+	inline bool isBranch()		{ return getKind().isBranch(); }
+	inline bool isBundle()		{ return getKind().isBundle(); }
+	inline bool isBundleEnd()	{ return getKind().isBundleEnd(); }
+	inline bool isCall()		{ return getKind().isCall(); }
+	inline bool isCond()		{ return getKind().isConditional(); }
+	inline bool isControl() 	{ return getKind().isControl(); }
+	inline bool isDiv()			{ return getKind().isDiv(); }
+	inline bool isFloat()		{ return getKind().isFloat(); }
+	inline bool isIndirect()	{ return getKind().isIndirect(); }
+	inline bool isInt()			{ return getKind().isInt(); }
+	inline bool isIntern()		{ return getKind().isIntern(); }
+	inline bool isLoad()		{ return getKind().isLoad(); }
+	inline bool isMem() 		{ return getKind().isMem(); }
+	inline bool isMul()			{ return getKind().isMul(); }
+	inline bool isMulti() 		{ return getKind().isMulti(); }
+	inline bool isReturn()		{ return getKind().isReturn(); }
+	inline bool isSpecial()		{ return getKind().isSpecial(); }
+	inline bool isStore()		{ return getKind().isStore(); }
+	inline bool isUnknown()		{ return getKind().isUnknown(); }
 
 	// other accessors
 	virtual Inst *target(void);
@@ -173,12 +178,13 @@ public:
 	virtual Inst *toInst(void);
 
 	// deprecated
-	virtual const elm::genstruct::Table<hard::Register *>& readRegs(void);
-	virtual const elm::genstruct::Table<hard::Register *>& writtenRegs(void);
+	virtual const Array<hard::Register *>& readRegs(void);
+	virtual const Array<hard::Register *>& writtenRegs(void);
 	virtual int multiCount(void);
+	inline bool isConditional(void)	{ return getKind().isConditional(); }
 
 protected:
-	static const elm::genstruct::Table<hard::Register *> no_regs;
+	static const Array<hard::Register *> no_regs;
 	virtual ~Inst(void) { };
 };
 
