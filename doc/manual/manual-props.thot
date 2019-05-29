@@ -1,78 +1,105 @@
-====== Property Work ======
+====== Properties, features and code processors ======
 @label props
 
-The properties are the first-class citizens of the OTAWA core used to annotate a program representation. They form a simple and usable facility to attach to/retrieve from the program representation some pieces of information. This section describes in details the use of properties.
+This chapter describes the facilities provided by @(OTAWA) to hook information on the program representation and to exchange information between analyzes composing the WCET calculation in a flexible and extensible way. Annotations, called //properties//, are hooked to the program representation items they apply to. The properties are consistently and logically grouped into //features// and analyzes are abstracted as //code processors//: a mix of the analysis algorithm, list of //required// features and //provided// features.
+
+===== Properties =====
+
+The properties are the first-class citizens of the @(OTAWA) framework used to annotate the program representation. The annotations form a simple and usable facility to attach to/retrieve from the program representation some pieces of information. This section describes in details the use of annotations, also called properties.
 
 
-===== Using the properties =====
+==== Using the properties ====
 
 A property is triple formed by:
-  * an identifier (usually an object of the class ''otawa::Identifier''),
+  * an identifier (usually an object of the class ''otawa::AbstractIdentifier''),
   * the type of the stored data,
   * the stored data itself.
 
-The properties work as dynamic fields of the object they are hooked to. As C++ does not support such a kind of field, OTAWA encapsulates the management of properties in a specific syntax based on the C++ operator overload ability. So, the syntax to read a property the identifier of which is ''ID'', attached to the object ''list'' (an object that has some properties attached to it is called a property list) is:
+The properties work as dynamic fields in the object they are hooked to. As C++ does not support this feature, @(OTAWA) encapsulates the management of properties in a specific syntax based on the C++ operator overload ability. So, the syntax to use a property is based on operators working on identifiers and objects supporting properties, that are called property lists. To read a property which identifier is //ID// and hooked to //list//, one has to write:
 
+<code c++>
   ID ( list )
-
-To set a property, one has just to use the same syntax followed by the ''='' equal assignment symbol and the assigned expression. If the annotation is already hooked to the property list, its value is easily replaced.
-
-  ID ( list ) = expression ;
-
-The property system allow hooking several properties with the same identifier to a list. The trick is easily performed using the ''add()'' method.
-
-  ID ( list ).add( expression );
-
-To retrieve properties with the same identifier, one has to use a clumsy syntax as below:
-
-  for(Identifier< data type > data( list , ID ); data; data++)
-    use(data);
-
-The properties may also be removed using the ''remove'' method of the ''Identifier'' class.
-
-  ID ( list ) . remove ( ) ;
-
-Although the access time to OTAWA properties is longer than an access to classical C++ fields, the penalty is reduced thanks to a cache system that benefits from the temporal locality of accesses. The properties also have a slightly larger size in memory. Yet, these drawbacks are balanced by the induced improvement in flexibility and usability to work on the program representation.
-
-This section has listed the main primitives used to handle properties. The following section will show how to declare ''Identifier'' objects.
-
-
-
-
-
-
-
-
-===== Creating an identifier =====
-
-An ''Identifier'' is a static object used to identify properties hooked to objects. As static objects, they must be declared in the ''.h'' header file to be used out of the current module and defined in the ''.cpp'' source file to get existence. In both files, the type of the stored data must be specified.
-
-The following example shows how to declare in a header file an identifier called ''EXECUTION_TIME'' that stores a time expressed by a simple ''long long'' integer. Here, the extern C++ modifier ensures that the static object will not be defined in each source that includes the header file.
-
-<code c>
-#include <otawa/prop/Identifier.h>
-
-extern Identifier<long long> EXECUTION_TIME;
 </code>
 
-The definition of an identifier follows the usual rule of C++ but two arguments must be passed to the constructor: the string name of the identifier and its default value. This default value is returned by the property accessor if the property has not been not assigned. It may be a valid default value or an invalid value to show that the property is not defined.
+To set a property, one has just to use the same syntax followed by the assignment operator ''='' and the assigned //expression//. If the annotation is already hooked to the property list, its value is automatically replaced.
+
+<code c++>
+  ID ( list ) = expression ;
+</code>
+
+The property system allow hooking several properties with the same identifier to a list. The trick is to use the ''add''() function of an identifier applied to a property list:
+
+<code c++>
+  ID ( list ).add( expression );
+</code>
+
+To retrieve properties with the same identifier, one has to use a very straight-forward C++-11 syntax as below:
+
+<code c++>
+  for(auto x: ID . all ( list ) )
+    use(data);
+</code>
+
+The properties may also be removed using the ''remove''() function of the identifier:
+
+<code c++>
+  ID ( list ) . remove ( ) ;
+</code>
+
+To test if a property is hooked to a property list, one can use the ''exists''() function:
+<code c++>
+  if ( ID ( list ) . exists ( ) )
+  	use ( ID ( list ) );
+</code>
+
+Whatever, accessing a property that  is not defined in a property list, does not cause a crash but returns the default value associated with the property identifier.
+
+Although the access time to @(OTAWA) properties is longer than usual C++ member variables, the penalty is reduced thanks to a cache system that benefits from the temporal locality of accesses. The properties also have a slightly larger size in memory. Yet, these drawbacks are balanced by the induced improvement in flexibility and usability to work on the program representation.
+
+The work of properties is funded on the automatic conversion facilities of C++. Yet, from time to time, the type checking system may be not clever enough to use this conversion. Anyways, you can always obtain the value of property by prefixing the identifier with a "*" as below:
+<code>
+	* ID ( list )
+</code>
+
+This section has listed the main primitives used to handle properties. The following section will show how to declare identifiers objects.
+
+
+
+
+
+
+
+
+==== Creating an identifier ====
+
+An identifier is a global object used to identify properties hooked to property lists. As global objects, they must be declared in the ''.h'' header file to be used out of the current module and defined in the ''.cpp'' source file to be actually defined. In both files, the type of the stored data must be specified.
+
+The following example shows how to declare in a header file an identifier called ''EXECUTION_TIME'' that stores a time expressed by a simple ''long long'' integer. Here, the ''extern'' C++ modifier ensures that the global object will not be defined in each source that includes the header file.
+
+<code c>
+#include <otawa/prop.h>
+
+extern p::id<long long> EXECUTION_TIME;
+</code>
+
+The definition of an identifier follows the usual rule of C++ but two arguments must be passed to the constructor: the string name of the identifier (possibly empty for anonymous identifier) and its default value. This default value is returned by the property accessor if the property has not been not assigned to a property list but read. It may be a valid default value or an invalid value to show that the property is not defined.
 
 In our example, we specify a default value of -1 (invalid time) to show that the property is not set.
 
-<code c>
-#include <otawa/prop/Identifier.h>
+<code c++>
+#include <otawa/prop.h>
 
-Identifier<long long> EXECUTION_TIME("execution_time", -1);
+p::id<long long> EXECUTION_TIME("EXECUTION_TIME", -1);
 </code>
 
 If the identifier is used as a static member of class named ''MyCLASS'', it must be declared as follows:
 
-<code c>
-#include <otawa/prop/Identifier.h>
+<code c++>
+#include <otawa/prop.h>
 
 class MyClass: ... {
   ...
-  static Identifier<long long> EXECUTION_TIME;
+  static p::id<long long> EXECUTION_TIME;
   ...
 };
 </code>
@@ -80,17 +107,17 @@ class MyClass: ... {
 and defined as below:
 
 <code c>
-#include <otawa/prop/Identifier.h>
+#include <otawa/prop.h>
 
-Identifier<long long> MyClass::EXECUTION_TIME("MyClass::execution_time", -1);
+p::id<long long> MyClass::EXECUTION_TIME("MyClass::EXECUTION_TIME", -1);
 </code>
 
-Specifying the type of the stored data when defining an ''Identifier'' allows the type checking system of C++ to be applied to properties which might help to avoid a bunch of errors. The data type is also used to provide many automatic facilities like pretty printing, "..." arguments scanning, serialization and so on, for the usual scalar types.
+Specifying the type of the stored data when defining an identifier allows the type checking system of C++ to be applied to properties which might help to avoid a bunch of errors. The data type is also used to provide many automatic facilities like pretty printing, arguments scanning, serialization and so on, for usual scalar types.
 
-To maintain consistency in naming, we advise to use capital letters for the identifier names (it recalls the constant used in the ''#define'' directives).
+To maintain consistency in naming, @(OTAWA) advises to use capital letters for the identifier names (it recalls the constant used in the ''#define'' directives).
 
 
-===== Creating an object supporting annotations =====
+==== Creating an object supporting annotations ====
 
 To support properties, a class has to inherit publicly from the ''otawa::PropList'' class.
 
@@ -104,4 +131,657 @@ public:
 </code>
 
 
-This ''PropList'' has a really little memory overhead (a single pointer), making it useful even for small objects. Allocating and freeing the property is automatically handled by the ''PropList'' class and does not require any additional action for the new class.
+This ''PropList'' has a really little memory footprint (a single pointer), making it useful even for small objects. Allocation and free of the properties is automatically handled by the ''PropList'' class and does not require any additional action from the new class.
+
+
+==== Contextual Properties ====
+
+A context, in @(OTAWA), is a family of execution paths made of function, calls and loop iterations. Each of this type of context step is identified by the address that represents the function address, the instruction call address or the loop header address.
+
+In C++, a context is represent by the class ''ContextualPath'' that is a list of ''ContextualStep''. A contextual step is pair (//k//, //a//) where //a// is the address and //k// the type of the step:
+  * ''FUNCTION'' -- to design a function context,
+  * ''CALL'' -- to design a call context,
+  * ''FIRST_ITER'' -- to design the first iteration of a loop,
+  * ''OTHER_ITER'' -- to design all iteration except the first one.
+
+For example, to design the context function f (address //a1//) calls (address //a2//) the function  g (address //a3//), one can write:
+<code c++>
+	ContextualPath p;
+	p.push(FUNCTION, a1);
+	p.push(CALL, a2);
+	p.push(FUNCTION, a3);
+</code>
+
+A contextual path is used to assign several values to an identifier depending on particular context.  For example, a BB can have different execution times depending on its context. In the example below, a BB can be in two contexts //p1// and //p2// with, respectivelt, times //t1// and //t2//:
+<code c++>
+	ContextualPath p1;
+	...
+	ContextualPath p2;
+	...
+	BasicBlock *bb = ...;
+	
+	p1(ipet::TIME, bb) = t1;
+	p2(ipet::TIME, bb) = t2;
+</code>
+
+The time can retrieved with a close syntax:
+<code c++>
+	cout << "time in context " << p1 << " is " << *p1(ipet::TIME, bb) << io::endl;
+</code>
+
+Notice that the contexts can be fuzzy (that is incomplete). For example, in the example below, //p1// is less specific than //p2// (missing ''CALL'' step) but as //p1// covers the //p2// case, the result is defined and equal to //t1//.
+<code>
+	ContextualPath p1;
+	p.push(FUNCTION, a1);
+	p.push(FUNCTION, a3);
+
+	ContextualPath p2;
+	p.push(FUNCTION, a1);
+	p.push(CALL, a2);
+	p.push(FUNCTION, a3);
+	
+	p1(ipet::TIME, bb) = t1;
+	int t2 = p1(ipet::TIME, bb);
+	ASSERT(t1 == t2); 
+</code>
+
+The contextual path, in its syntax to access properties, supports the same function as identifier: ''add''(), ''remove''(), ''exists''(), etc.
+
+
+==== Small collections ====
+
+Properties can store simple types as well as complex container types. For example, it is possible to declare an identifier of type ''Vector<BasicBlock *>'':
+<code c++>
+	extern p::id<Vector<BasicBlock *> > MY_BB_COLLECTION;
+</code>
+
+Yet, one may face performance issues when defining a property of this identifier is needed. A vector object with its content has first to b created and the copied in the property:
+<code c++>
+	Vector<BasicBlock *> bbs;
+	/* fill the vector */
+	MY_BB_COLLECTION(cfg) = bbs;
+</code>
+
+An alternative is to use a pointer to a vector, to build the object and to assign the property:
+<code c++>
+	extern p::id<Vector<BasicBlock *> *> MY_BB_COLLECTION;
+	...
+	Vector<BasicBlock *> *bbs = new Vector<BasicBlock *>();
+	/* fill the vector */
+	MY_BB_COLLECTION(cfg) = bbs;
+</code>
+
+This method works perfectly but have several drawbacks: (a) one has -- and not to forget -- to delete the vector object when the corresponding feature is invalidated and (b) pointer prevents the user of operator of aclass although the following syntax can be used (notice the double "*"):
+<code c++>
+	Vector<BasicBlock *>& v = **MY_BB_COLLECTION(cfg);
+</code>
+
+For small collection of objects, @(OTAWA) provides a better solution, the class ''Bag'' illustrated below:
+<code c++>
+	p::id<Bag<BasicBlock *> > MY_BB_COLLECTION;
+	...
+	Vector<BasicBlock *> bbs;
+	/* fill the vector */
+	MY_BB_COLLECTION(cfg) = Bag(bbs);
+	...
+	Bag<BasicBlock *>& bag = MY_BB_COLLECTION(cfg);
+</code>
+
+A ''Bag'' basically behaves as ELM ''Array'' (supporting indexed accesses, iterators, ''length''(), etc) but prevent the copy of its content. When a bag is assigned to another bag, the former looses its content that is stolen by the latter (just a matter of pointer copy). In addition, bags are compatible with ''Vector'' class and steal the content a vector passed as parameter to their constructor.
+
+
+===== Features =====
+
+As @(OTAWA) is developing, more and more property identifier were added and this drives quickly to a chaos on the number of identifier, on the availability of the feature, etc. To prevent this, the properties are grouped into features. For example, the feature ''LOOP_HEADERS_FEATURE'' ensures that the following properties are set:
+  * ''LOOP_HEADER'' is a boolean property put on all BB that are loop headers,
+  * ''BACK_EDGE'' is also a boolean property put on all edges that are loop back edges.
+
+
+==== Feature Definition ====
+
+Like identifiers, features are basically global variables used as identifier (and they extend ''AbstractIdentifier'' class). The main difference is that a feature can define a default analysis (code processor) to be called when it is required.
+
+In the header file, ''.h'', a feature is declared by:
+<code c++>
+#include <otawa/proc.h>
+using namespace otawa;
+
+extern p::feature MY_FEATURE;
+</code>
+
+In the source file, ''.cpp'', the feature is declared by:
+<code c++>
+p::feature MY_FEATURE("MY_FEATURE", p::make<MyBuilder>());
+</code>
+
+Where ''MyBuilder'' is a code processor providing the feature.
+How works the code processor is described in the next section.
+
+For now, and for the sake of performances and simplicity, the only link between a feature and its property identifiers is only logic, that is, not materialized in the software. Yet, it is advised to provide a solid documentation of each feature listing the set of supported identifiers, the type of object they are hooked to and possibly identifying identifiers used as configuration by the feature. A feature is really a contract ensuring that some properties are set at the right place on the program representation.
+
+Going on with the ''LOOP_HEADERS_FEATURE'', the [[http://otawa.fr/doc/otawa-2|autodocumentation]] of @(OTAWA) gives:
+
+**p::feature otawa::LOOP_HEADERS_FEATURE("otawa::LOOP_HEADERS_FEATURE", ...)**
+
+This feature ensures that all loop header are marked with a LOOP_HEADER property, and the back-edges are marked with a BACK_EDGE property.
+
+**Include:** <otawa/cfg/features.h>
+
+**Properties**
+  * LOOP_HEADER (BasicBlock)
+  * BACK_EDGE (Edge)
+
+
+
+==== Feature Usage ====
+
+The features are managed by the ''WorkSpace'' class that records the available feature.
+
+The following functions are available:
+
+<code c++>
+	WorkSpace *ws = ...;
+
+	ws->require(MY_FEATURE);
+</code>
+ 
+The ''require''() function ensures that the feature ''MY_FEATURE'' is built (its properties are set) in the current workspace. If the feature is already available, nothing is done. Otherwise, the default code processor of the feature is invoked. ''require''() can take an additional parameter, a property list, to configure the way the feature will be built. Notice that a feature code processor can require other features that needs to be built in turn and this call may outcome into a chain of analyzes performed on the workspace.
+
+<code c++>
+	if(ws->isProvided(MY_FEATURE))
+		do_somehting_with_the_feature();
+</code>
+The function ''isProvided''() on the ''WorkSpace'' is used to test if a feature is available.
+
+<code c++>
+	ws->invalidate(MY_FEATURE);
+</code>
+The ''invalidate''() feature is used to remove a feature. This means that the corresponding will not be available anymore and that all its properties are removed from the workspace and the program representation. As there may be dependencies between features due to the code processors, all dependent features are also removed (and the corresponding properties). Invalidation can be used to release resources occupied by feature or because a change in the configuration makes obsolete the corresponding feature.
+
+Features can not be provided as is by an application: a code processor (described in the next section) is needed.
+
+
+
+==== Features with interface ====
+@label props:intf
+
+
+A new type of feature appeared in @(OTAWA) v2, the //interfaced feature//. This feature does not only provide a set of properties (passive data) but also code and calculation through an interface. Such a feature is declared by:
+<code c++>
+	class MyInterface {
+		...
+	};
+	
+	extern p::interfaced_feature<MyInterface> MY_INTERFACED_FEATURE;
+</code>
+
+The class ''MyInterface'' is used as an interface to access or compute the resources provided by the feature. To get the interface, once the feature is provided in a workspace, one has to write:
+<code c++>
+	WorkSpace *ws = ...;
+	
+	MyInterface *mi = MY_INTERFACED_FEATURE.get(ws);
+</code>
+
+For example, the @(OTAWA) feature ''COLLECTED_CFG_FEATURE'', that collects and builds the CFGs used to represent a real-time task, is declare as:
+<code c++>
+p::interfaced_feature<const CFGCollection> otawa::COLLECTED_CFG_FEATURE("otawa::COLLECTED_CFG_FEATURE", ...)
+</code>
+ 
+And, anyone can work on the CFGs using the code:
+<code c++>
+	#include <otawa/cfg/features.h>
+	using namespace otawa;
+
+	WorkSpace *ws = ...;
+	ws->require(COLLECTED_CFG_FEATURE);
+
+	const CFGCollection *coll = COLLECTED_CFG_FEATURE.get(ws); 
+	for(auto cfg: *coll)
+		work_on_cfg(cfg);
+</code>
+
+
+
+===== Code Processors =====
+
+As seen in the previous sections, the main class to analyze programs is called a code processor and is represented by the ''otawa::proc::Processor'' class. We have also shown how to use them to perform WCET computation. This section presents how to extend OTAWA by developing new code processors.
+
+As a common example, all along this section, we show how to build a code processor that counts the number of instructions in the basic blocks and stores them in a property called ''INSTRUCTION_COUNT''.
+
+
+
+
+
+
+
+
+
+==== Definition ====
+
+The usual way to add an analysis to @(OTAWA) is to add a code processor. To write a code processor, One has to:
+  * choose a name,
+  * define the required features,
+  * define the provided features,
+  * implement the algorithm performing the analysis.
+
+A code processor have to extend the class ''otawa::Processor'', define a registration to record the code processor to @(OTAWA) framework and to overload some functions to let run the analysis algorithm:
+
+<code c>
+#include <otawa/proc.h>
+using namespace otawa;
+
+class InstructionCounter: public Processor {
+public:
+	static p::declare reg;
+	InstructionCounter();
+
+protected:
+	void processWorkSpace(WorkSpace *ws) override;	
+};
+
+InstructionCounter::InstructionCounter(): Processor(reg) {
+  ...
+}
+
+p::declare InstructionCounter::reg = p::init("InstructionCounter", Version(1, 0, 0))
+	.make<InstructionCounter>()
+	.extend<Processor>()
+	.require(COLLECTED_CFG_FEATURE)
+	.provide(INSTRUCTION_COUNT_FEATURE);
+</code>
+
+Notice that the class declaration and the constructor definition are usually placed, respectively, in a ''.h'' header file and in a ''.cpp'' source file. The constructor often contains none or very few things and its main role is to pass the registration description to the ''otawa::Processor'' class. It is also advised to give the full C++ qualified name to benefit from facilities in @(OTAWA) to run code processor from scripts or ''operform'' utility. 
+
+The registration ''InstructionCounter::reg'' is a static variable that (a) is of type ''p::declare'' and (b) needs to be declared separately in the source file. Code processor name and version are passed using the ''p::init''() constructor that, then, supports several configurations:
+  * ''make<T>''() provides the class of the code processor to the registration,
+  * ''extend<T>''() composes the registration with the one of the base class,
+  * ''require''(//F//) records that the code processor requires the feature //F// before to be run,
+  * ''provide''(//F//) informs that the code processor builds the feature //F//,
+  * ''user''(//F//) records that the code processor needs feature //F// at analysis time but the dependency is released after.
+
+As many ''require'' and ''provide'' can be passed as needed.
+
+The function ''Processor::processWorkSpace()'' is overridden to implement the algorithm of the analysis. , we have to overload the ''Processor::processWorkSpace()'' method as below.
+
+<code c>
+void InstructionCounter::processWorkSpace(WorkSpace *ws) {  
+	const CFGCollection *cfgs = COLLECTED_CFG_FEATURE.get(ws);
+	for(auto g: *cfgs)
+		for(auto b: *g)
+			if(b->isBasic()) {
+				int c = 0;
+				for(auto i: *b->toBasic())
+					c++;
+				INSTRUCTION_COUNT(bb) = c;
+			}
+}
+</code>
+
+Shortly, the algorithm retrieves the collection of CFGS composing the current task (using the interface ''CFGCollection'' provided by ''COLLECTED_CFG_FEATURE''). It traverses the blocks composing the CFGs and for each BB, it counts the instructions and stores the result in property whose identifier is  ''INSTRUCTION_COUNT''.
+
+This supposes that somewhere a feature named ''INSTRUCTION_COUNT_FEATURE'' and an identifier named ''INSTRUCTION_COUNT'' are defined:
+<code c++>
+extern p::feature INSTRUCTION_COUNT_FEATURE;
+extern p::id<int>  INSTRUCTION_COUNT;
+</code>
+
+
+As iterating on the CFGs and theirs BB is very frequent and tedious task, @(OTAWA) provides helper processors performing this work automatically. One has only to override a function named ''processBB''() as below:
+<code c++>
+class InstructionCounter: public BBProcessor {
+public:
+	...
+
+protected:
+	void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) override;
+};
+
+void InstructionCounter::processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) {
+	if(b->isBasic()) {
+		int c = 0;
+		for(auto i: *b->toBasic())
+			c++;
+		INSTRUCTION_COUNT(bb) = c;
+	}
+}
+</code>
+
+There exist several helper processors adapted to the different program representation. Some of them are listed below:
+  * ''CFGProcessor'': iterates on the involved CFG,
+  * ''BBProcessor'': iterates on the involved basic blocks,
+  * ''cache::LBlockProcessor'': iterates on L-Block (code block mapped to cache blocks).
+
+There are different ways to invoke a code processor (to make available its provided features). The simplest way is to use the workspace function ''run''():
+<code c++>
+	WorkSpace *ws = ...;
+	ws->run<InstrucitonCounter>();
+</code>
+
+If ''InstructionCounter'' is the default code processor of the feature ''INSTRUCTION_COUNT_FEATURE'', the feature may be required to the workspace:
+<code c++>
+	WorkSpace *ws = ...;
+	ws->require(INSTRUCTION_COUNT_FEATURE);
+</code>
+
+==== Code processor facilities ====
+
+In addition to provide an interface to connect analyzes to the @(OTAWA) framework, the code processors provides several facilities to help to write and to run the analyzes they implements. The facilities have the form of member functions or variables that are only accessible inside the code processor:
+  * ''isVerbose()'' -- returns true if verbose messages are required in the configuration.
+  * ''logFor''(//l//) -- returns true if logging is asked at the level //l// (logging level are sorted from least detailed to most detailed -- ''LOG_PROC'', ''LOG_FILE'', ''LOG_DEPS'', ''LOG_FUN'', ''LOG_BLOCK'', ''LOG_INST'').
+  * ''log'' -- output channel for logging information (''cerr'' as default).
+  * ''out'' -- output channel to display working information to user (''cout'' as default).
+  * ''workspace''() -- current workspace.
+  * ''warn''(//m//) -- display the warning message //m//.
+  * ''record''(//s//) -- record a new statistics in the @(OTAWA) managed statistic system.  
+
+To raise an error that will stop the analysis, one ahs to raise an exception of type ''otawa::Exception''. This exception supports a message expressing the error cause. New exception classes may be built by extending this class.
+<code c++>
+void MyCodeProcessor::processBB(WorkSpace *ws, CFG *g, Block *b) {
+	if(error_or(b))
+		raise otawa::Exception("my error message");
+}
+</code>
+
+
+==== Details about the Processing ====
+
+As shown above, the ''otawa::proc::Processor'' class is the base class to implement a code processor. It provides an interface to process workspace and an  interface to let actual analyzers perform their work.
+
+Classes ''Processor'' and ''WorkSpace'' are tighly coupled to work together and to let the analysis to be performed. The code processor work is specialized by overriding some member functions as:
+  * ''void configure(const PropList *props)'' -- this function is called to configure the code processor with the property list passed to invoke the analysis.
+  * ''void setup(WorkSpace *workspace)'' -- this function is called to setting up the processor, just before the analysis: it may be used to perform resource allocation for example.
+  * ''void processWorkSpace(WorkSpace *workspace)'': this function is called to perform the analysis on the given workspace.
+  * ''void cleanup(WorkSpace *workspace)'' -- this function is called just after the analysis  to clean up allocated resources only useful for the analysis.
+  * ''void destroy(WorkSpace *ws)'' -- the code processor is alive as long as its provided features are alive: this function is called when the feature is invalidated to release resources and properties of the provided features.
+
+OTAWA ensures that these four functions are ever called in the following order when the analysis is performed:
+  - ''configure()''
+  - ''setup()''
+  - ''processWorkSpace()''
+  - ''cleanup()''
+
+If you are using an helper processor, ''setup()'' and ''cleanup()'' are good points to allocate and free resources used throughout the analysis. Notice it is recommanded to always call the ''configure()'' method of the parent class to let it initialize itself from the configuration properties. This is the parent class, through the call to ''Processor::configure()'', that will manage common services like verbosity, logging, time measures and statistics gathering. If not called, these services will be unavailable.
+
+The ''destroy''() is a bit special and is related to the lifecycle of a feature. When a feature is required, an implementing code processor is identified and created. The code processor is launched to perform the corresponding analysis and will still alive as long as the feature is provided in the workspace. As soon as the feature is invalidated, the code processor instance is destructed and, just before, the ''destroy''() function is called.
+
+
+==== Statistics Service ====
+
+@(OTAWA) provides a common statistics service that is in charge of collecting all statistics of all performed analyzes. 
+
+In @(OTAWA), statistics are values tied to a code range (for example a BB) for a particular context path that can combined to be displayed to the user. For example, the feature ''ipet::WCET_FEATURE'' provides as statistics for each BB their execution time, their number of execution on the WCET path and the total execution time on the WCET path.
+
+To provide a statistics item, a code processor has to provide an object implementing the class ''StatCollector'' that (a) provides all information about the statistics and (b) provides a way for a user application to visit all code pieces containing statistics information. Maybe, the easiest way to implement this is to make the code processor to inherit from ''StatCollector'' as ''InstructionCounter'' in the example below:
+<code c++>
+class InstructionCounter: public BBProcessor, public StatCollector {
+public:
+
+	void keywords(Vector<cstring>& k) override
+		{ k.add("count"); k.add("instruction"); }
+	cstring name() override { return "prog/icount"; }
+	cstring unit() const override { return "inst."; } 
+
+	cstring id() const override { return "InstructionCounter::count"; }
+	void mergeAggreg(int v1, v2) override { return v1 + v2; }
+	void mergeContext(int v1, v2) override { return max(v1, v2); }
+	int total() override;
+
+	void collect(Collector& c) override;	
+};
+</code>
+
+Some of the functions are targeting the human users, other ones provides the statistics or calculation for the statistics:
+  * ''name''() -- human-readable name of the statistics item.
+  * ''unit''() -- human-readable unit name.
+  * ''keywords''() -- keywords to lookout or sort the statistics item.
+  * ''id''() -- internal name for the statistics.  
+  * ''mergeAgreg''() -- function to derive a statistics value from the combination of two aggregated code pieces.
+  * ''mergeContext''() -- function to derive a statistics value from two value on the same code piece but from two different contexts.
+  * ''total''() provides the statistics value for the whole program.
+
+''InstructionCounter::total''() is given below:
+<code c++>
+int InstructionCounter::total() {
+	int r = 0;
+	for(auto b: COLLECTED_CFG_FEATURE.get(workspace())->blocks())
+		if(b->isBasic())
+			r += INSTRUCTION_COUNT(b);
+	return r;
+}
+</code>
+
+Yet, the most important function is ''collect''() that takes, as parameter, a caller object to which statistics values can be passed. This way, the ''collect''() can choose the best way (faster, simpler, etc) to visit all statistics values and to transmit them to the caller application. The caller object must implement the class ''Collector'' that defines only one function, ''collect''():
+<code c++>
+class Collector {
+public:
+	virtual void collect(const Address& address, t::uint32 size, int value, const ContextualPath& path) = 0;
+  };
+</code>
+
+''collect'' takes as parameter the address and the size of the piece of code, the context of the statistics and the statistics value.
+
+For instance, the ''collect''() function of ''InstructionCounter'' is:
+<code c++>
+void InstructionCounter::collect(Collector& c) {
+	ContextualPath p;
+	for(auto b: COLLECTED_CFG_FEATURE(workspace())->blocks())
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
+			c.collect(bb->address(), bb->size(), INSTRUCTION_COUNT(bb), p);
+		} 
+}
+</code>
+
+To record the code processor to the statistics system, one has to call the ''record''() function of ''Processor''() with itself as argument, for example, int the ''cleanup''() function:
+<code c++>
+void InstructionCounter::cleanup(WorkSpace *ws) {
+	...
+	if(recordsStats())
+		record(this);
+}
+</code>
+
+Then, the statistics can be used by standard @(OTAWA) commands as ''owcet'' or ''operform'' and displayed using ''otawa-stat.py'' (if the code processor is invoked):
+<code sh>
+$ owcet -s trivial -D crc.elf
+$ otawa-stat.py main prog/icount
+</code>
+
+
+==== Providing a feature with interface ====
+
+Section~@ref:props:intf@ defines features with an interface (to provide not only data but also calculations). To define a code processors providing such type of feature, one has to override the function ''Processor::interfaceFor''(//F//) that takes as parameter the feature for which an interface is required. The general form of this functions is given below:
+<code c++>
+class MyProcessor {
+public:
+	...
+	void *interfaceFor(const AbstractFeature &f) override {
+		if(f == FEATURE1)
+			return interface1;
+		else if(f == FEATURE2)
+			return interface2;
+		...
+		else
+			return nullptr;
+	}
+};
+</code>
+
+**Beware with C++ and returning a generic pointer 'void *' that will be casted back to the actual type**. This warning is particularly important if the interface is extended by the code processor class itself and therefore, ''this'' is returned. C++ is a system of offsets to implement multiple-inheritance that is lost when passed to ''void *''. To prevent any issue, statically cast ''this'' to the interface type.
+
+Going on with example of @ref:props:intf@, we get:
+<code c++>
+class MyCodeProcessor: public Processor, public MyInterface {
+	...
+	void *interfaceFor(const AbstractFeature& f) override {
+		if(f == MY_INTERFACED_FEATURE)
+			return static_cast<MyInterface *>(this);
+		else
+			return nullptr;
+	};
+;
+</code>
+
+
+
+
+==== Updating/replacing a feature ====
+
+
+Updating and replacing an existing features rises special issues in the property management. This means that the code processor is using the properties put to implement a feature //F// and redefine these properties.
+
+This issue is amplified as @(OTAWA) promotes a "functional" approach in the management of properties: the result of the analysis is not increased but replaced by a new improved version. This is the case of analysis changing the CFG: instead of adding/removing vertices and/or edges, the CFG are rebuilt and modified based on the existing CFGs.
+
+
+Now, the issue is that the former provider of replaced feature will remove its properties: when it is invalidated, that is, after the analysis the work of the code processor providing the new version of the analysis, that is after  the call of any function involved in the analysis.
+
+To support the replacement of feature, there is a specific function called ''commit''() that can be used. It is invoked just after the invalidation of invalidated feature by the code processor to let the code processor install its own properties.
+
+This is used a lot by CFG transformers that change the form of the CFG to improve the precision of the analysis: ''LoopUnroller'', ''SubCFGBuilder'', ''Virtualizer'', ''DelayedBuilder'', ''ConditionalRestructurer'', etc. Moreover, there is a generic class that helps to transform the CFG -- and override and implement the ''commit''() function, ''CFGTransformer''.
+
+
+
+
+===== Code processor plug-ins =====
+
+
+==== Designing ====
+
+The easier way to extend @(OTAWA) -- to add new analyses, is to write code processor and the easier way to embed these analyzes at run-time in @(OTAWA) computation is to use plug-ins. A plug-in, in @(OTAWA), is just a dynamic library (as available in most desktop OS) providing a particular hook (a function) to register the plug-in in @(OTAWA). Once the hook has been recognized by @(OTAWA), all analyzes contained in the plug-in is automatically recorded in @(OTAWA) code processor database and ready to be used.
+
+To retrieve plug-ins, code processors, identifiers and features, @(OTAWA) uses the structure of their name. For example, the ''otawa::dcache::CATEGORY'' identifier of @(OTAWA) data cache plug-in is contained in the namespace ''otawa::dcache'', in conformance with its name, but is also supposed to be in a plug-in named ''otawa/dcache'' ("::" are replaced by "/"). On Linux, this means that @(OTAWA) will look in its plug-in directories for a dynamic library which path is ''otawa/dcache.so''.
+
+Consequently, a very sample way to provide plug-ins to @(OTAWA) in a consistant way is to choose a namespace for the content of a plug-in, ''my/plugin'', for example and to declare all plug-in items inside:
+<code c++>
+namespace my { namespace plugin {
+
+	extern p::id<bool> MY_ID;
+
+	extern p::feature MY_FEATURE;
+	
+	class MyAnalysis: public Processor {
+	...
+	};
+
+} }
+</code>
+And then to group them in a plug-in which relative path will be ''NS1/NS2''. Then, identifier, features and code processor has to be named according to this structure: ''my::plugin::MY_ID'' for the identifier, ''my::plugin::MY_FEATURE'' for the feature and ''my::plugin::MyAnalysis'' for the code processor. This allows some tools like @(OTAWA) or ''operform'' to retrieve and found automatically identifiers, features and code processors located in pug-ins.
+
+For instance, ''operform'' can run ''MyAnalysis' with a command like:
+<code sh>
+$ operform crc.elf process:my::plugin::MyAnalysis
+</code>
+
+The feature can also be invoked with:
+<code sh>
+$ operform crc.elf require:my::plugin::MY FEATURE
+</code>
+
+''operform'' can be very useful to invoke a particular sequence of analyzes or features but also to debug a developed analysis.  Scripts are described in the @(OTAWA) Development Manual.
+
+
+==== Compiling and installing =====
+
+Let the sources of the plug-in be //SOURCE1//, //SOURCE2//, ..., a new source named ''hook.cpp'' is added to define the hook of the plug-in for @(OTAWA):
+<code c++>
+#include <otawa/proc/ProcessorPlugin.h>
+using namespace otawa;
+
+namespace my { namespace plugin {
+
+class Plugin: public ProcessorPlugin {
+public:
+	Plugin(): ProcessorPlugin("my::plugin", Version(1, 0, 0), OTAWA_PROC_VERSION) { }
+};
+
+} }
+
+static my::plugin::Plugin my_plugin;
+ELM_PLUGIN(my_plugin, OTAWA_PROC_HOOK);
+</code>
+
+First, the source declare a new class for the plug-in with its name, version and an identifier for the version of the plug-in interfacen ''OTAWA_PROC_VERSION''. Then a static instance of this class is created, ''my_plugin'' and the hook is created using an ELM macro of type code processor plugin, ''OTAWA_PROC_HOOK''.
+
+Compilation and installation, on Linux, can be done with a ''Makefile'' as:
+<code make>
+NAME = plugin
+NS = my
+OTAWA_CONFIG = otawa-config
+CXXFLAGS = $(shell $(OTAWA_CONFIG) --cflags)
+LDFLAGS = $(shell $(OTAWA_CONFIG) --libs -r)
+PLUG_DIR = $(shell (OTAWA_CONFIG) --plugdir)
+SOURCES = SOURCE1.cpp SOURCE2.cpp ... hook.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+
+all: $(NAME).so
+
+$(NAME).so: $(OBJECTS)
+	gcc -shared -o $(NAME).so $(OBJECTS) $(LDFLAGS)
+
+install:
+	mkdir -p $(PLUG_DIR)/$(NS)
+	cp $(NAME).so $(PLUG_DIR)/$(NS)
+	
+</code>
+
+Refer to @ref:append:plugin@ for a portable CMake plug-in builder script.
+
+
+
+==== Using a plug-in in an application ====
+
+Plug-in can be used in scripts or with commands as ''operform'' and interconnected to @(OTAWA) using standard interfaces and features but it may useful to use particular definition (identifier, features, code processor or classes) of a plug-in in a custom application.
+
+For example, the following application is using the plug-in defined in the previous section:
+<code c++>
+#include <my/plugin.h>
+
+int main() {
+	WorkSpace *ws = MANAGER.load("crc.elf");
+	ws->require(COLLECTED_CFG_FEATURE);
+	for(auto g: *COLLECTED_CFG_FEATURE.get(ws))
+		my::plugin::MY_ID(cfg) = true;
+}
+</code>
+
+Although @(OTAWA) may be able to retrieve automatically the plug-in, the program at startup needs to resolve the link induced by the use of ''MY_ID'' and will fail if there is no link edition with ''my/plugin.so''. To achieve this, one has only to pass the plug-in as parameter to the ''otawa-config'' command in the ''Makefile'':
+<code make>
+LDFLAGS = $($(OTAWA_CONFIG) --libs -r my/plugin)
+</code>
+
+The option ''--r'' is also important as it records in the executable, and on OSes supporting it, the path to link the plug-in. On OSes that does not support the record of dynamic library paths (Windows), there is no other solution as adding the path to a specific configuration variable (''PATH'' on Windows).
+
+
+
+==== .eld files ====
+
+In @(OTAWA), plug-ins often comes with an additional file named as the plug-in but with extension ''.eld''. This file is supported by the ELM generic plug-in system to provide additional information about the linking. As not all OSes have the same dynamic linking features, this file is used to circumvent shortcomings found on some OSes.
+
+The ''.eld'' file is a text file in [[https://en.wikipedia.org/wiki/INI_file|INI format]]. For the example of ''my/plugin'', it could be as minimalist as:
+<code ini>
+[elm-plugin]
+name=plugin
+</code>
+
+But it may contain many information about the plug-in (one per line):
+  * ''author'' -- plug-in author name
+  * ''copyright'' -- license of the plug-in
+  * ''description'' -- description of the plug-in
+  * ''path'' -- actual path to dynamic library (alias)*
+  * ''site'' -- website of the plug-in.
+
+It contains also functional items as ''deps'' and ''libs''. ''libs'' is used to specify a "semicolon-separated list of paths of dynamic libraries used by the plug-in. This is used on some OSes that are not able to retrieve dynamic libraries out of the container directory of the plug-in.
+
+The ''deps'' item is used to specify the list of plug-ins on which the current plug-in is dependent. For example, if ''my/plugin'' requires the @(OTAWA) plug-ins ''otawa/dcache'' and ''otawa/trivial'', the ''.eld'' file content becomes:
+<code ini>
+[elm-plugin]
+name=plugin
+deps=otawa/dcache;otawa/trivial
+</code>
+
+The ''.eld'' can be also used in the work of ''otawa-config'' when a plug-in is compiled: in this case, there is no need to list the dependency plug-ins when ''otawa-config'' is called. The ''LDFLAGS'' line of ''my/plugin'' ''Makefile'' becomes:
+<code make>
+LDFLAGS = $(shell $(OTAWA_CONFIG) --libs -r -p plugin)
+</code>
+
+

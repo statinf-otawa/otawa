@@ -1,8 +1,12 @@
 ====== Glossary ======
 
-  ? BB   : Basic Block
-  ? CFG  : Control Flow Graph
-  ? ILP  : Integer Linear Programming
-  ? IPET : Implicit Path Enumeration Technique
-  ? OOP  : Object-Oriented Programming
-  ? PCG  : Program Call Graph
+@term BB  	Basic Block
+@term CFG	Control Flow Graph
+@term ILP	Integer Linear Programming
+@term IPET	Implicit Path Enumeration Technique
+@term OOP	Object-Oriented Programming
+@term PCG	Program Call Graph
+@term WCET	Worst Case Execution Time
+
+@lexicon
+

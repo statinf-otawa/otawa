@@ -194,7 +194,7 @@ Implicit Path Enumeration Techniques (IPET) is one of the approaches providing W
 Basically, IPET consists in representing the WCET problem as the maximization of an Integer Linear Problem (ILP) whose objective function is the WCET. It is usually represented as:
 
 > $wcet = \sum_{v \in V} t_v x_v$
- 
+
 Where:
   * //G = <V, E>// is the CFG with //V// the set of basic block (BB) and $E = \subseteq V \times V$ the edges,
   * $t_v$ is a constant representing the execution of basic block //V//,
@@ -212,7 +212,7 @@ Where $x_{v \to w}$ is an ILP representing the number of traversal of an edge fr
 
 As a CFG can contain loops, one has also to bound the number of execution of each loop headed by a vertex $h \in V$:
 
-> $\sum_{v \to h \in BACK_h} x_{v \to h} \le N \sum_{v \to h \in ENTRY_h} x_{v \to h} $
+> $\sum_{v \to h \in BACK_h} x_{v \to h} \le N \times \sum_{v \to h \in ENTRY_h} x_{v \to h} $
 
 Where //N// is the loop bound (maximum number of iterations per loop start), $BACK_h$ is the set of back-edges (forming the loop) and $ENTRY_h$ is the set of edges entering in the loop. To sump up, this constraints means that the back edges are taken at most //N// times each time the loop is entered. 
 
