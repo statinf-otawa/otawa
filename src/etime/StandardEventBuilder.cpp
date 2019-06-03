@@ -99,9 +99,9 @@ public:
 	virtual kind_t kind(void) const { return BRANCH; }
 	virtual ot::time cost(void) const { return _cost; }
 	virtual type_t type(void) const { return AFTER; }
-	virtual occurrence_t occurence(void) const { return _occ; }
+	virtual occurrence_t occurrence(void) const { return _occ; }
 	virtual cstring name(void) const { return "branch prediction"; }
-	virtual string detail(void) const { return "B-P"; }
+	virtual string detail(void) const { return _ << "BP " << *branch::CATEGORY(_wbb); }
 	virtual bool isEstimating(bool on) { return on; }
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
@@ -436,6 +436,49 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			case branch::FIRST_UNKNOWN:		handleVariableBranchPred(bb, ENCLOSING_LOOP_HEADER(branch::HEADER(bb))); break;
 			case branch::ALWAYS_H:
 			case branch::NOT_CLASSIFIED:	handleVariableBranchPred(bb, bb); break;
+
+			case branch::STATIC_TAKEN:
+				for(Block::EdgeIter out = bb->outs(); out(); out++) {
+					occurrence_t occ;
+					int cost = 0;
+					if(out->isNotTaken()) // incorrect not taken
+						cost = bht->getIncorrectNotTakenPenalty();
+					else // correct not taken
+						cost = bht->getCorrectTakenPenalty();
+
+					if(cost)
+						occ = ALWAYS;
+					else
+						occ = NEVER;
+
+					Event *event = new BranchPredictionEvent(out->target()->toBasic()->first(), cost, occ, 0, bb);
+					if(logFor(LOG_BB))
+						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << ", occ = " << occ << ", cost =  " << cost << io::endl;
+					EVENT(*out).add(event);
+				}
+				break;
+
+			case branch::STATIC_NOT_TAKEN:
+				for(Block::EdgeIter out = bb->outs(); out(); out++) {
+					occurrence_t occ;
+					int cost = 0;
+					if(out->isNotTaken())
+						cost = bht->getCorrectNotTakenPenalty();
+					else
+						cost = bht->getIncorrectTakenPenalty();
+
+					if(cost)
+						occ = ALWAYS;
+					else
+						occ = NEVER;
+
+					Event *event = new BranchPredictionEvent(out->target()->toBasic()->first(), cost, occ, 0, bb);
+					if(logFor(LOG_BB))
+						log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << ", occ = " << occ << ", cost =  " << cost << io::endl;
+					EVENT(*out).add(event);
+				}
+				break;
+
 			default:						ASSERT(false); break;
 			}
 		}
