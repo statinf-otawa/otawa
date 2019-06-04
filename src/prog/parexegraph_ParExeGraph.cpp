@@ -746,7 +746,8 @@ void ParExeGraph::addEdgesForFetch(void) {
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
+				if(_branch_penalty)
+					new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
 				if(_cache_line_size != 0)
 					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
 			}

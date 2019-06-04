@@ -340,7 +340,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		for(int i = 0; i < blocks.count(); i++) {
 
 			// find the instruction
-			while(inst->topAddress() < blocks[i]->address()) {
+			while(inst->topAddress() <= blocks[i]->address()) {
 				inst++;
 				ASSERT(inst);
 			}
