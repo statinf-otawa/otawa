@@ -52,11 +52,12 @@ using namespace cache;
 // Ordered list
 class NumberOrder {
 public:
+	typedef LBlock *t;
 	inline int doCompare(LBlock *lb1, LBlock *lb2) const {
 		return cache::CATEGORY_HEADER(lb1)->index() - cache::CATEGORY_HEADER(lb2)->index();
 	}
 };
-typedef SortedList<LBlock*, CompareManager<LBlock *, NumberOrder> > LinkedBlockList;
+typedef SortedList<LBlock*, NumberOrder> LinkedBlockList;
 
 
 /**
