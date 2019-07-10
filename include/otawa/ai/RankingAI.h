@@ -43,9 +43,8 @@ public:
 
 	RankingAI(A& adapter, R& rank = single<R>()):
 		_adapter(adapter),
-		_rank(rank),
-		_cmp(*this),
-		_todo(_cmp) { }
+		_rank(rank)
+		{ }
 
 	void run(void) {
 		t s;
@@ -70,11 +69,9 @@ public:
 	inline int doCompare(vertex_t v1, vertex_t v2) const { return _rank.rankOf(v1) - _rank.rankOf(v2); }
 
 private:
-	typedef CompareManager<vertex_t, RankingAI<A, R> > cmp_t;
 	A& _adapter;
 	R& _rank;
-	cmp_t _cmp;
-	SortedList<vertex_t, cmp_t> _todo;
+	SortedList<vertex_t, RankingAI<A, R>> _todo;
 };
 
 } }		// otawa::ai

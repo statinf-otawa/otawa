@@ -22,6 +22,7 @@
 #ifndef OTAWA_DFA_LEXICON_H_
 #define OTAWA_DFA_LEXICON_H_
 
+#include <elm/data/custom.h>
 #include <elm/data/HashMap.h>
 #include <elm/data/List.h>
 #include <elm/sys/Path.h>
@@ -30,18 +31,14 @@ namespace otawa { namespace dfa {
 
 using namespace elm;
 
-template <class S, class A, class M = HashManager<S> >
+template <class S, class A, class H = HashKey<S>, class AA = DefaultAlloc >
 class Lexicon {
 
-	class DerefHash {
+	class DerefHash: public H {
 	public:
-		inline DerefHash(M& man): m(man) { }
-		inline t::hash computeHash(const S *s) const { return m.computeHash(*s); }
-		inline int isEqual(const S *s1, const S *s2) const { return m.isEqual(*s1, *s2); }
-	private:
-		M& m;
+		inline t::hash computeHash(const S *s) const { return H::computeHash(*s); }
+		inline int isEqual(const S *s1, const S *s2) const { return H::isEqual(*s1, *s2); }
 	};
-	typedef HashManager<const S *, DerefHash, typename M::alloc_t> hman_t;
 
 public:
 
@@ -69,10 +66,8 @@ public:
 	};
 
 	static const int default_size = 4093;
-	Lexicon(int size = default_size): m(DerefHash(single<M>()), single<M>().alloc), h(m, size) { }
-	Lexicon(M& man, int size = default_size): m(DerefHash(man), man.alloc), h(m, size) { }
-	virtual ~Lexicon() { for(auto n: h) h.manager().free(n); }
-	inline M& manager() const { return h.manager(); }
+	Lexicon(int size = default_size): h(size) { }
+	virtual ~Lexicon() { for(auto n: h) h.allocator().free(n); }
 
 	Handle *add(const S& s) {
 		if(h.hasKey(&s))
@@ -164,8 +159,7 @@ protected:
 	virtual void doJoin(const S& s1, const S& s2, S& r) = 0;
 
 private:
-	hman_t m;
-	HashMap<const S *, Handle *, hman_t> h;
+	HashMap<const S *, Handle *, DerefHash, AA> h;
 };
 
 } }	// otawa::dfa
