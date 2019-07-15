@@ -228,13 +228,13 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		warn(String(" ") << interestedInstructions->count() << " instructions to resolve");
 		if(_debugLevel & DISPLAY_SLICING_STAGES) {
 			elm::cerr << __SOURCE_INFO__<< "The list of interested instructions: " << io::endl;
-			for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII(); currentII++) {
+			for(interested_instructions_t::Iter currentII(*interestedInstructions); currentII(); currentII++) {
 				elm::cerr << __SOURCE_INFO__ << "    " << currentII->getInst() << " @ " << currentII->getInst()->address() << " from BB " << currentII->getBB()->index() << io::endl;
 			}
 		}
 
 		// now we look into each of these instructions
-		for(interested_instructions_t::Iterator currentII(*interestedInstructions); currentII(); currentII++) {
+		for(interested_instructions_t::Iter currentII(*interestedInstructions); currentII(); currentII++) {
 			if(_debugLevel & DISPLAY_SLICING_STAGES) {
 				elm::cerr << __SOURCE_INFO__ << "Popping interested instruction " << currentII->getInst() << " @ " << currentII->getInst()->address() << io::endl;
 			}

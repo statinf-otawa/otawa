@@ -711,7 +711,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 	int cfgIndex = 0;
 	for(bb_map_table_t::Iter bbmtti(bb_map_table); bbmtti(); bbmtti++, cfgIndex++) { // for each CFG
 		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
-		for(bb_map_t::Iterator bbmti(**bbmtti); bbmti(); bbmti++) { // for each entry in the bb_map
+		for(bb_map_t::Iter bbmti(**bbmtti); bbmti(); bbmti++) { // for each entry in the bb_map
 			if(bbmti->isSynth()) { // now process the synth block. basic block were processed previously
 				if(*SYNTH_TARGET(*bbmti)) { // if there is an ID of the caller
 					cfgMaker->call(*bbmti->toSynth(),**cfg_map.get(**SYNTH_TARGET(*bbmti))); // get the map ID from the cfg_map

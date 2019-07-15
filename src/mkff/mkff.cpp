@@ -823,7 +823,7 @@ void XMLOutput::processWorkSpace(WorkSpace *ws) {
 void XMLOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	// initial log
 	if(logFor(LOG_DEPS))
-		for(avl::Set<const AbstractIdentifier *>::Iterator id(ids); id(); id++)
+		for(avl::Set<const AbstractIdentifier *>::Iter id(ids); id(); id++)
 			log << "\tproperty " << id->name() << " include in the output\n";
 
 	// build the root node

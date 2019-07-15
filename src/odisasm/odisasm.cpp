@@ -193,7 +193,7 @@ private:
 				avl.add(bb->toBasic());
 
 		// disassemble the BB
-		for(avl_t::Iterator bb(avl); bb(); bb++)
+		for(avl_t::Iter bb(avl); bb(); bb++)
 			for(BasicBlock::BundleIter bu(*bb); bu(); bu++) {
 
 				// display specific to an instruction

@@ -95,18 +95,18 @@ public:
 	// accessing registers
 	void set(const hard::Register *reg, Value value);
 	Value get(const hard::Register *reg) const;
-	class RegIter: public reg_map_t::PairIterator {
+	class RegIter: public reg_map_t::PairIter {
 	public:
-		inline RegIter(State *state): reg_map_t::PairIterator(state->regs) { }
-		inline RegIter(const RegIter& i): reg_map_t::PairIterator(i) { }
+		inline RegIter(State *state): reg_map_t::PairIter(state->regs) { }
+		inline RegIter(const RegIter& i): reg_map_t::PairIter(i) { }
 	};
 
 	// accessing configured memory
 	void record(const MemCell& cell);
-	class MemIter: public mem_map_t::Iterator {
+	class MemIter: public mem_map_t::Iter {
 	public:
-		inline MemIter(const State *state): mem_map_t::Iterator(state->cmem) { }
-		inline MemIter(const MemIter& iter): mem_map_t::Iterator(iter) { }
+		inline MemIter(const State *state): mem_map_t::Iter(state->cmem) { }
+		inline MemIter(const MemIter& iter): mem_map_t::Iter(iter) { }
 	};
 
 	// accessing initialized memory

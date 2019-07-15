@@ -327,7 +327,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 	}
 
 	// Output int constraints
-	for(avl::Set<Var *>::Iterator var(vars); var(); var++)
+	for(avl::Set<Var *>::Iter var(vars); var(); var++)
 		switch(var->type()) {
 		case Var::INT:		out << "int " << CID(dumper.name(*var)) << ";\n"; break;
 		case Var::FLOAT:	break;
