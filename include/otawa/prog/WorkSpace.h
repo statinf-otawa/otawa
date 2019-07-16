@@ -78,6 +78,13 @@ public:
 	virtual ~WorkSpace(void);
 	inline Process *process(void) const { return &proc; };
 
+	// name management
+	inline string name() const { return _name; }
+	inline WorkSpace& name(string name) { _name = name; wdir = ""; return *this; }
+	sys::Path workDir();
+	inline WorkSpace& workDir(sys::Path path) { wdir = path; return *this; }
+	sys::Path makeWorkDir();
+
 	// Process overload
 	virtual hard::Platform *platform(void);
 	virtual Manager *manager(void);
@@ -139,6 +146,8 @@ private:
 
 	LockPtr<Process> proc;
 	bool cancelled;
+	string _name;
+	sys::Path wdir;
 };
 
 };	// otawa

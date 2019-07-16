@@ -43,6 +43,8 @@ set(libotawa_SOURCES
 	"cfg_SubCFGBuilder.cpp"
 	"cfg_Virtualizer.cpp"
 	"cfg_Weighter.cpp"
+    "cfgio_Input.cpp"
+	"cfgio_Output.cpp"
 	"BBRatioDisplayer.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"

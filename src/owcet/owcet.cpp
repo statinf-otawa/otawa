@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	owcet command implementation
  *
  *	This file is part of OTAWA
@@ -25,13 +24,12 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
-#include <otawa/cfgio/Output.h>
 #include <otawa/ilp/System.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/script/Script.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/util/BBRatioDisplayer.h>
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/flowfact/FlowFactLoader.h>
 
 using namespace otawa;
 using namespace elm::option;
@@ -64,12 +62,25 @@ using namespace elm::option;
  * it provides usually its own script.
  *
  * Other options includes:
- * @li -p, --param ID=VAL: several parameters with this form may be passed; these definition are used
- * to pass parameters to the script and the supported @i ID depends on the launched script (see its documentation
- * for more details),
- * @li -f, --flowfacts PATH: OTAWA can not automatically found loops so this options is used
+ * * --add-prop ID=VAL: add the property named ID with the value VAL to the configuration properties of the
+ * analysis,
+ * * -f, --flowfacts PATH: OTAWA can not automatically found loops so this options is used
  * to design the file containing loop bounds; supported formats includes .ff or .ffx (@ref ff). Flowfacts allows also
  * to pass specific configuration for the flow execution of a program.
+ * * -i, --dump-ilp: dump the ILP system (if any) to the standard output.
+ * * -l, --list: list the configuration items of the used script.
+ * * --load-param ID=VAL: set the load parameter named ID to the value VAL.
+ * * --log LEVEL: select the log level (one of proc, deps, cfg, bb or inst).
+ * * -p, --param ID=VAL: several parameters with this form may be passed; these definition are used
+ * to pass parameters to the script and the supported @i ID depends on the launched script (see its documentation
+ * for more details).
+ * * -s, --script PATH: use the given script to compute the WCET.
+ * * -S, --display-stats: display statistics produced by the analysis.
+ * * --stats: outputs available statistics in work directory.
+ * * -t, --timed: display computation time.
+ * * -v, --verbose: verbose display of the process (same as --log bb)
+ * *-W, --wcet-stat: outputs detailed statistics about WCET.
+ * * --work-dir PATH: change the working directory to PATH.
  *
  * @par Hints
  *
@@ -116,18 +127,6 @@ private:
 	int _sum, _max, _min, _cnt;
 };
 
-class StatOutput: public StatCollector::Collector {
-public:
-	StatOutput(Output& out): _out(out) { }
-	virtual ~StatOutput() { }
-	virtual void collect(const Address &address, t::uint32 size, int value, const ContextualPath& ctx) {
-		_out << value << "\t" << address << "\t" << size << "\t" <<  ctx << io::endl;
-	}
-
-private:
-	Output& _out;
-};
-
 class OWCET: public Application {
 public:
 	OWCET(void): Application(
@@ -142,8 +141,8 @@ public:
 	ilp_dump		(SwitchOption			::Make(*this).cmd("-i")			.cmd("--dump-ilp").description("dump ILP system to standard output")),
 	list			(SwitchOption			::Make(*this).cmd("--list")		.cmd("-l").description("list configuration items")),
 	timed			(SwitchOption			::Make(*this).cmd("--timed")	.cmd("-t").description("display computation")),
-	display_stats	(SwitchOption			::Make(*this).cmd("-S")			.cmd("--stats").description("display statistics")),
-	detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics")),
+	display_stats	(SwitchOption			::Make(*this).cmd("-S")			.cmd("--display-stats").description("display statistics")),
+	//detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics")),
 	wcet_stats		(SwitchOption			::Make(*this).cmd("-W")			.cmd("--wcet-stat").description("detailed statistics about WCET"))
 	{ }
 
@@ -151,7 +150,7 @@ protected:
 	virtual void work (const string &entry, PropList &props) {
 
 		// set statistics option
-		if(display_stats || detailed_stats)
+		if(display_stats /*|| detailed_stats*/)
 			Processor::COLLECT_STATS(props) = true;
 
 		// any script
@@ -265,8 +264,8 @@ protected:
 		}
 
 		// display detail of statistics
-		if(detailed_stats && StatInfo::Iter(workspace())())
-			genDetails(entry, props);
+		/*if(detailed_stats && StatInfo::Iter(workspace())())
+			genDetails(entry, props);*/
 	}
 
 private:
@@ -276,56 +275,8 @@ private:
 	SwitchOption list;
 	SwitchOption timed;
 	SwitchOption display_stats;
-	SwitchOption detailed_stats;
 	SwitchOption wcet_stats;
 	string bin, task;
-
-	/**
-	 * Generate detailed statistics.
-	 * @param entry	Entry name.
-	 * @param props	Current properties.
-	 */
-	void genDetails(string entry, PropList& props) {
-		sys::Path spath = entry + "-stats";
-
-		// remove directory if it already exist
-		if(spath.exists()) {
-			if(!spath.isDir())
-				throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
-			else
-				try
-					{ spath.remove();; }
-				catch(sys::SystemException& e) {
-					throw otawa::Exception(_ << "cannot remove " << spath << " to output statistics: " << e.message());
-				}
-		}
-
-		// create the directory
-		try
-			{ sys::System::makeDir(spath); }
-		catch(sys::SystemException& e)
-			{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
-
-		// generate the statistics
-		for(StatInfo::Iter stat(workspace()); stat(); stat++) {
-			string id = string(stat->id()).replace("/", "-");
-			io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
-			Output out(*stream);
-			StatOutput sout(out);
-			stat->collect(sout);
-			delete stream;
-		}
-
-		// output the CFG
-		try {
-			cfgio::OUTPUT(props) = spath / "cfg.xml";
-			cfgio::LINE_INFO(props) = true;
-			workspace()->run<cfgio::Output>(props);
-		}
-		catch(sys::SystemException& e) {
-			throw otawa::Exception(_ << "cannot write CFG in statistics: " << e.message());
-		}
-	}
 
 };
 

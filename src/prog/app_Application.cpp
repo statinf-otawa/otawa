@@ -22,9 +22,12 @@
 #include <elm/io/ansi.h>
 #include <elm/sys/System.h>
 #include <otawa/app/Application.h>
+#include <otawa/cfgio/Output.h>
 #include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/stats/StatInfo.h>
 #include <otawa/util/SymAddress.h>
 #include <otawa/prog/Manager.h>
+
 #include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa {
@@ -129,6 +132,19 @@ namespace otawa {
  *	* log -- current log system
  *	* logFor() -- test the logging level.
  */
+
+class StatOutput: public StatCollector::Collector {
+public:
+	StatOutput(Output& out): _out(out) { }
+	virtual ~StatOutput() { }
+	virtual void collect(const Address &address, t::uint32 size, int value, const ContextualPath& ctx) {
+		_out << value << "\t" << address << "\t" << size << "\t" <<  ctx << io::endl;
+	}
+
+private:
+	Output& _out;
+};
+
 
 /**
  * @class LogOption
@@ -275,6 +291,8 @@ Application::Application(const Make& make):
 	sets(option::ListOption<string>::Make(*this).cmd("--add-prop").description("set a configuration property").argDescription("ID=VALUE")),
 	params(option::ListOption<string>::Make(*this).cmd("--load-param").description("add a load parameter").argDescription("ID=VALUE")),
 	ff(option::ListOption<string>::Make(*this).cmd("--flowfacts").cmd("-f").description("select the flowfacts to load").argDescription("PATH")),
+	work_dir(option::Value<string>::Make(*this).cmd("--work-dir").description("change the working directory").arg("PATH")),
+	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
 	log_level(*this),
 	props2(0),
 	result(0),
@@ -378,6 +396,8 @@ int Application::run(int argc, char **argv) {
 
 		// load the program
 		ws = MANAGER.load(path, props);
+		if(work_dir)
+			ws->workDir(*work_dir);
 
 		// if required, load the flowfacts
 		if(ff)
@@ -440,16 +460,71 @@ void Application::work(PropList &props) {
 		// determine entry address
 		Address addr = parseAddress(_args[i]);
 		TASK_ADDRESS(props) = addr;
+		if(record_stats)
+			Processor::COLLECT_STATS(props) = true;
 
-		// perform the computation
+		// prepare properties
 		props2 = new PropList(props);
 		ASSERT(props2);
+
+		// work on the current task
 		work(_args[i], *props2);
+		if(record_stats)
+			stats();
+
+		// cleanup properties
 		delete props2;
 		props2 = 0;
 
 	}
 }
+
+
+/**
+ * Generate statistics for the current workspace.
+ */
+void Application::stats() {
+	sys::Path spath = workspace()->workDir() / "stats";
+
+	// remove directory if it already exist
+	if(spath.exists()) {
+		if(!spath.isDir())
+			throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
+		else
+			try
+				{ spath.remove(); }
+			catch(sys::SystemException& e) {
+				throw otawa::Exception(_ << "cannot remove " << spath << " to output statistics: " << e.message());
+			}
+	}
+
+	// create the directory
+	try
+		{ sys::System::makeDir(spath); }
+	catch(sys::SystemException& e)
+		{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
+
+	// generate the statistics
+	for(StatInfo::Iter stat(workspace()); stat(); stat++) {
+		string id = string(stat->id()).replace("/", "-");
+		io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
+		Output out(*stream);
+		StatOutput sout(out);
+		stat->collect(sout);
+		delete stream;
+	}
+
+	// output the CFG
+	try {
+		cfgio::OUTPUT(props) = spath / "cfg.xml";
+		cfgio::LINE_INFO(props) = true;
+		workspace()->run<cfgio::Output>(props);
+	}
+	catch(sys::SystemException& e) {
+		throw otawa::Exception(_ << "cannot write CFG in statistics: " << e.message());
+	}
+}
+
 
 
 /**

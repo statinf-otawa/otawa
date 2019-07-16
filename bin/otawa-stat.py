@@ -166,6 +166,9 @@ class Task:
 
 class Decorator:
     
+    def major(self):
+        return None
+    
     def start_cfg(self, cfg):
         pass
 
@@ -182,7 +185,7 @@ class Decorator:
         pass
 
 def read_cfg(path):
-    cfg_path = os.path.join(path, "cfg.xml")
+    cfg_path = os.path.join(path, "stats/cfg.xml")
     try:
         
         # open the file
@@ -252,7 +255,7 @@ def norm(name):
 def output_CFG(path, task, decorator):
     
     # make directory
-    dir = os.path.join(path, "cfg")
+    dir = os.path.join(path, "%s-cfg" % decorator.major())
     if os.path.exists(dir):
         shutil.rmtree(dir)
     os.mkdir(dir)
@@ -301,7 +304,7 @@ def output_CFG(path, task, decorator):
 
 
 def read_stat(dir, task, stat):
-    inp = open(os.path.join(dir, stat + ".csv"))
+    inp = open(os.path.join(dir, "stats", stat + ".csv"))
     for l in inp.readlines():
         fs = l[:-1].split("\t")
         assert len(fs) == 4
@@ -331,6 +334,9 @@ class BaseDecorator(Decorator):
             for id in self.stats:
                 task.max.set_max(id, g.max.get_val(id))
                 task.sum.add_val(id, g.sum.get_val(id))
+    
+    def major(self):
+        return self.stats[0]
     
     def bb_label(self, bb, out):
         for id in self.stats:
@@ -614,7 +620,7 @@ parser.add_argument('--color-stat', '-s', action="store", help="statistics used 
 parser.add_argument('--source', '-S', action="store_true", help="output sources colored according to statistics")
 args = parser.parse_args()
 task = args.task
-dir = args.task + "-stats"
+dir = args.task + "-otawa"
 stats = args.stats
 if stats == []:
     if args.all:
@@ -633,7 +639,7 @@ if args.no_color:
 
 # list statistics
 if args.list:
-    for f in get_all_stats(dir):
+    for f in get_all_stats(os.path.join(dir, "stats")):
         sys.stdout.write("%s\n" % f)
 
 # produce output

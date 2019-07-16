@@ -7,6 +7,6 @@ set(owcet_SOURCES
 
 add_executable(owcet ${owcet_SOURCES})
 
-target_link_libraries(owcet otawa cfgio ${LIBELM})
+target_link_libraries(owcet otawa ${LIBELM})
 
 install(TARGETS owcet DESTINATION bin)

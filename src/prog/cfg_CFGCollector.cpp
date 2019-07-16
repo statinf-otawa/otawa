@@ -236,6 +236,10 @@ void CFGCollector::cleanup(WorkSpace *ws) {
 	// install the view
 	//view::Manager::add(ws, &ASSEMBLY_VIEW);
 
+	// if needed, set task name to the workspace
+	if(ws->name() == "")
+		ws->name(coll->entry()->name());
+
 	// cleanup all
 	AbstractCFGBuilder::cleanup(ws);
 }

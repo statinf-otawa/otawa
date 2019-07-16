@@ -2135,6 +2135,13 @@ class DotWindow(Gtk.Window):
 
     def open_file(self, filename):
 
+        # !!OTAWA!!
+        # if filename is a directory, look for index.dot
+        if os.path.isdir(filename):
+            aname = os.path.join(filename, "index.dot")
+            if os.access(aname, os.R_OK):
+                filename = aname
+
         # not already opened?
         for i in range(0, self.notebook.get_n_pages()):
             if filename == self.notebook.get_nth_page(i).filename:

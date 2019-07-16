@@ -46,11 +46,11 @@ void MultipleDotDisplayer::setup(WorkSpace *ws) {
 	if(out)
 		dir = out;
 	else
-		dir = sys::Path(ws->process()->program()->name()).basePart();
+		dir = ws->workDir() / "cfg";
 
 	// build it or use it
 	if(!dir.exists())
-		sys::System::makeDir(dir);
+		dir.makeDirs();
 }
 
 /**

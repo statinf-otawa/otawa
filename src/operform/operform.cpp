@@ -33,7 +33,7 @@ using namespace otawa;
 class OPerform: public Application {
 public:
 	OPerform(void):
-		Application(Make("operform", Version(0, 1, 0))
+		Application(Make("operform", Version(1, 0, 0))
 			.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.")
 			.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*")),
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),

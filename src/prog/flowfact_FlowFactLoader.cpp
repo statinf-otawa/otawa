@@ -632,6 +632,10 @@ void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
 			load(ws, paths[i]);
 	else {
 		bool done = false;
+		Vector<sys::Path> to_test;
+
+		// build the list of paths
+
 		Path path;
 
 		// replace suffix with "ff"

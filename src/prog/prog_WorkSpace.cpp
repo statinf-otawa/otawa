@@ -32,6 +32,7 @@
 #include <otawa/proc/FeatureDependency.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Registry.h>
+#include <otawa/prog/File.h>
 #include <otawa/prog/Loader.h>
 #include <otawa/prog/Symbol.h>
 #include <otawa/prog/WorkSpace.h>
@@ -996,5 +997,62 @@ Inst *WorkSpace::start(void) {
 Inst *WorkSpace::findInstAt(address_t addr) {
 	return proc->findInstAt(addr);
 }
+
+/**
+ * @fn string WorkSpace::name() const;
+ * Get the name of the workspace (if any) or an empty string.
+ * @return	Workspace name.
+ */
+
+/**
+ * @fn WorkSpace& WorkSpace::name(string name);
+ * Set the name of the workspace.
+ * @param name	New name of the workspace.
+ */
+
+/**
+ * Get the working directory. If the binary has for path DIR/FILE.EXT
+ * and if the workspace has for name NAME, the working directory is:
+ *
+ * DIR/NAME-otawa
+ *
+ * If the workspace has no name, the working directory is:
+ *
+ * DIR/FILE-otwaa
+ *
+ * @return	Working directory path.
+ */
+sys::Path WorkSpace::workDir() {
+	if(wdir.isEmpty()) {
+		string task;
+		if(_name != "")
+			task = _name;
+		else
+			task = sys::Path(process()->program()->name()).withoutExt().namePart();
+		wdir = sys::Path(process()->program()->name()).parent() / (task + "-otawa");
+	}
+	return wdir;
+}
+
+/**
+ * Build and return the working directory.
+ * @return	Working directory path.
+ * @throw elm::sys::SystemException		If there is an IO error.
+ */
+sys::Path WorkSpace::makeWorkDir() {
+	sys::Path p = workDir();
+	if(!p.isDir()) {
+		if(p.exists())
+			p.remove();
+		p.makeDirs();
+	}
+	return p;
+}
+
+/**
+ * @fn WorkSpace& WorkSpace::workDir(sys::Path path);
+ * Set the path of the working directory.
+ * @param path	new path to the working directory.
+ */
 
 } // otawa

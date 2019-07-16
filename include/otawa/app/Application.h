@@ -75,6 +75,7 @@ protected:
 	void error(string msg);
 	void warn(string msg);
 	void info(string msg);
+	void stats();
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s);
@@ -86,6 +87,8 @@ private:
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;
+	option::Value<string> work_dir;
+	option::SwitchOption record_stats;
 	LogOption log_level;
 	elm::sys::Path path;
 	Vector<string> _args;

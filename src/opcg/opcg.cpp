@@ -257,16 +257,9 @@ protected:
 		sys::Path path;
 		if(out_path)
 			path = out_path;
-		else {
-			path = workspace()->process()->program()->name();
-			path = path.withoutExt();
-			string name = path.namePart();
-			if(entry != "main")
-				name = name + "-" + entry;
-			name = name + "-pcg";
-			path = path.parent() / name;
-		}
-		
+		else
+			path = workspace()->makeWorkDir() / "pcg";
+
 		// Display the PCG
 		PCGDecorator dec(stat);
 		display::Displayer *disp = display::Provider::display(pcg, dec, out_type);
