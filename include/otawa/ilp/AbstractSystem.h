@@ -76,19 +76,24 @@ class AbstractSystem: public System {
 	};
 
 public:
-	AbstractSystem(void);
-	virtual ~AbstractSystem(void);
-	virtual Constraint *newConstraint(Constraint::comparator_t comp, double constant);
-	virtual Constraint *newConstraint(const string& label, Constraint::comparator_t comp, double constant);
-	virtual void addObjectFunction(double coef, Var *var);
-	virtual Var *newVar(const string& name);
-	virtual int countVars(void);
-	virtual int countConstraints(void);
-	virtual dyndata::AbstractIter<ilp::Constraint*> *constraints(void);
-	virtual dyndata::AbstractIter<ilp::Constraint::Term> *objTerms(void);
-	virtual void exportLP(io::Output& out);
-	virtual void dumpSolution(io::Output& out);
-	virtual Var *newVar(Var::type_t type, const string& name);
+	AbstractSystem(bool max = true);
+	~AbstractSystem();
+	inline bool isMaximizing() const { return _max; }
+	inline bool isMinimizing() const { return !_max; };
+
+	Constraint *newConstraint(Constraint::comparator_t comp, double constant) override;
+	Constraint *newConstraint(const string& label, Constraint::comparator_t comp, double constant) override;
+	void addObjectFunction(double coef, Var *var) override;
+	Var *newVar(const string& name) override;
+	int countVars() override;
+	int countConstraints() override;
+	dyndata::AbstractIter<ilp::Constraint*> *constraints() override;
+	dyndata::AbstractIter<ilp::Constraint::Term> *objTerms() override;
+	void exportLP(io::Output& out) override;
+	void dumpSolution(io::Output& out) override;
+	Var *newVar(Var::type_t type, const string& name) override;
+	void resetObjectFunction() override;
+	void remove(otawa::ilp::Constraint*) override;
 
 protected:
 	int index(ilp::Var *var);
@@ -126,6 +131,8 @@ private:
 	FragTable<AbstractConstraint *> conss;
 	Expression obj;
 	bool cleaning;
+	bool _max;
+	List<int> free;
 };
 
 } }		// otawa::ilp

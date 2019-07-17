@@ -24,6 +24,7 @@
 #include <otawa/ilp.h>
 #include <otawa/ilp/AbstractSystem.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <otawa/prog/Manager.h>
 #include <otawa/prog/WorkSpace.h>
 #include <elm/debug.h>
 
@@ -61,19 +62,19 @@ public:
 
 	/**
 	 */
-	System(ilp::ILPPlugin *plugin): vals(0), result(0), _plugin(plugin) {
+	System(ilp::ILPPlugin *plugin, bool max): vals(0), result(0), _plugin(plugin) {
 	}
 
 	/**
 	 */
-	virtual ~System(void) {
+	~System(void) {
 		if(vals)
 			delete vals;
 	}
 
 	/**
 	 */
-	virtual bool solve(WorkSpace *ws) {
+	bool solve(WorkSpace *ws) override {
 		Monitor mon;
 		return solve(ws, mon);
 	}
@@ -81,19 +82,17 @@ public:
 
 	/**
 	 */
-	virtual elm::string lastErrorMessage(void) {
+	elm::string lastErrorMessage(void) override {
 		return this->last_message;
 	}
 
 	/**
 	 */
-	virtual ilp::ILPPlugin *plugin(void) {
+	ilp::ILPPlugin *plugin(void) override {
 		return _plugin;
 	}
 
-	/**
-	 */
-	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon) {
+	bool solve(WorkSpace *ws, otawa::Monitor& mon) override {
 
 		// prepare environment
 		IloEnv _env;
@@ -108,7 +107,7 @@ public:
 
 		// build the variable
 		IloNumVarArray vars(_env);
-		for(VarIter var(this); var; var++) {
+		for(VarIter var(this); var(); var++) {
 			switch(var->type()) {
 			case ilp::Var::BIN:		vars.add(IloNumVar(_env, 0, 1, IloNumVar::Int)); break;
 			case ilp::Var::INT:		vars.add(IloNumVar(_env, 0, +IloInfinity, IloNumVar::Int)); break;
@@ -123,16 +122,20 @@ public:
 		// build the objective function
 		{
 			IloNumExpr expr(_env, 0);
-			for(ObjTermIterator term(this); term; term++)
+			for(ObjTermIterator term(this); term(); term++)
 				expr += (*term).snd * vars[index((*term).fst)];
-			IloObjective obj = IloMaximize(_env, expr);
+			IloObjective obj;
+			if(isMaximizing())
+				obj = IloMaximize(_env, expr);
+			else
+				obj = IloMinimize(_env, expr);
 			model.add(obj);
 		}
 
 		// build the constraints
-		for(AbstractSystem::ConstIter cons(this); cons; cons++) {
+		for(AbstractSystem::ConstIter cons(this); cons(); cons++) {
 			IloNumExpr expr(_env);
-			for(ilp::AbstractConstraint::TermIter term(cons); term; term++) {
+			for(ilp::AbstractConstraint::TermIter term(*cons); term(); term++) {
 				ASSERT(index((*term).fst) < vars.getSize());
 				expr += (*term).snd * vars[index((*term).fst)];
 			}
@@ -177,12 +180,12 @@ public:
 		}
 	}
 
-	virtual double valueOf(ilp::Var *var) {
+	double valueOf(ilp::Var *var) override {
 		ASSERTP(vals, "cplex: unsolved system");
 		return (*vals)[index(var)];
 	}
 
-	virtual double value(void) {
+	double value() override {
 		ASSERTP(vals, "cplex: solution not computed");
 		return result;
 	}
@@ -200,9 +203,9 @@ public:
 	Plugin(void): ILPPlugin(make("cplex", OTAWA_ILP_VERSION)
 		.version(Version(1, 0, 0))
 		.description("ILP plugin based on CPlex")
-		.license(Manager::copyright)) { }
+		.license(otawa::Manager::copyright)) { }
 
-	virtual ilp::System *newSystem(void) { return new System(this); }
+	ilp::System *newSystem(bool max) override { return new System(this, max); }
 
 };
 

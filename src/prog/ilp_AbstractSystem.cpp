@@ -164,8 +164,44 @@ void AbstractConstraint::reset(void) {
 
 
 /**
+ * Build a new ILP system.
+ * @param max	If set to true, the system is maximized. Set to false, it is minimized.
  */
-AbstractSystem::AbstractSystem(void): cleaning(false) {
+AbstractSystem::AbstractSystem(bool max): cleaning(false), _max(max) {
+}
+
+
+/**
+ * @fn bool AbstractSystem::isMaximizing() const;
+ * Test if the system is maximized.
+ * @return	True if the system is maximized, false else.
+ */
+
+
+/**
+ * @fn bool AbstractSystem::isMinimizing() const;
+ * Test if the system is minimized.
+ * @return	True if the system is minimized, false else.
+ */
+
+
+///
+void AbstractSystem::resetObjectFunction() {
+	obj.reset();
+}
+
+
+///
+void AbstractSystem::remove(Constraint *c) {
+	auto ac = static_cast<AbstractConstraint *>(c);
+	int i = ac->_idx;
+	delete conss[i];
+	if(i == conss.length() - 1)
+		conss.shrink(conss.length() - 1);
+	else {
+		conss[i] = nullptr;
+		free.add(i);
+	}
 }
 
 
@@ -201,7 +237,10 @@ Constraint *AbstractSystem::newConstraint(const string& label, Constraint::compa
 	AbstractConstraint *cons = new AbstractConstraint(label, comp, constant);
 	cons->_sys = this;
 	cons->_idx = conss.length();
-	conss.add(cons);
+	if(!free)
+		conss.add(cons);
+	else
+		conss[free.pop()] = cons;
 	return cons;
 }
 
