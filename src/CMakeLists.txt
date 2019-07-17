@@ -40,18 +40,6 @@ if(DOT)
 endif()
 
 
-# ILP plugins
-if(HAS_LP_SOLVE)
-	add_subdirectory(lp_solve)
-endif()
-if(LP_SOLVE5_LIB)
-	add_subdirectory(lp_solve5)
-endif()
-if(CPLEX_LIB)
-    add_subdirectory(cplex)
-endif()
-
-
 # tools
 add_subdirectory(bpred)
 add_subdirectory(config)

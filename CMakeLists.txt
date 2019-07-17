@@ -89,39 +89,6 @@ else()
 endif()
 
 
-# looking for CPLEX
-if(CPLEX_ROOT)
-    string(REPLACE "_" "-" x "${CMAKE_SYSTEM_PROCESSOR}")
-    string(TOLOWER "${x}_${CMAKE_SYSTEM_NAME}" CPLEX_OS)
-    set(CPLEX_LIB_PATH "${CPLEX_ROOT}/cplex/lib/${CPLEX_OS}/static_pic")
-    find_library(CPLEX_ILOCPLEX_LIB    "ilocplex"       PATHS "${CPLEX_LIB_PATH}")
-    find_library(CPLEX_CPLEX_LIB        "cplex"         PATHS "${CPLEX_LIB_PATH}")
-    set(CPLEX_CONCERT_PATH "${CPLEX_ROOT}/concert/lib/${CPLEX_OS}/static_pic")
-    find_library(CPLEX_CONCERT_LIB      "concert"       PATHS "${CPLEX_CONCERT_PATH}")
-    if(CPLEX_CPLEX_LIB AND CPLEX_ILOCPLEX_LIB AND CPLEX_CONCERT_LIB)
-        set(CPLEX_LIB "${CPLEX_ILOCPLEX_LIB}" "${CPLEX_CPLEX_LIB}" "${CPLEX_CONCERT_LIB}")
-        message(STATUS "CPLEX found at ${CPLEX_LIB}")
-        set(CPLEX_INCLUDE "${CPLEX_ROOT}/cplex/include" "${CPLEX_ROOT}/concert/include")
-	else()
-		message(STATUS "Cplex: cannot be found at ${CPLEX_ROOT}")
-	endif()
-endif()
-
-
-# setting default ILP plugin
-if(LP_SOLVE5_LIB)
-    set(DEFAULT_ILP lp_solve5)
-elseif(CPLEX_LIB)
-    set(DEFAULT_ILP cplex)
-endif()
-if(DEFAULT_ILP)
-    file(WRITE "default.eld"
-"[elm-plugin]
-path=$ORIGIN/${DEFAULT_ILP}
-")
-    install(FILES default.eld DESTINATION "${ILPDIR}")
-endif()
-
 # looking for version
 find_program(HG_PATH hg)
 if(HG_PATH)
