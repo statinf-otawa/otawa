@@ -1470,10 +1470,15 @@ dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
 		Address addr = this->scanAddress(velem, c).address();
 
 		// look for step and count
+		Option<long> base = scanInt(velem, "base");
 		Option<long> step = scanInt(velem, "step");
 		Option<long> count = scanInt(velem, "count");
-		if(!step || !count)
+		if(!step || !count || !base)
 			return dfa::Value(addr.offset());
+		else if((!step || !count) && base)
+			return dfa::Value(*base);
+		else if(base)
+			return dfa::Value(*base, *step, *count);
 		else
 			return dfa::Value(addr.offset(), *step, *count);
 	}

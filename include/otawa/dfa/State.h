@@ -70,6 +70,32 @@ private:
 };
 
 
+inline io::Output& operator<<(io::Output& out, const Value &val)
+{
+	if ((val.delta() == 0) && (val.count() ==  0))
+		out << "k(0x" << io::hex(val.base()) << ')';
+	else {
+		if(val.base() >= 0)
+			out << "(0x" << io::hex(val.base());
+		else {
+			t::int32 _baseToPrint = 0 - val.base();
+			out << "(-0x" << io::hex(_baseToPrint);
+		}
+		if(val.delta() >= 0)
+			out << ", 0x" << io::hex(val.delta());
+		else {
+			t::int32 _deltaToPrint =  0 - val.delta();
+			out << ", -0x" << io::hex(_deltaToPrint);
+		}
+		if(val.count() == 0xFFFFFFFF)
+			out << ", inf)";
+		else
+			out << ", 0x" << io::hex(val.count()) << ')';
+	}
+	return out;
+}
+
+
 class MemCell {
 public:
 	inline MemCell(void): _type(&Type::no_type) { }
