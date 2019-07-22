@@ -256,7 +256,16 @@ PotentialValue DynamicBranchingAnalysis::find(BasicBlock* bb, MemID id, const cl
 				case sem::CMP:		// d <- a ~ b
 				case sem::CMPU:		// d <- a ~u b
 					// elm::cerr << elm::log::Debug::debugPrefix(__FILE__, __LINE__,__FUNCTION__) << "not handled sem inst: " << i << io::endl;
-					elm::cerr << "WARNING: unsupported semantic instruction " << i << io::endl;
+					elm::cerr << "WARNING: unsupported semantic instruction " << i << ", obtained the value from clpState" << io::endl;
+
+					if(id.fst == REG) {
+						clp::Value valueFromCLP = clpState[semantics.length()].get(clp::Value(clp::REG, id.snd, 0,0));
+						PotentialValue r = setFromClp(valueFromCLP);
+						return r;
+					}
+					else
+						return PotentialValue();
+
 					return find(bb,id,clpin,globalin,semantics);
 
 				case sem::BRANCH:	// perform a branch on content of register a

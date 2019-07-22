@@ -1000,6 +1000,7 @@ void Command::work(PropList &props) {
 
 	if(!debugging) {
 		// Load flow facts and record unknown values
+		workspace()->require(DynFeature("otawa::dfa::INITIAL_STATE_FEATURE"), props);
 		QuestFlowFactLoader *ffl = workspace()->run<QuestFlowFactLoader>(props);
 
 		// determine printer
