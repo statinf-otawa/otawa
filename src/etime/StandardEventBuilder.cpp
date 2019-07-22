@@ -145,7 +145,14 @@ public:
 	}
 
 	virtual cstring name(void) const { return "L1 data cache"; }
-	virtual string detail(void) const { return _ << *dcache::CATEGORY(_acc) << " L1-D"; }
+	virtual string detail(void) const {
+		if(_acc.kind() == dcache::BlockAccess::BLOCK)
+			return _ << *dcache::CATEGORY(_acc) << " L1-D" << " @ " << _acc.block().address();
+		else if(_acc.kind() == dcache::BlockAccess::RANGE)
+			return _ << *dcache::CATEGORY(_acc) << " L1-D" << " @ set[" << _acc.first() << ":" << _acc.last() << "]";
+		else
+			return _ << *dcache::CATEGORY(_acc) << " L1-D any";
+	}
 
 	virtual int weight(void) const {
 		switch(dcache::CATEGORY(_acc)) {
@@ -319,7 +326,7 @@ ot::time StandardEventBuilder::costOf(Address addr, bool write) {
 	if(!bank || !bank->contains(addr)) {
 		const hard::Bank *new_bank = mem->get(addr);
 		if(!new_bank)
-			return 0;
+			return -1;
 		bank = new_bank;
 	}
 	return write ? bank->writeLatency() : bank->latency();
@@ -377,20 +384,19 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				break;
 			case dcache::BlockAccess::BLOCK:
 				cost = costOf(acc.block().address(), write);
-				if(!cost)
+				if(cost == -1)
 					goto error;
 				break;
 			case dcache::BlockAccess::RANGE:
 				cost = costOf(Address(acc.first()), write);
-				if(!cost)
+				if(cost == -1)
 					goto error;
 				break;
 			error:
-				if(!cost)
-					warn(_ << "memory instruction at " << acc.instruction()->address() << " access address " << acc.block().address() << " that is out of banks!");
+				warn(_ << "memory instruction at " << acc.instruction()->address() << " access address " << acc.block().address() << " that is out of banks!");
 				break;
 			}
-			if(!cost)
+			if(cost == -1)
 				cost = action == write ? mem->worstWriteAccess() : mem->worstReadAccess();
 
 			// make the event

@@ -236,6 +236,8 @@ p::id<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_
  */
 p::id<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
 
+p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES("otawa::dcache::NC_DATA_ACCESSES", pair(0, (NonCachedAccess *)0));
+
 
 /**
  * @class Block

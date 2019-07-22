@@ -165,6 +165,7 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 							throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 									<< " accessed from " << man->inst()->address());
 						if(!bank->isCached()) {
+							ncaccs.add(NonCachedAccess(inst, p.snd, Address(p.fst.lower())));
 							if(logFor(LOG_INST))
 								log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 							continue;
@@ -186,7 +187,8 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 							if(!bank)
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
-							else if(!bank->isCached()) {
+							else if(!bank->isCached()) { // FIXME: what if l is not cacheable but h is cacheable?
+								ncaccs.add(NonCachedAccess(inst, p.snd));
 								if(logFor(LOG_INST))
 									log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 								continue;
@@ -229,6 +231,19 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 	}
 	DATA_BLOCKS(bb) = pair(accs.count(), tab);
 	accs.clear();
+
+
+	NonCachedAccess *nctab = new NonCachedAccess[ncaccs.length()];
+	for(int i = 0; i < ncaccs.count(); i++) {
+		nctab[i] = ncaccs[i];
+		if(logFor(LOG_BB))
+			log << "\t\t\tNonCachedAccess:" << nctab[i] << io::endl;
+	}
+	NC_DATA_ACCESSES(bb) = pair(ncaccs.count(), nctab);
+	ncaccs.clear();
+
+
+
 }
 
 } }	// otawa::dcache

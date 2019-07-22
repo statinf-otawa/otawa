@@ -49,6 +49,7 @@ private:
 	const hard::Cache *cache;
 	const hard::Memory *mem;
 	Vector<BlockAccess> accs;
+	Vector<NonCachedAccess> ncaccs;
 	BlockCollection *colls;
 	clp::Manager *man;
 };

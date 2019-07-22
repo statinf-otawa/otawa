@@ -181,6 +181,45 @@ inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.pri
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
 io::Output& operator<< (io::Output& out, BlockAccess::action_t action);
 
+
+class NonCachedAccess: public PropList {
+public:
+	typedef enum kind_t {
+		ANY = 0,
+		SINGLE = 1,
+		MULTIPLE = 2
+	} kind_t;
+
+	inline NonCachedAccess(void): inst(0), _kind(ANY), _action(NONE) { }
+	inline NonCachedAccess(Inst* instx, BlockAccess::action_t actx): inst(instx), _kind(SINGLE), _action(actx) { ASSERT(instx); }
+	inline NonCachedAccess(Inst* instx, BlockAccess::action_t actx, Address addrx): inst(instx), _kind(SINGLE), _action(actx) { ASSERT(instx); addresses.add(addrx); }
+	inline NonCachedAccess(const NonCachedAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action), addresses(acc.addresses) { }
+	inline NonCachedAccess& operator=(const NonCachedAccess& acc) { inst = acc.inst; _kind = acc._kind; _action = acc._action; addresses = acc.addresses; return *this; }
+
+	inline Inst *instruction(void) const { return inst; }
+	inline kind_t kind(void) const { return kind_t(_kind); }
+	inline bool isAny(void) const { return _kind == ANY; }
+	inline BlockAccess::action_t action(void) const { return BlockAccess::action_t(_action); }
+	inline void addAddress(Address addr) { addresses.addLast(addr); _kind = MULTIPLE;}
+	const Vector<Address>& getAddresses(void) const { return addresses; }
+	inline void print(io::Output& out) const {
+		out << inst->address() << " (" << inst << "): " << BlockAccess::action_t(_action) << ' ';
+		if(addresses.count() == 1)
+			out << addresses[0];
+		else if(addresses.count() == 0)
+			out << "multiple addresses";
+		else
+			out << "multiple addresses";
+	}
+
+private:
+	Inst *inst;
+	t::uint8 _kind, _action;
+	Vector<Address> addresses;
+};
+
+inline io::Output& operator<<(io::Output& out, const NonCachedAccess& acc) { acc.print(out); return out; }
+
 // DirtyManager class
 class DirtyManager {
 public:
@@ -228,6 +267,7 @@ typedef Vector<acs_stack_t> acs_stack_table_t;
 extern p::feature DATA_BLOCK_FEATURE;
 extern p::feature CLP_BLOCK_FEATURE;
 extern p::id<Pair<int, BlockAccess *> > DATA_BLOCKS;
+extern p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES;
 extern p::id<const BlockCollection *> DATA_BLOCK_COLLECTION;
 extern p::id<Address> INITIAL_SP;
 
