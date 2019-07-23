@@ -123,7 +123,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray
 		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
 	else if(!bank->isCached()) {
 		if(isVerbose())
-			log << "INFO: block " << addr << "not cached.\n";
+			log << "INFO: block " << addr << " not cached.\n";
 		return;
 	}
 
@@ -186,7 +186,14 @@ void LBlockBuilder::processBB(WorkSpace *fw, CFG *cfg, Block *b) {
 			addLBlock(bb, *inst, index, lblocks, cache->round(inst->address().offset() + inst->size() - 1));
 		}
 	}
-	ASSERT(index == num_lblocks); // to make sure the last instruction falls to the last LBlock created
+	// ASSERT(index == num_lblocks); // to make sure the last instruction falls to the last LBlock created // however, blocks may not be cached.
+	// if the BB is not fully cached (existing un-cached segments, create a new LBlock AllocArray and re-assign to the BB_LBLOCKS
+	if(index != num_lblocks) {
+		AllocArray<LBlock*> *lblocks2 = new AllocArray<LBlock*>(index);
+		for(int i = 0; i < index; i++)
+			lblocks2->set(i, lblocks->get(i));
+		BB_LBLOCKS(bb) = lblocks2;
+	}
 }
 
 
