@@ -1,5 +1,5 @@
 /*
- *	FlowAwareRanking class interface
+ *	DefaultBlockStore class
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2014, IRIT UPS.
@@ -19,28 +19,36 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_AI_FLOWAWARERANKING_H_
-#define OTAWA_AI_FLOWAWARERANKING_H_
+#ifndef OTAWA_AI_DEFAULTBLOCKSTORE_H_
+#define OTAWA_AI_DEFAULTBLOCKSTORE_H_
 
-#include <otawa/cfg/CFG.h>
-#include <otawa/proc/Processor.h>
-#include "features.h"
+#include <otawa/cfg/features.h>
 
 namespace otawa { namespace ai {
 
-class FlowAwareRanking: public Processor, public CFGRanking {
+using namespace elm;
+
+template <class D>
+class DefaultBlockStore {
 public:
-	static p::declare reg;
-	FlowAwareRanking(p::declare& r = reg);
 
-	int rankOf(Block *v) override;
+	DefaultBlockStore(): size(0), tab(nullptr) { }
+	~DefaultBlockStore() { if(tab != nullptr) delete [] tab; }
 
-protected:
-	void *interfaceFor(const AbstractFeature& f) override;
-	void processWorkSpace(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
+	void init(const CFGCollection& c, const D& x) {
+		size = c.countBlocks();
+		tab = new D [size];
+		array::set(tab, size, x);
+	}
+
+	inline const D& get(Block *v) const { return tab[v->id()]; }
+	inline void set(Block *v, const D& x) { tab[v->id()] = x; }
+
+private:
+	int size;
+	D *tab;
 };
 
 } }		// otawa::ai
 
-#endif /* OTAWA_AI_FLOWAWARERANKING_H_ */
+#endif /* OTAWA_AI_DEFAULTBLOCKSTORE_H_ */

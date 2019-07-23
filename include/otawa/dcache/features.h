@@ -25,6 +25,7 @@
 #include <otawa/prop/PropList.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/hard/Cache.h>
+#include <otawa/util/Bag.h>
 
 namespace otawa {
 

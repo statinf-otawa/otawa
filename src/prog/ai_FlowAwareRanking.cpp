@@ -41,6 +41,7 @@ namespace otawa { namespace ai {
  *
  *	@par Provided features
  *		* @ref RANKING_FEATURE
+ *		* @ref CFG_RANKING_FEATURE
  *
  * @ingroup ai
  */
@@ -52,12 +53,28 @@ p::declare FlowAwareRanking::reg = p::init("otawa::ai::FlowAwareRanking", Versio
 	.make<FlowAwareRanking>()
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
-	.provide(RANKING_FEATURE);
+	.provide(RANKING_FEATURE)
+	.provide(CFG_RANKING_FEATURE);
 
 
 /**
  */
 FlowAwareRanking::FlowAwareRanking(p::declare& r): Processor(r) {
+}
+
+
+///
+void *FlowAwareRanking::interfaceFor(const AbstractFeature& f) {
+	if(&f == &CFG_RANKING_FEATURE)
+		return static_cast<CFGRanking *>(this);
+	else
+		return nullptr;
+}
+
+
+///
+int FlowAwareRanking::rankOf(Block *v) {
+	return *RANK_OF(v);
 }
 
 
@@ -79,7 +96,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 		int r = wl.head().snd;
 		wl.get();
 		RANK_OF(v) = r;
-		cerr << "DEBUG: propagating after " << v << " with rank " << r << io::endl;
+		//cerr << "DEBUG: propagating after " << v << " with rank " << r << io::endl;
 		r++;
 
 		// propagate at subprogram call
@@ -116,7 +133,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 	if(logFor(LOG_BLOCK)) {
 		for(auto g: *coll) {
-			log << "\tCFG " << *g << io::endl;
+			log << "\tCFG " << g << io::endl;
 			for(auto v = g->blocks(); v(); v++)
 				log << "\t\t" << *v << ": " << *RANK_OF(*v) << io::endl;
 		}

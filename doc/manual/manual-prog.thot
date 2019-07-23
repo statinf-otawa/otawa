@@ -38,9 +38,9 @@ In turn, a ''File'' is a collection of segments -- class ''Segment''. A segment 
 
 The easiest to access instructions -- class ''Inst'', is to use the process function ''start''() that gives the first instruction executed by the program. From this instruction, the next one can be accessed with ''Inst'' function ''nextInst''(). Another way to access an instruction is to use its address or its label with ''Process'' function ''findInstAt''(). Notice that basically, even in a segment defined as executable, there is a mix of instruction and data.
 
-The only way to separate is to follow the execution paths: the instruction building is performed according to the next of the analyzes. There is no other safe way to list the instructions instructions composing a program. One has also to notice the instructions does not form a partition of the memory: in some very complex CISC instruction set, it is possible to embed one instruction in another one.
+The only way to separate them is to follow the execution paths: the instruction building is performed according to the next of the analyzes. There is no other safe way to list the instructions instructions composing a program. One has also to notice the instructions does not form a partition of the memory: in some very complex CISC instruction set, it is possible to embed one instruction in another one.
 
-So it is for the data item: the same area can be used to contain different types of data according to the need and the organization of the program. Therefore, @(OTAWA) does not provide a fixed view of the data segments. Yet, it provides functions to readdata in initialized segments. This function family is called ''get''(a, x) and takes as parameters //a// the address to be read and //x// must be a variable of the type of data to read. The example below shows how to read an unsigned 16-bit integer:
+So it is for the data item: the same area can be used to contain different types of data according to the need and the organization of the program. Therefore, @(OTAWA) does not provide a fixed view of the data segments. Yet, it provides functions to read data in initialized segments. This function family is called ''get''(a, x) and takes as parameters //a// the address to be read and //x// must be a variable of the type of data to read. The example below shows how to read an unsigned 16-bit integer:
 <code c++>
 	t::uin16 x;
 	Address a = ...;
@@ -50,7 +50,7 @@ So it is for the data item: the same area can be used to contain different types
 
 Writing a loader plug-in is a complex task as a lot of useful but also complex information items can be extracted from machine instructions. To provide a bit of flexibility in the writing of these plug-ins, the exact set of available facilities is identified by features (as in the property system). They can be accessed by the process ''features''() function but are also recorded in the workspace and can be inquired with the workspace ''isProvided''() function. These features can be:
   * ''CONTROL_DECODING_FEATURE'' -- target address of branch instruction is provided,
-  * ''DELAYED_FEATURE'' and ''DELAYED2_FEATURE'' -- for instruction supporting it, information about delayed instruction and delaying behaviour,
+  * ''DELAYED_FEATURE'' and ''DELAYED2_FEATURE'' -- for instruction supporting it, information about delayed instruction and delaying behavior,
   * ''FLOAT_MEMORY_ACCESS_FEATURE'' -- memory read of floating-point data,
   * ''MEMORY_ACCESS_FEATURE'' -- memory read of integer data,
   * ''REGISTER_USAGE_FEATURE'' -- list hardware read and written instruction registers,
@@ -58,12 +58,24 @@ Writing a loader plug-in is a complex task as a lot of useful but also complex i
   * ''SEMANTICS_INFO_EXTENDED'' -- semantic instruction (see @ref:prog:sem@),
   * ''SEMANTICS_INFO_FLOAT'' -- semantic instruction (see @ref:prog:sem@),
   * ''SOURCE_LINE_FEATURE'' -- debugging information,
-  * ''VLIEW_SUPPORTED'' -- VLIW information for bundle building.
+  * ''VLIW_SUPPORTED'' -- #VLIW information for bundle building.
 
 
 ==== Instructions ====
 
 An instruction -- class ''Inst'' is the fundamental abstraction entity to support multiple instruction sets in @(OTAWA) framework. Basically, an instruction represents an atomic executable entity covering a small area of memory. Yet, it contains much more details about the instruction:
+* kind of the instructions,
+* read & written registers (''REGISTER_USAGE_FEATURE''),
+* target address for a branch instruction (''CONTROL_DECODING_FEATURE''),
+* delay policy for branch instruction on #IS supporting delayed-branch instructions (''DELAYED_FEATURE'', ''DELAYED_FEATURE2''),
+* semantics of the instruction (''SEMANTICS_INFO'', ''SEMANTICS_INFO_EXTENDED'', ''SEMANTICS_INFO_FLOAT'')
+* debugging information (''SOURCE_LINE_FEATURE'')
+* #VLIW support (''VLIW_SUPPORTED'')
+
+Notice the availability of these information depends on the features exported by the process and the corresponding is recalled after each information item. In this section only the kind of instruction is described but following sections cover the other aspects of an instruction.
+
+The kind of an instruction describes its nature, its type or the type of data it works on.
+
 
 
 

@@ -23,8 +23,22 @@
 
 #include <otawa/proc/Feature.h>
 
-namespace otawa { namespace ai {
+namespace otawa {
 
+class Block;
+
+namespace ai {
+
+// CFG ranking
+class CFGRanking {
+public:
+	virtual ~CFGRanking();
+	virtual int rankOf(Block *v) = 0;
+};
+extern p::interfaced_feature<CFGRanking> CFG_RANKING_FEATURE;
+
+
+// deprecated
 class PropertyRanking {
 public:
 	int rankOf(const PropList& props);

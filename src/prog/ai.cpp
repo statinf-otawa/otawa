@@ -24,10 +24,86 @@
 #include <otawa/ai/FlowAwareRanking.h>
 #include <otawa/ai/RankingAI.h>
 #include <otawa/dfa/ai.h>
+#include <otawa/ai/BlockAnalysis.h>
 
 using namespace elm;
 
 namespace otawa { namespace ai {
+
+/**
+ * Concept for an abstract interpretation on a CFG.
+ * @ingroup ai
+ */
+class CFGDomain {
+public:
+
+	/// Type of abstract values.
+	typedef struct abstract_value_t t;
+
+	/**
+	 * Called just before the abstract interpretation to initialize the domain.
+	 * @param ws	Current workspace.
+	 */
+	void setup(WorkSpace *ws);
+
+	/**
+	 * Called just after the abstract interpretation to clean up the resources
+	 * allocated for the domain.
+	 * @param ws	Current workspace.
+	 */
+	void cleanup(WorkSpace *ws);
+
+	/**
+	 * Get the initial abstract state (just before the CFG execution).
+	 * @return	Initial abstract state.
+	 */
+	t init(WorkSpace *ws);
+
+	/**
+	 * Get the bottom value.
+	 * @return	Bottom abstract state.
+	 */
+	t bot() const;
+
+	/**
+	 * Join two abstract states.
+	 * @param x1	First abstract state.
+	 * @param x2	Second abstract state.
+	 * @return		Joined abstract state.
+	 */
+	t join(const t& x1, const t& x2) const;
+
+	/**
+	 * Update the given abstract state according to the given CFG block.
+	 * @param v	CFG block to update with.
+	 * @param x	Abstract state to update.
+	 * @return	Updated abstract state x.
+	 */
+	t update(Block *v, const t& x) const;
+
+	/**
+	 * Test if two abstract states are equal.
+	 * @param x1	First abstract state.
+	 * @param x2	Second abstract state.
+	 * @return		True if both abstract states are equal, false else.
+	 */
+	bool equals(const t& x1, const t& x2) const;
+
+	/**
+	 * Assign an abstract state to another abstract state.
+	 * @param x	Assigned abstract state.
+	 * @param y	Abstract state to assign.
+	 */
+	void set(t& x, const t& y) const;
+
+	/**
+	 * Print an abstract state.
+	 * @param x		Abstract state to display.
+	 * @param out	Output to use.
+	 */
+	void print(const t& x, Output& out) const;
+};
+
 
 /**
  * @defgroup ai		New Abstract Interpretation Engine
@@ -36,7 +112,9 @@ namespace otawa { namespace ai {
  * It is most versatile as the previous module, @ref HalfAbsInt, and should be used instead
  * in OTAWA to perform analyzes.
  *
- * @section ai-principles Principles
+ * @section ai-processor Implementing an Abstract Interpretation
+ *
+ * @section ai-principles Principles(deprecated)
  *
  * The support for abstract interpretation is made of different classes that
  * are able to interact together according to the needs of the developer.
@@ -325,6 +403,113 @@ p::id<int> RANK_OF("otawa::ai::RANK_OF", -1);
  * 		* @ref FlowAwareRanking
  */
 p::feature RANKING_FEATURE("otawa::ai::RANKING_FEATURE", p::make<FlowAwareRanking>());
+
+
+/**
+ * @class CFGRanking
+ *
+ * This interface provides ranking for CFG, that is, based on BB. The ranking
+ * is an integer providing a hint to order calculation in an abstract
+ * interpretation. Lower is the ranker, sooner should the corresponding block
+ * be analyzed. The rank has no effect on the result of analysis but may
+ * significantly speed up the calculation time.
+ *
+ * Different policies can be designed for ranking. As default, the
+ * FlowAwareRanking processor is used.
+ *
+ * @ingroup ai
+ */
+
+///
+CFGRanking::~CFGRanking() {
+}
+
+/**
+ * @fn int CFGRanking::rankOf(Block *v);
+ * Get the rank for the given CFG block.
+ * @param v	CFG block to get rank for.
+ * @return	Rank of v.
+ */
+
+
+/**
+ * This feature ensures that a rank has been calculated for the block of the current CFGs.
+ * The rank is used to order the calculation of block in an abstract interpretation.
+ *
+ * @par Interface
+ * CFGRanking
+ *
+ * @par Implementation
+ * * FlowAwareRanking
+ *
+ * @ingroup ai
+ */
+p::interfaced_feature<CFGRanking> CFG_RANKING_FEATURE("otawa::ai::CFG_RANKING_FEATURE", p::make<FlowAwareRanking>());
+
+
+/**
+ * @class DefaultBlockStore
+ * This class is a store for abstract values of an abstract interpretation.
+ * It implements a map between CFG blocks and abstract values. The
+ * implementation uses an array idendex by the identifier of the blocks.
+ * To work, it uses the abstract domain for abstract value operations.
+ * Notice that the init() function must be called before any operation.
+ *
+ * @param D		Type of the abstract domain.
+ * @ingroup ai
+ */
+
+/**
+ * @fn void DefaultBlockStore::init(const CFGCollection& c, const D& x);
+ * Initialize the store (must be called before any operation and only once).
+ * @param c		CFG collection to store abstract values for.
+ * @param x		Default abstract value.
+ */
+
+/**
+ * @fn const D& DefaultBlockStore::get(Block *v) const;
+ * Get the value stored for a block.
+ * @param v	Block for which the abstract value is looked.
+ * @return	Abstract value associated with the block v.
+ */
+
+/**
+ * @fn void DefaultBlockStore::set(Block *v, const D& x);
+ * Set the abstract value x associated with block v.
+ * @param v	Block to store the value for.
+ * @param x	Stored abstract value.
+ */
+
+/**
+ * @class BlockAnalysis;
+ * Processor Implementing an abstract interpretation analysis at the level of
+ * CFG blocks, that is, the update function is called on the blocks. The
+ * customization, that the implementation of abstract interpretation itself,
+ * is based on a generic parameter that must implement the ai::CFGDomain
+ * concept.
+ *
+ * @ingroup ai
+ */
+
+/**
+ * @fn D& BlockAnalysis::domain();
+ * Get the abstract domain instance.
+ * @return	Abstract domain instance.
+ */
+
+/**
+ * @fn t BlockAnalysis::out(Block *v) const;
+ * Get the output state for CFG block v.
+ * @param v		Looked blocked.
+ * @return		Abstract output state for v.
+ */
+
+/**
+ * @fn t BlockAnalysis::in(Block *v) const;
+ * Get the input state for CFG block v.
+ * @param v		Looked blocked.
+ * @return		Abstract input state for v.
+ */
 
 } } 	// otawa::ai
 
