@@ -1,0 +1,35 @@
+<!ELEMENT cfg-collection (cfg,cfg*)>
+<!ATTLIST cfg-collection program	CDATA	#IMPLIED>
+
+<!ELEMENT cfg 	(property*,entry,bb*,exit,edge*)>
+<!ATTLIST cfg 	id		ID		#REQUIRED>
+<!ATTLIST cfg 	address	CDATA	#REQUIRED>
+<!ATTLIST cfg 	label	CDATA	"">
+<!ATTLIST cfg	number	CDATA	#REQUIRED>
+
+<!ELEMENT entry EMPTY>
+<!ATTLIST entry id		ID 		#REQUIRED>
+
+<!ELEMENT block (property*,inst*)>
+<!ATTLIST block	id		ID 		#REQUIRED>
+<!ATTLIST block	index	CDATA	#REQUIRED>
+<!ATTLIST block	address	CDATA 	#IMPLIED>
+<!ATTLIST block	size	CDATA	#IMPLIED>
+<!ATTLIST block	call	CDATA	#IMPLIED>
+
+<!ELEMENT exit EMPTY>
+<!ATTLIST exit id		ID 		#REQUIRED>
+
+<!ELEMENT edge (property*)>
+<!ATTLIST edge source		IDREF		#REQUIRED>
+<!ATTLIST edge target		IDREF		#IMPLIED>	<!-- should be ignored for call kind -->
+<!ATTLIST edge taken		(yes|no)	"no">
+<!ATTLIST edge not-taken	(yes|no)	"no">
+
+<!ELEMENT inst (property*)>
+<!ATTLIST inst	address	CDATA	#REQUIRED>
+<!ATTLIST inst	file	CDATA	#IMPLIED>
+<!ATTLIST inst	line	CDATA	#IMPLIED>
+
+<!ELEMENT property	(#PCDATA)>
+<!ATTLIST property	identifier		CDATA	 #REQUIRED>

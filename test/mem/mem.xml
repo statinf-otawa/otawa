@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<memory>
+	<banks>
+	
+		<bank>
+			<name>SRAM</name>
+			<address>0</address>
+			<size>0x10000</size>
+			<type>SPM</type>
+			<latency>1</latency>
+			<writable>true</writable>
+			<cached>false</cached>			
+		</bank>
+		
+		<bank>
+			<name>DRAM</name>
+			<address>0x8000</address>
+			<size>0x80000</size>
+			<type>DRAM</type>
+			<latency>20</latency>
+			<write_latency>10</write_latency>
+			<writable>true</writable>
+			<cached>true</cached>
+		</bank>
+		
+		<bank>
+			<name>flash</name>
+			<type>ROM</type>
+			<address>0x80000000</address>
+			<size>0x100000</size>
+			<latency>50</latency>
+			<writable>false</writable>
+			<cached>true</cached>
+		</bank>
+		
+	</banks>
+</memory>

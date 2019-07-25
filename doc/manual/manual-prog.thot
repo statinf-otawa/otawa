@@ -1,0 +1,104 @@
+====== Program Representation ======
+
+This chapter provides the description of most common program representations used in @(OTAWA). The low-level representation is directly extracted from the binary and represents a base for other program representation. The Control Flow Graph (#CFG) representation is very common in static analysis and represents the program as graph which vertices are list of instructions. It must be noted that this is the program representation used by the #IPET approach for #WCET computation. To get a higher overview of the program, Program Call Graphs (#PCG) represent subprogram as vertices and subprogram as edges. It is useful to detect and process recursion in program. 
+
+===== Low-level representation =====
+
+The low-level representation is built at load time of a program by the loader plug-in. It provides the structure of binary image in memory and also an abstraction about the machine instructions it contains. It is directly embedded in the workspace and can be shared between workspace.
+
+==== Processes ====
+
+The ''Process'' is the root of the low-level program representation. It represents the program image memory and provides access to its details:
+  * executable files composing the program (the program itself and its dynamic libraries)
+  * instructions composing the program
+  * raw bytes of the program image memory
+  * debugging information
+  * availibility of facilities provided by the loader.
+
+Most of the classes used in low-level representation designs memory areas and therefore support the functions:
+  * ''address''() -- base of the memory area,
+  * ''size''() -- size of the memory area (in bytes),
+  * ''topAddress''() -- address just after the last byte of the area (address + size).
+
+To obtain the ''Process'' of a workspace, one has to write:
+<code c++>
+	WorkSpace *ws = ...;
+	Process *proc = ws->process();
+</code>
+
+A ''Process'' is made of one program file -- class ''File'', and possibly, several dynamic library file. The program file is obtained by function ''program''() while the set of file composing the process can visited with function ''files''():
+<code c++>
+	for(auto f: proc->files())
+		/* do something */
+</code>
+
+In turn, a ''File'' is a collection of segments -- class ''Segment''. A segment is a, often named, memory range (defined by its based address and its size) which bytes shares the same properties (executable -- function ''isExecutable''(), writable -- function -- ''isWritable()'', initialized -- function ''isInitialized''() ). Segments are used to identify which memory areas contains code, read-only data, global data and so on. The set of segments is obtained by the function ''segments''().
+
+''File'' are also made of symbols -- class ''Symbol'', listed with file function ''symbols''. A symbol is mainly a label named symbolically identifying a memory area with a ''kind''() that may be ''FUNCTION'' for a subprogram, ''LABEL'' for a code label or ''DATA'' for global variable. Accessing a symbol by its name is also possible using ''Process'' function ''findSymbol''() or by its address ''Process'' function ''findSymbolAt''().
+
+The easiest to access instructions -- class ''Inst'', is to use the process function ''start''() that gives the first instruction executed by the program. From this instruction, the next one can be accessed with ''Inst'' function ''nextInst''(). Another way to access an instruction is to use its address or its label with ''Process'' function ''findInstAt''(). Notice that basically, even in a segment defined as executable, there is a mix of instruction and data.
+
+The only way to separate them is to follow the execution paths: the instruction building is performed according to the next of the analyzes. There is no other safe way to list the instructions instructions composing a program. One has also to notice the instructions does not form a partition of the memory: in some very complex CISC instruction set, it is possible to embed one instruction in another one.
+
+So it is for the data item: the same area can be used to contain different types of data according to the need and the organization of the program. Therefore, @(OTAWA) does not provide a fixed view of the data segments. Yet, it provides functions to read data in initialized segments. This function family is called ''get''(a, x) and takes as parameters //a// the address to be read and //x// must be a variable of the type of data to read. The example below shows how to read an unsigned 16-bit integer:
+<code c++>
+	t::uin16 x;
+	Address a = ...;
+	proc->get(a, x);
+	cout << "x = " << x << io::endl;
+</code>
+
+Writing a loader plug-in is a complex task as a lot of useful but also complex information items can be extracted from machine instructions. To provide a bit of flexibility in the writing of these plug-ins, the exact set of available facilities is identified by features (as in the property system). They can be accessed by the process ''features''() function but are also recorded in the workspace and can be inquired with the workspace ''isProvided''() function. These features can be:
+  * ''CONTROL_DECODING_FEATURE'' -- target address of branch instruction is provided,
+  * ''DELAYED_FEATURE'' and ''DELAYED2_FEATURE'' -- for instruction supporting it, information about delayed instruction and delaying behavior,
+  * ''FLOAT_MEMORY_ACCESS_FEATURE'' -- memory read of floating-point data,
+  * ''MEMORY_ACCESS_FEATURE'' -- memory read of integer data,
+  * ''REGISTER_USAGE_FEATURE'' -- list hardware read and written instruction registers,
+  * ''SEMANTICS_INFO'' -- semantic instruction (see @ref:prog:sem@),
+  * ''SEMANTICS_INFO_EXTENDED'' -- semantic instruction (see @ref:prog:sem@),
+  * ''SEMANTICS_INFO_FLOAT'' -- semantic instruction (see @ref:prog:sem@),
+  * ''SOURCE_LINE_FEATURE'' -- debugging information,
+  * ''VLIW_SUPPORTED'' -- #VLIW information for bundle building.
+
+
+==== Instructions ====
+
+An instruction -- class ''Inst'' is the fundamental abstraction entity to support multiple instruction sets in @(OTAWA) framework. Basically, an instruction represents an atomic executable entity covering a small area of memory. Yet, it contains much more details about the instruction:
+* kind of the instructions,
+* read & written registers (''REGISTER_USAGE_FEATURE''),
+* target address for a branch instruction (''CONTROL_DECODING_FEATURE''),
+* delay policy for branch instruction on #IS supporting delayed-branch instructions (''DELAYED_FEATURE'', ''DELAYED_FEATURE2''),
+* semantics of the instruction (''SEMANTICS_INFO'', ''SEMANTICS_INFO_EXTENDED'', ''SEMANTICS_INFO_FLOAT'')
+* debugging information (''SOURCE_LINE_FEATURE'')
+* #VLIW support (''VLIW_SUPPORTED'')
+
+Notice the availability of these information depends on the features exported by the process and the corresponding is recalled after each information item. In this section only the kind of instruction is described but following sections cover the other aspects of an instruction.
+
+The kind of an instruction describes its nature, its type or the type of data it works on.
+
+
+
+
+==== Debugging information ====
+@label prog:sem
+
+
+==== Semantic Instructions ====
+
+
+
+===== #CFG Representation =====
+
+==== #CFG and blocks ====
+
+
+==== Basic blocks ====
+
+
+
+==== Function calls and synthetic blocks ====
+
+
+
+
+===== #PCG Representation =====

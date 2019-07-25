@@ -1,0 +1,7 @@
+set(EXCLUDED_FILES PATTERN "CVS" EXCLUDE PATTERN "Makefile*" EXCLUDE PATTERN ".cvsignore" EXCLUDE)
+install(DIRECTORY caches DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY makefiles DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY procs DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY scripts DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY dtd DESTINATION share/Otawa/ ${EXCLUDED_FILES})
+install(DIRECTORY cmake DESTINATION share/Otawa/ ${EXCLUDED_FILES})

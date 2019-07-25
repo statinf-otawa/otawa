@@ -1,0 +1,5 @@
+.deps
+Makefile
+test_reg
+Makefile.in
+.libs

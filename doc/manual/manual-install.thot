@@ -1,0 +1,218 @@
+====== Installing OTAWA ======
+@label install
+
+This section describes the different ways to install the @(OTAWA) framework.
+
+===== Requirements =====
+
+To build OTAWA, the following tools are required:
+
+^ Package ^ Version ^ URL ^
+| GCC     | 4.6    | http://gcc.gnu.org/ |
+| CMake   | 3.5    | http://www.cmake.org/ |
+| Flex    | 2.5.4  |  |
+| Bison   | 2.0    |  |
+| OCAML   | 3.0    | http://caml.inria.fr/ocaml/release.fr.html |
+| libxml2 | 2.9.3  |  |
+| libxslt | 1.1.28 |  |
+
+OTAWA has been tested succesfully on the following platforms:
+  * Linux (32- or 64-bit),
+  * MacOSX (only 64-bit),
+  * Windows (32- or 64-bits but requires a recent version of [[http://mingw.org/|MinGW]]).
+
+Additionally, it can be useful to install cross-compilers for platforms
+you want to compute WCET for.
+
+
+===== Using the installer =====
+
+The @(OTAWA) website provides a Python script that makes easier the installation
+of @(OTAWA) modules. It is called ''otawa-install.py''. Once downloaded,
+you have first to invoke it to prepare the installation directory //INSTALL_DIR// as:
+
+<code sh>
+otawa-install.py -R INSTALL_DIR
+</code>
+
+It will be set up its own installation database in //INSTALL_DIR//
+and particularly, will configure itself to use the given //INSTALL_DIR//
+directory. Now, in order to install an @(OTAWA) module, you have to call
+//INSTALL_DIR//''/bin/otawa-install.py''.
+
+To install @(OTAWA), you have to write:
+<code sh>
+INSTALL_DIR/bin/otawa-install.py otawa
+</code>
+
+To avoid to type the full path for '''otawa-install.py''' or an @(OTAWA)
+command, it is good practice to add this directory to your preferred console
+path. For Linux, you can enter the following line in your starup script:
+<code sh>
+[.bashrc] export PATH=$PATH:INSTALL_PATH/bin
+[.cshrc] set path = ($path INSTALL_PATH/bin)
+</code>
+
+On Windows, you can also change the path from the
+[[https://www.computerhope.com/issues/ch000549.htm|system settings]].
+
+@(OTAWA) comes without any specific support for any instruction set.
+Before trying to compute a WCET, you have install one instruction
+set loader as '''otawa-arm'' or ''otawa-ppc2''. Just re-use the
+''otawa-install.py'' script with the required module:
+<code sh>
+OTAWA_INSTALL/bin/otawa-install.py otawa-arm
+</code>
+
+In fact, you can install any @(OTAWA) module this way. To get the list
+of available modules, you can write:
+<code sh>
+OTAWA_INSTALL/bin/otawa-install.py -l
+</code>
+
+The list of available modules is downloaded from Internet and it will
+evolves according to the publication of new modules. The modules are
+sorted in 3 categories:
+  * loader -- provides support for an instruction set,
+  * ilp -- provides support for an ILP solver (involved in IPET WCET method)
+  * micro -- provides support for a particular process model.
+
+You can obtain details about a particular module with the command:
+<code sh>
+OTAWA_INSTALL/bin/otawa-install.py -i MODULE
+</code>
+
+Notice that:
+  *  the //INSTALL_DIR// directories contains all commands, libraries,
+plugins and header files to use and develop with @(OTAWA)
+  * this directory can be moved around without breaking the @(OTAWA)
+installation.
+
+
+===== Building @(OTAWA) from sources =====
+
+
+This section describes the requirements to build and use the @(OTAWA) framework from sources.
+Additionally, you will need the following CVS tools:
+  * Mercurial
+  * Git
+
+
+==== Building the core ====
+
+Let the source directory to be //SOURCE_DIR// and the install directory //INSTALL_DIR.
+You have first to download the sources of the main components of @(OTAWA):
+<code sh>
+cd SOURCE_DIR
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/elm/v2 elm
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/gel/trunk gel
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/otawa/v2 otawa
+</code>
+
+Then you have to configure the sources and to compile them:
+<code sh>
+cd elm
+cmake . -DCMAKE_INSTALL_DIR=INSTALL_DIR
+make install
+
+cd ../gel
+cmake . -DCMAKE_INSTALL_DIR=INSTALL_DIR
+make install
+
+cd ../otawa
+cmake . -DCMAKE_INSTALL_DIR=INSTALL_DIR
+make install
+</code>
+
+
+If you encounter any error, contact us to [[mailto:otawa@irit.fr]] and join to the email
+a copy of the error messages you get.
+
+After that, you only get a bare core version of @(OTAWA): it does encompass loaders to
+read binary files, ILP solvers to compute WCET or architecture description to produce
+execution timings. The way to get this optional stuff is described in the next section.
+
+
+==== Building extensions ====
+
+The usual way to build an extension is to get its sources from our repositories,
+configure the sources to use your @(OTAWA) installation and to build and install the extension.
+For a module named //MODULE//, we get the following sequence of commands:
+<code sh>
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/MODULE/v2 MODULE
+cd MODULE
+cmake . -DOTAWA_CONFIG=OTAWA_CONFIG_PATH
+make install
+</code>
+
+With //OTAWA_CONFIG_PATH// begin ''otawa-config'' if you add //INSTALL_DIR//''/bin'' to your
+path, or //INSTALL_DIR///''/bin/otawa-config'' otherwise. Thanks to the command ''otawa-config'',
+the module will figure out where @(OTAWA) is installed and will put itself at the right place.
+
+For a loader, the support for a specific instruction set //ISET//, things are a bit more complex.
+You have first to install ''GLISS2'', a ISS simulator, the description in SimNML of the
+instruction set and the @(OTAWA) implementation of the loader for the instruction set:
+<code sh>
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/gliss2/trunk gliss2
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/ISET/trunk ISET
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/otawa-ISET/trunk otawa-ISET
+
+cd gliss2
+make
+cd ../ISET
+make WITH_DYNLIB=1
+cd ../otawa-ISET
+cmake . -DOTAWA_CONFIG=OTAWA_CONFIG_PATH
+make install
+</code>
+
+The following instruction sets are available:
+  * ''arm'' -- ARM v7T
+  * ''ppc2'' -- PowerPC
+  * ''sparc'' -- Sparc
+  * ''tricore'' -- Infineon TriCore
+
+Look to the [[http://www.otawa.fr|OTAWA website]] for more instruction sets and extensions.
+
+
+
+
+==== Building lp_solve extension ====
+
+To use the IPET approach to compute a WCET, an ILP solver is required. There exist some
+open-source ILP solver as [[http://lpsolve.sourceforge.net/|lp_solve]]. @(OTAWA) supports
+the version 5 of lp_solve but its installation is a bit special:
+
+<code sh>
+wget http://tracesgroup.net/otawa/packages/1.0/lp_solve5.tar.gz
+tar xvf lp_solve5.tar.gz
+cd lpsolve55
+sh ccc.linux
+
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/lp_solve5/v2 lp_solve5
+cd lp_solve5
+cmake . -DOTAWA_CONFIG=OTAWA_CONFIG_PATH
+</code>
+ 
+
+
+==== Building CPlex extension ====
+
+**TODO**
+
+
+
+
+==== Building oRange ====
+
+oRange is tool used to determine automatically loop bounds. It is very handy to compute WCET
+and it is advised to install. Its installation is also a bit special:
+<code sh>
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/frontc/trunk frontc
+hg clone https://anon:anon@www.irit.fr/hg/TRACES/orange/trunk orange
+
+cd frontc
+make
+cd ../orange
+make install PREFIX=INSTALL_DIR
+</code>

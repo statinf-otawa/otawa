@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ENTITY % pipeline_dtd	SYSTEM "pipeline.dtd">
+<!ENTITY % caches_dtd	SYSTEM "caches.dtd">
+<!ENTITY % memory_dtd	SYSTEM "memory.dtd">
+<!--!ENTITY % xslt_dtd		SYSTEM "http://www.w3.org/1999/11/xslt10.dtd"-->
+
+%pipeline_dtd;
+%caches_dtd;
+%memory_dtd;
+%xslt_dtd;
+
+<!ELEMENT otawa-script	(name,info?,path*,id,platform?,configuration?,script)>
+<!ATTLIST otawa-script	version	CDATA	(1|2)	"1" 
+
+<!ELEMENT name			(#PCDATA)>
+<!ELEMENT info			ANY>					<!-- should be XHTML -->
+<!ELEMENT path			EMPTY>
+<!ATTLIST path			to	CDATA	#REQUIRED>	<!-- local path -->
+
+<!ELEMENT id			((arch|abi|mach)*)>
+<!ELEMENT arch			(#PCDATA)>
+<!ELEMENT abi			(#PCDATA)>
+<!ELEMENT mach			(#PCDATA)>
+
+<!ELEMENT platform		((pipeline|memory|caches)*)>
+
+<!ELEMENT configuration	(item*)>
+<!ELEMENT item			((help|value)*)>
+<!ATTLIST item			name	CDATA	#REQUIRED>
+<!ATTLIST item			type	CDATA	"bool">		<!-- one of bool,int, string, range, enum -->
+<!ATTLIST item			default	CDATA	#REQUIRED>
+<!ATTLIST item			label	CDATA	#IMPLIED>
+<!ATTLIST item			low		CDATA	#IMPLIED>
+<!ATTLIST item			high	CDATA	#IMPLIED>
+<!ELEMENT help			ANY>						<!-- XHTML -->
+<!ELEMENT value			EMPTY>
+<!ATTLIST value			label	CDATA	#IMPLIED>
+<!ATTLIST value			value	CDATA	#REQUIRED>
+<!ATTLIST value			default CDATA	#IMPLIED>	<!-- boolean -->
+
+<!ELEMENT script		((step|config)*)>
+<!ELEMENT step			(config*)>
+<!ATTLIST step			processor	CDATA	#IMPLIED>	<!-- OTAWA processor path -->
+<!ATTLIST step			require		CDATA	#IMPLIED>	<!-- OTAWA feature path -->
+<!ELEMENT config		EMPTY>
+<!ATTLIST config		name		CDATA	#REQUIRED>	<!-- OTAWA identifier path -->
+<!ATTLIST config		value		CDATA	#REQUIRED>

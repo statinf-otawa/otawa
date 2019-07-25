@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE processor SYSTEM "/home/casse/otawa/otawa/data/dtd/pipeline.dtd">
+<processor class="otawa::hard::Processor"  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+	<arch></arch>
+	<model>generic</model>
+	<builder>OTAWA</builder>
+
+	<stages>
+		<stage id="FE">
+			<name>FE</name>
+			<width>1</width>
+			<type>FETCH</type>
+		</stage>
+		<stage id="DE">
+			<name>DE</name>
+			<width>1</width>
+			<type>LAZY</type>
+		</stage>
+
+		<stage id="EX">
+			<name>EX</name>
+			<type>EXEC</type>
+			<width>1</width>
+			<ordered>true</ordered>
+			<fus>
+				<fu id="ALL">
+					<name>ALL</name>
+					<width>1</width>
+					<mem>true</mem>
+				</fu>
+			</fus>
+			<dispatch>
+				<inst>
+					<type/>
+					<fu ref="ALL"/>
+				</inst>
+			</dispatch>
+
+		</stage>
+
+		<stage id="CM">
+			<name>CM</name>
+			<type>COMMIT</type>
+			<width>1</width>
+			<latency>0</latency>
+		</stage>
+
+
+	</stages>
+
+	<queues>
+		<queue>
+			<name>FQ</name>
+			<size>8</size>
+			<input ref="FE"/>
+			<output ref="DE"/>
+		</queue>
+	</queues>
+
+</processor>

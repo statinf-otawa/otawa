@@ -1,0 +1,270 @@
+====== Using Abstract Interpretation ======
+
+===== Introduction =====
+
+Abstract interpretation in OTAWA is performed on CFGs, and works by associating an abstract value (called "state") before and after each basic block. 
+
+Each particular analysis to be solved by abstract interpretation comprises 3 items:
+
+  * The abstract domain, i.e. the set of all the possible abstract values. 
+  * An update() function, which gives the output state of a basic block in function of its input state.
+  * A join() function, which merges the states whenever there's a path junction on the CFG.
+
+The analysis works by applying successively the update() to basic blocks and join() to path junctions until a fixpoint is reached for the entire program. The state of each basic block can be collected and retrieved by the user. 
+
+===== General organization =====
+
+The abstract intepretation in OTAWA is managed by the ''otawa::HalfAbsInt'' class template. ''otawa::HalfAbsInt '' contains the main engine for performing the abstract interpretation on all involved CFGs of the program.
+
+The ''otawa::HalfAbsInt'' class is parametrized by several other parameter-classes:
+
+  * ''FixPoint'' : The FixPoint class manages the loops. When a loop is encountered, HalfAbsInt uses ''FixPoint'', which is responsible for driving the resolution of a loop (determining when it's time to stop iterating over a loop, and computing entry abstract states for each iteration).
+
+  * ''Listener'' : The Listener classes gathers results. When HalfAbsInt needs to store results it uses the ''Listener'' class, which is responsible for storing the results in a form suitable for the user. 
+
+  * ''Problem'' : The Problem classes defines the particular problem for which we use the abstract interpretation. The Problem classes defines the Domain, and the usual lattice operations on it (LUB, assignation, equality test, bottom, ...).
+
+Actually, HalfAbsInt is only parametrized by the FixPoint. The FixPoint is in turn parametrized by the Listener, which is parametrized by Problem. Therefore, since HalfAbsInt has no direct access to Problem, the FixPoint must provides wrapper for Listener and Problem methods which are needed by HalfAbsInt.
+
+
+
+
+===== The Problem class =====
+
+First, the Problem must define a domain, called ''Problem::Domain'', representing
+the Abstract Domain of the abstract interpretation. 
+
+Additionnaly, the Problem must define the following methods: 
+
+  * ''const Domain& bottom()'' : Provides the Bottom value of the Abstract Domain.
+
+  * ''const Domain& entry()'' : Provides the entry state of the program, which may be different of Bottom.
+
+  * ''void lub(Domain &a, const Domain &b) const'' : This function does the Least Upper Bound of two elements a and b. This will be used, among other things, for performing the junction between two CFG paths. 
+
+  *''void assign(Domain &a, const Domain &b) const'' : This function does the assignation of a state to another. 
+
+  * ''bool equals(const Domain &a, const Domain &b) const'' : This functions tests two states for equality. 
+
+  * ''void update(Domain& out, Domain& in, BasicBlock *bb)'' : This function implements the Update() described in the introduction. It gives the output state, given the input state and a pointer to the basic block.
+
+The following two functions are special and will be explained at the end of this documentation. For now, it's safe to leave them empty. 
+
+  * ''void enterContext(Domain &dom, BasicBlock *header)''
+  * ''void leaveContext(Domain &dom, BasicBlock *header)''
+
+If the ''Problem::Domain'' is a class, it must also define a constructor by copy
+that is used to initialize domains used by analyzer:
+<code c++>
+class Problem {
+public:
+	Domain(const Domain& d);	// constructor by copy
+
+};
+</code>
+
+Be careful! C++ compiler will not complain if this constructor is not available
+and will generate one automatically if not present. This constructor just performs
+a byte-per-byte copy with possible bad effects when pointers or references are used.
+
+
+
+===== The Listener class =====
+
+First the Listener must provide a way for the FixPoint to access the Problem's methods. Since a Listener is written specifically for a particular FixPoint, any method will do, but the following convention is used in OTAWA: 
+
+<code c>
+class MyListener<Prob> {
+    Problem &prob;
+  public:
+    typedef Prob Problem;
+    MyListener( ...some params ..., &_prob) : prob(_prob) {
+      ... constructor code ... 
+    }
+    Problem& getProb() {
+      return(prob);
+    }
+}
+</code>
+
+Thanks to the typedef and the getProb() function, the FixPoint can access the Problem's methods. 
+
+Additionnaly, the Listener must provide the following methods:
+
+  * ''void blockInterpreted(const DefaultFixPoint< DefaultListener >  *fp, BasicBlock* bb, const typename Problem::Domain& in, const typename Problem::Domain& out, CFG *cur_cfg) const'' : This method is called whenever HalfAbsInt has processed a Basic Block. When the method is called, the Listener can store the Basic Block's input and output states in a form suitable for the user. The FixPoint's object is passed in parameter, since the FixPoint can provide useful methods for the Listener. We will see such a case in the "OTAWA built-in FixPoint and Listener classes" section. 
+
+   * ''void fixPointReached(const DefaultFixPoint<DefaultListener > *fp, BasicBlock*header )'' : This method is called whenever HalfAbsInt has finished processing a loop. When this method is called, the Listener can store informations about the loop header's entry state. This is somewhat redundant with the blockInterpreted method, because the latter is also called each time the loop header is processed. Anyway, it can be useful when someone cares only about loops, and does not wish to implement a blockInterpreted() method.
+ 
+
+
+
+===== The FixPoint class =====
+
+FixPoint drives the resolution of loops. First, it must provide the wrapper for some Listener and Problem methods/types that are needed by HalfAbsInt:
+
+<code c>	
+
+typedef typename Listener::Problem::Domain Domain; /* access to the Domain from the FixPoint */
+inline const Domain& bottom(void) const;
+inline const Domain& entry(void) const;
+inline void lub(Domain &a, const Domain &b) const;
+inline void assign(Domain &a, const Domain &b) const;
+inline bool equals(const Domain &a, const Domain &b) const;
+inline void update(Domain &out, const Domain &in, BasicBlock* bb);
+inline void blockInterpreted(BasicBlock* bb, const Domain& in, const Domain& out, CFG *cur_cfg) const;
+inline void fixPointReached(BasicBlock* bb) const;
+inline void enterContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
+inline void leaveContext(Domain &dom, BasicBlock* bb, util::hai_context_t ctx) const;
+
+</code>
+
+These items were already described in their respective sections, and will not be further discussed here. 
+
+Additionnaly, the FixPoint must define the following items: 
+
+  * ''class FixPointState'' : This is the class which will be used by FixPoint to store state information of a loop. It will contain at least the loop header's entry state, but can contain other useful informations, depending on the particular FixPoint class used. 
+
+  * ''FixPointState *newState()'' : This method creates a new FixPointState. Whenever a loop header is first encountered by HalfAbsInt, this function is called to create the new FixPointState of the loop. 
+
+  * ''void init(HalfAbsint<FixPoint> *_ai)'' : This function is called by HalfAbsInt upon initialization, and enables FixPoint to do some setup that couldn't be done in the constructor because HalfAbsInt was not initialized. 
+
+  * ''void markEdge(PropList *e, const Domain &s)'' : FixPoint is also responible for managing the Edge marking. This function is called to mark a PropList e (typically an edge), with a state s.
+
+  * ''void unmarkEdge(PropList *e)'' : This is called to unmark a PropList (generally an Edge)
+
+  * ''Domain *getMark(PropList *e)'' : This is called to get the state of a PropList (generally an Edge)
+
+Here is the main and most important method of FixPoint:
+
+''void fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const''
+
+This method is called each time HalfAbsInt iterates over a loop (actually, each time we process a loop header). The parameter //bb// is the loop header, and //firstTime// is true if it's the first time we see this header.
+
+This method's job is to compute the new loop header's in-state, and to determine if we have reached the fixpoint for this loop. To facilitate this job, HalfAbsInt provides the ''Domain backEdgeUnion(BasicBlock *header)'' and ''Domain entryEdgeUnion(BasicBlock *header)'' methods, which respectively gives the Back Edge Union and Entry Edge Union of the loop header. Obviously, the Back Edge Union is not available if we're at the first iteration (firstTime == true). 
+
+To determine if we have reached the fixpoint, we need to access the loop state information (of type FixPointState) via HalfAbsInt's getFixPointState() method. Since the loop state information contains the loop header's state, fixPoint()'s algorithm can detect if the fixpoint is reached by comparing the computed new loop header state with the loop header state stored in the loop state information. 
+
+
+The DefaultFixPoint of OTAWA uses the following algorithm:
+
+<code c>
+template < class Listener >	
+void DefaultFixPoint<Listener >::fixPoint(BasicBlock *bb, bool &fixpoint, Domain &in, bool firstTime) const {
+		
+		/* Get the loop state information */		
+		FixPointState *fpstate = ai->getFixPointState(bb);
+
+		/* Initialize the to-be-computed new header state to BOTTOM */
+		Domain newHeaderState(bottom());
+
+		fixpoint = false;
+				
+		if (firstTime) {
+			/* First iteration: Back edges not processed yet, fixPoint and fixPoint cannot be reached yet 
+			 * New header state is the union of entry edges */
+			assign(newHeaderState, ai->entryEdgeUnion(bb));
+		} else {
+			/* Other iterations: the new header state is the union of all in-edges (back edges and entry edges).
+			 * If the new computed state is equal to the state stored in the loop state information, then fixpoint reached */ 
+			assign(newHeaderState, ai->entryEdgeUnion(bb));
+			prob.lub(newHeaderState, ai->backEdgeUnion(bb));
+			
+			if (prob.equals(newHeaderState, fpstate->headerState))
+				fixpoint = true;
+		}
+		
+		/* Store the new header state in the loop state information for the next iteration */
+		assign(fpstate->headerState, newHeaderState);
+
+		/* Pass the new header state back to HalfAbsInt */
+		assign(in, newHeaderState);
+	}
+	
+
+</code>
+
+===== OTAWA built-in FixPoint and Listener classes =====
+
+The DefaultFixPoint class built-in in OTAWA is designed to managed loops in a simple way, according to the algorithm presented in the section before. This FixPoint merges the states for all iterations. 
+
+The DefaultListener is a Listener designed to be used with DefaultFixPoint. It simply collects all the input states of each basic block in the array ''Domain ***results'', accessed like this: results[cfg_number][basicblock_number].
+
+The FirstUnrollingFixPoint class does the distinction between the first iteration of a loop, and the other iterations. It presents a method getIter(BasicBlock *bb), callable from the Listener, which gives the current iteration number of the loop. 
+
+The UnrollingListener is a Listener designed to be used with FirstUnrollingFixPoint, and is similar to DefaultListener.
+
+===== Example : Dominance computation using HalfAbsInt =====
+
+In this section we will give the implementation of the Dominance analysis, in the form of an HalfAbsInt Problem, which can be used with DefaultFixPoint + DefaultListener.
+
+<code c>
+
+class DominanceProblem {
+
+	private:
+
+	int size; /* Number of basic blocks */
+	Domain bot; /* Bottom state */
+	Domain ent; /* Entry state */
+
+	public:
+	typedef BitSet Domain; /* The domain is a BitSet */
+
+	inline DominanceProblem(int cfg_size) : size(cfg_size), bot(cfg_size), ent(cfg_size) {
+	}
+	
+	inline const Domain& bottom(void) const {
+		bot.fill(); /* the Bottom is a filled BitSet */
+	}
+
+	inline const Domain& entry(void) const {
+		ent.empty(); /* The Entry state is an empty BitSet */
+	}
+
+	inline void lub(Domain &a, const Domain &b) const {
+		a.mask(b); /* The Join is the set intersection */
+	}
+
+	inline void assign(Domain &a, const Domain &b) const {
+		a = b; /* Define the assignment */
+	}
+	inline bool equals(const Domain &a, const Domain &b) const {
+		return (a.equals(b)); /* Define the test for equality */
+	}
+
+	inline void update(Domain& out, const Domain& in, BasicBlock* bb) {
+		/* out = Update(in) = in U bb_num */
+		out = in;
+		out.add(bb->number());
+	}
+
+	inline void enterContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		/* When there's an edge entering a loop (going from a basic block outside the loop to a basic block inside the loop),
+		 * the Problem has the possibility of adapting the state "dom" to reflect the fact that we entered the loop context. 
+		 * This is entirely optionnal, and not used in this analysis. */
+
+	}
+
+	inline void leaveContext(Domain &dom, BasicBlock *header, util::hai_context_t ctx) {
+		/* This function performs the same as enterContext, but for the edges leaving loops. */
+	}	
+};
+
+
+</code>
+
+Usage: 
+
+<code c>
+
+DominanceProblem prob(cfg_size);
+DefaultListener<DominanceProblem> list(workspace, prob);
+DefaultFixPoint<DefaultListener<DominanceProblem> > fp(list);
+HalfAbsInt<DefaultFixPoint<DefaultListener<DominanceProblem> > > hai(fp, *workspace);
+hai.solve();
+
+/* now, we can access the results with list.results[cfg_number][bb_number]. The cfg_number is required since the analysis done by HalfAbsInt may span   
+ * multiples CFGs */
+
+</code>
+

@@ -1,0 +1,7 @@
+if(PYTHONINTERP_FOUND)
+	install(PROGRAMS "otawa-gen.py" DESTINATION "bin")
+	install(PROGRAMS "otawa-stat.py" DESTINATION "bin")
+	if(XDOT_ENABLED)
+		install(PROGRAMS "otawa-xdot.py" DESTINATION "bin")
+	endif()
+endif()

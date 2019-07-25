@@ -1,0 +1,8 @@
+.deps
+Makefile
+Makefile.in
+ostat
+*.libs
+cmake_install.cmake
+CMakeFiles
+ostat.exe

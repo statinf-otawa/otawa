@@ -1,0 +1,465 @@
+====== Computing a WCET ======
+
+Although @(OTAWA) is designed as a generic framework to develop static analyzes for WCET computation, some facilities are provided to compute WCET using dedicated scripts.
+
+@(OTAWA) can implement several approaches to WCET computation, IPET (Implicit Path Enumeration Technique) is currently the more mature one. In addition, IPET seems to be the method that has been the most developed and that gave the most interesting and precise results.
+
+In @(OTAWA), there are three ways to compute a WCET:
+  * ''owcet'' command allows to perform computation based on script adapted to specific architecture,
+  * the Eclispe plug-in gives access to architecture scripts in a more friendly graphic way inside the Eclipse IDE,
+  * by writing your own program benefiting from the facilities of the framework (that is explored in different sections).
+
+
+==== Using ''owcet'' ====
+
+''owcet'' aims to compute WCET based on scripts describing the target
+architecture hardware and to provide adapted analyses. To use ''owcet'',
+you need a script adapted to your hardware: either you can write your
+own script, or use a script automatically installed with @(OTAWA) core,
+or to download an extension describing your hardware from the @(OTAWA)
+website. Notice that, in @(OTAWA) 2, the tool ''otawa-install.py''
+makes much easier the installation of new extensions. However, we will use the builtin script, ''trivial'', to show the work
+of ''owcet''. 
+
+First, you need a binary application that is supported by @(OTAWA). The core installation of @(OTAWA) does not provide any loader but it is easy to install one like ''ARM'' and ''PowerPC'' using ''otawa-install.py''. Just type the command:
+<code sh>
+otawa-install.py otawa-ARCH
+</code>
+With //ARCH//=''arm'' for ARM or //ARCH//=''ppc2'' for PowerPC.
+
+
+These binaries are usually obtained using a cross-compiler from your x86 platform. GCC on Linux OSes provides lots cross-compilers but cross-compilers also exists for other platforms. You can also look for pre-compiled binaries on the @(OTAWA) website.
+
+Second, the program you want to process must fit the complexity of the software found in critical hard real-time systems. This mainly means that, if they contains dynamic memory allocation or formatted input-output (aka ''printf''), you will have hard time to make it working:
+  * very big computation time (dominated by formatted input/output functions),
+  * very imprecise analysis of the data cache,
+  * very complex loops to bound.
+
+Real-time applications are usually split into tasks that are called periodically and which input-output are network or sensors / actuators accesses . Often, they work stand-alone on bare-metal platforms with a very tiny layer of OS.
+
+For this example, we will uses the ''crc.c'' sample of the  [[http://www.mrtc.mdh.se/projects/wcet/benchmarks.html|Mälardalen benchmark]]:
+<code c,line>
+typedef unsigned char uchar;
+#define LOBYTE(x) ((uchar)((x) & 0xFF))
+#define HIBYTE(x) ((uchar)((x) >> 8))
+
+unsigned char lin[256] = "asdffeagewaHAFEFaeDsFEawFdsFaefaeerdjgp";
+
+unsigned short icrc1(unsigned short crc, unsigned char onech)
+{
+	int i;
+	unsigned short ans=(crc^onech << 8);
+
+	for (i=0;i<8;i++) {
+		if (ans & 0x8000)
+			ans = (ans <<= 1) ^ 4129;
+		else
+			ans <<= 1;
+	}
+	return ans;
+}
+
+unsigned short icrc(unsigned short crc, unsigned long len,
+		    short jinit, int jrev)
+{
+  unsigned short icrc1(unsigned short crc, unsigned char onech);
+  static unsigned short icrctb[256],init=0;
+  static uchar rchr[256];
+  unsigned short tmp1, tmp2, j,cword=crc;
+  static uchar it[16]={0,8,4,12,2,10,6,14,1,9,5,13,3,11,7,15};
+
+  if (!init) {
+    init=1;
+    for (j=0;j<=255;j++) {
+      icrctb[j]=icrc1(j << 8,(uchar)0);
+      rchr[j]=(uchar)(it[j & 0xF] << 4 | it[j >> 4]);
+    }
+  }
+  if (jinit >= 0) cword=((uchar) jinit) | (((uchar) jinit) << 8);
+  else if (jrev < 0)
+    cword=rchr[HIBYTE(cword)] | rchr[LOBYTE(cword)] << 8;
+  for (j=1;j<=len;j++) {
+    if (jrev < 0) {
+      tmp1 = rchr[lin[j]]^ HIBYTE(cword);
+    }
+    else {
+      tmp1 = lin[j]^ HIBYTE(cword);
+    }
+    cword = icrctb[tmp1] ^ LOBYTE(cword) << 8;
+  }
+  if (jrev >= 0) {
+    tmp2 = cword;
+  }
+  else {
+    tmp2 = rchr[HIBYTE(cword)] | rchr[LOBYTE(cword)] << 8;
+  }
+  return (tmp2 );
+}
+
+
+int main(void)
+{
+
+  unsigned short i1,i2;
+  unsigned long n;
+
+  n=40;
+  lin[n+1]=0;
+  i1=icrc(0,n,(short)0,1);
+  lin[n+1]=HIBYTE(i1);
+  lin[n+2]=LOBYTE(i1);
+  i2=icrc(i1,n+2,(short)0,1);
+  return 0;
+}
+</code>
+This benchmark is small enough for human understanding but provides enough effects to demonstrate the work of @(OTAWA).
+
+On a Linux platform, you can compile with:
+<code sh>
+> arm-linux-gnueabi-gcc crc.c -o crc.elf -g3 -static
+</code>
+The ''-static'' option ensures that the ''crc'' is compiled statically without any link to a dynamic library. ''-g3'' enables the debugging information generation in the executable: it is not mandatory but it help a lot to let us communicate with @(OTAWA).
+
+Now, we can launch the WCET computation with the ''trivial'' script:
+<code sh>
+> owcet -t trivial crc.elf
+INFO: plugged otawa::trivial (...s/site/lib/otawa/otawa/trivial.so)
+WARNING: otawa::util::FlowFactLoader 1.4.0:no flow fact file for crc.elf
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0xf4 (00010484).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context [FUN(00010390)]
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0x274 (00010604).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context [FUN(00010390)]
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc + 0x274 (00010604).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context [FUN(00010390)]
+WARNING: otawa::ipet::FlowFactLoader 2.0.0:no limit for the loop at icrc1 + 0x94 (00010370).
+WARNING: otawa::ipet::FlowFactLoader 2.0.0: in the context [FUN(000102dc)]
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 5 (00010604)
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 17 (00010484)
+WARNING: otawa::ipet::FlowFactConstraintBuilder 1.1.0:no flow fact constraint for loop at BB 2 (00010370)
+ERROR: failed due to 3 (UNBOUNDED)
+ERROR: no WCET computed (see errors above).
+</code>
+
+The output is a bit verbose but it is clear that the result was not computed. In fact, the warning lines inform us that some loop bounds are missing! As they are not bounded, they are considered as iterating an infinite number of times and hence the WCET cannot be obtained.
+
+In fact, the loop bounding is a main issue we will encounter when we have to compute a WCET. It is a hard problem, as hard as proving that a program terminates. However, in the type of program targeted by OTAWA, the loops are often relatively simple and a bound can be computed. As bounding loops is not always feasible and may require a lot of computation power, it is performed in a preliminary phase of the WCET computation and maintained as long as the source are not modified.
+
+
+==== Specifying the Flow Facts by Hand ====
+@label flowfacts
+
+The first choice, to provide loop bounds (or more generally //flow facts//), is to fulfill a flow fact file suffixed by ''.ff''. Writing such a file is not very easy so that @(OTAWA) provides a tool, ''mkff'', to help you a bit. Let execute it on our binary file:
+<code sh>
+> mkff crc.elf > crc.ff
+</code>
+
+Now, take a look to the obtained file:
+<code>
+checksum "crc.elf" 0x52fb7d55;
+
+// Function icrc (crc.c:23)
+loop "icrc" + 0x274 ? ; // 0x10604 (crc.c:40)
+loop "icrc" + 0xf4 ? ; // 0x10484 (crc.c:32)
+
+// Function icrc1 (crc.c:8)
+loop "icrc1" + 0x94 ? ; // 0x10370 (crc.c:12)
+</code>
+
+The ''.ff'' files have a simple text syntax where loops are identified by their address, absolute or relative to the function containing them. The start address of the last loop is 0x98 bytes after the label of function ''icrc1''. Remark that ''mkff'' provides in comment (after ''//'') as many information as possible: the corresponding absolute address and, if debugging information are available, the source file and the source line containing the loop. This help us to match the loop with the source to fulfill the missing bounds represented as questions marks.
+
+The user has to edit by hand with any text editor the generated file and to replace each ''?'' mark by the program maximal loop count. The ''checksum'' must not be changed: it is used to check consistency of the flow fact file with the executable as code addresses may change when an executable is recompiled.
+
+File ''crc.ff'' fixed with loop bounds should look like:
+
+<code>
+checksum "crc.elf" 0x52fb7d55;
+
+// Function icrc (crc.c:23)
+loop "icrc" + 0x274 42 ; // 0x10604 (crc.c:40)
+loop "icrc" + 0xf4 256 ; // 0x10484 (crc.c:32)
+
+// Function icrc1 (crc.c:8)
+loop "icrc1" + 0x94 8 ; // 0x10370 (crc.c:12)
+</code>
+
+Now, if we launch again the WCET computation with ''owcet'', the flow fact is automatically
+loaded and we get the WCET:
+<code sh>
+> owcet -s trivial crc.elf 
+INFO: plugged otawa::trivial (.../site/lib/otawa/otawa/trivial.so)
+WCET[main] = 548240 cycles</code>
+
+We could have also specified the flow fact file to use with:
+<code sh>
+> owcet -s trivial crc.elf -f crc.ff
+</code>
+
+Notice that the WCET we does not reflect any actual WCET as the ''trivial'' script
+does not correspond to any real architecture: it counts 5 cycles per instruction
+without taking into account any micro-architecture accelerator. If you want a real
+micro-architecture, you can install on using ''otawa-install.py''.
+
+Notice that ''mkff'' works in an incremental way: if a ''crc.ff'' is available,
+it will first load it and will display only loops that have not been resolved.
+If all loop bounds are resolved, ''mkff'' displays nothing.
+
+
+==== Automatic computation of flow facts ====
+
+@(OTAWA) is delivered with an automatic flow computation programm called //oRange//.
+//oRange// works only on C sources but often produces loop bounds tighter than one
+computed by hand. Indeed, it accounts for function call chains to compute the loop
+bounds of loops and sometimes the loop bound depends on the parameters or the call
+site of a function containing the loop. In addition, oRange is able to produce
+two types of bounds:
+  * maximum bound -- maximum number of iterations at each loop start,
+  * total bound -- maximum number of iterations over the whole execution of the program.
+
+In some cases, this makes possible to tighten the WCET of some loops like
+triangular loops (inner loop bound depends on outer loop induction variable).
+
+To call oRange, one has to type:
+<code sh>
+> orange crc.c main > crc.ffx
+</code>
+
+As many sources as needed can be passed to oRange. All sources composing a program
+are not needed but better precision in loop bounds is obtained. Loop bounds
+are computed for function ''main'' and its sub-functions but the loop bounds are
+computed for any passed function name.
+
+The output format file is in XML, suffix ''.ffx'' but can be used as ''.ff'' files
+(with or without ''-f'' option):
+<code sh>
+> owcet -s trivial crc.elf -f crc.ffx
+</code>
+
+oRange is not able to resolve any bound of any program. If some loop bound determination
+fail, the FFX file will contain ''NOCOMP'' attributes values as below:
+<code xml>
+<loop loopId="3" line="93" source="crc.c" exact="true" maxcount="NOCMP" totalcount="NOCOMP">
+</code>
+
+The FFX file can be edited with any editor (simple text or XML) and the ''NOCOMP'' can be replaced by the actual loop bound. If both total and maximum are missing, it is possible to remove one of the attribute (at least one is needed to bound the loop).
+
+Refer to the format documentation of FFX for more details on the format.
+
+Now the WCET computation with ''trivial'' script has to be called with option ''virtual=true'':
+<code sh>
+> owcet -s trivial crc.elf -f crc.ff -p virtual=true
+</code>
+
+This comes from the fact that oRange provides its bound on a call chains basis. To match oRange information with @(OTAWA) binary, call chains have also to be unfolded in WCET calculation. The need for this option depends on the used script: some automatically unfold the call chain and other do not.
+
+
+
+
+==== Details about the computation ====
+
+In order to compute the WCET, ''owcet'' performs several analyzes whose last one results in the WCET
+evaluation. To obtain the details of performed analyzes, one can type the following command:
+<code sh>
+> owcet -s trivial crc.elf --log proc
+RUNNING: otawa::script::Script (1.0.0)
+INFO: plugged otawa::trivial (/home/casse/otawa/site/lib/otawa/otawa/trivial.so)
+RUNNING: otawa::dfa::InitialStateBuilder (1.0.0)
+RUNNING: otawa::util::FlowFactLoader (1.4.0)
+RUNNING: otawa::LabelSetter (1.0.0)
+RUNNING: otawa::CFGCollector (2.1.0)
+RUNNING: otawa::trivial::BlockTime (1.0.0)
+RUNNING: otawa::ipet::ILPSystemGetter (1.0.0)
+RUNNING: otawa::ipet::VarAssignment (1.0.0)
+RUNNING: otawa::ipet::BasicConstraintsBuilder (1.0.0)
+RUNNING: otawa::ipet::BasicObjectFunctionBuilder (1.0.1)
+RUNNING: otawa::Dominance (1.2.0)
+RUNNING: otawa::CFGChecker (1.0.0)
+RUNNING: otawa::ipet::FlowFactLoader (2.0.0)
+RUNNING: otawa::ipet::FlowFactConstraintBuilder (1.1.0)
+RUNNING: otawa::ipet::WCETComputation (1.1.0)
+WCET[main] = 548240 cycles
+</code>
+
+The option ''--log'' enables logging for the level ''proc'', that is processor
+level (in @(OTAWA), an analysis or a code transformation is called a code
+processor). Other possible values include ''deps'' (analysis dependencies),
+''cfg'', ''bb'' or ''inst''.
+
+The following analyzes are performed for the trivial script:
+  * ''Script'' -- analysis in charge of the script
+  * ''FlowFactLoader'' -- load and record the ''.ff'' file,
+  * ''LabelSetter'' -- assign to decoded instructions the labels found in the binary,
+  * '' CFGCollector'' -- decode the instructions, group them in BB (Basic Blocks) and build CFG (Control Flow Graph),
+  * ''trivial::BlockTime'' -- compute block time in trivial way (5 cycle / instruction),
+  * ''ILPSystemGetter'' -- obtain an ILP system loading the default ILP pluging (usually ''lp_solve''),
+  * ''VarAssignment'' -- assign ILP variable to BB and CFG edges,
+  * ''BasicConstaintBuilder'' -- build ILP constraints to represent CFG flow,
+  * ''BasicObjectFunctionBuilder'' -- build the ILP function to optimize as
+the sum of block number execution multiplied by the execution time,
+  * ''Dominance'' -- compute dominance relationship to identify loops,
+  * ''CFGChecker'' -- checks that the CFG is fully connected,
+  * ''ipet::FlowFactLoader'' -- assign loop bounds to machine instructions,
+  * ''ipet::FlowFactConstaintBuilder'' -- convert loop bounds to ILP constraints,
+  * ''WCETComputation'' -- perform the final WCET computation as the maximization of the built ILP system.
+
+The ''trivial'' script uses the **IPET** (Implicit Path Enumeration Technique): the program CFG is expressed as an ILP system whose maximize function (sum of the number of execution of BB -- variables, multiplied by the execution time of BB). The constraints, on the number of execution of BB, represents the execution path of the CFG and the loop bounds. The execution time of BB is produce using a trivial approach considering each instruction as taking 5 cycles. **IPET** is very flexible as any variation in the computation is simply achieved by adding variables or constraints and changing the formula of the maximized function.
+
+The ''-log'' is useful when things go wrong: it provides details on the performed computation and may help to figure out where the problem is coming from.
+
+For more details on a particular analysis, one has to refer to @(OTAWA) automatic documentation (produced by Doxygen) and available from the sources or the website. Each code processor, like ''otawa::ipet::ILPSystemGetter'' corresponds to a C++ class.
+
+
+==== Fine-grain output of WCET ====
+
+Clearly, the main goal of ''owcet '' is to provide the WCET (what it does) but it may sometimes useful to have a fine-grain view of the spent time in the application. This may help to tighten the WCET if it is bigger than an allocated time budget.
+
+A first very trivial option is ''-S'':
+<code sh>
+> owcet -s trivial crc.elf -S
+INFO: plugged otawa::trivial (.../site/lib/otawa/otawa/trivial.so)
+WCET[main] = 548240 cycles
+Block Execution Time:  avg=48.6207, max=160, min=15
+Total Execution Time: total=548240,  avg=18904.8, max=163840, min=0
+Total Execution Count:  avg=683.345, max=4608, min=0
+</code>
+It provides average, maximum and minimum execution time per block, execution time over all the program and execution count.
+
+More precise results may be obtained with option ''-W'':
+<code sh>
+> owcet -s trivial crc.elf -W
+INFO: plugged otawa::trivial (.../site/lib/otawa/otawa/trivial.so)
+WCET[main] = 548240 cycles
+ADDRESS		NUM	SIZE	TIME	COUNT	RATIO		FUNCTION	LINE
+000106a8	1	60	75	1	0.0136801%	main	crc.c:60,65,66,67
+000106e4	2	92	115	1	0.0209762%	main	crc.c:67,68,69,70
+00010740	3	24	30	1	0.00547206%	main	crc.c:70,71,72
+TOTAL FUNCTION		220	1	0.0401284%		main
+00010390	1	60	75	2	0.0273603%	icrc	crc.c:23,27,30
+00010490	2	12	15	2	0.00547206%	icrc	crc.c:37
+000104d4	3	12	15	2	0.00547206%	icrc	crc.c:38
+00010538	4	12	15	2	0.00547206%	icrc	crc.c:40
+00010604	5	16	20	86	0.313731%	icrc	crc.c:40
+00010544	6	12	15	84	0.229826%	icrc	crc.c:41
+0001058c	7	44	55	0	0%	icrc	crc.c:45
+00010550	8	60	75	84	1.14913%	icrc	crc.c:42
+000105b8	9	76	95	84	1.45557%	icrc	crc.c:47,40
+00010614	10	12	15	2	0.00547206%	icrc	crc.c:49
+0001062c	11	88	110	2	0.0401284%	icrc	crc.c:53
+00010620	12	12	15	0	0%	icrc	crc.c:50
+00010684	13	16	20	2	0.00729607%	icrc	crc.c:55,56
+000104e0	14	88	110	2	0.0401284%	icrc	crc.c:39
+0001049c	15	56	70	0	0%	icrc	crc.c:37
+000103cc	16	24	30	2	0.0109441%	icrc	crc.c:31,32
+00010484	17	12	15	514	1.40632%	icrc	crc.c:32
+000103e4	18	32	40	512	3.73559%	icrc	crc.c:33
+00010404	19	128	160	512	14.9424%	icrc	crc.c:33,34,32
+TOTAL FUNCTION		128180	2	23.3803%		icrc
+000102dc	1	80	100	512	9.33898%	icrc1	crc.c:8,10,12
+00010370	2	12	15	4608	12.6076%	icrc1	crc.c:12
+0001032c	3	12	15	4096	11.2068%	icrc1	crc.c:13
+00010358	4	12	15	0	0%	icrc1	crc.c:16
+00010338	5	32	40	4096	29.8847%	icrc1	crc.c:14
+00010364	6	12	15	4096	11.2068%	icrc1	crc.c:12
+0001037c	7	20	25	512	2.33474%	icrc1	crc.c:18,19
+TOTAL FUNCTION		419840	512	76.5796%		icrc1
+</code>
+
+For each BB, the displayed information are, from left to right, the address, the number in CFG, the size in bytes, the time in cycles, the number of executions in WCET, the ratio of the block on the WCET, the function containing the block and the corresponding source lines.
+
+Graphical and/or colored views of the results can be obtained with option ''-D'':
+<code sh>
+> owcet -s trivial crc.elf -D
+</code>
+This option does not display anything but creates a directory named ''main-stats'' where are created files representing all statistics produced by @(OTAWA) during WCET computation. To obtain a CFG (Control Flow Graph) view of the execution total time of each BB (BasicBlock), the command ''otawa-stat.py'' can be used:
+<code sh>
+> otawa-stat.py main
+</code>
+This creates a directory ''main-stats/cfg'' containing one ''.dot'' file for each CFG that can be displayed with ''otawa-xdot.py'':
+<code sh>
+> otawa-xdot.py main-stats/cfg/_2.dot
+</code>
+And the displayed CFG is:
+
+{{_2.png?475x630}}
+
+The BB are colored according to the impact of BB total time of the WCET.
+
+Depending on the performed analyzes, some statistics are available or not. One has to to use the argument ''-l'' to get the list of available statistics:
+<code sh>
+> otawa-stat.py main -l
+ipet-total_count
+ipet-time
+ipet-total_time
+</code>
+
+The available statistics are:
+  * ''ipet-total_count'' -- number of execution of a BB on the WCET path
+  * ''ipet-time'' -- execution time of a BB
+  * ''ipet-total_time'' -- total exceution time of a BB in the WCET
+
+To select the displayed statistics, one has to type:
+<code sh>
+> otawa-stat.py main ipet-total_count ipet-time
+</code> 
+
+Or to display all:
+<code sh>
+> otawa-stat.py main -a
+</code> 
+
+
+In addition, if the sources are available, ''otawa-stat.py'' can produce a colored version of the sources with argument ''-S'':
+<code sh>
+> otawa-stat main -S -a
+</code>
+
+The output is a set of HTML files and can be displayed with any HTML browser:
+<code sh>
+> xdg-open main-stats/src/index.html
+</code> 
+
+{{html.png?700x300}}
+
+Source are colored according to the impact of the line one the selected
+statistics. Clicking on the column selects which statistics is used to color the source lines. Notice that the numbers in columns are only indicative; there is not a perfect map between source lines and BB: a source line may be split over several BB and BB may concern several source lines. In addition, the displayed statistics depends on the performed analyses in the WCET computation: for instance, if a cache analysis is involved, statistics will include information about hits and misses of the cache.
+
+
+==== More on ''owcet'' ====
+
+The ''owcet'' is usually invoked with the following syntax from the command line shell:
+<code sh>
+$ owcet -s SCRIPT EXE_FILE [TASK_NAME]
+</code>
+
+Where //SCRIPT// is the name of the script. The scripts are installed in the directory ''otawa-config --scripts''.
+The script files have ''.osx'' for extension and the //SCRIPT// may be either the script name without extension, or a file path
+designing a script file. To list the available scripts, you can use ''otawa-config'':
+<code sh>
+$ otawa-config --list-scripts
+</code>
+
+The //EXE_FILE// is the ELF file containing the executable and //TASK_NAME// is an optional argument giving the name
+of the function representing the task. If //TASK_NAME// is omitted, the computation is performed for the ''main'' function.
+ 
+As for ''owcet'', flow fact information (like loop bounds) may be required to achieve the computation. ''owcet'' supports the F4
+flow fact format (''.ff'' suffix) but also the FFX format (based on XML) providing much more expressivity for the flow facts.
+Whatever the used format,
+the flow facts may be passed implicitely with a file named //EXE_FILE//''.ff'' or //EXE_FILE//''.ffx'' according to the used format,
+or by passing explicitely with the option ''-f'' or ''--flowfacts'':
+<code sh>
+$ owcet -s SCRIPT EXE_FILE [TASK_NAME] -f PATH_TO_FLOWFACT_FILE
+</code>
+
+Usually, the delivered scripts provide several configuration items: either a script represents a family of microprocessors and the model needs to be selected,
+or some properties on the environment of the microprocessor (that is the board it is mount on) can be tuned. To list the available
+parameters, one can type the following command:
+
+<code sh>
+$ owcet -s SCRIPT EXE_FILE --list
+</code>
+
+Either one can let undefined a parameter (using the default value), or you can pass it a parameter to the computation
+with option ''-p'' or ''--param'' passing as argument a string separated by an equal symbol ''=''. On the left side, stands the
+parameter name and on the right side the parameter value:
+<code sh>
+$ owcet -s SCRIPT EXE_FILE -p PARAM1=VALUE1 -p PARAM2=VALUE2...
+</code>

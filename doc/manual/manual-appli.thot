@@ -1,0 +1,368 @@
+====== Writing an OTAWA Application ======
+
+Basically, OTAWA is a framework providing a bunch of classes for static analysis and particularly Worst Case Execution Time Computation. Although OTAWA provides some ready-to-use utilities, more interesting is the implementation of an application filling exactly some needs or extending the OTAWA features.
+
+To achieve this goal, the following skills are required :
+  * a basic experience in C++,
+  * some experience with Makefiles,
+  * a solid knowledge about WCET and static analysis.
+
+This tutorial will show how to make and compile a little application using @(OTAWA) framework. First of all, a working version of @(OTAWA) must be available (see Section @ref:install@).
+
+
+===== Application Design =====
+
+Once you have installed OTAWA, you can start to write your first OTAWA application. As a first example, we want to use OTAWA to apply basic IPET method on some embedded program (whose architecture is supported by OTAWA). Our program will include the following passes :
+  - select the task entry point for which to compute the WCET,
+  - compute the execution time of each basic block using a trivial approach (1 time / instruction),
+  - build the ILP system for the program control flow,
+  - resolve it to get the WCET.
+
+
+
+===== Source Header =====
+
+First, we write a simple C++ source file to perform our work. We call it ''myapp.cpp'' and it will start with the following lines:
+<code c>
+#include <elm/io.h>
+#include <otawa/otawa.h>
+#include <otawa/ipet.h>
+
+using namespace elm;
+using namespace otawa;
+</code>
+
+The first inclusion ''<elm/io.h>'' imports classes to perform outputs. ELM is a general purpose library delivered with and used by @(OTAWA). It provides a lot of useful facilities including I/O support, generic data structures and OS abstractions.
+
+The following inclusion ''<otawa/otawa.h>'' provides @(OTAWA) main classes while the next one, ''otawa/ipet.h'', is dedicated to IPET definitions. The last two lines just open the name spaces where ELM and OTAWA classes lie in.
+
+
+===== Main Function =====
+
+The main function looks like:
+
+<code c>
+int main(void) {
+  try {
+    WorkSpace *ws = MANAGER.load("program to analyze");
+    ...
+  }
+  catch(elm::Exception& e) {
+    cerr << "ERROR: " << e.message() << '\n';
+  }
+}
+</code>
+
+The first step is to load the program using the static object ''MANAGER'' that stores common resources used in @(OTAWA). The function ''load'' is used to open the executable file. It returns a ''WorkSpace'' object, that is, a location shared by all @(OTAWA) analyzes and where the loaded binary file can be analyzed to get a WCET.
+
+The binary file ''open()'' call is enclosed in a ''try { ... } catch(...)'' clause in order to catch possible errors and exception thrown by the ''load'' function. If any error is raised, the ''catch'' just stops the application and display the error message.
+
+Most @(OTAWA) objects may throw exceptions when an error is encountered. Depending on the application needs, they can be immediately processed or simply ignored and let the caller functions to process it. The latter approach makes the program a bit easier to write and to read (providing that the allocated resources are fried).
+
+
+
+===== Writing the Analysis =====
+
+The easiest way to perform the IPET analysis it to call the ''otawa::ipet::WCETComputation'' code processor as below:
+<code c>
+    ws->run<ipet::WCETComputation<();
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+In @(OTAWA), a code processor is a piece of code that performs an analysis on the workspace. Usually, a workspace contains the program representation augmented with a lot of annotations produced by the code processors. As an instance, the last line is used to display the final ''ipet::WCET'' annotation linked to the workspace by the ''ipet::WCETComputation'', that is, the WCET expressed in cycles.
+
+The code processors work on the workspace and are allowed to use already tied annotations, or to create their own annotations. Here, ''ipet::WCETComputation'' has computed the WCET and has linked it with the ''ipet::WCET'' annotation identifier. Yet, computing a WCET is a big task involving many different code processors like CFG (Control Flow Graph) building, ILP (Integer Linear Programming) system generation, etc.
+
+To achieve the trick, each code processor automatically records a list of required features and provided features (a feature is a set of annotations). Before a code processor can be launched, all its required features needs to be provided in the workspace. When a feature is missing, @(OTAWA) looks for a code processor to provide it. The code processor to launch in order to obtain a feature may be a processor provided in the configuration, or a default processor tied to the feature. In any case, either a code processor is found and run (and in turn it will require some features that will trigger other code processors and so on), or the calculations stop and an error is displayed.
+
+In our case, as only the final code processor -- ''ipet::WCETComputation'' -- is called, the default code processors are called in turn to satisfy its required features. To observe this chain of analyzes, @(OTAWA) can be called with the annotation ''Processor::VERBOSE'' set to true as below:
+
+<code c>
+    PropList props;
+    Processor::LOG_LEVEL(props) = Processor::LOG_PROC;
+    ws->run<ipet::WCETComputation>(props);
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+This piece of code displays all details about the performed computations and the processed code parts. Also, it demonstrates how annotations can be used to provide a configuration to the execution of a code processor. ''PropList'' is the base class of most @(OTAWA) classes and provide facilities to hang annotations (called //properties// in @(OTAWA) terminology). The source line containing the assignment to ''Processor::LOG_LEVEL'' actually creates a new annotation with identifier ''Processor::VERBOSE'' and the value ''true'' and record it in the property list ''props'' (see Section @ref:props@ for more details).
+
+To sum up, the configuration of the ''WCETComputation'' processor is based on an empty property list, ''props'' that is enriched by adding a property named ''Processor::VERBOSE'' which value is true. Then, the property list is passed to the ''run'' function of the workspace. This function launches the analysis of the processor on the given workspace with the given configuration.
+
+
+**TO GO FURTHER** Developing in @(OTAWA) requires to have a good knowledge about its classes. The documentation of all classes is grouped in so-called [[http://www.otawa.fr/doc/otawa-2|auto-documentation]].
+
+
+
+
+
+===== Compiling the Sources =====
+
+To be executed, the application described in the previous section has first to be compiled as an application. As @(OTAWA) compilation is a bit complex to configure, it is advised to use a build system as, for instance, a //Makefile// as the one presented below:
+
+<code make>
+OTAWA_CONFIG	= otawa-config
+PLUGINS         = 
+APP         	= myapp
+SOURCES         = myapp.cpp
+
+CXXFLAGS        = $(shell $(OTAWA_CONFIG) --cflags $(PLUGINS))
+LDLIBS          = $(shell $(OTAWA_CONFIG) --libs $(PLUGINS) --rpath)
+
+OBJECTS         = $(SOURCES:.cpp=.o)
+
+$(APP): $(OBJECTS)
+        $(CXX) $(CXXFLAGS) -o $@ $^ $(LDLIBS)
+</code>
+
+The utility ''otawa-config'' provides all details about @(OTAWA) installation directories and compilation flags: C++ flags, libraries to link, path to shared resources, etc. ''otawa-config'' can be found in the directory ''bin'' of the @(OTAWA) installation directory. It is advised to add this directory to the OS ''PATH'' variable to avoid to re-type the full path.
+
+''PLUGINS'' are not used in this example but keeping this definition may be useful for latter developments. @(OTAWA) comes with several plug-ins that can linked with an application, just by passing their name in the variable ''PLUGINS''. Yet, an explicit link with plug-in is not always required: @(OTAWA) is able to automatically retrieve and load a plug-in depending on the used features or by using textual name to refer to code processors, features or annotation identifiers.
+
+Beside, ''otawa-config'' can be used to get the list of all available plug-ins:
+<code sh>
+$ otawa-config --list-plugins
+</code>
+
+
+Building the application is as simple as typing:
+<code sh>
+$ make
+</code>
+
+**TO GO FURTHER** @(OTAWA) can be built using different build mechanism as CMake (@ref:append:cmake@) 
+
+
+===== Running the Application =====
+
+Once all bug has been fixed and the ''make'' operation succeeded, you get your executable analyzer that you can launch it with the command (be sure to give a valid executable path to ''open()'' function -- the executable built in the previous section can be used):
+<code sh>
+$ ./myapp
+</code>
+
+The output of the command is presented below for the file ''crc.elf'' compiled in the previous section:
+
+<code>
+RUNNING: otawa::ipet::ILPSystemGetter (1.1.0)
+RUNNING: otawa::dfa::InitialStateBuilder (1.0.0)
+RUNNING: otawa::util::FlowFactLoader (1.4.0)
+RUNNING: otawa::LabelSetter (1.0.0)
+RUNNING: otawa::view::Maker (1.0.0)
+RUNNING: otawa::CFGCollector (2.1.0)
+RUNNING: otawa::ipet::VarAssignment (1.0.0)
+RUNNING: otawa::ipet::BasicConstraintsBuilder (1.0.0)
+INFO: plugged otawa::trivial (/home/casse/otawa/site/lib/otawa/otawa/trivial.so)
+RUNNING: otawa::trivial::BlockTime (1.0.0)
+RUNNING: otawa::ipet::BasicObjectFunctionBuilder (1.0.1)
+RUNNING: otawa::Dominance (1.2.0)
+RUNNING: otawa::LoopInfoBuilder (2.0.0)
+RUNNING: otawa::ExtendedLoopBuilder (1.0.0)
+RUNNING: otawa::CFGChecker (1.0.0)
+RUNNING: otawa::ipet::FlowFactLoader (2.0.0)
+RUNNING: otawa::ipet::FlowFactConstraintBuilder (1.1.0)
+RUNNING: otawa::ipet::WCETComputation (1.1.0)
+the wcet is 548240
+</code>
+
+One can see that the following analyzes are performed:
+  - the ILP system for IPET is built -- ''ipet::ILPSystemGetter'',
+  - the initial functional state of the program is retrieved -- ''dfa::InitialStateBuilder'',
+  - the flow facts are loaded -- 'util::FlowFactLoader'',
+  - the binary labels are recorded on instructions -- ''LabelSetter'',
+  - for now, we just ignore the view system -- ''view::Maker'',
+  - the CFG are built from the binary -- ''CFGCollector'',
+  - variables assigned to each CFG vertex and edge -- ''ipet::VarAssignment'',
+  - the ILP flow constraints are built -- ''BasicConstraintBuilder'',
+  - the basic block execution time are computed -- ''trivial::BlockTime'',
+  - the dominance relationship is built (to find loops) -- ''Dominance'',
+  - the loops are identified -- ''LoopInfoBuilder'',
+  - a more useful representation of loops is made -- ''ExtendedLoopBuilder'',
+  - the CFG is checked to have a good shape (no split) -- ''CFGChecker'',
+  - the flow facts are transfered from binary to CFG -- ''ipet::FlowFactLoader'',
+  - the flow facts are translated into constraints in the ILP -- ''ipet::FlowFactConstraintBuilder'',
+  - and the WCET is computed -- ''WCETComputation''.
+
+Yet, in all this work, something goes wrong: the computed WCET is -1, that is, no solution can be computed. The problem often comes from the loop contained in the tested program. OTAWA can not automatically compute the bound of the loop and, consequently, the generated system has an unbounded WCET.
+
+To get a right result, you have to provides loop bounds in a flow fact file. Refer to @ref:flowfacts@ for a description of flow facts files. Actually, the flow fact files are managed by the ''FlowFactLoader'' processor. As no flow fact file was available, it gave up silently.
+
+
+
+===== A few words about IPET =====
+
+Implicit Path Enumeration Techniques (IPET) is one of the approaches providing WCET by static analyzes. Several other methods exist but IPET has proven, at the time this text is written, to be the more complete and successful one. Although @(OTAWA) is not specialized in a particular method, IPET is the most complete one.
+
+Basically, IPET consists in representing the WCET problem as the maximization of an Integer Linear Problem (ILP) whose objective function is the WCET. It is usually represented as:
+
+> $wcet = \sum_{v \in V} t_v x_v$
+
+Where:
+  * //G = <V, E>// is the CFG with //V// the set of basic block (BB) and $E = \subseteq V \times V$ the edges,
+  * $t_v$ is a constant representing the execution of basic block //V//,
+  * $x_v$ is a variable of the ILP and represents the number of execution of BB //v// in the WCET path. 
+
+The WCET is obtained by maximizing the execution time of an execution path in the CFG but this requires to constraint the variables $x_v$ according to control flow constraints of the CFG. This means that the CFG is executed once ($e \in V$ is the entry edge):
+
+> $x_e = 1$
+
+And that the $x_v$ matches the flow constraint of the CFG:
+
+> $\forall v \in V, x_v = \sum_{w \in PRED_v} x_{w \to v} = \sum_{w \in SUCC_v} x_{v \to w}$
+
+Where $x_{v \to w}$ is an ILP representing the number of traversal of an edge from //v// to //w//, $PRED_v$ the set of predecessors of //v// and $SUCC_v$ the set of successors of //v//. To sum up, a BB is executed as many times it is entered and left on the execution path.
+
+As a CFG can contain loops, one has also to bound the number of execution of each loop headed by a vertex $h \in V$:
+
+> $\sum_{v \to h \in BACK_h} x_{v \to h} \le N \times \sum_{v \to h \in ENTRY_h} x_{v \to h} $
+
+Where //N// is the loop bound (maximum number of iterations per loop start), $BACK_h$ is the set of back-edges (forming the loop) and $ENTRY_h$ is the set of edges entering in the loop. To sump up, this constraints means that the back edges are taken at most //N// times each time the loop is entered. 
+
+This IPET formulation is very basic. Depending on the complexity of the micro-architecture and of the hardware, a BB may experiment several execution times, meaning more variables, that has to be bound according to the occurrences of the events caused by the program behaviour and the hardware.
+
+**TO GO FURTHER** A lot of literature exists about IPET but the original idea was published by Y.-T. Li and S. Malik, [[https://dl.acm.org/citation.cfm?doid=217474.217570|Performance analysis of embedded software using implicit path enumeration]].
+
+
+
+===== Specializing the Computation =====
+
+@(OTAWA) code processors chain themselves using on the so-called //features//. A //feature// simply asserts that a set of properties are available in the current workspace. To this end, each code processor declares its list of required and provided features. Shortly, required features are computed before the code processor is launched and provided features are made available once that the code processor has been executed.
+
+If a required feature is not present, a default code processor is invoked to compute missing information. Often, the default code processor is very simple and its results are very approximative but conservative overestimations of the WCET. This work is well illustrated by our application where the WCET is only computed with all default code processors of features. Yet, notice that several features provide a fully functional processor (''CFGBuilder'', ''CFGConstraintBuilder'').
+
+Now, we want exploit this behavior to specialize the performed analysis, that is, to provide an alternate code processor for a particular feature. In this example, we aims to replace the trivial BB time computation by a new one. The targeted feature is ''otawa::ipet::BB_TIME_FEATURE'' that store the time of each BB using the property identifier ''otawa::ipet::TIME''. So, we have to write an @(OTAWA) analysis that works at BB level and that provides the BB time feature: this analysis is outlined in the following.
+
+<code c++>
+#include <otawa/proc/BBProcessor.h>
+
+class MyTime: public BBProcessor {
+public:
+	static p::declare reg;
+	MyTime(): BBProcessor(reg) { }
+
+protected:
+	void processBB(WorkSpace *ws, CFG *cfg, Block *b) override { ... }
+	
+};
+
+p::declare MyTime::reg = p::init("MyTime", Version(1, 0, 0))
+	.make<MyTime>()
+	.extend<BBProcessor>()
+	.provide(ipet::BB_TIME_FEATURE);
+</code>
+ 
+This code declares a new code processor named ''MyTime'' and that is registered in @(OTAWA) code processor database using the static variable ''MyTime::reg''. ''MyTime::reg'' record the name and the version of the code processor and working information: implementation class -- ''MyType'', parent code processor -- ''BBProcessor'' and provided features -- ''ipet::BB_TIME_FEATURE''. This elements help @(OTAWA) scheduler to run ''MyTime'' in the right conditions.
+
+As expected, the ''MyTime'' class extends ''BBProcessor'' and the code processor registration at construction of ''BBProcessor''. The ''BBProcessor'' is a special meta-code processor that run the function ''processBB''() for each block of the processed task: this alleviates the programmer task that does not need to figure out the structure of the task CFGs. The content of this function is presented below:
+
+<code c++>
+		if(!b->isBasic())
+			return;
+		BasicBlock *bb = b->toBasic();
+		
+		ot::time t = 0;
+		for(auto i: *bb) {
+			if(i->isMul()) {
+				if(i->isFloat())
+					t += 6;
+				else
+					t += 4;
+			}
+			else if(i->isDiv()) {
+				if(i->isFloat())
+					t += 15;
+				else
+					t += 12;					
+			}
+			else if(i->isFloat())
+				i += 5;
+			else if(i->isLoad())
+				i += 10;
+			else if(i->isStore())
+				i += 5;
+			else
+				t += 1;
+		}
+		
+		ipet::TIME(bb) = t;
+</code>
+
+As the CFG of @(OTAWA) are made of blocks of several kinds (BBs, call blocks, entry and exit blocks), the function ''processBB''() first tests the type of block and returns immediately if //b// is not a BB. Otherwise, it converts //b// to a BB -- //bb// (class ''BasicBlock''). The time of the BB, in this extension, is the sum of times assigned to each instruction as described below:
+  * floating-point multiplication -- 6 cycles,
+  * integer multiplication -- 4 cycles,
+  * floating-point division -- 15 cycles
+  * integer division -- 12 cycles
+  * other floating-point operation -- 5 cycles
+  * memory load -- 10 cycles
+  * memory store -- 5 cycles
+  * other operations -- 1 cycle.
+
+This is implemented by visiting all instruction composing the BB (simple ''for'' loop) and by summing the different times in variable //c//. The instructions have for class ''Inst'' and provides several functions to test the kind of the instruction (''isMul''() for multiplication, ''isFloat''() for floating-point, etc).  Finally, the time is stored as property  -- named ''ipet::TIME'' -- on the BB. This property will be used by subsequent @(OTAWA) analyzes as the execution time of the BB.
+
+To use ''MyTime'', one has only to add it in the analysis invocation of the main program:
+<code c++>
+    PropList props;
+    Processor::LOG_LEVEL(props) = Processor::LOG_PROC;
+    ws->run<MyTime>(props);
+    ws->run<ipet::WCETComputation>(props);
+    cout << "the wcet is " << ipet::WCET(ws) << io::endl;
+</code>
+
+As the code processor ''MyTime'' is invoked before ''ipet::WCETComputation'' prevent the default ''ipet::BB_TIME_FEATURE'' analysis to be run (as the feature is already provided) and ''ipet::WCETComputation'' will use the ''ipet::TIME'' properties defined by ''MyTime''.
+
+Running it on the ''crc.elf'' application gets as results:
+<code sh>
+./appli crc.elf
+the wcet is 61537
+</code>
+
+Customizing @(OTAWA) is as easy as providing alternative analyzes (code processors) for existing features. Replacing the default analysis by a customized one consist in running the analysis to let it provide its feature before it is required. Naturally, any programmer can provide its own feature and properties (as the standard @(OTAWA) are declared) and either has to connect with @(OTAWA) usual calculations, or can provide its own to comute a WCET (possibly re-using some @(OTAWA) features and analyses.
+
+**TO GO FURTHER** The basics of connecting custom code with @(OTAWA) standard analysis (re-using or providing features) is to have the documentation of these features. It is available in the [[http://www.otawa.fr/doc/otawa-2|autodocumentation]] in the section //Available features and processors//.
+
+===== Fast Way =====
+
+The previous sections have presented the hard way to make an @(OTAWA) application but @(OTAWA) implements convenient classes to simplify the work.
+
+Writing an application is often made of burden and a repetitive tasks like scanning the application arguments, opening the binary file and to processing each entry point passed as argument. The class ''otawa::Application'' is able to manage automatically a lot of these tasks. The example program, presented in the previous sections, becomes:
+
+<code cpp>
+#include <otawa/ipet.h>
+#include <otawa/app/Application.h>
+
+using namespace elm;
+using namespace otawa;
+
+class MyApp: public Application {
+public:
+	MyApp(): Application("MyApp", Version(1, 0, 0)) {
+	}
+
+protected:
+	void work(const string &entry, PropList &props) override {
+    	workspace()->run<ipet::WCETComputation>(props);
+    	cout << "the wcet is " << ipet::WCET(workspace()) << io::endl;
+	} 
+};
+OTAWA_RUN(MyApp)
+</code>
+
+Notice that the ''main'' is automatically handled by the ''OTAWA_RUN'' macro  and the application class automatically supports a lot of standard @(OTAWA) options like ''-v'' (verbose mode), ''--log proc'' or ''-h'' (to display all options).
+
+The''Application'' class will open the binary passed as first parameter. Each subsequent parameter is considered as a function name for which the function ''work''() is called to perform some analysis. If no subsequent parameter is provided, ''work''() on the function ''main''.
+
+Once compiled, the obtained command is called by passing the executable file as parameter:
+<code sh>
+$ ./myapp crc.elf
+</code>
+
+
+**TO GO FURTHER** The class ''otawa::Application'' is based on the option management system of the library ELM. More details about this can be found [[http://www.otawa.fr/doc/elm-2|here]].
+
+
+===== Conclusion =====
+
+In this tutorial, we have learned :
+  * to write a little analyzer using the OTAWA API,
+  * how to compile this application,
+  * to change the default behavior of an analysis by straight invocation of code processors.
+
+Although @(OTAWA) provides working analyzes, the use of the framework is more valuable if we are able to write new analyzes and if we combine these analyzes with the @(OTAWA) framework. This will be presented in the next chapters.

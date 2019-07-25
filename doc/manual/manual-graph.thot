@@ -1,0 +1,283 @@
+====== Using graphs ======
+
+@(OTAWA) is heavily based on graph theory (Control Flow Graphs,
+Program Call Grah, Execution Graphs, etc) and therefore provides
+powerful graph classes and facilities to manage graphs.
+
+This section requires basics in graph theory. If you are not familiar,
+you can refer to [[https://en.wikipedia.org/wiki/Graph_(discrete_mathematics)|WikipediA]]
+and more specifically to [[https://en.wikipedia.org/wiki/Directed_graph|Directed Graphs]].
+
+
+=====  ''DiGraph'' Class =====
+
+The class ''DiGraph'' provides a very basic and useful implementation of a graph.
+They are made of 3 classes:
+  * ''DiGraph'' -- represents the graph and is mainly a collection of vertices.
+  * ''Vertex'' -- represent a vertex in the graph.
+  * ''Edge'' -- represents an edge linking two vertices.
+
+This classes are available in the ''otawa::graph'' name space and are usually handled 
+using pointers. The vertices can be visited considering the graph is a collection:
+<code c++>
+#include <otawa/graph/DiGraph.h>
+using namespace otawa;
+
+graph::DiGraph *g = ...;
+for(auto v: *g)
+	work_with_vertex(v);
+</code>
+
+An index is associated with each vertex allowing any data structure based on indexes
+to work with vertices. The example below uses a bit set where each bit is associated
+with vertex with the corresponding index (the method ''count()'' returns the number
+of vertices):
+<code c++>
+#include <otawa/dfa/BitSet.h>
+
+graph::DiGraph g;
+dfa::BitSet set(g.count());
+
+for(auto v: *g)
+	if(test_vertex(v))
+		set.add(v->index());
+</code>
+
+Any vertex can be retrieved using the ''at()'' method. The previous example is continued
+as:
+<code c++>
+for(int i = 0; i < set.count(); i++)
+	if(set[i])
+		process_vertex(g->at(i));
+</code>
+
+The graph can also be traversed by following edges. The ''Vertex'' provides a collection
+of output edges and input edges. In turn, the source vertex and the sink vertex of each edge
+can be obtained from the ''Edge'' class:
+<code c++>
+Vertex *v;
+
+for(auto e: v->outEdges())
+	process_successor(e->sink());
+
+for(auto e: v->inEdges())
+	process_predecessor(e->source());
+</code>
+
+Finally, the ''Vertex'' class provides some useful properties like:
+  * ''countIns()'' computes the input degree,
+  * ''countOuts()'' computes the output degree,
+  * ''index()'' get the index of the vertex.
+
+
+===== Building a graph =====
+
+To ensure the consistency of a built graph, a special builder class is provided: ''CiGraphBuilder''.
+One has to create a static instance:
+<code c++>
+#include <otawa/graph/DiGraph.h>
+using namespace otawa;
+
+graph::DiGraphBuilder builder;
+</code>
+
+Then, vertices and edges can be added using this builder:
+  * ''add (vertex)'' to add the given vertex to the graph
+  * ''add(source, sink, edge)'' to add the given edge to the graph that will go from the source
+vertex to the sink vertex.
+
+In the end, the built graph can be obtained with ''build()'' method:
+<code c++>
+graph::DiGraph *graph = builder.build();
+</code>
+
+
+===== Customizing ''DiGraph'' =====
+
+A common practice in OOP, the re-use of a structure implementation,
+like ''DiGraph'', is performed by extending the classes composing
+the graph, namely ''DiGraph'', ''Vertex'' and ''Edge'' with new
+customized classes.. This works perfectly but any function returning
+one of the former classes has to be cast to the new class.
+
+As these casts may be cumbersome, performance consuming (if you use
+''dynamic_cast'') and even error-prone, @(OTAWA) comes with a set of
+specialized classes to help extensions: ''GenDiGraph'', ''GenVertex'',
+''GenEdge'' and ''GenDiGraphBuilder''.
+
+To use them, you have first to pre-declare the custom vertex and edge
+classes:
+<code c++>
+class MyVertex;
+class MyEdge;
+</code>  
+
+Then, vertex and edge classes have to extend, respectively, ''GenVertex''
+and ''GenEdge'':
+<code c++>
+class MyVertex: public graph::GenVertex<MyVertex, MyEdge> {
+	...
+};
+
+class MyEdge: public graph::GenEdge<MyVertex, MyEdge> {
+	...
+};
+</Code>
+
+Do the same for ''GenDiGraph'' and ''GenDiGraphBuilder'':
+<code c++>
+class MyGraph: public graph::GenDiGraph<MyVertex, MyEdge> {
+	...
+};
+
+graph::DiGraphBuilder builder(new MyGraph());
+// fill the graph
+MyGraph *g = builder.build(); 
+</code>
+Notice (a) you have to build the graph instance yourself and (b) that
+now the builder only accepts vertices and edges of type ''MyVertex''
+and ''MyEdge''.
+
+Now, you can browse the content of the graph without any cast
+required:
+<code c++>
+for(MyVertex *v: *g) {
+	process(v);
+	for(MyEdge *e: v->outEdges())
+		process(e);
+}
+</code>
+
+
+
+===== Facilities on Graphs =====
+
+
+
+===== Displaying Graphs =====
+
+The visualization of internal data structure is paramount to debug
+or validate algorithms used in static or binary analysis. Yet,
+displaying graphs is usually complex because to remain readable
+by a human user, the display must try to reduced the crossing of
+edges, problem that is labeled [[https://en.wikipedia.org/wiki/Graph_drawing|Graph Drawing]].
+
+@(OTAWA) does not provide its own solution to this problem but integrates
+a unified interface to connect with libraries / tools able to
+draw a graph. Currently, only the support for [[http://graphviz.org/|GraphViz]] library
+but it is easy to add more. 
+
+The display of a graph uses several classes of name ''otawa::display''
+contained in the extension module ''otawa/display''. The display is
+performed by the class ''display::Displayer'' which an instance can
+be obtained by ''Provider::make()'' method. This static method takes as 
+parameter the graph to display, a decorator and, optionally, the type
+of output to use. It looks automatically for a plug-in supporting
+the given type of output and returns the built displayer (the default
+output type depends on the available graph display modules):
+
+<code c++>
+graph::MyGraph *my_graph;
+display::Displayer *disp = display::make(my_graph, my_decorator);
+</code>
+
+''my_graph'' must be an instance of ''graph::DiGraph'' and decorator
+is a special object that contains 3 methods that are called at display
+time to get the look of the graph, of the vertices and of the edges.
+It must be of type ''display::Decorator'' but a customized graph
+version exists, ''display::GenDecorator''. Thus, to customize the
+output of the graph, you have to write:
+
+<code c++>
+class MyDecorator: public display::GenDecorator<MyGraph, MyVertex, MyEdge> {
+public:
+	void decorate(MyGraph *graph, Text &caption, GraphStyle &style) const override {
+		// (a)
+	}
+ 
+	void decorate(MyGraph *graph, MyVertex *vertex, Text &content, VertexStyle &style) const override {
+		// (b)
+	}
+ 
+	void decorate(MyGraph *graph, MyEdge *edge, Text &label, EdgeStyle &style) const override {
+		// (c) 
+	}
+</code>  
+
+The function (a) is used to decorate the graph (its label), (b) to
+decorate the vertices (their shape and their content) and (c) to
+decorate the edges (their look and their label).
+
+The content and the label of graphs, vertices and edges uses the ''Text''
+class. This class behaves like an ELM ''io::Output '' class (supporting
+''<<'' operator display) but provides also layout facilities by outputting
+special symbols:
+  * ''br'' -- break the flow of the current line,
+  * ''hr'' -- display an horizontal rule,
+  * ''display::align::left'' -- to align text to left,
+  * ''display::align::right'' -- to align text to right,
+  * ''display::align::center'' -- to center the text,
+  * ''begin''(e) -- to start a display environment //e//,
+  * '' end''(e) -- to end a display environment //e//.
+
+ Possible environments //e// includes:
+   * ''display::BOLD'' -- bold area
+   * ''display::ITALIC'' -- italic area
+   * ''display::UNDERLINE'' -- underline area
+   * ''display::SUPER'' -- superscript area
+   * ''display::SUB'' -- subscript area
+   * ''display::SMALL'' -- small text area
+   * ''display::BIG'' -- big text area
+   * ''display::TABLE'' -- table made of rows,
+   * ''display::ROW'' -- table row made of cells,
+   * ''display::CELL'' -- table cell that may contain text.
+
+''GraphStyle'', ''VertexStyle'' and ''EdgeStyle'' allows setting the lookup of
+the corresponding graph object. Refer to their automatic documentation for more
+details. They may set up on an object basis in the decorator or they may be
+fixed for the complete set of vertices and edges from the displayer:
+<code c++>
+VertexStyle& vertex_style = disp->defaultVertex();
+// change content of vertex_style
+EdgeStyle& edge_style = disp->defaultEdge();
+// change content of edge_style
+</code>
+
+Additionally, the ''Displayer'' class allows to change the output path of the
+generated file with ''Displayer::setPath''(//path//) or the overall layout
+of the graph with ''Displayer::setLayout''(//layout//) with //layout// being:
+  * ''display::MAPPED'' -- default vertical layout,
+  * ''display::SPRING'' -- layout obtained using a spring algorithm,
+  * ''display::RADIAL'' -- radial layout,
+  * ''display::CIRCULAR'' -- circular layout.
+
+For example, to display a ''CFG'', the following decorator can be set up:
+<code c++>
+class MyCFGDecorator: public display::GenDecorator<CFG, Block, Edge> {
+public:
+	void decorate(CFG *graph, Text &caption, GraphStyle &style) const override {
+		caption << cfg;
+	}
+ 
+	void decorate(MyGraph *graph, Block *vertex, Text &content, VertexStyle &style) const override {
+		content << display::begin(display::BIG) << vertex << display::end(display::BIG) << io::endl; 
+		if(vertex->isBasic()) {
+			BasicBlock *bb = vertex->toBasic();
+			for(auto i: *bb)
+				content << i->address() << ' ' << i << io::endl;
+		}
+	}
+ 
+	void decorate(CFG *graph, MyEdge *edge, Text &label, EdgeStyle &style) const override {
+	}
+</code>
+
+Finally, the output is built by calling the function ''process'' of the displayer:
+<code c++>
+CFG *g = ...;
+MyCFGDecorator decorator;
+display::Displayer *disp = display::Provider(g, decorator);
+disp->setPath("my_output_path");
+disp->process();
+</code>
+ 

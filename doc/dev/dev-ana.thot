@@ -1,0 +1,298 @@
+====== Analyzer Development ======
+
+OTAWA annotation system, loader plugins and scripts provides lots of possibilities
+to tune and customize the WCET computation. Yet, sometimes, the available analysis
+are not enough to support a particular hardware or application. Fortunately,
+OTAWA allows also to extend the performed analyzes  using its flexible plugin system.
+
+===== OTAWA Plugin System =====
+
+OTAWA is heavily built upon the plugin concept to make it as versatile as possible.
+This involves several issues for which OTAWA framework proposes several solutions.
+
+The first one is the localization of a needed plugin: OTAWA uses a system that try
+to locate a plugin based on the full name of used object. This approach can be applied
+to locate a plugin containing either a property identifier, a feature or a code processor.
+
+The full-qualified name is the complete name of the entity prefixed by the C++ name spaces (separated
+by the usual C++ "::"). The name spaces chain is transformed in a file system path
+that allows to lookout for a plugin containing it. Once the plugin is found in the file system,
+it is loaded and the looked item (property, feature and processor) becomes available.
+
+For example, the "otawa::dcache::MUST_ACS" property identifier produces the file system path
+"otawa/dcache". The, OTAWA will look for plugin matching this name in the usual directories
+where plugins are fetched:
+  * $PWD/.otawa/proc,
+  * $HOME/.otawa/proc
+  * $(OTAWA_HOME)/lib/otawa/proc
+
+In fact, a hierarchical search is performed. First, only "otawa" is looked for a plugin.
+If not found, a plugin whose path "otawa/dcache" is looked. The search continues until
+the name space identifiers have been exhausted. This allows to group together in a same plugin
+different namespaces.
+
+
+===== Using Entities defined in a Plugin =====
+
+To get an entity inside a plugin (property identifier, feature or code processor), the full-qualified
+name is only required and lookup of this name is performed by OTAWA. To help the programmer in this task,
+the framework propose several useful class.
+
+For a property identifier, the class ''DynIdentifier'' is a good candidate. It takes as constructor
+argument the full-qualified name of the identifier and, as soon it is used, will automatically,
+if required, causes the linkage of the plugin. In addition, it may be used as any other identifier.
+The example below shows its use:
+
+<code cpp>
+#include <otawa/prop/DynIdentifier.h>
+using namespace otawa;
+
+static DynIdentifier INITIAL_SP("otawa::dcache::INITIAL_SP");
+
+PropList props;
+INITIAL_SP(props) = initial_sp_address;
+</code>
+
+The same exists for feature with ''DynFeature'' class:
+<code cpp>
+#include <otawa/proc/DynFeature.h>
+using namespace otawa;
+
+static DynFeature MAY_ACS_FEATURE("otawa::dcache::MAY_ACS_FEATURE");
+
+WorkSpace *ws;
+ws->require(MAY_ACS_FEATURE);
+</code>
+
+
+And it works in the same way for code processors with class ''DynProcessor''. Naturally,
+this works only with registered processors. 
+<code cpp>
+#include <otawa/proc/DynProcessor.h>
+using namespace otawa;
+
+static DynProcessor clp_builder("otawa::dcache::CLPBlockBuilder");
+clp_builder.process(workspace, props);
+</code> 
+
+It must be noted that global variable is an efficient to use dynamic identifier, dynamic feature
+or dynamic processors because the linkage is only performed once.
+
+Yet, the linkage to a dynamic entities, based on plugins, does not always succeed. In this case,
+an exception of class ''ProcessorNotFound'' or ''FeatureNotFound'' is raised.
+It may just be ignored and application will stop and display the message attached to the exception,
+letting the user understanding the problem: ''app::Application'' will do this automatically.
+Else the exception may be caught and a fix operation started. There is no exception for
+property identifier because they are supposed to be used after the requirement of their matching
+feature.
+
+The use of the ''static'' C++ modified aims to avoid symbols conflicts. Depending on the OS,
+this may prevent the linkage because a symbol of the same name is present. In addition,
+if the symbols have different types (and in our examples, they have), this could drive
+to the application crash.
+
+
+===== Writing a Analysis Plugin =====
+
+With the ''Dyn''//XXX// family of classe, it is possible to exploit entities defined
+in plugins. Here is presented the way to write and to make such a plugin.
+
+Let's for example, a wonderful analysis that counts the number of instructions in each
+basic block. It is in the ''useful'' package that defines several plugins and particularly
+the ''stat'' plugin. This plugin provides a feature, ''COUNT_FEATURE'' and a property
+''INST_COUNT''. It is implemented by the code processor ''InstCounter''.
+
+First, a ''stat.h'' file has to be created containing this definitions in the right namespace
+to provides identifier and featiures to the user of the plugin:
+<code cpp>
+namespace useful { namespace stat {
+	extern p::feature COUNT_FEATURE;
+	extern Identifier<int> INST_COUNT;
+} }
+</code> 
+
+The code processor, ''InstCounter'', does not need to be provided in the ''stat.h''
+because it does not aim to be used as class but only as the producer of
+''COUNT_FEATURE''. Therefore, the source ''stat.cpp'' might looks like:
+<code cpp>
+#include "stat.h"
+
+namespace useful { namespace stat {
+
+class InstCounter: public BBProcessor {
+public:
+	p::declare reg;
+	InstCounter(p::declare& r = reg): BBProcessor(r) { }
+protected:
+	virtual void processBB(WorkSpace *ws, CFG *cfg, BasicBlock *bb) { ... }
+};
+
+p::declare InstCounter::reg = p::init("useful::stat::InstCounter", Version(1, 0, 0))
+	.base(BBProcessor::reg)
+	.maker<InstCounter>()
+	.provide(COUNT_FEATURE);
+
+p::Identifier<int> INST_COUNT("useful::stat::INST_COUNT", -1);
+p::feature COUNT_FEATURE("useful::stat::COUNT_FEATURE", new Maker<InstCounter>());
+
+} }		// useful::stat
+</code>
+
+The code of the plugin is mostly ready. Only an object declaring the OTAWA plugin is missing.
+This object allows to OTAWA to know that this is, as expected, a real plugin and to
+avoid to perform an inconsistent link.
+
+<code cpp>
+namespace useful { namespace stat {
+	class Plugin: public ProcessorPlugin {
+	public:
+		typedef genstruct::Table<AbstractRegistration * > procs_t;
+		AbstractRegistration *regs[] = { InstCounter::reg };	// (1)	
+		procs_t reg_tab(regs, 1);								// (2)
+		 
+	Plugin(void)
+		: ProcessorPlugin("useful::stat", Version(1, 0, 0), OTAWA_PROC_VERSION) { }	// (3)
+	virtual procs_t& processors(void) const
+		{ return procs_t::EMPTY; };	// (4)
+};
+
+} } useful::stat
+
+useful::stat::Plugin OTAWA_PROC_HOOK;						// (4)
+useful::stat::Plugin& useful_stat = OTAWA_PROC_HOOK;		// (5)
+</code>
+
+The code above class a plugin class decicated to the plugin that must inherit from
+class ''otawa::ProcessorPlugin''. At mark (1), a simple array
+with the registration of all provided code processors is created and then wrapped, mark (2),
+in a ''elm::genstruct::Table''. This table is returned to the user with the virtual method
+''ProcessorPlugin::processors''.
+
+More interesting is the construction at mark (3). Arguments includes the plugin name, version
+and the version of the interface, constant ''OTAWA_PROC_VERSION''. This content allows
+(a) to record the current version of plugin interface and (b) to allow to check compatibility
+when the plugin is load.
+
+Finally, out of the namespace of the name space of the plugin, a plugin instance must be created.
+It is named according to the constant ''OTAWA_PROC_HOOK'' that contains the real name used by OTAWA
+to lookup for the plugin entry. This definition must in the top name space else the C++ mangling
+will prevent OTAWA from finding it. In the opposite, the mark (5) is optional and only useful
+if static linkage is planned for this plugin.
+
+There are different ways to build a plugin but here is presented an approach based
+on [[http://www.cmake.org/|CMake]] and [[http://gcc.gnu.org|GCC]] that works on the OS we support
+(Linux, Windows, MaxOSX)((On Windows, [[http://mingw.org/|MinGW]] has been used) without changing the scripts.
+
+To compile the plugin, the //CMake// script below may be used:
+<code cmake>
+CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
+
+# configuration (1)
+set(PLUGIN		"stat")			# plugin name
+set(NAMESPACE	"useful")		# namespace
+set(MODULES				)		# used modules (to pass to otawa-config=
+set(SOURCES 	stat.cpp)		# sources of the plugin
+
+# script (2)
+project(${PLUGIN})
+
+# look for OTAWA (3)
+if(NOT OTAWA_CONFIG)
+	find_program(OTAWA_CONFIG otawa-config DOC "path to otawa-config")
+	if(NOT OTAWA_CONFIG)
+		message(FATAL_ERROR "ERROR: otawa-config is required !")
+	endif()
+endif()
+message(STATUS "otawa-config at ${OTAWA_CONFIG}")
+execute_process(COMMAND "${OTAWA_CONFIG}" --cflags ${MODULES} OUTPUT_VARIABLE OTAWA_CFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --libs ${MODULES}  OUTPUT_VARIABLE OTAWA_LDFLAGS OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${OTAWA_CONFIG}" --prefix OUTPUT_VARIABLE OTAWA_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# plugin definition (4)
+set(CMAKE_INSTALL_RPATH "\\$ORIGIN/../../../")
+include_directories("${CMAKE_SOURCE_DIR}" ".")
+add_library(${PLUGIN} SHARED ${SOURCES})
+set_property(TARGET ${PLUGIN} PROPERTY PREFIX "")
+set_property(TARGET ${PLUGIN} PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
+target_link_libraries(${PLUGIN} "${OTAWA_LDFLAGS}")
+
+# installation (5)
+if(NOT PREFIX)
+	set(PREFIX "${OTAWA_PREFIX}")
+endif()
+set(PLUGIN_PATH "${PREFIX}/lib/otawa/proc/${NAMESPACE}")
+if(WIN32 OR WIN64)
+	install(TARGETS ${PLUGIN} RUNTIME DESTINATION ${PLUGIN_PATH})
+else()
+	install(TARGETS ${PLUGIN} LIBRARY DESTINATION ${PLUGIN_PATH})
+endif()
+</code>
+
+Section (1) only defines some variables that will be used thereafter while section (2) defines the projet for //CMake//.
+Section (3) looks for ''otawa-config'' to get details for compilation (''OTAWA_CFLAGS'', ''OTAWA_LDFLAGS'').
+''otawa-config'' is either automatically discovered if it is on the path, or may be passed as a parameter
+to the script as ''-DOTAWA_CONFIG=path-to-otawa-config''.
+
+The section (4) is specially interesting as it builds the plugin itself. The ''CMAKE_INSTALL_RPATH''
+allows to link back with OTAWA libraries. ''$ORIGIN'' represents the container directory of the plugin
+and, as it may be have installed in the OTAWA standard directories ''lib/otawa/proc'', the built path
+designs the directory ''lib'' where OTAWA libraries can be find. The number of ''..'' mus be adjusted
+according to the depth of ''${NAMESPACE}'' of the plugin. One must also observe that the library
+prefix, usually ''lib'', is removed from the name of plugin.
+
+The installation is performed in section (5). It is not very clear but it seems that, on Windows,
+the plugin must be installed as a ''RUNTIME'' and not as a ''LIBRARY''.
+
+The script has to be recorded as ''CMakeList.txt'' and can be invoked with:
+<code sh>
+$ cmake .
+$ make install
+</code>
+
+
+===== Management of Dependencies with Plugin =====
+
+Although the plugin techniques are widely used, their support in OS is quite irregular.
+This makes the procedure to build them and load them difficult to handle and specially
+for the developer. Using ''${CMAKE_INSTALL_RPATH}'' as in the //CMake// of previous
+section is very efficient on Unix-like systems (Linux, MacOSX) but does not work on Windows.
+
+To help a bit, OTAWA supports meta-information with the its plugins. This meta-information
+is a file with the same named as the plugin but with ''.eld'' suffix and is formatted
+as Windows initialization files. It may help to pre-load required libraries and plugins,
+to mimic symbolic links of Unices, etc.
+
+In ''.eld'', OTAWA is only interested in the section named ''elm-plugin''. Developers
+can add other sections for their own use since they will be ignored by OTAWA.
+In this section, the following definitions are considered:
+
+  * ''author'' -- author of the plugin in the form "AUTHOR <EMAIL>",
+  * ''copyright'' -- name and, optionally and space separated, link to the license,
+  * ''deps'' -- ";" separated list of plugin names to load before the current plugin,
+  * ''description'' -- description of the plugin for human user,
+  * ''libs'' -- ";" separated list of library names or paths (absolute or relative) to load before the current plugin,
+  * ''name'' -- alternative name of the plugin,
+  * ''path'' -- absolute or relative path to the actual plugin (support for aliasing),
+  * ''rpaths'' -- ";" separated list of paths to look for required plugins / libraries,
+  * ''site'' -- URL to the website publising the plugin.
+
+Lets the example of the previous to depend on plugin ''useful::handy'', the following ''stat.eld'' file
+can be created:
+<code ini>
+[elm-plugin]
+author=myself
+deps=handy
+</code>
+
+To create an alias name to ''useful::stat'' named ''useful::old_stat'', the file ''old_state.eld'' below
+must be generated:
+<code ini>
+[elm-plugin]
+name=stat
+path=stat
+</code>
+
+Both files must be copied in the same directory as the plugin. This is done by the //CMake// below:
+<code cmake>
+install(FILES stat.eld old_stat.eld DESTINATION ${PLUGIN_PATH})
+</code>

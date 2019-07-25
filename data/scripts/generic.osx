@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<otawa-script xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<name>Generic WCET Computation</name>
+
+<info>
+This script proposes a generic approach to compute WCET. Mainly, this approach
+is based on IPET (Implicit Enumeration Technique) and is composed of:
+<ul>
+<li>support for L1 instruction cache if any (LRU replacement only),</li>
+<li>very basic support for L1 data cache if any (LRU replacement only),</li>
+<li>support for branch prediction by category if any,</li>
+<li>computation by execution graph of block timing.</li>
+</ul>
+
+If no processor configuration is given, a 5-level stage pipeline is considered.
+Other hardware components are optional and must be provided by the user expressed
+in the OTAWA XML formats.
+
+In addition to the pure WCET time in cycle, the user can request other information
+to be provided:
+<ul>
+<li>time and frequency by block,</li>
+<li>output of CFG used  by the calculation,</li>
+<li>dump in HTML of the produced ILP system of the IPET approach.</li>
+</ul>
+
+</info>
+
+<configuration>
+	<item name="pipeline" type="string" label="pipeline description file">
+		<help>Select the path of the pipeline description file to use.
+		If not configured, use a default 5-stage pipeline.</help>
+	</item>
+	<item name="cache" type="string" label="cache description file">
+		<help>Select the path of the cache description file to use.
+		If none is provided, the hardware is considered without caches.</help>
+	</item>
+	<item name="memory" type="string" label="memory description file">
+		<help>Select the path of the memory description file to use.
+		If none is provided, the memory is made of only one 32-bits bank with 10-cycles access.</help>
+	</item>
+	<item name="bbstats" type="bool" default="false" label="BB stat">
+		<help>Set to true, display statistics on execution time
+		and execution occurrence count of BBs.</help>
+	</item>
+</configuration>
+
+<script>
+
+	<!-- pipeline configuration -->
+	<xsl:variable name="pipeline_path">
+		<xsl:if test="$pipeline=''"><xsl:value-of select="$ORIGIN"/>/generic/pipeline.xml</xsl:if>
+		<xsl:if test="$pipeline!=''"><xsl:value-of select="$pipeline"/></xsl:if>
+	</xsl:variable>
+	<config name="otawa::PROCESSOR_PATH" value="{$pipeline_path}"/>
+	<xsl:if test="$VERBOSE > 0">
+		<xsl:message> pipeline = <xsl:value-of select="$pipeline_path"/></xsl:message>
+	</xsl:if>
+
+	<!-- cache configuration -->
+	<xsl:if test="$cache!=''">
+		<config name="otawa::CACHE_CONFIG_PATH" value="{$cache}"/>
+	</xsl:if>
+	<xsl:if test="$VERBOSE > 0">
+		<xsl:message> cache = <xsl:value-of select="$cache"/></xsl:message>
+	</xsl:if>
+
+	<!-- memory configuration -->
+	<xsl:if test="$memory!=''">
+		<config name="otawa::MEMORY_PATH" value="{$memory}"/>
+	</xsl:if>
+
+	<!-- CFG building -->
+	<step processor="otawa::Virtualizer"/>
+
+	<!-- cache analysis -->
+	<!-- step require="otawa::ipet::CACHE_SUPPORT_FEATURE"/ -->
+	<xsl:if test="$cache!=''">
+		<step require="otawa::icat3::EDGE_EVENTS_FEATURE"/>
+	</xsl:if>
+
+	<!-- timing analysis -->
+	<step require="otawa::etime::EDGE_TIME_FEATURE"/>
+	<step require="otawa::ipet::WCET_FEATURE"/>
+
+	<!-- outputs -->
+	<xsl:if test="$bbstats">
+		<step processor="otawa::BBRatioDisplayer"/>
+	</xsl:if>
+
+</script>
+
+</otawa-script>

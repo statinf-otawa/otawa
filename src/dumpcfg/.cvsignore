@@ -1,0 +1,9 @@
+.deps
+dumpcfg
+Makefile
+Makefile.in
+.libs
+cmake_install.cmake
+cmake_install.cmake
+CMakeFiles
+dumpcfg.exe

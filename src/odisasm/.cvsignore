@@ -1,0 +1,8 @@
+.deps
+.libs
+Makefile
+Makefile.in
+odisasm
+cmake_install.cmake
+CMakeFiles
+odisasm.exe

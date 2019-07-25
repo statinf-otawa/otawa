@@ -1,0 +1,297 @@
+====== Performing Iterative Data Flow Analysis ======
+
+Iterative Data Flow Analysis is a large family of static analysis on program. This presents  the classes available in OTAWA to perform such kind of analysis in intra- and inter-procedural way.
+
+
+
+
+
+
+
+===== A Little Bit of Theory =====
+
+A data flow analysis (DFA) computes information items at the different points of programs according the control flow. A lot of different information may be computed as domination, accessibility and reachibility and so on. Refer to [Ahot&Sethi&Ullman] and [Muchnick] for more details. Usually, the DFA is applied on CFG and information is computed for each basic block as a function of the information items of its predecessors.
+
+==== Principle ====
+
+The Iterative Data Flow Analysis proceed by computing information of each basic iteratively until reaching a fix point. Usually, the computed information is represented by sets and the set of elements is called the domain of the analysis.
+
+To be computable by the iterative approach the following conditions must be met: 
+  * the domain admits a partial order operator and a join function such that the result of the join must be greater than the involved operands
+  * each element of the domain also admits a greatest elements.
+This conditions ensure the termination of the analysis. This kind of domain is usually a semi-lattice or complete partial order (CPO).
+
+With such a domain, the computation performed on each basic block can follow the following algorithm:
+
+<code>
+foreach basic block n in the CFG do
+  OUT(n) = EMPTY
+while there is n such that OLD(n) <> OUT(n) do
+  foreach basic block n in the CFG do
+    OLD(n) = OUT(n)
+    OUT(n) = join(OUT(PRED(n))) - KILL(n) U GEN(n)
+</code>
+
+where:
+  * OUT(//n//): the set after execution of basic block //n//,
+  * PRED(//n//): list of predecessors of //n//,
+  * KILL(//n//): elements removed by the execution of //n// (killed),
+  * GEN(//n//)</m>: elements added by the execution of //n// (generated).
+
+Consequently, to define completely an iterative DFA, one has just to give:
+  * the join function,
+  * the empty set for the join function,
+  * the kill set of each basic block,
+  * the generative set of each basic block.
+The PRED() function is given by the CFG but there is at least two directions to perform the analysis: in a forward way, according the direction of the CFG edges; in backward way, in the reverse direction of the edges. This depends on the computed problem.
+
+==== Example ====
+
+In the following of the section, we will compute the dominance relation as an exemple. A basic block //n// is said to dominate a basic block //m// if and only if each path starting at the entry of the CFG contains //n//.
+
+To make the computation easier, we will compute the reverse relation : for each basic block, we compute the set of dominators of the basic block. The domain is the set of the CFG while the join is the intersection. Indeed, the join function records information coming from different paths before the current basic block. As the dominance checks the block on any path, we only keep dominating basic blocks contained in all paths. Consequently, the empty is the neutral for the intersection, that is, a set containing all basic blocks of the CFG.
+
+Then, the generative set contains only the singleton containing the current block (the current basic block may dominates its successors) and the kill set is empty (as the traversal of a basic block does not invalidate any element already in the basic block). Notice that we have a little problem with the entry. Initialized to the full set, it will propagate a full set all along each path. As it has no predecessor, it must have an empty domination set. To achieve this goal, we initialize the kill set to the full set.
+
+To summarize, we have the following dominance problem definition:
+
+<code>
+JOIN = intersection
+EMPTY = { all n in the CFG}
+GEN(n) = { n }
+KILL(entry) = { all n in the CFG }
+KILL(n / n <> entry) = { }
+</code>
+
+
+
+
+
+
+
+
+
+
+
+===== Intra-procedural Analysis with IterativeDFA =====
+
+==== DFAEngine ====
+
+The ''DFAEngine'' class is a C++ template used to implement iterative data flow analysis. The constructor is declared in the header file ''otawa/dfa/IterativeDFA.h'' as below:
+<code c>
+template<
+  class Problem,
+  class Set,
+  class Iter = Predecessor
+> otawa::dfa::IterativeDFA<Problem, Set, Iter>::IterativeDFA (Problem &problem, CFG &cfg);
+</code>
+
+This templates takes three type arguments. The //Problem// is a type providing the functions to handle the domain represent by the //Set//. Both types have been separated to support re-use of the domain type. The //Problem// must contain the following methods:
+
+  * ''Set *empty(void)'': get the empty relatively to the join function,
+  * ''Set *gen(BasicBlock *bb)'': get the generative set for the given basic block,
+  * ''Set *kill(BasicBlock *bb)'': get the kill set for the given basic block,
+  * ''bool equals(Set *set1, Set *set2)'': test for equality between two sets,
+  * ''void merge(Set *set1, Set *set2)'': the join function,
+  * ''void add(Set *dset, Set *tset)'': the union from the computation formula,
+  * ''void diff(Set *dset, Set *tset);'': the difference from the computation formula.
+
+To improve the performances of the computation, the following methods must also be defined:
+  * ''void reset(Set *set)'' : set to empty the given set (this kind of function is used to improve performances of the computation),
+  * ''void set(Set *dset, Set *tset)'' : perform the copy the second set to the first one.
+
+The //Iter// type is used to control the direction of traversal of the CFG. With its default value, the analysis is performed from the entry of CFG to the exit the CFG. According the problem, the iteration may be performed in a reversedirection, from exit to entry using the ''otawa::dfa::Successor'' iterator.
+
+To represent a set, we may use any type of object compatible with a problem. To improve speed, a usual solution is to use a bit vector where each bit records presence of an element in the set. OTAWA such a class called ''otawa::dfa::BitSet''. It provides all operations used on a set. It requires only that the size of the domain to be known before the analysis and to assign an integer index value to each involved element.
+
+==== Example ====
+
+As an example, we will implement our dominance problem with ''IterativeDFA'' class. The domain is represented by a simple bit set. As each basic block contains an index attribute, there is no need to build an associative array for (index, basic block) pairs. Now, below, we write the ''DominanceProblem'':
+
+<code c>
+class DominanceProblem {
+	int size;
+public:
+	DominanceProblem(CFG *_cfg) { size = _cfg->countBB(); }
+	BitSet *empty(void) {
+		BitSet *result = new BitSet(size);
+		result->fill();
+		return result;
+	}
+	BitSet *gen(BasicBlock *bb) {
+		BitSet *result = new BitSet(size);
+		result->add(bb->number());
+		return result;
+	}
+	BitSet *kill(BasicBlock *bb) {
+		BitSet *result = new BitSet(size);
+		if(bb->isEntry())
+			result->fill();
+		return(result);
+	}
+	bool equals(BitSet *set1, BitSet *set2) { return(set1->equals(*set2)); }
+	void merge(BitSet *set1, BitSet *set2) { set1->mask(*set2); }
+	void add(BitSet *dset, BitSet *tset) { dset->add(*tset); }
+	void diff(BitSet *dset, BitSet *tset) { dset->remove(*tset); }
+	void reset(BitSet *set) { set->fill(); }
+	void set(BitSet *dset, BitSet *tset) { *dset = *tset; }
+};
+</code>
+
+The constructors just records the count of basic blocks in order to build the bit sets. Then, most methods just use the set operator of the ''BitSet'' class (the join is implemented as an intersection, kill as a removal and addition as a union). The generative sets contains only the current block and the kill set are ever empty except for the entry (there is no predecessor to the entry).
+
+Then, the analysis is easily performed as follow (notice that the third type argument is not given as the default forward analysis is used):
+
+<code c>
+DominanceProblem problem(cfg);
+dfa::IterativeDFA<DominanceProblem, BitSet> engine(problem, *cfg);
+engine.compute();
+</code>
+
+The ''compute'' method of the ''IterativeDFA'' class performs the iterative DFA analysis (it may take a bunch of time according the size of the CFG and of the complexity of computed domain). Please, remark that the ''kill()'' and ''gen()'' are only called once at the initialization time and remains constant all along the analysis: this may save some time if the sets are complex to compute.
+
+Then, one may exploit the result of the analysis. For each basic block, the ''IterativeDFA'' object can provides the ''outSet()'', ''inSet()''((''inSet()'' is the join of predecessors of the basic block)), ''genSet()'' and ''killSet()''. The example below just records the out bit sets in a basic block property.
+
+<code c>
+for (CFG::BBIterator bb(cfg); bb; bb++) {
+  REVERSE_DOM(blocks) = new BitSet(*engine.outSet(bb));
+}
+</code>
+
+Notice that the bit set are owned by the ''IterativeDFA'' class and must be copied to be saved after the the ''IterativeDFA'' object deletion.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===== Inter-procedural Analysis with XIterativeDFA =====
+
+==== Another View ====
+
+The ''XIterativeDFA'' class allows to perform inter-procedural iterative DFA.
+It is based on variation of the ''OUT'' computation set:
+''OUT(bb) =  join(meet(join(IN(pred) ), PRES(BB), GEN(BB) )''. It uses two functions,
+join and meet, while the previous method uses three ones: join, difference and union.
+Next, the ''PRES(BB)'', the preserving set, is just the complement of the kill set.
+
+Whatever the choice of the functions, the ''OUT(BB)'' must stays monotonic. Usually, either we use union and intersection for, respectively, the join and the meet function in case on increasings sets, or the reverse for increasing sets.
+
+So we can re-formulate the dominance problem as:
+<code>
+join = intersection
+meet = union
+PRES(BB) = { BB }
+GEN(entry) = { }
+GEN(n / n <> BB) = { all in the CFG }
+</code>
+
+==== XIterativeDFA ====
+
+The ''XIterativeDFA'' is defined as a template, as below, that takes as argument a type that provides facilities to :
+  * traverse the basic blocks and the subprogram calls,
+  * implement the domain operations.
+
+<code c>
+template<class Visitor> class otawa::dfa::XIterativeDFA;
+</code>
+
+This type argument must implement the complex ''otawa::dfa::Visitor'' concept that is not detailed here. Instead, one may use one of its implementation, called ''otawa::dfa::XCFGVisitor''. Actually, the ''XIterativeDFA'' does not know any thing about the inter-procedural visit: it works for any graph-like data flow structure. The responsibility to handle the inter-CFG calls is let to the visitor, that is, the ''XCFGVisitor''.
+
+This one is declared as a template taking as type parameter the problem definition:
+<code c>
+template<class Problem> class otawa::dfa::XCFGVisitor;
+</code>
+
+The problem definition must implement the following concept:
+<code c>
+class Problem {
+public:
+  typedef domain_t;
+  domain_t *empty(void);
+  domain_t *generate(CFG *cfg, BasicBlock *bb);
+  domain_t *preserve(CFG *cfg, BasicBlock *bb);
+  void free(domain_t *d);
+}
+</code>
+
+''domain_t'' defines the type of the domain. The ''empty()'' returns the empty domain. ''generate()'' and ''preserve()'' provides generative and preserving sets. Both takes as parameters the current CFG and the current basic block. Finally, the ''free()'' is used to free domains allocated by the previous methods.
+
+The ''domain_t'' must have the following concept:
+<code c>
+class domain_t {
+public:
+  void reset(void);
+  void join(domain_t *d);
+  void meet(domain_t *d);
+  void bool equals(domain_t *d);
+};
+</code>
+
+The method ''reset()'' may be used to reset the content of a domain. ''join()'' and ''meet'' functions previously defined functions. Finally, ''equals()'' performs the test for equality.
+
+==== Example ====
+
+If we want to extend the dominance analysis to the full program, we write the following ''Problem'' and ''domain_t'' classes :
+
+<code c>
+class DominanceDomain {
+public:
+  domain_t(int size, bool fill = true): bs(size) { if(fill) bs.fill(); }
+  void reset(void) { bs.fill(); }
+  void join(domain_t *d) { bs.mask(d->bs); }
+  void meet(domain_t *d) { bs.add(d->bs); }
+  void bool equals(domain_t *d) { return bs.equals(d->bs); }
+private:
+  BitSet bitset;
+};
+
+class DominanceProblem {
+public:
+  DominanceProblem(CFGCollection *collect) {
+    size = 0;
+    for(CFGCollection::Iter cfg(collect); cfg; cfg++)
+      size += cfg->countBB();
+  }
+  typedef DominanceDomain domain_t;
+  domain_t *empty(void) { return new DominanceDomain(size); }
+  void free(domain_t *d) { delete d; }
+  domain_t *generate(CFG *cfg, BasicBlock *bb) {
+    return new DominanceDomain(size, !bb->isEntry());
+  }
+  domain_t *preserve(CFG *cfg, BasicBlock *bb) {
+    BitSet *result = new BitSet(size, false);
+    result->add(bb->number());
+    return result;
+  }
+private:
+  int size;
+};
+</code>
+
+Now, we can perform the computation on our program:
+<code c>
+CFGCollection *collect = INVOLVED_CFGS(ws);
+DominanceProblem problem(collect);
+dfa:XCFGVisitor<DominanceProblem> visitor(problem, collect);
+dfa::XIterativeDFA<dfa:XCFGVisitor<DominanceProblem> > engine(visitor);
+engine.process();
+</code>
+
+Now, we can examine the results:
+<code c>
+for(CFGCollection::Iter cfg(collect); cfg; cfg++)
+  for(CFG::BBIter bb(cfg); bb; bb++)
+    process(visitor.out(engine, cfg, bb));
+</code>
+

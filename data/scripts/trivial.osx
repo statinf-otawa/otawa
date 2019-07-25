@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="iso-8859-1" standalone="yes" ?>
+<otawa-script
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:xi="http://www.w3.org/2001/XInclude">
+
+<name>Trivial WCET computation</name>
+
+<info>
+This script may be used to compute trivial WCET (not realistic)
+with scalar pipelined processors. In the extreme case, it may give
+a rough overestimation of the real WCET.
+</info>
+
+<configuration>
+	<item name="virtual" type="bool" default="false" label="function call virtualization">
+		<help>Cause the function call to be replaced by inlining the function body.
+		Improve the precision of the WCET but may augment the computation time.</help>
+	</item>
+	<item name="stages" type="int" default="5" label="number of stages">
+		<help>Number of stages in the pipeline.</help>
+	</item>
+	<item name="cache" type="string" default="" label="cache configuration">
+		<help>Select the cache configuration to use.</help>
+	</item>
+	<item name="do_icache" type="bool" default="false" label="instruction cache analysis">
+		<help>This option enables the trivial instruction cache analysis.
+		Requires a cache configutation with an instruction cache to be available.</help>
+	</item>
+	<item name="do_dcache" type="bool" default="false" label="data cache analysis">
+		<help>This option enables the trivial data cache analysis.
+		Requires a cache configutation with a data cache to be available.</help>
+	</item>
+</configuration>
+
+<script>
+	<xsl:if test="$virtual!=0">
+		<step processor="otawa::Virtualizer"/>
+	</xsl:if>
+	
+	<!-- cache support -->
+	<xsl:if test="$cache!=''">
+		<step require="otawa::hard::CACHE_CONFIGURATION_FEATURE">
+			<config name="otawa::CACHE_CONFIG_PATH"><xsl:attribute name="value"><xsl:value-of select="$cache"/></xsl:attribute></config>
+		</step>
+	</xsl:if>
+	
+	<xsl:if test="$do_icache!=0">
+		<step processor="otawa::trivial::AllMissICacheTime"/>
+	</xsl:if>
+	<xsl:if test="$do_dcache!=0">
+		<step processor="otawa::trivial::NoDCacheTime"/>
+	</xsl:if>
+	
+	<!-- WCET computation -->
+	<step processor="otawa::trivial::BlockTime">
+		<config name="otawa::trivial::INSTRUCTION_TIME" value="{$stages}"/>
+	</step>
+	<step processor="otawa::ipet::WCETComputation"/>
+
+</script>
+
+</otawa-script>

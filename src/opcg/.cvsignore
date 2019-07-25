@@ -1,0 +1,14 @@
+MascotteOptimise.abs.ff
+.project
+opcg
+MascotteOptimise.abs
+.cproject
+main.ps
+main.dot
+Makefile
+Makefile.in
+.deps
+.libs
+cmake_install.cmake
+CMakeFiles
+opcg.exe

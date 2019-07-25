@@ -1,0 +1,315 @@
+/**
+ * Design elements for default Template
+ *
+ * @author Andreas Gohr <andi@splitbrain.org>
+ * @author Anika Henke <henke@cosmocode.de>
+ * @author Hugues Casse <hugues.casse@laposte.net>
+ */
+
+/* -------------- general --------------- */
+body {
+  font: 80% "Lucida Grande", Verdana, Lucida, Helvetica, Arial, sans-serif;
+  background-color: #a6a6a6;
+  color: #000;
+}
+
+div.main {
+  margin-top: 13px;
+  margin-bottom: 8px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 1000px;
+  }
+
+/* -------------- header --------------- */
+
+.header {
+  height: 180px;
+  background: transparent url(images/otawa.jpg) no-repeat;
+  padding: 5px 0px 0px 0px;
+  color: white;
+}
+
+.title {
+  font-size: 220%;
+  font-weight: bolder;
+  margin-top: 8px;
+}
+
+.authors {
+	font-size: 150%;
+	font-style:italic; 
+	float:right;
+	padding-right:15px;
+	padding-top:20px;
+}
+
+.authors a:link, .authors a:visited {
+	color: white;
+}
+
+.authors a:active, .authors a:hover {
+	text-decoration: underline;
+}
+
+
+/* ---------------  main ---------------- */
+
+div.main {
+  overflow: auto;
+  
+}
+
+/* ---------------  page ---------------- */
+
+div.page {
+  text-align: justify;
+  line-height: 1.5em;
+  padding-top: 21px;
+  padding-bottom: 34px;
+  
+
+  padding-left: 42px;
+  padding-right: 67px;
+  /*float: right;*/
+  /* width: 466px; */
+  background:url(images/fond2.jpg) repeat-y;
+}
+
+/* ---------------  toc ---------------- */
+
+div.toc {
+  background: #C9C0DD;
+  font-size: 90%;
+  padding: 21px 41px 34px 26px;
+}
+
+div.toc ul {
+  list-style-type: none;
+}
+
+/* special headlines for sidebar */
+div.toc ul { clear: none; font-size: 150%; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 5px;}
+div.toc ul ul { clear: none; font-size: 80%; text-transform: uppercase; letter-spacing: 0.2em; margin-bottom: 5px;}
+div.toc ul ul { clear: none; font-size: 80%; margin-bottom: 2px;}
+div.toc ul ul ul { clear: none; margin-bottom: 2px;}
+div.toc ul ul ul ul { clear: none; margin-bottom: 2px;}
+
+/*div.toc:after {
+  content: "&nbsp;";
+  display: block;
+  height: 0;
+  font-size: 0;
+  line-height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}*/
+
+/* the document */
+
+table {
+  font-size: 100%;
+}
+
+img {
+  border: 0;
+}
+
+p, blockquote, table, pre {
+  margin: 0 0 1em 0;
+}
+
+hr {
+  border: 0px;
+  border-top: 1px solid #61a0ff;
+  text-align: center;
+  height: 0px;
+  margin: 1em 0;
+}
+
+
+/* --------------- Links ------------------ */
+
+a:link, a:visited {
+  color: #3A1A87;
+  text-decoration: none;
+}
+a:hover , a:active {
+  color: #371188;
+  text-decoration: underline;
+}
+
+h1 a, h2 a, h3 a, h4 a, h5 a, a.nolink {
+  color: #000 !important;
+  text-decoration: none !important;
+}
+
+
+/* ------------- Page elements ----------------- */
+
+/* general headline setup */
+h1, h2, h3, h4, h5 {
+    color: #000;
+    background-color: inherit;
+    font-size: 100%;
+    font-weight: normal;
+    margin: 0 0 1em 0;
+    padding: 0.5em 0 0 0;
+    border-bottom: 1px solid #3A1A87;
+    clear: left;
+}
+
+/* special headlines */
+h1 {font-size: 150%; font-weight: bold;}
+h2 {font-size: 140%;}
+h3 {font-size: 120%; border-bottom: none; font-weight: bold;}
+h4 {font-size: 110%; border-bottom: none; font-weight: bold;}
+h5 {font-size: 100%; border-bottom: none; font-weight: bold;}
+
+/* unordered lists */
+ul {
+  line-height: 1.5em;
+  list-style-type: square;
+  list-style-image: none;
+  margin: 0 0 0.5em 1.5em;
+  color: #3A1A87;
+}
+
+/* ordered lists */
+ol {
+  line-height: 1.5em;
+  list-style-image: none;
+  margin: 0 0 0.5em 1.5em;
+  color: #3A1A87;
+  font-weight: bold;
+}
+
+ol {list-style-type: decimal}
+ol ol {list-style-type: upper-roman}
+ol ol ol {list-style-type: lower-alpha}
+ol ol ol ol {list-style-type: lower-greek}
+
+li * {
+  color: #000;
+  font-weight: normal;
+}
+
+blockquote {
+  border: 1px solid #c8c8c8;
+  background-color: #f2f2f2;
+  line-height: 1.2em;
+  padding: 0.2em 0.5em;
+  margin: 0.5em 0;
+  opacity: 0.9;
+}
+
+pre {
+  font-size: 110%;
+  line-height: 1.2em;
+  padding: 0.5em;
+  border: 1px dashed #3A1A87;
+  color: #000;
+  overflow: auto;
+}
+
+/* inline code words */
+pre.code {
+  font-size: 110%;
+}
+
+/* code blocks by file tag */
+pre.file {
+  background-color: #c2daff;
+}
+
+/* inline tables */
+table {
+  background-color: #fff;
+  line-height: 1.2em;
+  border-spacing: 0px;
+  border-collapse: collapse;
+}
+
+table th {
+  padding: 3px;
+  border: 1px solid #3A1A87;
+  background-color: #DBD7E8;
+}
+
+table td {
+  padding: 3px;
+  border: 1px solid #3A1A87;
+}
+
+
+/* ---------- table of contents ------------------- */
+
+/*div.toc {
+  margin: 1.2em 0 0 2em;
+  float: right;
+  width: 200px;
+  font-size: 80%;
+  clear: both;
+}
+
+div.toc h1 {
+  border: 1px solid #61a0ff;
+  background-color: #d9e8ff;
+  text-align: left;
+  font-weight: bold;
+  padding: 3px;
+  margin-bottom: 2px;
+}
+
+
+div.toc > ul {
+  list-style-type: none;
+  list-style-image: none;
+  line-height: 1.2em;
+  margin: 0;
+
+  border: 1px solid #61a0ff;
+  background-color: #fff;
+  text-align: left;
+  padding: 0.5em 0 0.7em 1em;
+  
+  list-style-type: none;
+}
+
+div.toc ul li {
+  background: transparent url(images/tocdot2_blue.gif) 0 0.6em no-repeat;
+  padding-left: 0.5em;
+  list-style-type: none;
+}
+
+div.toc a:link, div.toc a:visited {
+  color: #003f9e;
+}
+
+div.toc a:hover, sic.toc a:active {
+  color: #000;
+}*/
+
+/* --------------------- footnotes -------------------------------- */
+
+div.footnotes {
+  clear: both;
+  border-top: 1px solid #3A1A87;
+  padding-left: 1em;
+  margin: 1em 0;
+}
+
+ div.footnotes p {
+  font-size: 90%;
+  line-height: 1.2em;
+}
+
+a.footnumber {
+  vertical-align: super;
+  font-size: 70%;
+  font-weight: bold;
+}
+
+a.footnumber:after {
+  content: ")";
+ }

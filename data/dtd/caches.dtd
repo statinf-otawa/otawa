@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT cache-config 	((cache|icache|dcache)*)>
+
+<!ELEMENT cache			((on_chip|block_bits|row_bits|way_bits|allocate|next|replace|write)+)>
+<!ATTLIST cache			id	ID		#IMPLIED>
+<!ATTLIST cache			ref	IDREF	#IMPLIED>
+
+<!ELEMENT icache		((on_chip|block_bits|row_bits|way_bits|allocate|next|replace|write)+)>
+<!ATTLIST icache		id	ID		#IMPLIED>
+<!ATTLIST icache		ref	IDREF	#IMPLIED>
+
+<!ELEMENT dcache		((on_chip|block_bits|row_bits|way_bits|allocate|next|replace|write)+)>
+<!ATTLIST dcache		id	ID		#IMPLIED>
+<!ATTLIST dcache		ref	IDREF	#IMPLIED>
+
+<!ELEMENT on_chip		(#PCDATA)>	<!-- boolean -->
+<!ELEMENT block_bits	(#PCDATA)>	<!-- integer -->
+<!ELEMENT row_bits		(#PCDATA)>	<!-- integer -->
+<!ELEMENT way_bits		(#PCDATA)>	<!-- integer -->
+<!ELEMENT allocate		(#PCDATA)>	<!-- boolean -->
+<!ELEMENT next			EMPTY>
+<!ATTLIST next			ref	IDREF	#REQUIRED>
+<!ELEMENT replace		(#PCDATA)>	<!-- one of NONE, OTHER, LRU, RANDOM, FIFO or PLRU -->
+<!ELEMENT write			(#PCDATA)>	<!-- one of WRITE_THROUGH or WRITE_BACK -->

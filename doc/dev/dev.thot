@@ -1,0 +1,38 @@
+@use dokuwiki
+@TITLE=OTAWA Development Manual
+@AUTHORS=H. Cassé <casse@irit.fr>
+@VERSION=1
+@LANG=en_EN
+@ENCODING=utf-8
+@HTML_STYLES=../css/manual.css
+
+[[http://www.otawa.fr|OTAWA]] is dedicated to the development and experimentation
+of Worst Case Execution Time (WCET) computation methods. OTAWA is a framework
+composed of a main library, //libotawa//, with several sub-libraries and plugins
+that may be automatically invoked by //libotawa//. This makes the framework
+very versatile and easy to extend.
+
+The goal of this manual is mainly to describe how extensions can be developed
+for OTAWA.  The following extensions are described :
+  * // scripts//: to provide a new computation methods or adaptation to new micro-architectures (usually matching a specific microprocessor model).
+  * //loaders//: to adapt a new Instruction Set Architecture (ISA),
+  * //analyzers// (or code processor in OTAWA terminology): to provide new or more specific analyzes, 
+  * //ilp solvers//: to connect OTAWA with a new solver,
+
+Before reading this manual, it is advised to master the OTAWA framework
+whose details are given in the [[../manua/manual.html|OTAWA manual]]. It is also
+a good idea to have an access to the API documentation (also called autodoc):
+prefer the up-to-date auto-documentation delivered with your OTAWA package
+although this documentation may be also obtained from [[http://www.otawa.fr/doku/autodoc|here]].
+
+For any problem or question, you may ask the OTAWA developers from the site [[http://www.otawa.fr]].
+
+
+@include dev-script.thot
+@include dev-loader.thot
+@include dev-ana.thot
+
+
+====== ILP Solver Development ======
+
+

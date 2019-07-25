@@ -1,0 +1,31 @@
+  Follows the known format of Heptane AST files.
+Notice that letter case seems to be meaningful.
+
+file	::=	def+
+def		::= NAME "=" ast
+ast		::=	"Vide"
+		|	"Code" "(" LABEL ("," call)* LABEL ')'
+		|	"Seq" "[" ast (";" ast)* "]"
+		|	"If" "(" ast "," ast "," ast ")"
+		|	"While" "(" range "," ast "," ast ")"
+		|	"DoWhile" "(" range "," ast "," ast ")"
+		|	"For" "(" range "," ast "," ast "," ast ")"
+call	::= APPEL "{" NAME "}"
+range	::= "[" exp "," exp ']'
+exp		::= NUMBER
+		|	NAME
+		|	NAME '(' (exp ("," exp)*)? ')'
+		|	"(" exp ")"
+		|	("+" | "-") exp
+		|	exp op exp
+		
+op		::= "+" | "-" | "*" | "/" | "**"
+		|	">= " | "<=" | ">" | "<" | "#" | "="
+
+NAME	::=	/[a-zA-Z_][a-zA-Z_0-9]*/
+LABEL	::=	/{NAME}/
+INT		::=	/[0-9]+/
+FRAC	::=	/\.{INT}/
+EXP		::=	/[eE][+-]{INT}/
+NUMBER	::= /{INT}|{INT}{FRAC}|{INT}{EXP}|{INT}{FRAC}{EXP}/
+

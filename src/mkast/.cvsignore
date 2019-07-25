@@ -1,0 +1,11 @@
+.swp
+a.out
+hello.ast
+hello.ast.c
+hello.c
+hello.s
+mkast
+mkast.cmi
+mkast.cmo
+._d
+ocaml-make-6.21.1

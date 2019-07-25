@@ -1,0 +1,30 @@
+@use dokuwiki
+@TITLE=OTAWA Manual
+@AUTHORS=H. Cassé <casse@irit.fr>, C. Rochange <rochange@irit.fr>, C. Ballabriga <ballabri@irit.fr>
+@VERSION=1
+@LANG=en_EN
+@ENCODING=utf-8
+@HTML_STYLES=../css/manual.css
+
+@LATEXMATH=mathjax
+@use latexmath
+@use lexicon
+
+@OTAWA_SITE={{http://www.otawa.fr}}
+@OTAWA=**OTAWA**
+
+@include manual-install.thot
+@include manual-wcet.thot
+@include manual-appli.thot
+@include manual-props.thot
+@include manual-prog.thot
+
+
+@include manual-graph.thot
+@include manual-elm.thot
+@include manual-dfa.thot
+@include manual-ai.thot
+@include manual-refs.thot
+@include manual-formats.thot
+@include manual-gloss.thot
+@include manual-append.thot

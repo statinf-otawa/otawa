@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!ELEMENT processor (arch,model?,builder?,stages,queues?)>
+<!ATTLIST processor class CDATA #FIXED "otawa::hard::Processor">
+
+<!ELEMENT arch		(#PCDATA)>
+<!ELEMENT model 	(#PCDATA)>
+<!ELEMENT builder 	(#PCDATA)>
+
+<!ELEMENT stages (state+)>
+
+<!ELEMENT stage ((name|width|latency|type|dispatch|fus|ordered)+)>
+<!ATTLIST stage	id	ID	#REQUIRED>
+
+<!ELEMENT name		(#PCDATA)>
+<!ELEMENT width		(#PCDATA)>		<!-- integer -->
+<!ELEMENT latency	(#PCDATA)>		<!-- integer -->
+<!ELEMENT type		(#PCDATA)>		<!-- one of fetch, lazy, commit or exe -->
+<!ELEMENT ordered	(#PCDATA)>		<!-- true or false -->
+
+<!ELEMENT dispatch	(inst*)>
+<!ELEMENT inst		(type,fu)>
+<!ELEMENT type		(#PCDATA)>		<!-- IS_XXX combination separated by | -->
+<!ELEMENT fu		EMPTY>
+<!ATTLIST fu		ref		IDREF>	<!-- should be #REQUIRED but two fu version impossible -->
+
+<!ELEMENT fus		(fu+)>
+<!ELEMENT fu		((name|latency|width|pipelined)*)>
+<!ELEMENT pipelined	(#PCDATA)>		<!-- true or false -->
+
+<!ELEMENT queues	(queue*)>
+<!ELEMENT queue		((name|size|intern|output|input)*)>
+<!ELEMENT name		(#PCDATA)>
+<!ELEMENT size		(#PCDATA)>		<!-- integer -->
+<!ELEMENT intern	EMPTY>
+<!ATTLIST intern	ref 	IDREF 	#REQUIRED>
+<!ELEMENT input		EMPTY>
+<!ATTLIST input		ref 	IDREF 	#REQUIRED>
+<!ELEMENT output	EMPTY>
+<!ATTLIST output	ref 	IDREF 	#REQUIRED>

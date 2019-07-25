@@ -1,0 +1,198 @@
+====== Architecture Formats ======
+
+This sections describes the format of the files used to describe an architecture.
+They includes description for:
+  * microprocessor pipeline,
+  * cache hierarchy,
+  * memory address space.
+
+===== Notation =====
+
+These description files formats are based on [[http://www.w3.org/TR/2006/REC-xml11-20060816/|XML]].
+XML allows to represent structured documents with a textual representation organized as a tree
+of elements. Elements are delimited by tags and identifier between brackets, ''<'' and ''>'',
+possibly containing attributes.
+
+This document describes dialects of XML whose syntax is given with a special notation
+derived from [[http://fr.wikipedia.org/wiki/Extended_Backus-Naur_Form|EBNF]].
+
+<code xml>
+<!-- NT ::= -->
+<mytag att="INT"?> <!-- NT1 --> (<!-- NT2 --> | <!-- NT3 -->) </mytag>
+</code>
+
+The example below allows to define the non-terminal symbol NT that starts and
+ends with tags ''mytag''. It may have an attribute called ''att'' containing
+an integer. Its content start first with a an element ''NT1'' (defined elsewhere)
+and followed either by an element of type ''NT2'' or ''NT3''.
+
+Words in uppercase describe a //terminal// textual content
+while the tags are represented as-is.
+
+Tags and attributes may be followed with one of this symbol:
+  * ''*'' -- item may be repeated zero or several times,
+  * ''+'' -- item may be repeated one or several times,
+  * ''?'' -- item is optional.
+
+The //terminals// may be:
+  * ''INT'' -- an integer (accepting C decimal, binary, octal or hexadecimal notation),
+  * ''TEXT'' -- any text supported by XML,
+  * ''BOOL'' -- one of ''true'' or ''false'',
+
+
+===== Microprocessor Pipeline =====
+
+A microprocessor pipeline allows to describes the stages and the queue composing
+the pipeline. References between stages and queues is performed by assigning ''id''
+attributes to the items and referencing them using ''ref'' attributes.
+
+==== To Level ====
+
+The top-level element is given below (notice that the ''class'' attribute is mandatory):
+<code xml>
+<!-- PIPELINE::= -->
+<processor class="otawa::hard::Processor">
+	<arch>TEXT</arch>?
+	<model>TEXT</model>?
+	<builder>TEXT</builder>?
+	<frequency>INT</frequency>?
+	
+	<stages> <!-- STAGE -->* </stages>?
+	<queues> <!-- QUEUE -->* </queues>?
+</processor>
+</code>
+
+The contained items have the following description:
+  * ''<arch>'' -- describe the Instruction-Set Architecture of the processor
+(this may be used to identify the loader plug-in used with this description),
+  * ''<model>'' -- processor model name as provided by the builder,
+  * ''<builder>'' -- builder name
+  * ''<frequency>'' -- frequency of the processor in Hz,
+  * ''<stages>'' -- list of stages,
+  * ''<queues>'' -- list of queues. 
+
+==== Stage Description ====
+
+<code xml>
+<!-- STAGE ::= -->
+<stage id="TEXT"?>
+	<name>TEXT</name>?
+	<width>INT</width>?
+	<latency>INT</latency>?
+	<pipelined>BOOL</pipelined>?
+	<type>FETCH|LAZY|EXEC|COMMIT</type>?
+	<ordered>BOOL</ordered>?
+	<fus> <!-- FU -->* </fus>?
+	<dispatch> <!-- INST -->* </dispatch>?
+</stage>
+</code>
+
+A pipeline stage may have ''<name>'' (for the human user), a ''<width>'' that gives the numer
+of instructions that may processed by the stage in one cycle and a ''<type>''. ''<latency>''
+gives the number of cycles an instruction spends in the stage while ''<pipelined>'' says
+if the instruction execution in the stage is pipelined, that is, overlapped.
+
+The types have the following meaning:
+  * ''FETCH'' -- stage getting instruction from memory,
+  * ''LAZY'' -- do noting special (only spends time),
+  * ''EXEC'' -- stage performing execution of instructions,
+  * ''COMMIT'' -- stage where instructions are leaving the pipeline.
+
+''<ordered>'', ''fus'' and ''dispatch'' elements are only used with ''EXEC'' type stages.
+''ordered'' allows to know if the execution is in-order or not. ''FU'' gives the list of
+FU (Functional Units) while the ''<dispatch>'' allows to dispatch instructions to the
+different FUs. An ''EXEC'' stage dispatches instruction to FU for instruction only if
+the data dependencies are already fulfilled. 
+
+
+
+==== Functional Unit ====
+
+A FU is responsible for performing the execution of an instruction.
+
+<code xml>
+<!-- FU ::= -->
+<fu id="TEXT"?>
+	<name>TEXT</name>
+	<width>INT</width>
+	<latency>INT</latency>
+	<pipelined>BOOL></pipelined>
+</fu>
+</code>
+
+The ''<name>'' is only for display to the human user and may be any text.
+In ''<width>'' element gives the number of instruction that may executed
+in parallel in each cycle with ''<latency>'' gives the number of cycles
+an instruction spends in the stage. With a latency of several cycles,
+the instruction traversal of the FU may be pipelined, element ''<pipelined>'',
+that is, the different cycles may be overlapped.
+
+==== ''<inst>'' Element ====
+
+''<inst>'' element allows to select which FU will execute an instruction.
+
+<code xml>
+<inst>
+	<type>FLAGS</type>
+	<fu ref="TEXT"/>
+</code>
+
+The ''<fu>'' element gives the FU that will execute an instruction matching the flags
+in the ''<type>'' element.
+
+The flags are separated by ''|'' pipes and are a composition of identifier
+selecting the properties of the instruction (as provided by the loader). To be selected,
+an instruction must match all flags of the ''<type>'' element.
+
+Known flags are derived from the ''otawa::Inst'' class kinds and includes:
+  * IS_COND -- conditional instruction,
+  * IS_CONTROL -- control instruction,
+  * IS_CALL -- sub-program call,
+  * IS_RETURN -- sub-program return,
+  * IS_MEM -- instruction performing memory access,
+  * IS_LOAD -- instruction reading in memory,
+  * IS_STORE -- instruction writing in memory,
+  * IS_INT -- instruction working on integers,
+  * IS_FLOAT -- instruction working on floats,
+  * IS_ALU -- computation instruction,
+  * IS_MUL -- multiplication,
+  * IS_DIV -- division,
+  * IS_SHIFT -- shift or rotation,
+  * IS_TRAP -- trap or exception instruction,
+  * IS_INTERN -- instruction performing internal work in hardware (not changing program behaviour),
+  * IS_MULTI -- performs multiple loads or stores,
+  * IS_SPECIAL -- instruction that can not be classified with other flags,
+  * IS_INDIRECT -- indirect control (branching on address obtained from a register).
+
+
+==== Queue ====
+
+A queue is a small memory containing instructions processed by the pipeline. It may be
+interleft between two stages (FIFO queue) or used as an instruction store for a stage
+(like a re-order buffer with out-of-order execution architecture)
+
+<code xml>
+<!-- QUEUE ::= -->
+<queue>
+	<name>TEXT</name>?
+	<size>INT</size>?
+	<input ref="TEXT"/>
+	<output ref="TEXT"/>
+	<intern>
+		<stage ref="TEXT"/>
+	</intern>?
+</queue>
+</code>
+
+The ''<name>'' element is only used for human display while the ''<size>'' elements
+gives the number of instruction the queue can contain.
+
+A queue must ever have an ''<input>'' stage (stage putting instructions in) and
+an ''<output>'' stage (stage getting instructions from). In addition, a queue may have
+several ''<intern>'' stages that use it as an instruction buffer. The referenced stages
+in an ''<intern>'' are usually of type ''EXEC'' and allows the instruction to leave the
+queue only if it has been executed.
+
+
+===== Cache Hierarchy =====
+
