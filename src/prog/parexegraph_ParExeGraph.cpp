@@ -565,7 +565,8 @@ void ParExeGraph::createSequenceResources(){
     for (int j = 0; j < reg_num; j++){
     	if (is_input[j]) {
     		StringBuffer buffer;
-    		buffer << "r" << j ;
+    		// buffer << "r" << j ;
+    		buffer << _microprocessor->processor()->platform()->findReg(j)->name();
     		RegResource *new_resource = new RegResource(buffer.toString(), 0, j, resource_index++);
     		_resources.add(new_resource);
     		new_resource->addUsingInst(is_input_for[j]);
@@ -745,7 +746,8 @@ void ParExeGraph::addEdgesForFetch(void) {
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
+				if(_branch_penalty)
+					new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
 				if(_cache_line_size != 0)
 					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
 			}

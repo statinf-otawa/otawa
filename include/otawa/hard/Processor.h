@@ -41,14 +41,14 @@ using namespace elm;
 
 // PipelineUnit class
 class PipelineUnit {
-	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(branch) & FIELD(mem));
+	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(branch) & FIELD(mem) & FIELD(mem_stage));
 
 public:
 	class Make {
 	public:
 		friend class PipelineUnit;
 		inline Make(string name = "")
-			: _name(name), _latency(1), _width(1), branch(false), mem(false) { }
+			: _name(name), _latency(1), _width(1), branch(false), mem(false), mem_stage(0) { }
 		inline Make& latency(int l) { _latency = l; return *this; }
 		inline Make& width(int w) { _width =w; return *this; }
 		inline Make& do_branch(void) { branch = true; return *this; }
@@ -57,6 +57,7 @@ public:
 		string _name;
 		int _latency, _width;
 		bool branch, mem;
+		int mem_stage;
 	};
 
 	PipelineUnit(void);
@@ -68,6 +69,7 @@ public:
 	inline int getWidth(void) const { return width; };
 	inline bool isBranch(void) const { return branch; }
 	inline bool isMem(void) const { return mem; }
+	inline int memStage(void) const { return mem_stage; }
 
 protected:
 	string name;
@@ -75,6 +77,7 @@ protected:
 	int width;
 	bool branch;
 	bool mem;
+	int mem_stage;
 };
 
 // FunctionalUnit class

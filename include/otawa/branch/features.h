@@ -45,7 +45,9 @@ typedef enum category_t {
 	ALWAYS_H = 2,
 	FIRST_UNKNOWN = 3,
 	NOT_CLASSIFIED = 4,
-	MAX = 5
+	STATIC_TAKEN = 5,
+	STATIC_NOT_TAKEN = 6,
+	MAX = 7
 } category_t;
 io::Output& operator<<(io::Output& out, category_t cat);
 

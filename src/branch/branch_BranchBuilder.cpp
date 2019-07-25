@@ -88,7 +88,9 @@ Output& operator<<(Output& out, category_t cat) {
 		"always-D",			// ALWAYS_D = 1,
 		"always-H",			// ALWAYS_H = 2,
 		"first-unknown",	// FIRST_UNKNOWN = 3,
-		"not-classified"	// NOT_CLASSIFIED = 4
+		"not-classified",	// NOT_CLASSIFIED = 4
+		"static taken",		// STATIC_TAKEN = 5
+		"static not-taken",	// STATIC_NOT_TAKEN = 6
 	};
 	ASSERTP(cat < MAX, "bad branch category");
 	out << labels[cat];

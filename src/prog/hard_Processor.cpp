@@ -48,7 +48,8 @@ PipelineUnit::PipelineUnit(const PipelineUnit *unit)
 	latency(unit->latency),
 	width(unit->width),
 	branch(unit->branch),
-	mem(unit->mem)
+	mem(unit->mem),
+	mem_stage(unit->mem_stage)
 { }
 
 
@@ -59,7 +60,8 @@ PipelineUnit::PipelineUnit(void)
 :	latency(1),
 	width(1),
 	branch(false),
-	mem(false)
+	mem(false),
+	mem_stage(0)
 { }
 
 
@@ -71,7 +73,8 @@ PipelineUnit::PipelineUnit(const Make& maker)
 	latency(maker._latency),
 	width(maker._width),
 	branch(maker.branch),
-	mem(maker.mem)
+	mem(maker.mem),
+	mem_stage(maker.mem_stage)
 { }
 
 

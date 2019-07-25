@@ -63,13 +63,13 @@ Value Value::parse(const string& str) {
 		int c1 = str.indexOf(',');
 		if(c1 < 0)
 			throw io::IOException("',' missing, malformed CLP");
-		int c2 = str.substring(c1 + 1).indexOf(',');
+		int c2 = str.indexOf(',', c1 + 1);
 		if(c2 < 0)
 			throw io::IOException("second ',' missing, malformed CLP");
 		t::uint32 base, delta, cnt;
 		str.substring(1, c1 - 1) >> base;
-		str.substring(c1 + 1, c2 - c1) >> delta;
-		str.substring(c2 + 1, str.length() - c2 - 1) >> cnt;
+		str.substring(c1 + 1, c2 - c1 - 1) >> delta;
+		str.substring(c2 + 1, str.length() - c2 - 2) >> cnt;
 		return Value(base, delta, cnt);
 	}
 

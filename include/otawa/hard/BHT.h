@@ -50,12 +50,20 @@ private:
 	int cond_penalty;
 	int indirect_penalty;
 	int cond_indirect_penalty;
+	int correct_taken_penalty;
+	int incorrect_taken_penalty;
+	int correct_not_taken_penalty;
+	int incorrect_not_taken_penalty;
 	predict_t def_predict;
 	
 	SERIALIZABLE(BHT, ELM_BASE(PureCache) &
 		DFIELD(cond_penalty, 10) &
 		DFIELD(indirect_penalty, 10) &
 		DFIELD(cond_indirect_penalty, 10) &
+		DFIELD(correct_taken_penalty, 10) &
+		DFIELD(incorrect_taken_penalty, 10) &
+		DFIELD(correct_not_taken_penalty, 10) &
+		DFIELD(incorrect_not_taken_penalty, 10) &
 		DFIELD(def_predict, PREDICT_TAKEN)
 	);
 
@@ -67,12 +75,20 @@ public:
 	inline void setCondPenalty(int time) { cond_penalty = time; }
 	inline void setIndirectPenalty(int time) { indirect_penalty = time; }
 	inline void setCondIndirectPenalty(int time) { cond_indirect_penalty = time; }
+	inline void setCorrectTakenPenalty(int time) { correct_taken_penalty = time; }
+	inline void setIncorrectTakenPenalty(int time) { incorrect_taken_penalty = time; }
+	inline void setCorrectNotTakenPenalty(int time) { correct_not_taken_penalty = time; }
+	inline void setIncorrectNotTakenPenalty(int time) { incorrect_not_taken_penalty = time; }
 	inline void setDefaultPrediction(predict_t def) { def_predict = def; }
 	
 	// Accessors
 	inline int getCondPenalty(void) const { return cond_penalty; }
 	inline int getIndirectPenalty(void) const { return indirect_penalty; }
 	inline int getCondIndirectPenalty(void) const { return cond_indirect_penalty; }
+	inline int getCorrectTakenPenalty(void) const { return correct_taken_penalty; }
+	inline int getIncorrectTakenPenalty(void) const { return incorrect_taken_penalty; }
+	inline int getCorrectNotTakenPenalty(void) const { return correct_not_taken_penalty; }
+	inline int getIncorrectNotTakenPenalty(void) const { return incorrect_not_taken_penalty; }
 	inline int getDefaultPrediction(void) const { return def_predict; }
 
 	// Convenient methods

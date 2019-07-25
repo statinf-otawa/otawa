@@ -217,9 +217,12 @@ void CFGDecorator::displayLabels(Inst *i, Text& content) const {
  */
 void CFGDecorator::displayProps(CFG *g, BasicBlock *b, Text& content) const {
 	for(PropList::Iter p(b); p(); p++)
-		if(p->id()->name())
+		if(p->id()->name()) {
+			StringBuffer out;
+			p->id()->print(out, *p);
 			content << display::begin(display::BOLD) << p->id()->name() << display::end(display::BOLD)
-					<< "\t" << *p << display::left;
+					<< "\t" << out.toString() << display::left;
+		}
 }
 
 /**

@@ -1474,10 +1474,15 @@ dfa::Value FlowFactLoader::scanValue(xom::Element *element) {
 		Address addr = this->scanAddress(velem, c).address();
 
 		// look for step and count
+		Option<long> base = scanInt(velem, "base");
 		Option<long> step = scanInt(velem, "step");
 		Option<long> count = scanInt(velem, "count");
-		if(!step || !count)
+		if(!step || !count || !base)
 			return dfa::Value(addr.offset());
+		else if((!step || !count) && base)
+			return dfa::Value(*base);
+		else if(base)
+			return dfa::Value(*base, *step, *count);
 		else
 			return dfa::Value(addr.offset(), *step, *count);
 	}
@@ -1597,8 +1602,14 @@ void FlowFactLoader::scanMemSet(xom::Element *element, dfa::State* state) {
 	ContextualPath c;
 	Address addr = this->scanAddress(element, c).address();
 
+
 	// get the value
-	dfa::Value val = scanValue(element);
+	dfa::Value val;
+	Option<xom::String> value = element->getAttributeValue("value");
+	if(value)
+		val = dfa::Value::parse(*value);
+	else
+		val = scanValue(element);
 
 	// perform the instruction
 	onMemSet(state, addr, type, val);

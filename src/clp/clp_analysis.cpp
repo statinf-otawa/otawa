@@ -151,6 +151,7 @@ Identifier<Analysis::init_t> Analysis::INITIAL(
 Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", false);
 Identifier<Vector<FlowFactStateInfo>*> FLOW_FACT_STATE_INFO("otawa::clp::FLOW_FACT_STATE_INFO", nullptr);;
 
+static hard::Platform *PF = 0;
 
 /**
  * Return positive GCD of two unsigned integers.
@@ -2275,6 +2276,8 @@ void State::print(io::Output& out, const hard::Platform *pf) const {
 					out << ", ";
 				else
 					fst = false;
+				if(otawa::clp::PF)
+					pf = otawa::clp::PF;
 				if(!pf)
 					out << "r" << i;
 				else
@@ -3411,6 +3414,7 @@ void Analysis::setup(WorkSpace *ws) {
  * @param ws the workspace to be processed
  */
 void Analysis::processWorkSpace(WorkSpace *ws) {
+	otawa::clp::PF = ws->platform();
 	clock_t clockWorkSpace;
 	clockWorkSpace = clock();
 
@@ -3779,6 +3783,7 @@ Feature<DeadCodeAnalysis> DEAD_CODE_ANALYSIS_FEATURE("otawa::DEAD_CODE_ANALYSIS_
 Identifier<bool> NEVER_TAKEN("otawa::NEVER_TAKEN");
 
 namespace clp {
+
 
 /**
  * @class Manager
