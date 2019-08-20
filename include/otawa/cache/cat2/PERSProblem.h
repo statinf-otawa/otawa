@@ -263,7 +263,9 @@ class PERSProblem {
 
 			
 			inline bool equals(const Domain &dom) const {
-				ASSERT(!isBottom && !dom.isBottom);			
+				//ASSERT(!isBottom && !dom.isBottom);
+				if(isBottom && dom.isBottom)
+					return true;
 				for (int i = 0; i < dom.data.length(); i++) {
 					if (!data[i]->equals(*dom.data[i]))
 						return false;

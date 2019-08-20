@@ -184,14 +184,21 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 						else {
 							clp::uintn_t l = p.fst.start(), h = p.fst.stop();
 							const hard::Bank *bank = mem->get(l);
+							const hard::Bank *bankh = mem->get(h);
 							if(!bank)
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
 							else if(!bank->isCached()) { // FIXME: what if l is not cacheable but h is cacheable?
-								ncaccs.add(NonCachedAccess(inst, p.snd));
+								if(bank == bankh && !p.fst.isInf()) { // if the range all falls into the same bank
+									ncaccs.add(NonCachedAccess(inst, p.snd, Address(p.fst.lower())));
+								}
+								else {
+									ASSERTP(false, "The memory access is throughout different memory banks, some are cacheable, some are not.");
+								}
 								if(logFor(LOG_INST))
 									log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 								continue;
+
 							}
 							else if(cache->block(l) == cache->block(h)) { // if all the access addresses are in the same cached block
 								const Block& block = colls[cache->set(l)].obtain(cache->round(l));

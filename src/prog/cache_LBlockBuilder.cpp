@@ -123,7 +123,7 @@ void LBlockBuilder::addLBlock(BasicBlock *bb, Inst *inst, int& index, AllocArray
 		log << "WARNING: no memory bank for code at " << addr << ": block considered as cached.\n";
 	else if(!bank->isCached()) {
 		if(isVerbose())
-			log << "INFO: block " << addr << " not cached.\n";
+			log << "\t\t\t\t" << "INFO: block " << addr << " not cached.\n";
 		return;
 	}
 
