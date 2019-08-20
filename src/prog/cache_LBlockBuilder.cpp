@@ -84,6 +84,7 @@ void LBlockBuilder::setup(WorkSpace *fw) {
 
 	// get the memory
 	mem = hard::MEMORY_FEATURE.get(fw);
+	ASSERT(mem);
 
 	// Build the l-block sets
 	lbsets = new LBlockSet *[cache->rowCount()];

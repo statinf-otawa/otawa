@@ -281,11 +281,11 @@ private:
 		List<ParExeStage *> *list = _proc->listOfInorderStages();
 
 		// create the edges
-		for(ParExeGraph::StageIterator stage(list) ; *stage ; stage++) {
+		for(ParExeGraph::StageIterator stage(list) ; stage() ; stage++) {
 			int count = 1;
 			ParExeNode *previous = NULL;
 			int prev_id = 0;
-			for(ParExeStage::NodeIterator node(*stage); *node; node++){
+			for(ParExeStage::NodeIterator node(*stage); node(); node++){
 				if(previous){
 					if(stage->width() == 1)
 						factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, program_order);

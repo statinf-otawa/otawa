@@ -319,10 +319,11 @@ void StandardILPGenerator::EventCollector::boundNegative(EventCase c, ilp::Var *
  * @param sys	System to create constraints in.
  */
 void StandardILPGenerator::EventCollector::make(ilp::System *sys) {
+	static string label = "time occurrence bounding by events";
 	for(int c = 0; c < SIZE; ++c) {
 		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
 			ilp::Constraint *cons = sys->newConstraint(
-				evt->name() ,
+				label,
 				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
 			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++)

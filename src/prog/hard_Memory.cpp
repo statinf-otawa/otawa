@@ -625,7 +625,8 @@ protected:
 			to_free = true;
 		}
 		else if(logFor(LOG_DEPS)) {
-			mem = nullptr;
+			mem = &Memory::full;
+			to_free = false;
 			log << "\tno memory configuration\n";
 		}
 

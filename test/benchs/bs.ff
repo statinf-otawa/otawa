@@ -1,0 +1,6 @@
+checksum "bs.elf" 0x4359a46d;
+
+// Function binary_search (bs.c:77)
+loop "binary_search" + 0x2c 10 ; // 0x8260 (bs.c:83)
+
+

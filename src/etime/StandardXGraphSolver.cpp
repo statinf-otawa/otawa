@@ -783,7 +783,7 @@ public:
 		contributeBase(split.lts_time);
 
 		// contribute HTS
-		contributeTime(split.hts_time - split.lts_time);
+		contributeTime(split.hts_time);
 
 		// build effects of events
 		for(auto ev = *events; ev(); ev++)
