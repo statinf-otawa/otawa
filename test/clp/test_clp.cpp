@@ -238,6 +238,14 @@ int main(void) {
 		v.leu(10);
 		CHECK_EQUAL(v, clp::Value(clp::VAL, 5, 1, 5));
 	}
+	
+	// le tests
+	{
+		clp::Value v = clp::Value::all;
+		v = clp::Value(clp::VAL, 0x7FFFE775, -1, 0xFFFFFFFF);
+		v.le(0xffffe775);
+		CHECK_EQUAL(v, clp::Value(clp::VAL, -0x188b, -0x1, 0x7fffe775));
+	}
 
 	// substractions
 	{

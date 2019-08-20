@@ -31,13 +31,13 @@
 #include <otawa/cache/cat2/CachePenalty.h>
 #include <otawa/cfg/BasicBlock.h>
 #include <otawa/cfg/Dominance.h>
+#include <otawa/hard/Memory.h>
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/parexegraph/ParExeProc.h>
 #include <otawa/parexegraph/Resource.h>
 #include "../ograph/GenGraph.h"
 #include "../ograph/PreorderIterator.h"
-
 
 namespace otawa {
 	extern Identifier<int> DEFAULT_BRANCH_PENALTY;
@@ -221,7 +221,7 @@ namespace otawa {
 	 *
 	 */
 
-	class ParExeGraph: public ograph::GenGraph<ParExeNode, ParExeEdge> {
+	class ParExeGraph: public ograph::GenGraph<ParExeNode, ParExeEdge>, Monitor {
 		friend class InstIterator;
 		friend class ParExeNode;
 	protected:
@@ -238,11 +238,14 @@ namespace otawa {
 		ParExeNode *_last_prologue_node;																					// ====== REALLY USEFUL? (used in analyze())
 		ParExeNode *_last_node;																								// ====== REALLY USEFUL? (used in analyze())
 		int _cache_line_size;																								// ====== REALLY USEFUL?
+		const hard::Memory *mem;
+		int _branch_penalty;																							// ====== REALLY USEFUL?
+
 	private:
 		ParExeSequence * _sequence;									// sequence of instructions related to the graph
 		int _capacity;																										// ====== REALLY USEFUL? (used in analyze())
-		int _branch_penalty;																							// ====== REALLY USEFUL?
 		bool _explicit;
+
 
 		inline string comment(string com)
 			{ if(_explicit) return com; else return ""; }

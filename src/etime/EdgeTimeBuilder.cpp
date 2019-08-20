@@ -1046,7 +1046,6 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		int mem_stage = 0;
 		for(ParExeInst::NodeIterator node(inst); node(); node++)
 			if(node->stage()->unit()->isMem()) {
-				elm::cout << "node->stage()->unit()->memStage() = " << node->stage()->unit()->memStage() << endl;
 				if(node->stage()->unit()->memStage() != mem_stage) {
 					mem_stage++;
 					continue;
@@ -1171,8 +1170,13 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case MEM: {
 		bool found = false;
+		int mem_stage = 0;
 		for(ParExeInst::NodeIterator node(inst); node(); node++)
 			if(node->stage()->unit()->isMem()) {
+				if(node->stage()->unit()->memStage() != mem_stage) {
+					mem_stage++;
+					continue;
+				}
 				node->setLatency(node->latency() - event->cost() + 1);
 				found = true;
 				break;

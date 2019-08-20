@@ -1,6 +1,7 @@
 
 #include <elm/string.h>
 #include <otawa/parexegraph/ParExeGraph.h>
+#include <otawa/proc/Monitor.h>
 namespace otawa {
 
 /**
@@ -729,9 +730,20 @@ void ParExeGraph::addEdgesForFetch(void) {
 	if(_cache_line_size != 0)
 		current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
 
+	bool cached = true;
 	ParExeNode *previous = nullptr;
 	for (ParExeStage::NodeIterator node(fetch_stage) ; node() ; node++) {
 		if (previous){
+
+			// Address addr = inst->address();
+			const hard::Bank *bank = mem->get(node->inst()->inst()->address());
+			if(!bank)
+				log << "\t\t\t\t" << "WARNING: no memory bank for code at " << node->inst()->inst()->address() << ": block considered as cached.\n";
+			else if(!bank->isCached()) {
+				cached = false;
+				if(isVerbose())
+					log << "\t\t\t\t" << "Address " << node->inst()->inst()->address() << " not cached. No need to create edge for cache\n";
+			}
 
 			// branch case
 			if (previous->inst()->inst()->topAddress() != node->inst()->inst()->address()) {
@@ -746,36 +758,36 @@ void ParExeGraph::addEdgesForFetch(void) {
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				if(_branch_penalty)
+				if(_branch_penalty && cached)
 					new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
-				if(_cache_line_size != 0)
-					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
+//				if(_cache_line_size != 0 && cached)
+//					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
 			}
 
 			// no branch
 			else {
-				//elm::cout << "_cache_line_size = " << _cache_line_size << endl;
 				// no cache
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
 						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 				}
-
-				// cache bound edges
-				else {
-					Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
-					//elm::cout << node->name() << " addr " << hex(node->inst()->inst()->address().offset()) << ", cache line = " << hex(cache_line.offset()) << ", current_cache_line = " << hex(current_cache_line.offset()) << endl;
-					if(cache_line != current_cache_line) {
-						new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
-						if(first_cache_line_node != previous)
-							new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
-						first_cache_line_node = *node;
-						current_cache_line = cache_line;
-					}
-					else
-						new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg));
-				}
 			}
+
+			// cache bound edges
+			if (cached) {
+				Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
+				if(cache_line != current_cache_line) {
+					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg)); // between the 1st appearence of instructions from different cache set
+
+					if(first_cache_line_node != previous)
+						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg)); // the last instruction of the difference cache set to the 1st instruction of the new cache set
+					first_cache_line_node = *node;
+					current_cache_line = cache_line;
+				}
+				else // same cache line
+					new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg)); // within the same cache set
+			}
+
 		}
 		previous = *node;
 	}
@@ -1471,8 +1483,12 @@ ParExeGraph::ParExeGraph(
 				_cache_line_size = 1;*/
 			_cache_line_size = 0;
 		}
+
+		mem = hard::MEMORY_FEATURE.get(ws);
+		ASSERT(mem);
 	}
 	_props = props;
+	configure(props);
 	ASSERT(!hw_resources->isEmpty());
 	for (Vector<Resource *>::Iter res(*hw_resources) ; res() ; res++) {
 		_resources.add(*res);

@@ -378,7 +378,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			bool write =  action == dcache::BlockAccess::STORE;
 
 			// compute cost
-			ot::time cost = 0;
+			ot::time cost = -1;
 			switch(acc.kind()) {
 			case dcache::BlockAccess::ANY:
 				break;

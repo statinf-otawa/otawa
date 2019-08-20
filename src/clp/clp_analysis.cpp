@@ -1321,20 +1321,21 @@ Value& Value::le(intn_t k) {
 		}
 
 		// apply le
-		if(start() > k)		// case a
+		if(start() > k)		// case a: if the min-possible value is larger than filter, than nothing will left
 			*this = none;
-		else if(stop() < k)	// case c
+		else if(stop() < k)	// case c: if the max-possible value if smaller than the filter, than all can pass
 			return *this;
-		else {				// case b
-			if(_delta >= 0)
+		else {				// case b: start <= k && stop >= k
+			if(_delta >= 0) {
 				_mtimes = (k - _base) / _delta;
+			}
 			else {
 				intn_t s = (_base - k - _delta - 1) / (-_delta);
-				ASSERT(s >= 0);
-				_base = _base + _delta * s;
+				_base = _base + _delta * s; // need to make sure the _base is smaller than the filter too
 				_mtimes -= s;
 			}
-
+			ASSERTP(start() <= k,  *this << " should be ≤ " << k << ", but start() = " << start() << " and stop() = " << stop() << endl);
+			ASSERTP(stop() <= k,  *this << " should be ≤ " << k << ", but start() = " << start() << " and stop() = " << stop() << endl);
 		}
 	}
 

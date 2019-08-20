@@ -382,7 +382,10 @@ void HalfAbsInt<FixPoint>::outputProcessing(void) {
 			fp.markEdge(return_edge, out);
 			workList->push(return_edge->sink());
 		}
-		else if(!current->toSynth()->callee()->exit()->ins()) { // the CFG contains an endless loop such that it never returns
+
+		// the CFG contains an endless loop such that it never returns, make the output of the function to be bottom
+		// as it will not contribute any states to its return edge
+		else if(!current->toSynth()->callee()->exit()->ins()) {
 			fp.assign(out, fp.bottom());
 			fp.markEdge(return_edge, out);
 			tryAddToWorkList(return_edge->target());
