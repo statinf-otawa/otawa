@@ -148,7 +148,7 @@ if(DOXYGEN AND WIN32)
 	execute_process(COMMAND "cmd" "/C doxygen Doxyfile")
 elseif(DOXYGEN AND UNIX) #not tested
 	message(STATUS "Doxygen found, generation of documentation")
-	execute_process(COMMAND "bash" "doxygen Doxyfile")
+	execute_process(COMMAND bash "-c" "doxygen Doxyfile")
 else(DOXYGEN AND WIN32)
 	message(WARNING "Doxygen not found, cannot generate documentation")
 endif(DOXYGEN AND WIN32)
