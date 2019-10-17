@@ -418,7 +418,7 @@ private:
 	}
 
 	/**
-	 * TODO
+	 * Prepare data useful to build the graph.
 	 */
 	void init(void) {
 

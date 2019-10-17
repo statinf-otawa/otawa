@@ -12,6 +12,7 @@ set(SOURCES
 	"hook.cpp"
     "StandardEventBuilder.cpp"
     "TimeUnitTimer.cpp"
+    "StepGraphBuilder.cpp"
 )
 
 include_directories(".")

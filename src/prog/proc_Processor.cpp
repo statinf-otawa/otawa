@@ -432,6 +432,7 @@ void Processor::configure(const PropList& props) {
  */
 void Processor::run(WorkSpace *ws) {
 	this->ws = ws;
+	setWorkspace(ws);
 
 	// pre-processing actions
 	if(logFor(LOG_CFG))

@@ -49,7 +49,8 @@ PipelineUnit::PipelineUnit(const PipelineUnit *unit)
 	width(unit->width),
 	branch(unit->branch),
 	mem(unit->mem),
-	mem_stage(unit->mem_stage)
+	mem_stage(unit->mem_stage),
+	_index(0)
 { }
 
 
@@ -61,7 +62,8 @@ PipelineUnit::PipelineUnit(void)
 	width(1),
 	branch(false),
 	mem(false),
-	mem_stage(0)
+	mem_stage(0),
+	_index(0)
 { }
 
 
@@ -74,7 +76,8 @@ PipelineUnit::PipelineUnit(const Make& maker)
 	width(maker._width),
 	branch(maker.branch),
 	mem(maker.mem),
-	mem_stage(maker.mem_stage)
+	mem_stage(maker.mem_stage),
+	_index(0)
 { }
 
 
@@ -82,6 +85,15 @@ PipelineUnit::PipelineUnit(const Make& maker)
  */
 PipelineUnit::~PipelineUnit(void) {
 }
+
+
+/**
+ * @fn int PipelineUnit::index() const;
+ * Each pipeline unit (stage or functional unit) is assigned with a unique
+ * index to make easier its use. The maximum index is provided by the
+ * function Processor::unitCount().
+ * @return	Index of the current unit.
+ */
 
 
 /**
@@ -259,7 +271,7 @@ const PipelineUnit *Stage::select(Inst *inst) const {
  * Empty queue builder.
  */
 Queue::Queue(void)
-	: size(0), input(0), output(0) { }
+	: size(0), input(0), output(0), _index(-1) { }
 
 
 /**
@@ -269,7 +281,8 @@ Queue::Queue(const Make& make)
 :	name(make._name),
 	size(make._size),
 	input(make._input),
-	output(make._output)
+	output(make._output),
+	_index(-1)
 {
 	if(make._intern) {
 		intern = AllocArray<Stage *>(make._intern.count());
@@ -433,7 +446,13 @@ Dispatch::~Dispatch(void)
 
 /**
  */
-Processor::Processor(void): AbstractIdentifier(""), frequency(0), _process(nullptr), _pf(nullptr) {
+Processor::Processor(void)
+:	AbstractIdentifier(""),
+	frequency(0),
+	_process(nullptr),
+	_pf(nullptr),
+	_unit_count(0)
+{
 }
 
 
@@ -447,7 +466,8 @@ Processor::Processor(const Make& m, cstring name)
   builder(m._builder),
   frequency(m._frequency),
   _process(nullptr),
-  _pf(m.pf)
+  _pf(m.pf),
+	_unit_count(0)
 {
 	if(m.stages) {
 		stages = AllocArray<Stage *>(m.stages.length());
@@ -458,6 +478,7 @@ Processor::Processor(const Make& m, cstring name)
 			for(int i = 0; i < m.queues.length(); i++)
 				queues[i] = m.queues[i];
 		}
+		init();
 	}
 }
 
@@ -474,7 +495,8 @@ Processor::Processor(const Processor& proc, cstring name)
 	builder(proc.builder),
 	frequency(proc.frequency),
 	_process(proc._process),
-	_pf(proc.platform())
+	_pf(proc.platform()),
+	_unit_count(0)
 {
 	if(proc.stages.count()) {
 
@@ -491,6 +513,8 @@ Processor::Processor(const Processor& proc, cstring name)
 			queues = AllocArray<Queue *>(proc.queues.count());
 
 		}
+
+		init();
 	}
 }
 
@@ -503,6 +527,35 @@ Processor::~Processor(void) {
 		delete queues[i];
 	for(int i = 0; i < stages.count(); i++)
 		delete stages[i];*/
+}
+
+/**
+ * @fn int Processor::unitCount() const;
+ * This function returns the count of pipeline units in the processor.
+ * Beside, a unique index can be assigned to each unit (stage or functional
+ * unit) between 0 and the unit count.
+ * @return	Count of pipeline unit in the processor.
+ */
+
+
+/**
+ * Perform some initialization in the processor encompassing the assignment
+ * of unique index to each pipeline unit.
+ */
+void Processor::init() {
+
+	// set index of pipeline units
+	_unit_count = 0;
+	for(auto s: getStages()) {
+		s->_index = _unit_count++;
+		if(s->getType() == Stage::EXEC)
+			for(auto f: s->getFUs())
+				f->_index = _unit_count++;
+	}
+
+	// set index of queues
+	for(int i = 0; i < queues.count(); i++)
+		queues[i]->_index = i;
 }
 
 
@@ -894,28 +947,28 @@ Output& operator<<(Output& out, const Step& step) {
 		out << "\t" << step.stage()->getName();
 		break;
 	case hard::Step::READ:
-		out << " r:" << step.getReg()->name();
+		out << " r:" << step.reg()->name();
 		break;
 	case hard::Step::WRITE:
-		out << " w:" << step.getReg()->name();
+		out << " w:" << step.reg()->name();
 		break;
 	case hard::Step::USE:
-		out << " use:" << step.getQueue()->getName();
+		out << " use:" << step.queue()->getName();
 		break;
 	case hard::Step::RELEASE:
-		out << " rel:" << step.getQueue()->getName();
+		out << " rel:" << step.queue()->getName();
 		break;
 	case hard::Step::BRANCH:
 		out << " branch";
 		break;
-	case hard::Step::MEM_CACHED:
-		out << " mem";
+	case hard::Step::ISSUE_MEM:
+		out << " issue-mem:" << (step.isLoad() ? "load" : "store") << (step.isCached() ? "" : "/uncached");
 		break;
-	case hard::Step::MEM_UNCACHED:
-		out << " umem";
+	case hard::Step::WAIT_MEM:
+		out << " wait-mem:" << step.delay();
 		break;
-	case hard::Step::MEM_WAIT:
-		out << " wait";
+	case hard::Step::WAIT:
+		out << " wait:" << step.delay();
 		break;
 	default:
 		out << " [unknown]";

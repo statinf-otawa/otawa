@@ -41,7 +41,14 @@ using namespace elm;
 
 // PipelineUnit class
 class PipelineUnit {
-	SERIALIZABLE(otawa::hard::PipelineUnit, FIELD(name) & FIELD(latency) & FIELD(width) & FIELD(branch) & FIELD(mem) & FIELD(mem_stage));
+	friend class Processor;
+	SERIALIZABLE(otawa::hard::PipelineUnit,
+		FIELD(name) &
+		FIELD(latency) &
+		FIELD(width) &
+		FIELD(branch) &
+		FIELD(mem) &
+		FIELD(mem_stage));
 
 public:
 	class Make {
@@ -60,16 +67,17 @@ public:
 		int mem_stage;
 	};
 
-	PipelineUnit(void);
+	PipelineUnit();
 	PipelineUnit(const Make& maker);
 	PipelineUnit(const PipelineUnit *unit);
-	virtual ~PipelineUnit(void);
-	inline elm::String getName(void) const { return name; };
-	inline int getLatency(void) const { return latency; };
-	inline int getWidth(void) const { return width; };
-	inline bool isBranch(void) const { return branch; }
-	inline bool isMem(void) const { return mem; }
-	inline int memStage(void) const { return mem_stage; }
+	virtual ~PipelineUnit();
+	inline elm::String getName() const { return name; };
+	inline int getLatency() const { return latency; };
+	inline int getWidth() const { return width; };
+	inline bool isBranch() const { return branch; }
+	inline bool isMem() const { return mem; }
+	inline int memStage() const { return mem_stage; }
+	inline int index() const { return _index; }
 
 protected:
 	string name;
@@ -78,6 +86,7 @@ protected:
 	bool branch;
 	bool mem;
 	int mem_stage;
+	int _index;
 };
 
 // FunctionalUnit class
@@ -188,6 +197,7 @@ private:
 
 // Queue class
 class Queue {
+	friend class Processor;
 	friend class QueueBuilder;
 	SERIALIZABLE(otawa::hard::Queue, FIELD(name) & FIELD(size) & FIELD(input)
 		& FIELD(output) & FIELD(intern));
@@ -220,12 +230,14 @@ public:
 	inline Stage *getInput(void) const { return input; }
 	inline Stage *getOutput(void) const { return output; }
 	inline const AllocArray<Stage *>& getIntern(void) const { return intern; }
+	inline int index() const { return _index; }
 
 private:
 	elm::String name;
 	int size;
 	Stage *input, *output;
 	AllocArray<Stage *> intern;
+	int _index;
 };
 
 
@@ -240,21 +252,28 @@ public:
 		USE,
 		RELEASE,
 		BRANCH,
-		MEM_CACHED,
-		MEM_UNCACHED,
-		MEM_WAIT
+		ISSUE_MEM,
+		WAIT_MEM,
+		WAIT
 	} kind_t;
 
 	inline Step(void): _kind(NONE) { }
 	inline Step(const PipelineUnit *unit): _kind(STAGE) { arg.unit = unit; }
 	inline Step(kind_t kind, const hard::Register *reg): _kind(kind) { ASSERT(kind == READ || kind == WRITE); arg.reg = reg; }
 	inline Step(kind_t kind, hard::Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
-	inline Step(kind_t kind): _kind(kind) { ASSERT(kind >= BRANCH || kind <= MEM_WAIT ); }
+	inline Step(kind_t kind): _kind(kind) { ASSERT(kind == BRANCH); }
+	inline Step(bool store, bool cached = true): _kind(ISSUE_MEM)
+		{ arg.mem.store = store; arg.mem.cached = cached; }
+	inline Step(kind_t kind, int delay): _kind(kind) { ASSERT(_kind == WAIT || _kind == WAIT_MEM); arg.delay = delay; }
 
 	inline kind_t kind(void) const { return _kind; }
 	inline const PipelineUnit *stage(void) const { ASSERT(_kind == STAGE); return arg.unit; }
-	inline const Register *getReg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
-	inline Queue *getQueue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
+	inline const Register *reg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
+	inline Queue *queue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
+	inline bool isCached() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.cached; }
+	inline bool isLoad() const { ASSERT(_kind == ISSUE_MEM); return !arg.mem.store; }
+	inline bool isStore() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.store; }
+	inline int delay() const { ASSERT(_kind == WAIT || _kind == WAIT_MEM); return arg.delay; }
 
 private:
 	kind_t _kind;
@@ -262,7 +281,11 @@ private:
 		const PipelineUnit *unit;
 		const Register *reg;
 		Queue *queue;
-		bool cached;
+		struct {
+			bool store;
+			bool cached;
+		} mem;
+		int delay;
 	} arg;
 };
 Output& operator<<(Output& out, const Step& step);
@@ -271,8 +294,13 @@ Output& operator<<(Output& out, const Step& step);
 // Processor class
 class Processor: public AbstractIdentifier {
 	friend class ProcessorProcessor;
-	SERIALIZABLE(otawa::hard::Processor, FIELD(arch) & FIELD(model)
-		& FIELD(builder) & FIELD(stages) & FIELD(queues) & FIELD(frequency));
+	SERIALIZABLE(otawa::hard::Processor,
+		FIELD(arch) &
+		FIELD(model) &
+		FIELD(builder) &
+		FIELD(stages) &
+		FIELD(queues) &
+		FIELD(frequency));
 
 public:
 
@@ -299,19 +327,21 @@ public:
 		hard::Platform *pf;
 	};
 
-	Processor(void);
+	Processor();
 	Processor(const Make& m, cstring name = "");
 	Processor(const Processor& proc, cstring name = "");
-	virtual ~Processor(void);
+	virtual ~Processor();
 
-	inline elm::String getArch(void) const { return arch; };
-	inline elm::String getModel(void) const { return model; };
-	inline elm::String getBuilder(void) const { return builder; };
+	inline elm::String getArch() const { return arch; };
+	inline elm::String getModel() const { return model; };
+	inline elm::String getBuilder() const { return builder; };
 	inline const Array<Stage *>& getStages(void) const { return stages; };
 	inline const Array<Queue *>& getQueues(void) const { return queues; };
-	inline t::uint64 getFrequency(void) const { return frequency; }
+	inline t::uint64 getFrequency() const { return frequency; }
 
-	inline hard::Platform *platform(void) const { return _pf; }
+	inline hard::Platform *platform() const { return _pf; }
+	inline int unitCount() const { return _unit_count; }
+	inline int queueCount() const { return queues.count(); }
 
 	static const Processor null;
 	static Processor *load(const elm::sys::Path& path);
@@ -322,10 +352,13 @@ public:
 	virtual Processor *clone(cstring name = "") const;
 	virtual Processor *instantiate(Process *process, cstring name = "") const;
 
+	inline void __serial_complete() { init(); }
+
 protected:
 	inline Process *process(void) const { return _process; }
 
 private:
+	void init();
 	string arch;
 	string model;
 	string builder;
@@ -334,6 +367,7 @@ private:
 	t::uint64 frequency;
 	Process *_process;
 	hard::Platform *_pf;
+	int _unit_count;
 };
 
 
