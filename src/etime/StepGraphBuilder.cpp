@@ -33,6 +33,12 @@ namespace otawa { namespace etime {
  * @ingroup etime
  */
 
+
+///
+StepGraphBuilder::~StepGraphBuilder() {
+}
+
+
 ///
 StepGraphBuilder::StepGraphBuilder(const Monitor& mon): XGraphBuilder(mon) {
 }
