@@ -1271,7 +1271,7 @@ Condition::Condition(sem::cond_t cond, hard::Register *reg): _reg(reg) {
 		GT | EQ,		// UGE		= 12
 		GT				// UGT		= 13
 	};
-	ASSERT(_cond < sem::MAX_COND);
+	ASSERT(cond < sem::MAX_COND);
 	_cond = set[cond];
 	_unsigned = sem::ULT <= cond && cond <= sem::UGT;
 }

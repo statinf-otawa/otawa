@@ -181,7 +181,7 @@ int ParExeGraph::cost() {
 int ParExeGraph::delta(ParExeNode *node, Resource *res) {
 	int r_id = res->index();
 	// if the node does not depend on the resource, return 0
-	if (node->delay(r_id)<0)
+	if ((node->delayLength() <= r_id) || (node->delay(r_id)<0))
 		return (0);
 
 	int delta;
@@ -451,9 +451,9 @@ void ParExeGraph::propagate() {
 			}
 			for (Vector<Resource *>::Iter resource(_resources) ; resource() ; resource++) {
 				int r_id = resource->index();
-				if (node->delay(r_id) != -1) {
+				if ((node->delayLength() > r_id) && (node->delay(r_id) != -1)) {
 					int delay = node->delay(r_id) + latency;
-					if (delay > succ->delay(r_id)) {
+					if ((succ->delayLength() <= r_id) || (delay > succ->delay(r_id))) {
 						succ->setDelay(r_id, delay);
 					}
 				}
