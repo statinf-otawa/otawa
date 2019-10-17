@@ -521,6 +521,13 @@ void ParExeNode::buildContendersMasks(){
 
 // ----------------------------------------------------------------
 
+RegResource *ParExeGraph::newRegResource(const hard::Register *r) {
+	RegResource *res = new RegResource(r->name(), nullptr, r->id(), _resources.length());
+	_resources.add(res);
+	return res;
+}
+
+
 void ParExeGraph::createSequenceResources(){
 
     int resource_index = _resources.length();

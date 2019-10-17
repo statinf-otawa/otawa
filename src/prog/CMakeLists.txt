@@ -180,6 +180,7 @@ set(libotawa_SOURCES
 
 #   program representation module
 	"prog_Bundle.cpp"
+	"prog_Decoder.cpp"
 	"prog_File.cpp"
 	"prog_FixedTextDecoder.cpp"
 	"prog_Inst.cpp"

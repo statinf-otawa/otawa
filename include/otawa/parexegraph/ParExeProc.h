@@ -202,6 +202,7 @@ namespace otawa {
 	  inline const hard::Processor *processor(void) const { return _proc; }
 	  inline void addQueue(elm::String name, int size){_queues.add(new ParExeQueue(name, size));}
 	  inline ParExeQueue * queue(int index) {return _queues[index];}
+	  inline int queueCount() const { return _queues.count(); }
 	  inline void setFetchStage(ParExeStage * stage) {_fetch_stage = stage;}
 	  inline ParExeStage *fetchStage(void) {return _fetch_stage;}
 	  inline void setExecStage(ParExeStage * stage) {_exec_stage = stage;}

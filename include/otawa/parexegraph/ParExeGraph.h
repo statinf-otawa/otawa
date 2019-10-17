@@ -170,10 +170,12 @@ namespace otawa {
 		TimingContext(){
 			_header[0] = NULL;
 			_header[1] = NULL;
+			_type = CachePenalty::MISS;
 		}
 		TimingContext(Block *h0, Block *h1=NULL){
 			_header[0] = h0;
 			_header[1] = h1;
+			_type = CachePenalty::MISS;
 		}
 
 		class NodeLatencyIterator: public List<NodeLatency *>::Iter {
@@ -282,6 +284,7 @@ namespace otawa {
 		// compute execution time
 		void findContendingNodes();
 		void createSequenceResources();
+		RegResource *newRegResource(const hard::Register *r);
 		int analyze();
 		virtual void initDelays();
 		void clearDelays();
@@ -362,13 +365,13 @@ namespace otawa {
 	// a node in an execution graph (ParExeGraph)
 	class ParExeNode: public ograph::GenGraph<ParExeNode,ParExeEdge>::GenNode{
 	private:
-		ParExeStage *_pipeline_stage;								// pipeline stage to which the node is related
-		ParExeInst *_inst;											// instruction to which the node is related
-		int _latency;												// latency of the node
-		int _default_latency;										// default latency of the node
-		elm::String _name;											// name of the node (for tracing)
-//		AllocArray<int> * _d;					// delays wrt availabilities of resources
-//		AllocArray<bool> * _e;					// dependence on availabilities of resources
+		ParExeStage *_pipeline_stage;		// pipeline stage to which the node is related
+		ParExeInst *_inst;					// instruction to which the node is related
+		int _latency;						// latency of the node
+		int _default_latency;				// default latency of the node
+		elm::String _name;					// name of the node (for tracing)
+//		AllocArray<int> * _d;				// delays wrt availabilities of resources
+//		AllocArray<bool> * _e;				// dependence on availabilities of resources
 		Vector<int> * _delay;				// dependence and delays wrt availabilities of resources
 	protected:
 		Vector<ParExeNode *> _producers;			// nodes this one depends on (its predecessors)
@@ -379,8 +382,14 @@ namespace otawa {
 
 	public:
 		inline ParExeNode(ParExeGraph *graph, ParExeStage *stage, ParExeInst *inst)
-			: ParExeGraph::GenNode(graph),
-			_pipeline_stage(stage), _inst(inst),  _latency(stage->latency()), _default_latency(stage->latency()){
+		:	ParExeGraph::GenNode(graph),
+			_pipeline_stage(stage),
+			_inst(inst),
+			_latency(stage->latency()),
+			_default_latency(stage->latency()),
+			_possible_contenders(nullptr),
+			_late_contenders(0)
+		{
 			int num = graph->numResources();
 			_delay = new Vector<int>(num);
 			StringBuffer _buffer;
