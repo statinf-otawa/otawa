@@ -66,7 +66,7 @@ Monitor::Monitor(Monitor& mon)
 	ws(mon.ws),
 	parent(&mon)
 {
-	mon.refs.add(&mon);
+	mon.refs.add(this);
 }
 
 
