@@ -55,7 +55,7 @@ class StandardILPGenerator: public ILPGenerator {
 	};
 
 public:
-	StandardILPGenerator(const Monitor& mon);
+	StandardILPGenerator(Monitor& mon);
 	void process(WorkSpace *ws) override;
 
 protected:

@@ -70,9 +70,9 @@ public:
 class XGraphBuilder: public Monitor {
 	friend class AbstractTimeBuilder;
 public:
-	static XGraphBuilder *make(const Monitor& mon);
-	XGraphBuilder(const Monitor& mon);
-	virtual ~XGraphBuilder(void);
+	static XGraphBuilder *make(Monitor& mon);
+	XGraphBuilder(Monitor& mon);
+	virtual ~XGraphBuilder();
 
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
@@ -92,8 +92,8 @@ private:
 class XGraphSolver: public Monitor {
 	friend class AbstractTimeBuilder;
 public:
-	static XGraphSolver *make(const Monitor& mon);
-	XGraphSolver(const Monitor& mon);
+	static XGraphSolver *make(Monitor& mon);
+	XGraphSolver(Monitor& mon);
 	virtual ~XGraphSolver(void);
 	sys::Path dumpDir(void) const;
 
@@ -117,8 +117,8 @@ class ILPGenerator: public Monitor {
 	friend class AbstractTimeBuilder;
 	friend class XGraphSolver;
 public:
-	static ILPGenerator *make(const Monitor& mon);
-	ILPGenerator(const Monitor& mon);
+	static ILPGenerator *make(Monitor& mon);
+	ILPGenerator(Monitor& mon);
 	virtual ~ILPGenerator(void);
 
 	virtual void process(WorkSpace *ws) = 0;

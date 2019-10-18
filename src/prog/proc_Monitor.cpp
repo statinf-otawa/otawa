@@ -50,7 +50,7 @@ extern cstring VERBOSE_ENV;
 
 /**
  */
-Monitor::Monitor(void): flags(0), log_level(LOG_NONE), ws(0) {
+Monitor::Monitor(void): flags(0), log_level(LOG_NONE), ws(nullptr), parent(nullptr) {
 }
 
 
@@ -58,13 +58,35 @@ Monitor::Monitor(void): flags(0), log_level(LOG_NONE), ws(0) {
  * Build a monitor by copy.
  * @param mon	Monitor to copy.
  */
-Monitor::Monitor(const Monitor& mon)
+Monitor::Monitor(Monitor& mon)
 :	out(mon.out.stream()),
 	log(mon.log.stream()),
 	flags(mon.flags),
 	log_level(mon.log_level),
-	ws(mon.ws)
+	ws(mon.ws),
+	parent(&mon)
 {
+	mon.refs.add(&mon);
+}
+
+
+///
+Monitor::~Monitor() {
+	if(parent != nullptr)
+		parent->refs.remove(this);
+	for(auto r: refs)
+		r->parent = nullptr;
+}
+
+
+/**
+ * Update the workspace in the monitor.
+ * @param workspace	New workspace.
+ */
+void Monitor::setWorkspace(WorkSpace *workspace) {
+	ws = workspace;
+	for(auto r: refs)
+		r->ws = ws;
 }
 
 
@@ -123,8 +145,18 @@ void Monitor::configure(const PropList& props) {
 		if(level >= LOG_BLOCK)
 			flags |= IS_VERBOSE;
 	}
-}
 
+	// record in the children
+	for(auto r: refs) {
+		r->out.setStream(out.stream());
+		r->log.setStream(log.stream());
+		r->log_level = log_level;
+		if(flags & IS_VERBOSE)
+			r->flags |= IS_VERBOSE;
+		else
+			r->flags &= ~IS_VERBOSE;
+	}
+}
 
 
 /**

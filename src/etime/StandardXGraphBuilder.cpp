@@ -30,7 +30,7 @@ namespace otawa { namespace etime {
  */
 
 
-XGraphBuilder::XGraphBuilder(const Monitor& mon): Monitor(mon), _atb(nullptr) {
+XGraphBuilder::XGraphBuilder(Monitor& mon): Monitor(mon), _atb(nullptr) {
 }
 
 
@@ -108,7 +108,7 @@ void XGraphBuilder::configure(const PropList& props) {
 class StandardXGraphBuilder: public XGraphBuilder {
 public:
 
-	StandardXGraphBuilder(const Monitor& mon): XGraphBuilder(mon) {
+	StandardXGraphBuilder(Monitor& mon): XGraphBuilder(mon) {
 	}
 
 	ParExeGraph *build(ParExeSequence *seq) override {
@@ -451,7 +451,7 @@ private:
 /**
  * TODO
  */
-XGraphBuilder *XGraphBuilder::make(const Monitor& mon) {
+XGraphBuilder *XGraphBuilder::make(Monitor& mon) {
 	return new StandardXGraphBuilder(mon);
 }
 

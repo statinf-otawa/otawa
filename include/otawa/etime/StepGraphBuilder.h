@@ -28,7 +28,7 @@ namespace otawa { namespace etime {
 
 class StepGraphBuilder: public XGraphBuilder {
 public:
-	StepGraphBuilder(const Monitor& mon);
+	StepGraphBuilder(Monitor& mon);
 	~StepGraphBuilder();
 	ParExeGraph *build(ParExeSequence *seq);
 

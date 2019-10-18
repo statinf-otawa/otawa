@@ -43,7 +43,7 @@ namespace otawa { namespace etime {
 
 /**
  */
-ILPGenerator::ILPGenerator(const Monitor& mon): Monitor(mon), _atb(nullptr) {
+ILPGenerator::ILPGenerator(Monitor& mon): Monitor(mon), _atb(nullptr) {
 }
 
 
@@ -335,7 +335,7 @@ void StandardILPGenerator::EventCollector::make(ilp::System *sys) {
 
 /**
  */
-StandardILPGenerator::StandardILPGenerator(const Monitor& mon):
+StandardILPGenerator::StandardILPGenerator(Monitor& mon):
 	ILPGenerator(mon),
 	_edge(nullptr),
 	_t_lts(-1),
@@ -530,7 +530,7 @@ StandardILPGenerator::EventCollector *StandardILPGenerator::get(Event *event) {
 /**
  * Build the default ILP generator instance.
  */
-ILPGenerator *ILPGenerator::make(const Monitor& mon) {
+ILPGenerator *ILPGenerator::make(Monitor& mon) {
 	return new StandardILPGenerator(mon);
 }
 

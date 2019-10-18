@@ -48,7 +48,7 @@ class TimeUnitGenerator: public ILPGenerator {
 
 public:
 
-	TimeUnitGenerator(const Monitor& mon):
+	TimeUnitGenerator(Monitor& mon):
 		ILPGenerator(mon),
 		tu(nullptr),
 		_t_lts(0),

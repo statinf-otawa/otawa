@@ -35,8 +35,9 @@ class Monitor {
 public:
 	static Monitor& null;
 
-	Monitor(void);
-	Monitor(const Monitor& mon);
+	Monitor();
+	Monitor(Monitor& mon);
+	~Monitor();
 
 	typedef enum log_level_t {
 		LOG_NONE = 0,
@@ -62,7 +63,7 @@ public:
 	void configure(const PropList& props);
 
 protected:
-	inline void setWorkspace(WorkSpace *workspace) { ws = workspace; }
+	void setWorkspace(WorkSpace *workspace);
 	static const t::uint32
 		IS_VERBOSE		= 0x01,
 		CUSTOM_SHIFT	= 16;
@@ -71,6 +72,8 @@ protected:
 private:
 	log_level_t log_level;
 	WorkSpace *ws;
+	Monitor *parent;
+	List<Monitor *> refs;
 };
 
 // configuration

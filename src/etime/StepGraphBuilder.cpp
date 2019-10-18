@@ -40,7 +40,7 @@ StepGraphBuilder::~StepGraphBuilder() {
 
 
 ///
-StepGraphBuilder::StepGraphBuilder(const Monitor& mon): XGraphBuilder(mon) {
+StepGraphBuilder::StepGraphBuilder(Monitor& mon): XGraphBuilder(mon) {
 }
 
 

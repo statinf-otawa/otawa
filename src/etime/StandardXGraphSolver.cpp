@@ -51,7 +51,7 @@ namespace otawa { namespace etime {
 
 /**
  */
-XGraphSolver::XGraphSolver(const Monitor& mon): Monitor(mon), _atb(nullptr) {
+XGraphSolver::XGraphSolver(Monitor& mon): Monitor(mon), _atb(nullptr) {
 
 }
 
@@ -118,7 +118,7 @@ class StandardXGraphSolver: public XGraphSolver {
 public:
 	typedef t::uint32 mask_t;
 
-	StandardXGraphSolver(const Monitor& mon): XGraphSolver(mon), bedge(nullptr) {
+	StandardXGraphSolver(Monitor& mon): XGraphSolver(mon), bedge(nullptr) {
 	}
 
 	/**
@@ -873,7 +873,7 @@ void XGraphSolver::contributeNegative(EventCase event, bool prec) {
  * @param mon	Monitor to use.
  * @return		Default graph solver.
  */
-XGraphSolver *XGraphSolver::make(const Monitor& mon) {
+XGraphSolver *XGraphSolver::make(Monitor& mon) {
 	return new StandardXGraphSolver(mon);
 }
 
