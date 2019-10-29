@@ -688,9 +688,26 @@ void WorkSpace::invalidate(Dependency *dep) {
  * @param feature	Feature to test.
  * @return			True if it is provided, false else.
  */
-bool WorkSpace::isProvided(const AbstractFeature& feature) {
+bool WorkSpace::provides(const AbstractFeature& feature) {
 	return dep_map.hasKey(&feature);
 }
+
+
+/**
+ * @fn bool WorkSpace::implements(const AbstractFeature& feature);
+ * Test if a feature is provided.
+ * @param feature	Feature to test.
+ * @return			True if it is provided, false else.
+ */
+
+
+/**
+ * @fn bool WorkSpace::isProvided(const AbstractFeature& feature);
+ * Test if a feature is provided.
+ * @param feature	Feature to test.
+ * @return			True if it is provided, false else.
+ * @deprecated		Use provides() instead.
+ */
 
 
 /**

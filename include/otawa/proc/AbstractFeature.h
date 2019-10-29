@@ -63,13 +63,18 @@ namespace p {
 	template <class I>
 	class interfaced_feature: public feature {
 	public:
-		inline interfaced_feature(cstring name, AbstractMaker *maker): feature(name, maker) { }
-		inline interfaced_feature(cstring name, p::declare& reg): feature(name, reg) { }
+		inline interfaced_feature(cstring name, AbstractMaker *maker, I *d = nullptr): feature(name, maker), def(d) { }
+		inline interfaced_feature(cstring name, p::declare& reg, I *d = nullptr): feature(name, reg), def(d) { }
 
 		template <class P> inline I *give(P *p) const { return p; }
 		I *get(WorkSpace *ws) const
-			{ void *p = get_impl(ws, *this); if(p == nullptr) return nullptr;
+			{ void *p = get_impl(ws, *this); if(p == nullptr) return defaultInterface();
 			  else return static_cast<I *>(p); }
+
+		inline I *defaultInterface() const { return def; }
+
+	private:
+		I *def;
 	};
 }
 

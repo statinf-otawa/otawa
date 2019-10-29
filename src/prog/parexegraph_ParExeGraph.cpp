@@ -1481,19 +1481,27 @@ ParExeGraph::ParExeGraph(
 	_explicit(false)
 {
 	if(_ws != nullptr) {
-		const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
-		if (cache && cache->instCache())
-			_cache_line_size = cache->instCache()->blockSize();
-		else {
-			/*_cache_line_size = ws->process()->instSize();
-			if(!_cache_line_size)
-				_cache_line_size = 1;*/
-			_cache_line_size = 0;
+
+		// look for cache configuration
+		if(_ws->isProvided(hard::CACHE_CONFIGURATION_FEATURE)) {
+			const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
+			if (cache && cache->instCache())
+				_cache_line_size = cache->instCache()->blockSize();
+			else {
+				/*_cache_line_size = ws->process()->instSize();
+				if(!_cache_line_size)
+					_cache_line_size = 1;*/
+				_cache_line_size = 0;
+			}
 		}
 
+		// look for memory configuration
+		if(!_ws->isProvided(hard::MEMORY_FEATURE))
+			throw Exception("memory description is required!");
 		mem = hard::MEMORY_FEATURE.get(ws);
 		ASSERT(mem);
 	}
+
 	_props = props;
 	configure(props);
 	ASSERT(!hw_resources->isEmpty());

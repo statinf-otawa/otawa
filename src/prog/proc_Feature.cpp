@@ -139,7 +139,7 @@ void feature::process(WorkSpace *ws, const PropList& props) const {
 void *get_impl(WorkSpace *ws, const AbstractFeature& feature) {
 	Processor *p = ws->getImpl(feature);
 	if(p == nullptr)
-		throw otawa::Exception(_ << "feature " << feature.name() << " is not provided!");
+		return nullptr;
 	else
 		return p->interfaceFor(feature);
 }

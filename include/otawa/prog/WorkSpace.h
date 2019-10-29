@@ -103,9 +103,10 @@ public:
 		{ T *p = new T(); run(p, props, true); return p; }
 	inline void run(Processor& proc, const PropList& props, bool del_proc = false) { run(&proc, props); }
 	void require(const AbstractFeature& feature, const PropList& props = PropList::EMPTY);
-	bool isProvided(const AbstractFeature& feature);
 	void invalidate(const AbstractFeature& feature);
 	Processor *getImpl(const AbstractFeature& feature) const;
+	bool provides(const AbstractFeature& feature);
+	inline bool implements(const AbstractFeature& feature) { return provides(feature); }
 
 	// cancellation management
 	inline void clearCancellation(void) { cancelled = false; }
@@ -126,6 +127,7 @@ public:
 	ilp::System *newILPSystem(bool max = true);
 	CFGInfo *getCFGInfo(void);
 	CFG *getStartCFG(void);
+	inline bool isProvided(const AbstractFeature& feature) { return provides(feature); }
 
 private:
 
