@@ -755,6 +755,7 @@ void EdgeTimeBuilder::processSequence(void) {
 	// compute all cases
 	t::uint32 prev = 0;
 	Vector<ConfigSet> confs;
+	custom.clear();
 	for(event_mask = 0; event_mask < t::uint32(1 << events.count()); event_mask++) {
 
 		// adjust the graph
@@ -1099,6 +1100,31 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		bedge->setLatency(event->cost());
 		break;
 
+	case CUSTOM:
+		switch(event->type()) {
+		case LOCAL: {
+				ParExeNode *n = findNode(inst, event->unit());
+				ASSERT(n);
+				addLatency(n, event->cost());
+			}
+			break;
+		case AFTER: {
+				ParExeNode *n = findNode(inst, event->unit());
+				ParExeNode *m = findNode(event->related(), inst);
+				ParExeEdge *e = new ParExeEdge(m, n, ParExeEdge::SOLID, event->cost(), event->name());
+				custom.put(event, e);
+			}
+			break;
+		case NOT_BEFORE: {
+				ParExeNode *n = findNode(inst, event->unit());
+				ParExeNode *m = findNode(event->related(), inst);
+				ParExeEdge *e = new ParExeEdge(m, n, ParExeEdge::SLASHED, event->cost(), event->name());
+				custom.put(event, e);
+			}
+			break;
+		}
+		break;
+
 	default:
 		ASSERTP(0, _ << "unsupported event kind " << event->kind());
 		break;
@@ -1225,11 +1251,97 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 		bedge = 0;
 		break;
 
+	case CUSTOM:
+		switch(event->type()) {
+		case LOCAL: {
+				ParExeNode *n = findNode(inst, event->unit());
+				ASSERT(n);
+				removeLatency(n, event->cost());
+			}
+			break;
+		case AFTER:
+		case NOT_BEFORE:
+			graph->remove(custom.get(event));
+			break;
+		}
+		break;
+
 	default:
 		ASSERTP(0, _ << "unsupported event kind " << event->kind());
 		break;
 	}
 
+}
+
+
+/**
+ * Lookup for the instruction i back from instruction f.
+ * @param i	Looked instruction.
+ * @param f	Instruction to look backward from.
+ * @return	Corresponding parexgraph instruction (assertion raised if not found).
+ */
+ParExeInst *EdgeTimeBuilder::findInst(Inst *i, ParExeInst *f) {
+	ParExeInst *last = nullptr;
+	for(ParExeSequence::InstIterator xi(seq); xi() && *xi != f; xi++)
+		if(xi->inst() == i)
+			last = *xi;
+	ASSERT(last);
+	return last;
+}
+
+
+/**
+ * Find in the given XG instruction the node corresponding to the given unit.
+ * Fall through assertion failure if the unit node cannot be found.
+ * @param i		Current XG instruction.
+ * @param u		Looked unit.
+ * @return		XG node corresponding to the XG instruction i and to the unit u.
+ */
+ParExeNode *EdgeTimeBuilder::findNode(ParExeInst *i, const hard::PipelineUnit *u) {
+	for(ParExeInst::NodeIterator n(i); n(); n++)
+		if(n->stage()->unit() == u)
+			return *n;
+	ASSERT(false);
+	return nullptr;
+}
+
+
+/**
+ * Find the node corresponding to the location pair (instruction, unit).
+ * If the node cannot be found, an assertion failure is raised.
+ * @param loc	Looked location.
+ * @param from	Relative instruction to seach from.
+ * @return		Corresponding XG node.
+ */
+ParExeNode *EdgeTimeBuilder::findNode(Pair<Inst *, const hard::PipelineUnit *> loc, ParExeInst *from) {
+	ParExeInst *xi = findInst(loc.fst, from);
+	return findNode(xi, loc.snd);
+}
+
+
+/**
+ * Add the latency to the node.
+ * @param n	Node to add latency in.
+ * @param l	Latency to add.
+ */
+void EdgeTimeBuilder::addLatency(ParExeNode *n, int l) {
+	if(n->latency() == 1)
+		n->setLatency(l);
+	else
+		n->setLatency(n->latency() + l);
+}
+
+
+/**
+ * Remove the latency from the node.
+ * @param n	Node to remove latency from.
+ * @param l	Latency to remove.
+ */
+void EdgeTimeBuilder::removeLatency(ParExeNode *n, int l) {
+	if(n->latency() == l)
+		n->setLatency(1);
+	else
+		n->setLatency(n->latency() - l);
 }
 
 

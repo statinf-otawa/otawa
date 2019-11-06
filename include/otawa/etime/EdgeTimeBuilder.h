@@ -103,6 +103,12 @@ private:
 	void displayConfs(const Vector<ConfigSet>& confs, const event_list_t& events);
 	int countDynEvents(const event_list_t& events);
 
+	ParExeInst *findInst(Inst *i, ParExeInst *from);
+	ParExeNode *findNode(ParExeInst *i, const hard::PipelineUnit *unit);
+	ParExeNode *findNode(Pair<Inst *, const hard::PipelineUnit *> loc, ParExeInst *i);
+	void addLatency(ParExeNode *n, int l);
+	void removeLatency(ParExeNode *n, int l);
+
 	PropList _props;
 
 	// ILP state
@@ -120,6 +126,7 @@ private:
 	ParExeNode *bnode;
 	ParExeEdge *bedge;
 	BasicBlock *source, *target;
+	HashMap<Event *, ParExeEdge *> custom;
 
 	// collector of events
 	HashMap<Event *, EventCollector *> colls;

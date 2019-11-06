@@ -48,7 +48,7 @@ So it is for the data item: the same area can be used to contain different types
 	cout << "x = " << x << io::endl;
 </code>
 
-Writing a loader plug-in is a complex task as a lot of useful but also complex information items can be extracted from machine instructions. To provide a bit of flexibility in the writing of these plug-ins, the exact set of available facilities is identified by features (as in the property system). They can be accessed by the process ''features''() function but are also recorded in the workspace and can be inquired with the workspace ''isProvided''() function. These features can be:
+Writing a loader plug-in is a complex task as a lot of useful but also complex information items can be extracted from machine instructions. To provide a bit of flexibility in the writing of these plug-ins, the exact set of available facilities is identified by features (as in the property system). They can be accessed by the process ''features''() function but are also recorded in the workspace and can be inquired with the workspace ''provides''() function. These features can be:
   * ''CONTROL_DECODING_FEATURE'' -- target address of branch instruction is provided,
   * ''DELAYED_FEATURE'' and ''DELAYED2_FEATURE'' -- for instruction supporting it, information about delayed instruction and delaying behavior,
   * ''FLOAT_MEMORY_ACCESS_FEATURE'' -- memory read of floating-point data,
@@ -64,41 +64,347 @@ Writing a loader plug-in is a complex task as a lot of useful but also complex i
 ==== Instructions ====
 
 An instruction -- class ''Inst'' is the fundamental abstraction entity to support multiple instruction sets in @(OTAWA) framework. Basically, an instruction represents an atomic executable entity covering a small area of memory. Yet, it contains much more details about the instruction:
-* kind of the instructions,
-* read & written registers (''REGISTER_USAGE_FEATURE''),
-* target address for a branch instruction (''CONTROL_DECODING_FEATURE''),
-* delay policy for branch instruction on #IS supporting delayed-branch instructions (''DELAYED_FEATURE'', ''DELAYED_FEATURE2''),
-* semantics of the instruction (''SEMANTICS_INFO'', ''SEMANTICS_INFO_EXTENDED'', ''SEMANTICS_INFO_FLOAT'')
-* debugging information (''SOURCE_LINE_FEATURE'')
-* #VLIW support (''VLIW_SUPPORTED'')
+  * kind of the instructions,
+  * read & written registers (''REGISTER_USAGE_FEATURE''),
+  * target address for a branch instruction (''CONTROL_DECODING_FEATURE''),
+  * delay policy for branch instruction on #IS supporting delayed-branch instructions (''DELAYED_FEATURE'', ''DELAYED_FEATURE2''),
+  * semantics of the instruction (''SEMANTICS_INFO'', ''SEMANTICS_INFO_EXTENDED'', ''SEMANTICS_INFO_FLOAT'')
+  * debugging information (''SOURCE_LINE_FEATURE'')
+  * #VLIW support (''VLIW_SUPPORTED'')
 
 Notice the availability of these information depends on the features exported by the process and the corresponding is recalled after each information item. In this section only the kind of instruction is described but following sections cover the other aspects of an instruction.
 
-The kind of an instruction describes its nature, its type or the type of data it works on.
-
+The kind of an instruction describes its nature, its type or the type of data it works on. It is implemented by class ''Inst::Kind'' that provides function functions to test the different possible traits of the instruction ((These functions are available in the ''Inst'' class.)). Notice that these traits are not exclusive and hierarchical:
+  * ''MEM'' -- instruction performing memory access (sub-traits includes ''LOAD'', ''STORE'', ''ATOMIC'', ''MULTI'' -- for multiple memory accesses, ''INDIRECT'' -- for indirect branches or ''TRAP'' -- for system call or exception raise),
+  * ''CONTROL'' -- instruction performing a modification of PC (sub-traits includes ''CALL'', ''RETURN'')
+  * ''ALU'' instructions performs computations but may be more precisely considered as ''MUL'' -- multiplication, ''DIV'' -- division, ''SHIFT'' for shift operation),
+  * instructions may be typed with ''INT'' or ''FLOAT'',
+  * ''COND'' denotes conditional instructions,
+  * ''INTERN'' denotes instruction having on the hardware internales (caches, MMU, etc),
+  * ''UNKNOWN'' denotes instructions that are unknown by the decoder.
+  
+Each nature corresponds to a ''isNature()'' function in ''Inst'' or in ''Inst::Kind()''.
 
 
 
 ==== Debugging information ====
-@label prog:sem
+
+Debugging information is only available if the ''SOURCE_LINE_FEATURE'' is provided in the workspace.
+
+If debugging information are available in the processed executable, the source line and source file name can be accessed from the ''Process'' representing the program. Either the source line and file can be obtained from the address in the program, or the source line and file can fetched to find back the corresponding memory areas.
+
+The function ''Process::getSourceLine()'' find source information from an address:
+<code c++>
+	Option< Pair< cstring, int >> Process::getSourceLine (Address addr);
+</code>
+
+The code sample below look for the source line number and source file name corresponding to the address ADDR. If they exist, they are displayed.
+<code c++>
+Workspace *ws = ...;
+auto info = ws->process()->getSourceLine(ADDR);
+if(info)
+	cout << info.fst << ':' << info.snd << io::endl;
+</code>
+
+The function ''Process::getAddresses()'' obtains the addresses corresponding to a source position (if any). A set of memory areas is returned, (base address, top address) because, depending on the compiler and the applied optimization, a source line may be split and mixed with other source line code (code scheduling) or duplicated (function inlining, loop unrolling, etc). The set of memory areas is stored in a vector passed as parameter and fulfilled by the function.
+<code c++>
+	void Process::getAddresses(cstring file, int line, Vector< Pair< Address, Address>> &addresses);
+</code>
+
+In the sample below, the memory areas are displayed for source file name FILE and source line number LINE:
+<code c++>
+WorkSpace ws = ...;
+Vector<Pair<Address, Address>> areas;
+ws->process()->getAddresses(FILE, LINE, areas);
+for(auto p; areas)
+	cout << p.fst << '-' << P.snd << io::endl;
+</code>
+ 
+Notice that an executable is made of different pieces of code compiled by different compilers and/or different compilation options (at least the program source itself and the C standard library). Debugging information may be available on some executable parts and not on other ones. It is also worth noting that the mapping one-to-one between the executable and the source is usually inversely proportional to the level of optimization.
+
+
+==== Straight Memory Access ====
+
+Depending on the performed analyses, it may be useful to read directly the bytes from the program image at startup: @(OTAWA) does not provide this way the different values taken by the memory. Refer to the data flow analyses for this kind of information.
+
+To obtain the memory bytes, (a) ''MEMORY_ACCESS_FEATURE'' and/or ''FLOAT_MEMORY_ACCESS_FEATURE'' must be provided and (b) one of the function ''Process::get'' has to be used. These functions takes as first parameter the address of the value to get and a reference to the variable that will receive the memory value. The type, //T//, of the result variable determines the type of accessed data item as in the sample below:
+<code c++>
+WorkSpace *ws = ...;
+T result;
+ws->process->get(ADDR, result);
+cout << result << io::endl;
+</code>
+
+Notice that, depending on the underlying executable loader, the result may be meaningless if the address does not point to an initialized memory.
+
 
 
 ==== Semantic Instructions ====
+@label prog:sem
 
+To analyze the data flow of instructions and to maintain the data flow analyses independent from a particular instruction, @(OTAWA) is able to translate a machine instruction in a sequence of so-called //semantic instructions//.
+
+The //semantic instruction// set is very close to a #RISC instruction set, that is, they consist in three-operand very simple instructions working on the processor registers and on temporary variable (for calculations internal to the instruction). For now, they work on 32-bit values but we plan to extend them soon to 64-bit. Memory accesses are performed by dedicated ''load'' and ''store'' instructions. They support conditional content but only in a forward way to avoid the build of loops.
+
+Their argument are integers representing:
+  * register unique number (as obtained by the function ''hard::Register::platformNumber()''),
+  * negative numbers represent temporaries (their maximum can be obtained by the ''process::maxTemp()''),
+  * immediate integer values for the ''seti'' instruction.
+
+A quick summary of //semantic instructions// is given below but more details can be found in the automatic documentation of @(OTAWA) in the corresponding module documentation):
+  
+^ Semantic instruction ^ Meaning ^ 
+| add(d, a, b) | R[d] <- R[a] + R[b] |
+| sub(d, a, b) | R[d] <- R[a] - R[b] |
+| mul(d, a, b) | R[d] <- R[a] * R[b] |
+| div(d, a, b) | R[d] <- R[a] / R[b] |
+| mod(d, a, b) | R[d] <- R[a] % R[b] |
+| shl(d, a, b) | R[d] <- R[a] << R[b] |
+| shr(d, a, b) | R[d] <- R[a] >> R[b] |
+| asr(d, a, b) | R[d] <- R[a] >> R[b] |
+| and(d, a, b) | R[d] <- R[a] and R[b] |
+| or(d, a, b) | R[d] <- R[a] or R[b] |
+| xor(d, a, b) | R[d] <- R[a] xor R[b] |
+| neg(d, a) | R[d] <- -R[a] |
+| not(d, a) | R[d] <- ~R[a] |
+| set(d, a) | R[d] <- R[a] |
+| seti(d, i) | R[d] <- i |
+| scratch(d) | R[d] <- T |
+| branch(a)  | PC <- R[a] |
+| stop       | stop |
+| cmp(d, a, b) | d <- a ~ b |
+| cmpu(d, a, b) | d <- a ~u b |
+| assume(c, a) | c in a true |
+| fork(k)   | go on and skip k instructions |
+| if(c, a, k) | <=> fork(k); assume(c, a) ... k: assume(not c, a) |
+| load(d, a, t) | R[d] <- Mt[R[a]] |
+| store(d, a, t) | Mt[R[a]] <- R[d] |
+With:
+  * d, a, b -- register/temporary number,
+  * i -- 32-bit integer,
+  * c -- condition (one of ''sem::EQ'', ''sem::LT'', ''sem::LE'', ''sem::GE'', ''sem::GT'', etc),
+  * k -- a natural,
+  * t -- a type (one of sem::INT8, sem::INT16, etc),
+  * R -- all registers and temporaries used,
+  * Mt -- main memory accessed by type t,
+  * T -- any value (useful for unknown value in static analysis).
+
+''branch'' is a bit special: it is used in a control instruction to change the #PC but does not stop the execution of the semantic instructions. In the opposite, ''stop'' stop the execution of semantic instructions.
+
+Condition are produced by ''cmp'' and ''cmpu'' instructions. ''cmpu'' is a variant considering its arguments as unsigned while ''cmp'' consider any integer signness. The destination register (a kind of SR) receives the result of the comparison can be exploited by the ''assume'' instruction. This instruction assumes its condition in register a as true for the following instructions (and any abstract state can be filtered using this assumption). To support conditional execution, the ''fork'' allows to create a second thread of semantic instruction execution each supporting different set of ''assume'' assumptions. ''if'' is an old form combinating ''fork'' and ''assume''.
+
+The function ''Inst::semInsts()'' is used to get the //semantic instructions// corresponding to a machine instruction. It takes a as parameter a vector that will be fufilled with the //semantic instructions//. In fact, the semantic instructions are appended to the vector and calling this function without emptying the vector can be used to chain the semantic instructions of a sequence of machine instructions.
+
+The sample below show the classic use of a simple sequence of //semantic instructions//:
+<code c++>
+Inst *inst = ...;
+sem::Block b;
+inst->semInsts(b);
+for(int i = 0; b[i].op != sem::STOP; i++)
+	switch(b[i].op) {
+	case sem::ADD: ...; break;
+	case sem::SUB: ...; break;
+	...
+	};
+</code>
+
+In fact, things may become trickier if the semantic instruction list contains ''fork'' or ''if'' creating different threads of execution (and so several data flow abstract states). The iterator class ''sem::PathIter'' may help to manage these threads. The sample below shows the use of ''sem::PathIter'':
+<code c++>
+Inst *inst = ...;
+Vector<S> stack;
+S s = INITIAL, r = BOTTOM;
+stack.push(s);
+for(sem::PathIter i(inst); i(); i++) {
+	if(i.pathEnd()) {
+		r = JOIN(r, i);
+		s.pop();
+	}
+	else if(i.isFork())
+		stack.push(s);
+	else
+		s = APPLY(i, s);
+} 
+</code>
+With:
+  * S -- the type of abstract state,
+  * BOTTOM -- the empty state,
+  * INITIAL -- the initial state,
+  * APPLY(i, s) -- apply semantic instruction i to s,
+  * JOIN(s, s') -- merge states s and s',
+  * r -- the resulting abstract state after the machine instruction.
+
+When the machine instruction is a conditional branch, two sets of abstract states have to be handled: abstract states containing a ''branch'' semantic instruction refers to the branch taken case. Other abstract states refers to the not-taken case. The iterator ''sem::StateIter'' can help the programer in this management but works on #CFG [[#CFG|basic blocks]].
 
 
 ===== #CFG Representation =====
+@label CFG
 
-==== #CFG and blocks ====
+A Control Flow Graph (#CFG) is a very useful program representation very handy for machine code programs. A #CFG G is a graph represented by the tuple <V, G, α, ω> where V represents the set of nodes, called Basic Block (#BB), pieces of code only supporting branches as last instruction, and E ⊆ V × V, are the edges representing the program control flowing between BBs. In the following, an edge from BB //v// to BB //w// is denoted //v// → //w//. In @(OTAWA), a #CFG has two special nodes: α ∈ V is the entry point of the program (no predecessor) and ω ∈ V is the exit point of the program (no successor).
+
+A #CFG is used to sub-program but a real-time is usally made of several sub-programs. In @(OTAWA) 2, there are one #CFG per sub-program what requires to have special nodes to represent sub-program calls and thus, the complete representation of real-time task is made of a collection of #CFG with a special #CFG called the entry point of the task.
+
+Basically, the nodes of the #CFG may be:
+  * basic blocks -- sequence of instruction,
+  * call blocks named synthetic blocs -- representing sub-program calls,
+  * end blocks -- representing enry nide α, exit node ω but alsow the unknown target for an unresolved indirect.
+
+Notice that @(OTAWA) is versatile enough to support other program representations. Yet, there are so many features working with #CFG that the #CFG program representation is the prefered one.
+
+
+==== #CFG collection #CFG and blocks ====
+
+To otain the #CFG collection representing a real-time task, one has to require the feature ''COLLECTED_CFG_FEATURE''. The default implementation feature uses  the ''TASK_ADDRESS'' configuration property (address) or the the ''TASK_NAME'' configuration property (sub-program name) to select the task to compute #CFG for. If none of these configuration properties is set, the function ''main'' is used. If your analysis application derives from ''app::Application'', the configuration properties are automatically set from the command line arguments.
+
+
+In a second step, the #CFG is built usually by following all execution path flowing from the task entry point. The result is a ''CFGCollection'' that is obtained by:
+<code c++>
+WorkSpace *ws = ...;
+const CFGCollection *cfgs = COLLECTED_CFG_FEATURE.get(ws);
+</code>
+
+Listing the #CFG is as simple as:
+<code c++>
+for(auto g: *cfgs)
+	// work with g of type CFG *
+</code>
+
+The function ''cfgs->entry()'' provides also the entry #CFG of the task. In turn, the ''CFG'' class consists in a lot of facilities:
+  * ''CFG::address()'' -- address of the first instruction of the #CFG,
+  * ''CFG::first()'' -- first instruction of the #CFG,
+  * ''CFG::blocks()'' -- nodes of the CFG (set V),
+  * ''CFG::entry()'', ''CFG::exit()'' -- entry and exit nodes,
+  * ''CFG:index()'' -- index of #CFG between 0 and the number if #CFG composing the task,
+  * ''CFG::label()'' -- human readable name of the #CFG (usually the sub-program identifier),
+  * ''CFG::unknown()'' -- if any, special node representing the target of an unknown branch,
+  * ''CFG::format(a)'' -- format the address of a relatively to the current #CFG,
+  * ''CFG::callCount()'' -- number of calls performed to the current #CFG sub-program (null for the entry #CFG), 
+  * ''CFG::callers()'' -- list of synthetic nodes calling the current #CFG.
+
+The base class of #CFG node is named ''Block'' and allow to figure out what is the actual type of a node:
+  * ''Block::isEntry()'' -- entry node,
+  * ''Block::isExit()'' -- exit node,
+  * ''Block::isUnknown()'' -- unknown branch node,
+  * ''Block::isBaic()'' -- basic block node,
+  * ''Block::isSynth()'' -- call/synthetic node.
+
+In the case of basic or synthetic node, the actual instances of classes  ''BasicBlock'' or ''SyntheticBlock'' are obtained respectively by the functions ''Block::toBasic()'' or ''Block::toSynthetic()''.
+
+To make easier the processing of blocks, @(OTAWA) provides with function ''Block::id()'' a identifier that is unique for the whole CFG collection. The total number of blocks in the #CFG collection is obtained by ''cfgs->countsBlocks()''. Notice also that the blocks of #CFG are indexed in sequence and the initial block number is obtained by ''CFG::offset()''.
+
+Notice also that the #CFG owner of a block can be obtained with function ''Block::cfg()''.
+
+==== Exploring a #CFG ====
+
+There are mainly two ways to access blocks of #CFG. First, one can explore the blocks in a random order using the function ''CFG::blocks()'' as:
+<code c++>
+CFG *g = ...;
+for(auto b: *g)
+	// work with b
+</code>
+
+The second way consist in starting from the entry block, ''CFG::entry()'', or from the exit blocks, ''CFG::exit()'' and then to move to the neighbour blocks using the list of entering edges or leaving edges:
+<code c++>
+void forward(Block *b) {
+	for(auto e: b->outEdges())
+		// work with edge e
+}
+
+void backward(Block *b) {
+	for(auto e: b->inEdges())
+		// work with edge e
+}
+</code>
+
+The ''Edge'' class provides the following information:
+  * ''Edge::source()'' -- the source block of the edge,
+  * ''Edge::sink()'' -- the sink block of the edge,
+  * ''Edge::isTaken()'' -- returns true if the edge corresponds to a taken branch,
+  * ''Edge::isNotTaken()'' -- returns true if the edge corresponds to a sequential flow,
+  * ''Edge::isForward()'' -- returns true if the edge branches to an address after the branch,
+  * ''Edge::isBackward()'' -- returns true if the edge branches to an address before the branch.
+
+To list the successors of a block //b//, the following can be used:
+<code c++>
+Block b = ...;
+for(auto e: b->outEdges()) {
+	Block *successor = e->sink();
+	// work with successor
+}
+</code>
 
 
 ==== Basic blocks ====
 
+A Basic Block (BB) is a #CFG block containing code, its class is ''BasicBlock''. To test if a block is basic, one has to call ''Block::isBasic()'' and then ''Block::toBasic()'' to convert the block instance in ''BasicBlock'' instance.
+
+
+Basically, a #BB contains a list of instructions that can explored in order with:
+<code c++>
+BasicBlock *bb = ...;
+for(auto i: *bb)
+	// work with instruction i
+</code>
+
+A BB implements all the function of a ''MemoryArea'', that is:
+  * ''BasicBlock::address()'' -- get the base address of the BB,
+  * ''BasicBlock::topAddress()'' -- get the top address of the BB,
+  * ''BasicBlock::area()'' -- get the area corresponding to the BB,
+  * ''BasicBlock::contains(a)'' -- test if an address is in the BB,
+  * ''BasicBlock::size()'' -- get the size in bytes of the BB,
+  * ''BasicBlock::overlap(ma)'' -- test if the memory area //ma// overlaps the BB.
+
+In addition, a BB provides other information as:
+  * ''BasicBlock::count()'' -- count the instructions in the BB,
+  * ''BasicBlock::first()'' -- get the first instruction of the BB,
+  * ''BasicBlock::last()'' -- get the last instruction of the BB,
+  * ''BasicBlock::control()'' -- if any, get the control instruction of the block((This may not be the last instruction of the BB if the instruction set implements delayed branches.)).
 
 
 ==== Function calls and synthetic blocks ====
 
+The synthetic blocks, class ''SynthBlock'', can be used to isolate the #CFG of a called function but can also be used to isolate any part of a #CFG for special processing. The main difference between actual #CFG and isolated part is the way they are invoked. If the synthetic block corresponds to a call, the function ''Block::isCall()'' will return true.
 
+The synthetic blocks are shared between the caller #CFG and the callee #CFG: for the caller, it is inserted in the #CFG itself; for the callee, it may be obtained as the list of called of the callee #CFG, funcion ''CFG::callers()''. This is why it provides functions ''SynthBlock::caller()'', to get the caller #CFG, and ''SynthBlock::callee()'', to get the callee #CFG. It must be noted that the callee may be a null pointer if the callee target is unknown. If the synthetic block is actually a call, the function ''SynthBlock::callInst()'' gives the instruction that performs a call.
+
+
+===== Loops representation =====
+
+@(OTAWA) can also provide a view of loops in the #CFG. This performed by using the feature ''otawa::EXTENDED_LOOP_FEATURE'' that will invoke an analysis of the #CFG in order to identify the loops.
+
+Loops in @(OTAWA) are mainly defined based on the dominance relationship. For any blocks of a #CFG, $v$ dominates $w$, notes $v ~dom~ w$, means that any path from the entry block $\alpha$ to $w$ traverses $v$. From this, a back edge is any edge $v \to w \in E$ s.t. $w ~dom~ v$. The header of a loop is any block that the sink of a back edge. Loops are identified by their header block, $h$. The body of the loop is made of any block (a) dominated by $h$, (b) that is on the path from $h$ to $h$ (not traversing $h$) and which last edge is a back edge of $h$. An exit edge $v \to w \in E$ is an exit edge if $v$ is in a loop headed by $h$ and $w$ in a loop headed by $h'$ and $h \ne g'$.
+
+In @(OTAWA), irregular loops (loops headed by more than one block) can //regularized// using the feature ''otawa::REDUCED_LOOPS_FEATURE''. With this #CFG transformation, a head is chosen in a multi-headed loop and the paths from other heads to this head is duplicated to ensure the uniqueness of the loop header. In some cases, they may increase the size of the program representation but makes easier subsequent analysis algorithms.
+
+The loop are implemented as instance of class ''Loop''. From the feature, the top-level loop of particular #CFG //g// is a pseudo-loop corresponding to the top-level of the #CFG. It is obtained by:
+<code c++>
+WorkSpace *ws = ...;
+CFG *g = ...;
+Loop *top_loop = EXTENDED_LOOP_FEATURE.get(ws)->top(g);
+</code>
+
+For any block //v//, the innermost container loop can be obtained with:
+<code c++>
+WorkSpace *ws = ...;
+EXTENDED_LOOP_FEATURE.get(ws)->loop(v);
+</code>
+
+If //v// is not contained in any loop, the top-level pseudo-loop is returned. If //v// is a loop header, the returned loop is the loop headed by //v//.
+
+To navigate in the loop tree, one can use the functions:
+  * ''Loop::parent()'' -- to get the parent loop((Top-level loop has no parent!)),
+  * ''Loop::subLoops()'' -- to get the list of immediate sub-loops.
+
+To come back to the #CFG from a loop, the following functions are available:
+  * ''Loop:cfg()'' -- to get the owner #CFG,
+  * ''Loop::exitEdges()'' -- to get the list of exit edges of the loop,
+  * ''Loop::header()'' -- to get the header block of the loop.
+
+Some operations are specially dedicated to loops:
+  * ''Loop::address()'' -- gets base address of the loop (usually the address of the header block),
+  * ''Loop::depth()'' -- computes the depth of the loop (0 for top-level loop),
+  * ''Loop::includes(l)'' -- tests if the loop //l// is included in the current loopn
+  * ''Loop::isLead()'' -- tests if the current loop is a loop tree leaf (no sub-loop),
+  * ''Loop::isTop()'' -- tests if the current loop is the top-level loop.
 
 
 ===== #PCG Representation =====

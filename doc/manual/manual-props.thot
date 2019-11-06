@@ -56,7 +56,7 @@ Whatever, accessing a property that  is not defined in a property list, does not
 
 Although the access time to @(OTAWA) properties is longer than usual C++ member variables, the penalty is reduced thanks to a cache system that benefits from the temporal locality of accesses. The properties also have a slightly larger size in memory. Yet, these drawbacks are balanced by the induced improvement in flexibility and usability to work on the program representation.
 
-The work of properties is funded on the automatic conversion facilities of C++. Yet, from time to time, the type checking system may be not clever enough to use this conversion. Anyways, you can always obtain the value of property by prefixing the identifier with a "*" as below:
+The work of properties is supported by the automatic conversion facilities of C++. Yet, from time to time, the type checking system may be not clever enough to use this conversion. Anyways, you can always obtain the value of property by prefixing the identifier with a "*" as below:
 <code>
 	* ID ( list )
 </code>
@@ -222,7 +222,7 @@ For small collection of objects, @(OTAWA) provides a better solution, the class 
 	...
 	Vector<BasicBlock *> bbs;
 	/* fill the vector */
-	MY_BB_COLLECTION(cfg) = Bag(bbs);
+	MY_BB_COLLECTION(cfg) = bbs;
 	...
 	Bag<BasicBlock *>& bag = MY_BB_COLLECTION(cfg);
 </code>
@@ -288,7 +288,7 @@ The following functions are available:
 The ''require''() function ensures that the feature ''MY_FEATURE'' is built (its properties are set) in the current workspace. If the feature is already available, nothing is done. Otherwise, the default code processor of the feature is invoked. ''require''() can take an additional parameter, a property list, to configure the way the feature will be built. Notice that a feature code processor can require other features that needs to be built in turn and this call may outcome into a chain of analyzes performed on the workspace.
 
 <code c++>
-	if(ws->isProvided(MY_FEATURE))
+	if(ws->provides(MY_FEATURE))
 		do_somehting_with_the_feature();
 </code>
 The function ''isProvided''() on the ''WorkSpace'' is used to test if a feature is available.

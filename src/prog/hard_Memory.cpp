@@ -234,104 +234,104 @@ static Bank full("RAM", 0, 0);
 
 
 /**
- * @fn const string& Bank::name(void) const;
+ * @fn const string& Bank::name() const;
  * Get the name of the bank.
  * @return Bank name.
  */
 
 
 /**
- * @fn const Address& Bank::address(void) const;
+ * @fn const Address& Bank::address() const;
  * Get the base address of the bank.
  * @return	Base address.
  */
 
 
 /**
- * @fn const int Bank::size(void) const;
+ * @fn const int Bank::size() const;
  * Get the size of the bank.
  * @return	Bank size (in bytes).
  */
 
 
 /**
- * @fn type_t Bank::type(void) const;
+ * @fn type_t Bank::type() const;
  * Get the type of the bank.
  * @return	Bank type.
  */
 
 
 /**
- * @fn int Bank::latency(void) const;
+ * @fn int Bank::latency() const;
  * Get the default latency for accessing this bank.
  * @return	Default latency (in cycle).
  */
 
 
 /**
- * @fn int Bank::power(void) const;
+ * @fn int Bank::power() const;
  * Get the default power for accessing this bank.
  * @return	Default power.
  */
 
 
 /**
- * @fn int Bank::blockBits(void) const;
+ * @fn int Bank::blockBits() const;
  * Get the number of bits in the block size of the bank.
  * @return	Default bits per block (0 if there is no blocking).
  */
 
 
 /**
- * @fn int Bank::blockSize(void) const;
+ * @fn int Bank::blockSize() const;
  * Get the block size of this bank.
  * @return	Block size (in bytes, 0 if the bank is not blocked).
  */
 
 
 /**
- * @fn const Table<const Mode *>& Bank::modes(void);
+ * @fn const Table<const Mode *>& Bank::modes();
  * Get the mode transition table of the bank. The first mode is the default mode.
  * @return	Mode transition table.
  */
 
 
 /**
- * @fn bool Bank::isCached(void) const;
+ * @fn bool Bank::isCached() const;
  * Test if the bank is cached.
  * @return	True if the bank is cached, false else.
  */
 
 
 /**
- * @fn bool Bank::isOnChip(void) const;
+ * @fn bool Bank::isOnChip() const;
  * Test if the bank is on the same chip than the processor.
  * @return	True if it is on the same chip, false else.
  */
 
 
 /**
- * @fn bool Bank::isWritable(void) const;
+ * @fn bool Bank::isWritable() const;
  * Test if the bank is writable.
  * @return	True if the bank is writable, false else.
  */
 
 
 /**
- * @fn int Bank::portNum(void) const;
+ * @fn int Bank::portNum() const;
  * Get the number of port on the bank bus.
  * @return	Number of ports.
  */
 
 /**
- * @fn const Bus *Bank::bus(void) const;
+ * @fn const Bus *Bank::bus() const;
  * Get the bus of the bank.
  * @return	Bank bus.
  */
 
 
 /**
- * @fn Address Bank::topAddress(void) const;
+ * @fn Address Bank::topAddress() const;
  * Get the top successor address of the bank, that is, bank address + bank size.
  * @return	Bank top address.
  */
@@ -343,6 +343,12 @@ static Bank full("RAM", 0, 0);
  * @return	True if the address is in the bank, false else.
  */
 
+
+/**
+ * @fn MemArea Bank::area() const;
+ * Get the area covered by this memory bank.
+ * @return	Bank memory area.
+ */
 
 /**
  * @class Memory

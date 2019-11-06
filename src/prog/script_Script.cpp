@@ -308,7 +308,7 @@ private:
 
 /**
  */
-Script::Script(void): Processor(reg), only_config(false), timed(false) {
+Script::Script(void): Processor(reg), only_config(false), timed(false), _version(0) {
 }
 
 
@@ -385,8 +385,12 @@ void Script::work(WorkSpace *ws) {
 			xom::Element *item = items->get(i);
 			ScriptItem *sitem = ScriptItem::parse(*item);
 			this->items.add(sitem);
-			if(logFor(LOG_DEPS))
-				log << "\tscript parameter \"" << sitem->name << "\" found.\n";
+			if(logFor(LOG_DEPS)) {
+				log << "\tscript parameter \"" << sitem->name << "\" found";
+				if(sitem->deflt)
+					log << " (default " << sitem->deflt << ')';
+				log << io::endl;
+			}
 		}
 		delete items;
 	}
@@ -423,15 +427,16 @@ void Script::work(WorkSpace *ws) {
 
 		// multi-parameter
 		else
-			for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param(); param++)
-				if((*param).fst == item->name) {
+			for(auto p: PARAM.all(props))
+				if(p.fst == item->name) {
 					xom::Element *param_elt = new xom::Element(item->name.toCString());
 					empty_root->appendChild(param_elt);
-					param_elt->addAttribute(new xom::Attribute("value", item->makeParam((*param).snd).toCString()));
+					if(logFor(LOG_PROC))
+						log << "\t" << item->name << " added with " << p.snd << io::endl;
+					param_elt->addAttribute(new xom::Attribute("value", item->makeParam(p.snd).toCString()));
 				}
 	}
 
-	// !!DEBUG!!
 	/*DEBUG(OutStream *out = elm::system::System::createFile("out.xml");
 	xom::Serializer serial(*out);
 	serial.write(xsl);
@@ -442,18 +447,18 @@ void Script::work(WorkSpace *ws) {
 	declareGlobals(xslt);
 	ScriptErrorHandler handler(log);
 	xslt.setErrorHandler(&handler);
-	for(Identifier<Pair<string, string> >::Getter param(props, PARAM); param(); param++) {
+	for(auto p: PARAM.all(props)) {
 		bool found = false;
 		for(ItemIter item(*this); item(); item++) {
-			if(!item->multi && item->name == (*param).fst) {
+			if(!item->multi && item->name == p.fst) {
 				found = true;
-				xslt.setParameter((*param).fst, item->makeParam((*param).snd));
+				xslt.setParameter(p.fst, item->makeParam(p.snd));
 				if(logFor(LOG_DEPS))
-					log << "\tadding argument \"" << (*param).fst << "\" to \"" << (*param).snd << "\"\n";
+					log << "\tadding argument \"" << p.fst << "\" to \"" << p.snd << "\"\n";
 			}
 		}
 		if(!found)
-			warn(_ << "unknown configuration parameter: " << (*param).fst);
+			warn(_ << "unknown configuration parameter: " << p.fst);
 	}
 	xom::Document *res = xslt.transformDocument(empty);
 	delete empty;

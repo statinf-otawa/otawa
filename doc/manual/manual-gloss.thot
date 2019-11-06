@@ -6,6 +6,7 @@
 @term IPET	Implicit Path Enumeration Technique
 @term OOP	Object-Oriented Programming
 @term PCG	Program Call Graph
+@term RISC  Reduced/Regular Instruction Set Computer
 @term WCET	Worst Case Execution Time
 
 @lexicon

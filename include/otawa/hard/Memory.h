@@ -115,20 +115,21 @@ public:
 	Bank(cstring name, Address address, size_t size);
 	virtual ~Bank(void);
 
-	inline const string& name(void) const { return _name; }
+	inline const string& name() const { return _name; }
 	inline const Address& address(void) const { return _address; }
-	inline const int size(void) const { return _size; }
-	inline type_t type(void) const { return _type; }
-	inline ot::time readLatency(void) const { return _latency; }
-	inline ot::time writeLatency(void) const { if(!_write_latency) return _latency; else return _write_latency; }
-	inline int power(void) const { return _power; }
-	inline int blockBits(void) const { return _block_bits; }
-	inline int blockSize(void) const { return 1 << _block_bits; }
+	inline const int size() const { return _size; }
+	inline MemArea area() const { return MemArea(address(), size()); }
+	inline type_t type() const { return _type; }
+	inline ot::time readLatency() const { return _latency; }
+	inline ot::time writeLatency() const { if(!_write_latency) return _latency; else return _write_latency; }
+	inline int power() const { return _power; }
+	inline int blockBits() const { return _block_bits; }
+	inline int blockSize() const { return 1 << _block_bits; }
 	inline const Array<const Mode *>& modes(void) const { return _modes; }
-	inline bool isCached(void) const { return _cached; }
-	inline bool isOnChip(void) const { return _on_chip; }
-	inline bool isWritable(void) const { return _writable; }
-	inline int portNum(void) const { return _port_num; }
+	inline bool isCached() const { return _cached; }
+	inline bool isOnChip() const { return _on_chip; }
+	inline bool isWritable() const { return _writable; }
+	inline int portNum() const { return _port_num; }
 	inline const Bus *bus(void) const { return _bus; }
 
 	inline Address topAddress(void) const { return address() + size(); }

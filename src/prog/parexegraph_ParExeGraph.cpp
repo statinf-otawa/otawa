@@ -777,6 +777,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
 						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
+					cached = false;
 				}
 			}
 
@@ -1268,41 +1269,41 @@ void ParExeGraph::dump(elm::io::Output& dotFile, const string& info, const strin
 		for (InstNodeIterator node(*inst) ; node() ; node++) {
 			dotFile << "\"" << node->stage()->name();
 			dotFile << "I" << node->inst()->index() << "\"";
-			dotFile << " [group=" << node->stage()->index() << ", shape=record, ";
+			dotFile << " [group=" << node->stage()->index() << ", shape=plaintext, ";
 			if (node->inst()->codePart() == BLOCK)
 				dotFile << "color=blue, ";
-			dotFile << "label=\"" << node->stage()->name();
+			dotFile << "label=<<table border=\"0\" cellborder=\"1\" cellspacing=\"0\"><tr><td>" << node->stage()->name();
 			dotFile << "(I";
 			// dump the whole bundle
 			InstIterator it = inst;
 			for (; it->inst()->isBundle(); ++it)
 				dotFile << it->index() << ", I";
-			dotFile << it->index() << ")\\<" << node->latency() << "\\>\\l";
+			dotFile << it->index() << ")&lt;" << node->latency() << "&gt;</td></tr><tr><td>";
 			// dump the whole bundle
 			for (it = inst; it->inst()->isBundle(); ++it)
-				escape(dotFile, elm::_ << it->inst() << "\\l");
-			escape(dotFile, elm::_ << it->inst() << "\\l");
+				escape(dotFile, elm::_ << it->inst() << "<br/>");
+			escape(dotFile, elm::_ << it->inst());
 			node->customDump(dotFile);
-            dotFile << "| { ";
+            dotFile << "</td></tr><tr><td>";
 			int i=0;
 			int num = _resources.length();
 			while (i < num) {
 				int j=0;
-				dotFile << "{ ";
+				dotFile << "<table border=\"0\" cellborder=\"1\" cellspacing=\"0\"><tr><td>";
 				while (j<width && i<num) {
 					if (node->delayLength() > i && node->delay(i)>=0)
 						dotFile << node->delay(i);
 					if (j<width-1 && i<num-1)
-						dotFile << " | ";
+						dotFile << "</td><td>";
 					i++;
 					j++;
 				}
-				dotFile << " }";
+				dotFile << "</td></tr></table>";
 				if (i<num)
-					dotFile << " | ";
+					dotFile << "</td></tr><tr><td>";
 			}
-			dotFile << " }";
-			dotFile << "\"];\n";
+			//dotFile << "</table>";
+			dotFile << "</td></tr></table>>];\n";
 		}
 		dotFile << "\n";
     }
@@ -1483,16 +1484,11 @@ ParExeGraph::ParExeGraph(
 	if(_ws != nullptr) {
 
 		// look for cache configuration
+		_cache_line_size = 0;
 		if(_ws->isProvided(hard::CACHE_CONFIGURATION_FEATURE)) {
 			const hard::CacheConfiguration *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 			if (cache && cache->instCache())
 				_cache_line_size = cache->instCache()->blockSize();
-			else {
-				/*_cache_line_size = ws->process()->instSize();
-				if(!_cache_line_size)
-					_cache_line_size = 1;*/
-				_cache_line_size = 0;
-			}
 		}
 
 		// look for memory configuration

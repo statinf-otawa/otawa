@@ -34,7 +34,7 @@ template <class T>
 class Give {
 public:
 	inline Give(int c, T *a): cnt(c), arr(a) { }
-	inline Give(Vector<T>& v): cnt(v.length()), arr(*v.detach()) { }
+	inline Give(Vector<T>& v): cnt(v.length()), arr(v.detach().buffer()) { }
 	inline int count(void) const { return cnt; }
 	inline T *array(void) const { return arr; }
 private:
@@ -50,10 +50,10 @@ public:
 	inline Bag(void): cnt(0), arr(0) { }
 	inline Bag(int c): cnt(c), arr(new T[c]) { }
 	inline Bag(const Bag& bag) { copy(bag.cnt, bag.arr); }
-	inline Bag(int c, const T *a): arr(nullptr) { copy(c, a); }
-	inline Bag(int c, T *a): arr(nullptr) { copy(c, a); }
-	inline Bag(const Vector<T>& v): arr(nullptr) { copy(v); }
-	inline Bag(Pair<int, T *> p): arr(nullptr) { copy(p.fst, p.snd); }
+	inline Bag(int c, const T *a): cnt(0), arr(nullptr) { copy(c, a); }
+	inline Bag(int c, T *a): cnt(0), arr(nullptr) { copy(c, a); }
+	inline Bag(const Vector<T>& v): cnt(0), arr(nullptr) { copy(v); }
+	inline Bag(Pair<int, T *> p): arr(nullptr), cnt(0) { copy(p.fst, p.snd); }
 	inline Bag(const Give<T>& g): cnt(g.count()), arr(g.array()) { }
 	inline ~Bag(void) { clear(); }
 
@@ -70,9 +70,9 @@ public:
 	// Iter class
 	class Iter: public PreIterator<Iter, T> {
 	public:
-		inline Iter(void): b(nullptr), i(0) { }
+		inline Iter(): b(nullptr), i(0) { }
 		inline Iter(const Bag<T>& bag): b(&bag), i(0) { }
-		inline Iter(const Bag<T>& bag, int index): b(bag), i(index) { }
+		inline Iter(const Bag<T>& bag, int index): b(&bag), i(index) { }
 		inline bool ended(void) const { return i >= b->count(); }
 		inline const T& item(void) const { return (*b)[i]; }
 		inline void next(void) { i++; }
@@ -116,6 +116,11 @@ private:
 	int cnt;
 	T *arr;
 };
+
+template <class T>
+Bag<T> move(Vector<T>& v) { return Bag<T>(Give<T>(v)); }
+template <class T>
+Bag<T> move(int c, T *t) { return Bag<T>(Give<T>(c, t)); }
 
 };	// otawa
 

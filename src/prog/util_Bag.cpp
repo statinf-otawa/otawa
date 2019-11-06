@@ -122,4 +122,23 @@ namespace otawa {
  * @return	True if the bag is empty, false else.
  */
 
+
+/**
+ * @fn Bag<T> move(Vector<T>& v);
+ * Move the given vector content to a bag, letting home empty.
+ * @param v	Vector to move.
+ * @return	Built bag.
+ * @ingroup props
+ */
+
+
+/**
+ * @fn Bag<T> move(int c, T *t);
+ * Move the given array content to a bag. After this call, the builder of the array
+ * is no more in charge of freeing the corresponding memory. t must have allocated using a new!
+ * @param c	Count of items in t.
+ * @param t	Array to put in the bag.
+ * @return	Built bag.
+ */
+
 }	// otawa
