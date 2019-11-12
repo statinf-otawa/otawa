@@ -598,65 +598,72 @@ int BasicBlock::count(void) const {
 	return c;
 }
 
+
+/**
+ * Compute the predecessors of the current basic block that (a) are basic
+ * blocks and (b)for which transition can be accounted by an edge.
+ * The result predecessor vector is empty if there is at least one
+ * predecessor basic block that cannot be accounted by an edge.
+ *
+ * This function is useful when an analysis requires to work on instructions
+ * of chains of basic blocks.
+ *
+ * The result is a vector of pair (b, e) where b is a predecessor basic blocks
+ * and e the edge that account for the number of iterations of the basic block.
+ *
+ * @param preds	List of predecessors basic blocks and accounting edge.
+ *
+ */
+void BasicBlock::basicPreds(basic_preds_t& preds) {
+	Vector<Edge *> todo;
+
+	// prepare to-do list
+	for(auto e: inEdges())
+		todo.push(e);
+
+	// work on the todo list
+	while(todo) {
+		auto p = todo.pop();
+		Block *b = p->source();
+
+		// BB case
+		if(b->isBasic())
+			preds.add(pair(b->toBasic(), p));
+
+		// phony case
+		else if(b->isPhony()) {
+			for(auto e: b->inEdges())
+				todo.push(e);
+		}
+
+		// entry case
+		else if(b->isEntry()) {
+			if(b->cfg()->callCount() == 0)
+				preds.push(pair(null<BasicBlock>(), p));
+			else
+				for(auto c: b->cfg()->callers())
+					todo.push(*c->inEdges().begin());
+		}
+
+		// synthetic case
+		else {
+			SynthBlock *sb = b->toSynth();
+			if(sb->callee() == nullptr
+			|| (sb->callee()->exit()->countIns() != 1 && sb->callee()->callCount() > 1)) {
+				preds.clear();
+				preds.push(pair<BasicBlock *, Edge *>(nullptr, p));
+				return;
+			}
+			for(auto e: sb->callee()->exit()->inEdges())
+				todo.push(e);
+		}
+	}
+}
+
+
 /**
  * @class BasicBlock::InstIter;
  * Iterator for instruction of a basic block.
- */
-
-/**
- * @class BasicIter
- * Iterator on the basic edges of a block (that is only edges
- * that link a basic block to the current one, that is neither
- * synthetic block, nor end blocks).
- */
-
-/**
- */
-BasicBlock::BasicIns::BasicIns(BasicBlock *bb) {
-	for(EdgeIter i = bb->ins(); i(); i++)
-		wl.push(pair(*i, *i));
-	e = BasicEdge(0, 0, bb);
-	next();
-	if(!e.sink())
-		e = BasicEdge(0, *bb->ins(), bb);
-}
-
-/**
- */
-void BasicBlock::BasicIns::next(void) {
-	while(wl) {
-		Pair<Edge *, Edge *> p = wl.pop();
-
-		// simple edge
-		if(p.fst->source()->isBasic()) {
-			e = BasicEdge(p.fst->source()->toBasic(), p.fst, e.sink());
-			return;
-		}
-
-		// function entry
-		else if(p.fst->source()->isEntry())
-			for(auto c: p.fst->source()->cfg()->callers())
-				for(Block::EdgeIter i = c->ins(); i(); i++)
-					wl.push(pair(*i, *i));
-
-		// function return
-		else {
-			SynthBlock *sb = p.fst->source()->toSynth();
-			if(sb->callee())
-				for(Block::EdgeIter i = sb->callee()->exit()->ins(); i(); i++)
-					wl.push(pair(*i, p.fst));
-		}
-	}
-	e = BasicEdge();
-}
-
-
-/**
- * @fn BasicIter BasicBlock::basicIns(void) const;
- * Get the list of basic input edges of the current basic block.
- * @warning This method is effective only if the @ref BASIC_PREDECESSOR_FEATURE
- * has been required.
- * @return	Iterator on the list of input edges.
  */
 
 

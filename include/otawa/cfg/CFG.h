@@ -177,33 +177,10 @@ public:
 		inline BundleIter(const InstIter& i): _iter(i) { }
 		InstIter _iter;
 	};
-	//inline BundleIter bundles(void) const { return BundleIter(this); }
 	inline Range<BundleIter> bundles() const { return Range<BundleIter>(BundleIter(begin()), BundleIter(end())); }
 
-	class BasicEdge {
-	public:
-		inline BasicEdge(void): v(0), w(0), e(0) { }
-		inline BasicEdge(BasicBlock *source, Edge *edge, BasicBlock *sink)
-			: v(source), w(sink), e(edge) { }
-		inline BasicBlock *source(void) const { return v; }
-		inline BasicBlock *sink(void) const { return w; }
-		inline Edge *edge(void) const { return e; }
-	private:
-		BasicBlock *v, *w;
-		Edge *e;
-	};
-
-	class BasicIns: public PreIterator<BasicIns, BasicEdge> {
-	public:
-		BasicIns(BasicBlock *bb);
-		inline bool ended(void) const { return !e.sink(); }
-		inline const BasicEdge& item(void) const { return e; }
-		void next(void);
-	private:
-		BasicEdge e;
-		Vector<Pair<Edge *, Edge *> > wl;
-	};
-	inline BasicIns basicIns(void) { return BasicIns(this); }
+	typedef Vector<Pair<BasicBlock *, Edge *>> basic_preds_t;
+	void basicPreds(basic_preds_t& preds);
 
 private:
 	AllocArray<Inst *> _insts;

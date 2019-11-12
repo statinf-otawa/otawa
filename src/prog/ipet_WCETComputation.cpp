@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	WCETComputation class implementation
  *
  *	This file is part of OTAWA
@@ -33,6 +32,9 @@
 #include <otawa/stats/BBStatCollector.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/ilp/ILPPlugin.h>
+#include <otawa/proc/ProcessorPlugin.h>
+#include <otawa/etime/features.h>
+#include <otawa/proc/DynFeature.h>
 
 using namespace otawa::ilp;
 
@@ -54,18 +56,28 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
 p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation::DO_DISPLAY", false);
 
 
-// total time statistics
-class TotalTimeStat: public BBStatCollector {
+// AbstractTotalTimeStat class
+class AbstractTotalTimeStat: public BBStatCollector {
 public:
-	TotalTimeStat(WorkSpace *ws): BBStatCollector(ws) {
+	AbstractTotalTimeStat(WorkSpace *ws): BBStatCollector(ws) {
 		system = SYSTEM(ws);
 		ASSERT(system);
 	}
 
-	virtual cstring id(void) const { return "ipet/total_time"; }
-	virtual cstring name(void) const { return "Total Execution Time"; }
-	virtual cstring unit(void) const { return "cycle"; }
-	virtual int total(void) { return WCET(ws()); }
+	virtual cstring id(void) const override { return "ipet/total_time"; }
+	virtual cstring name(void) const override { return "Total Execution Time"; }
+	virtual cstring unit(void) const override { return "cycle"; }
+	virtual int total(void) override { return WCET(ws()); }
+
+protected:
+	ilp::System *system;
+};
+
+// total time statistics
+class TotalTimeStat: public AbstractTotalTimeStat {
+public:
+	TotalTimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) {
+	}
 
 	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
 		if(bb->isEnd())
@@ -82,8 +94,61 @@ public:
 		collector.collect(bb->address(), bb->size(), cnt * time, path);
 	}
 
+};
+
+
+/**
+ * Total time statistics in the frame of etime module.
+ * @ingroup ipet
+ */
+class EdgeTotalTimeStat: public AbstractTotalTimeStat {
+public:
+	EdgeTotalTimeStat(WorkSpace *ws):
+		AbstractTotalTimeStat(ws),
+		sys(nullptr),
+		LTS_TIME(p::get_id<ot::time>("otawa::etime::LTS_TIME")),
+		HTS_CONFIG(p::get_id<Pair<ot::time, ilp::Var *>>("otawa::etime::HTS_CONFIG"))
+	{ }
+
+protected:
+
+	int getStat(BasicBlock *bb) override {
+		int t = 0;
+
+		// ensure ILP system
+		if(sys == nullptr) {
+			sys = ipet::SYSTEM(ws());
+			if(sys == nullptr)
+				return 0;
+		}
+
+		// compute time
+		BasicBlock::basic_preds_t ps;
+		bb->basicPreds(ps);
+		for(auto p: ps)
+			if(p.snd->hasProp(LTS_TIME)) {
+
+				// compute low time
+				int lt = LTS_TIME(p.snd);
+				int lc = sys->valueOf(ipet::VAR(p.snd));
+				t += lc * lt;
+
+				// compute high times
+				for(auto c: HTS_CONFIG.all(p.snd)) {
+					int ht = c.fst;
+					int hc = sys->valueOf(c.snd);
+					t += hc * ht;
+				}
+			}
+
+		// return time
+		return t;
+	}
+
 private:
-	ilp::System *system;
+	ilp::System *sys;
+	p::id<ot::time>& LTS_TIME;
+	p::id<Pair<ot::time, ilp::Var *>>& HTS_CONFIG;
 };
 
 
@@ -183,8 +248,15 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
 /**
  */
 void WCETComputation::collectStats(WorkSpace *ws) {
-	record(new TotalTimeStat(ws));
 	record(new TotalCountStat(ws));
+	if(ws->provides("otawa::etime::EDGE_TIME_FEATURE")) {
+		record(new EdgeTotalTimeStat(ws));
+		log << "DEBUG: edge time stat!\n";
+	}
+	else {
+		record(new TotalTimeStat(ws));
+		log << "DEBUG: normal time stat!\n";
+	}
 }
 
 

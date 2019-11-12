@@ -39,11 +39,23 @@ public:
 	AbstractFeature(cstring name = "");
 	virtual ~AbstractFeature(void);
 	virtual void process(WorkSpace *ws, const PropList& props = PropList::EMPTY) const = 0;
+
 };
 
 
 // feature class
 namespace p {
+
+	bool is_feature(const AbstractIdentifier *id);
+	AbstractFeature *find_feature(cstring name);
+	AbstractIdentifier *find_id(cstring name);
+
+	template <class T>
+	inline p::id<T>& get_id(cstring name) {
+		AbstractIdentifier *i = find_id(name);
+		ASSERTP(i != nullptr, "identifier " << name << " cannot be found!");
+		return *static_cast<p::id<T> *>(i);
+	}
 
 	class feature: public AbstractFeature {
 	public:

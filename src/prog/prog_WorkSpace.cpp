@@ -694,6 +694,20 @@ bool WorkSpace::provides(const AbstractFeature& feature) {
 
 
 /**
+ * Test if the named feature is provided.
+ * @param name	Name of the look feature.
+ * @return		True if the feature is available, false else.
+ */
+bool WorkSpace::provides(cstring name) {
+	AbstractIdentifier *id = AbstractIdentifier::find(name);
+	if(id == nullptr || !p::is_feature(id))
+		return false;
+	else
+		return provides(*static_cast<const AbstractFeature *>(id));
+}
+
+
+/**
  * @fn bool WorkSpace::implements(const AbstractFeature& feature);
  * Test if a feature is provided.
  * @param feature	Feature to test.

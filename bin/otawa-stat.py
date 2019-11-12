@@ -37,6 +37,24 @@ COLORS = [
 ]
 COLOR_TH = 4
 
+def escape_dot(s):
+	"""Escape a string to be compatible with dot."""
+	return s. \
+		replace("{", "\\{").\
+		replace("}", "\\}").\
+		replace("\n", "").\
+		replace("\r", "")
+
+def escape_html(s):
+	"""Escape a string to be compatible with HTML text."""
+	return s. \
+		replace("<", "&lt;"). \
+		replace(">", "&gt;"). \
+		replace("&", "&amp;"). \
+		replace(" ", "&nbsp;"). \
+		replace("\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
+
+
 def background(ratio):
     return COLORS[round(ratio * (len(COLORS) - 1))]
 
@@ -54,6 +72,53 @@ def fatal(msg):
     error(msg)
     exit(1)
 
+
+class SourceManager:
+	"""The source manager manges sources of the processed program."""
+	
+	def __init__(self, paths = ["."]):
+		self.paths = paths
+		self.sources = {}
+	
+	def load_source(self, path, alias = None):
+		"""Try to load the source from the file system."""
+		try:
+			return list(open(path, "r"))
+		except OSError:
+			return None
+	
+	def find_source(self, path):
+		"""Lookup for a source file. If not already loaded, lookup
+		for the source using the lookup paths."""
+		try:
+			return self.sources[path]
+		except KeyError:
+			lines = None
+			if os.path.isabs(path):
+				lines = self.load_source(path)
+			else:
+				for p in self.paths:
+					p = os.path.join(p, path)
+					lines = self.load_source(p, path)
+					if lines != None:
+						self.sources[p] = lines
+						break
+			self.sources[path] = lines
+			return lines
+
+	def get_line(self, path, line):
+		"""Get the line corresponding to the given source path and line.
+		If not found, return None."""
+		lines = self.find_source(path)
+		if lines == None:
+			return None
+		else:
+			try:
+				return lines[line - 1]
+			except IndexError:
+				return None
+
+
 class Data:
     
     def __init__(self):
@@ -64,7 +129,8 @@ class Data:
     
     def get_val(self, id):
         try:
-            return self.data[id]
+            r = self.data[id]
+            return r
         except KeyError:
             return 0
     
@@ -91,6 +157,7 @@ class Block(Data):
         self.id = id
         self.next = []
         self.pred = []
+        self.lines = []
     
     def collect(self, id, val, addr, size):
         return 0
@@ -166,93 +233,109 @@ class Task:
 
 class Decorator:
     
-    def major(self):
-        return None
+	def __init__(self, sman = SourceManager()):
+		self.sman = sman
     
-    def start_cfg(self, cfg):
-        pass
+	def major(self):
+		return None
 
-    def end_cfg(self, cfg):
-        pass
-    
-    def cfg_label(self, cfg, out):
-        pass
-    
-    def bb_body(self, bb, out):
-        pass
+	def start_cfg(self, cfg):
+		pass
 
-    def bb_attrs(self, bb, out):
-        pass
+	def end_cfg(self, cfg):
+		pass
+
+	def cfg_label(self, cfg, out):
+		pass
+
+	def bb_body(self, bb, out):
+		pass
+
+	def bb_attrs(self, bb, out):
+		pass
 
 def read_cfg(path):
-    cfg_path = os.path.join(path, "stats/cfg.xml")
-    try:
-        
-        # open the file
-        doc = ET.parse(cfg_path)
-        root = doc.getroot()
-        if root.tag != "cfg-collection":
-            raise IOError("bad XML type")
-        
-        # prepare CFGS
-        task = Task(path)
-        cfg_map = {}
-        for n in root.iter("cfg"):
-            id = n.attrib["id"]
-            try:
-                ctx = n.attrib["context"]
-            except KeyError:
-                ctx = ""
-            cfg = CFG(id, n.attrib["label"], ctx)
-            task.cfgs.append(cfg)
-            cfg_map[id] = cfg
-            cfg.node = n
-        
-        for cfg in task.cfgs:
-            block_map = {}
+	cfg_path = os.path.join(path, "stats/cfg.xml")
+	try:
 
-            # fill the vertices of CFG
-            for n in cfg.node:
-                try:
-                    id = n.attrib["id"]
-                except KeyError:
-                    continue
-                if n.tag == "entry":
-                    b = Block(BLOCK_ENTRY, id)
-                    cfg.entry = b
-                elif n.tag == "exit":
-                    b = Block(BLOCK_EXIT, id)
-                    cfg.exit = b
-                elif n.tag == "bb":
-                    try:
-                        b = CallBlock(id, cfg_map[n.attrib["call"]])
-                    except KeyError:
-                        lines = []
-                        for l in n.iter("line"):
-                            lines.append((l.attrib["file"], int(l.attrib["line"])))
-                        b = BasicBlock(id, int(n.attrib["address"], 16), int(n.attrib["size"]), lines)
-                else:
-                    continue  
-                cfg.add(b)
-                block_map[id] = b
+		# open the file
+		doc = ET.parse(cfg_path)
+		root = doc.getroot()
+		if root.tag != "cfg-collection":
+			raise IOError("bad XML type")
+
+		# prepare CFGS
+		task = Task(path)
+		cfg_map = {}
+		for n in root.iter("cfg"):
+			id = n.attrib["id"]
             
-            # fill the edges of CFG
-            for n in cfg.node.iter("edge"):
-                Edge(block_map[n.attrib["source"]], block_map[n.attrib["target"]])
+			# look for context
+			try:
+				ctx = n.attrib["context"]
+			except KeyError:
+				ctx = ""
+				for p in n.iter("property"):
+					try:
+						if p.attrib["identifier"] == "otawa::CONTEXT":
+							ctx = p.text
+							break
+					except KeyError:
+						pass
+            
+			# build the CFG
+			cfg = CFG(id, n.attrib["label"], ctx)
+			task.cfgs.append(cfg)
+			cfg_map[id] = cfg
+			cfg.node = n
+        
+        # initialize the content of CFGs
+		for cfg in task.cfgs:
+			block_map = {}
 
-            cfg.node = None
+			# fill the vertices of CFG
+			for n in cfg.node:
+				try:
+					id = n.attrib["id"]
+				except KeyError:
+					continue
+				if n.tag == "entry":
+					b = Block(BLOCK_ENTRY, id)
+					cfg.entry = b
+				elif n.tag == "exit":
+					b = Block(BLOCK_EXIT, id)
+					cfg.exit = b
+				elif n.tag == "bb":
+					try:
+						b = CallBlock(id, cfg_map[n.attrib["call"]])
+					except KeyError:
+						lines = []
+						for l in n.iter("line"):
+							lines.append((l.attrib["file"], int(l.attrib["line"])))
+						b = BasicBlock(id, int(n.attrib["address"], 16), int(n.attrib["size"]), lines)
+						b.lines = lines
+				else:
+					continue  
+				cfg.add(b)
+				block_map[id] = b
+            
+			# fill the edges of CFG
+			for n in cfg.node.iter("edge"):
+				Edge(block_map[n.attrib["source"]], block_map[n.attrib["target"]])
 
-        return task
-    except ET.ParseError as e:
-        error("error during CFG read: %s" % e)
-    except KeyError:
-        error("malformed CFG XML file")
+			cfg.node = None
+
+		return task
+	except ET.ParseError as e:
+		error("error during CFG read: %s" % e)
+	except KeyError:
+		error("malformed CFG XML file")
 
 
 def norm(name):
     return name.replace("-", "_")
 
-def output_CFG(path, task, decorator):
+def output_CFG(path, task, decorator, with_source = False):
     
     # make directory
     dir = os.path.join(path, "%s-cfg" % decorator.major())
@@ -285,15 +368,18 @@ def output_CFG(path, task, decorator):
                 out.write("URL=\"%s.dot\",label=\"call %s\",shape=\"box\"" % (b.callee.id, b.callee.label))
             else:
                 num = b.id[b.id.find("-") + 1:]
-                out.write("shape=\"Mrecord\",label=\"{BB %s (%s:%s)|" % (num, b.base, b.size))
+                out.write("margin=0,shape=\"box\",label=<<table border='0' cellpadding='8px'><tr><td>BB %s (%s:%s)</td></tr><hr/><tr><td align='left'>" % (num, b.base, b.size))
+                if with_source:
+                    decorator.bb_source(b, out)
+                    out.write("</td></tr><hr/><tr><td>")
                 decorator.bb_label(b, out)
-                out.write("}\"")
+                out.write("</td></tr></table>>")
             decorator.bb_attrs(b, out)
             out.write("];\n")
         for b in cfg.verts:
             for e in b.next:
                 out.write("\t%s -> %s;\n" % (norm(e.src.id), norm(e.snk.id)))
-        out.write("label=<CFG: %s %s<br/>" % (cfg.label, cfg.ctx))
+        out.write("label=<CFG: %s %s<br/>colorized by %s<br/>" % (cfg.label, cfg.ctx, decorator.major()))
         decorator.cfg_label(cfg, out)
         out.write("<BR/><I>Generated by otawa-stat.py (%s).</I><BR/><I>OTAWA framework - copyright (c) 2019, University of Toulouse</I>" % datetime.datetime.today())
         out.write(">;\n}")
@@ -304,55 +390,67 @@ def output_CFG(path, task, decorator):
 
 
 def read_stat(dir, task, stat):
-    inp = open(os.path.join(dir, "stats", stat + ".csv"))
-    for l in inp.readlines():
-        fs = l[:-1].split("\t")
-        assert len(fs) == 4
-        task.collect(stat, int(fs[0]), int(fs[1], 16), int(fs[2]), fs[3][1:-1])
+	try:
+		inp = open(os.path.join(dir, "stats", stat + ".csv"))
+		for l in inp.readlines():
+			fs = l[:-1].split("\t")
+			assert len(fs) == 4
+			task.collect(stat, int(fs[0]), int(fs[1], 16), int(fs[2]), "[%s]" % fs[3][1:-1])
+	except OSError as e:
+		fatal("cannot open statistics %s: %s." % (stat, e))
 
 
 class BaseDecorator(Decorator):
     
-    def __init__(self, main, task, stats):
-        self.main = main
-        self.task = task
-        self.stats = stats
-        
-        # assign maxes
-        task.max = Data()
-        task.sum = Data()
-        for g in task.cfgs:
-            g.max = Data()
-            g.sum = Data()
+	def __init__(self, main, task, stats):
+		Decorator.__init__(self)
+		self.main = main
+		self.task = task
+		self.stats = stats
+
+		# assign maxes
+		task.max = Data()
+		task.sum = Data()
+		for g in task.cfgs:
+			g.max = Data()
+			g.sum = Data()
 
         # compute maxes
-        for g in task.cfgs:
-            for b in g.verts:
-                for id in self.stats:
-                    g.max.set_max(id, b.get_val(id))
-                    g.sum.add_val(id, b.get_val(id))
-            for id in self.stats:
-                task.max.set_max(id, g.max.get_val(id))
-                task.sum.add_val(id, g.sum.get_val(id))
+		for g in task.cfgs:
+			for b in g.verts:
+				for id in self.stats:
+					g.max.set_max(id, b.get_val(id))
+					g.sum.add_val(id, b.get_val(id))
+			for id in self.stats:
+				task.max.set_max(id, g.max.get_val(id))
+				task.sum.add_val(id, g.sum.get_val(id))
     
-    def major(self):
-        return self.stats[0]
+	def major(self):
+		return self.main
     
-    def bb_label(self, bb, out):
-        for id in self.stats:
-            val = bb.get_val(id)
-            out.write("%s=%d (%3.2f%%)\\n" % (id, val, val * 100. / self.task.sum.get_val(id)))
+	def bb_source(self, bb, out):
+		if bb.lines != []:
+			for (f, l) in bb.lines:
+				t = self.sman.get_line(f, l)
+				if t == None:
+					t = ""
+				out.write("%s:%d: %s<br align='left'/>" % (f, l, escape_html(t)))
     
-    def start_cfg(self, cfg):
-        self.max = 0
-        for b in cfg.verts:
-            try:
-                v = b.data[self.main]
-                if v > self.max:
-                    self.max = v
-            except KeyError:
-                pass
-        self.max = float(self.max)
+	def bb_label(self, bb, out):
+		for id in self.stats:
+			val = bb.get_val(id)
+			out.write("%s=%d (%3.2f%%)<br/>" % (id, val, val * 100. / self.task.sum.get_val(id)))
+    
+	def start_cfg(self, cfg):
+		self.max = 0
+		for b in cfg.verts:
+			try:
+				v = b.data[self.main]
+				if v > self.max:
+					self.max = v
+			except KeyError:
+				pass
+		self.max = float(self.max)
 
 
 class ColorDecorator(BaseDecorator):
@@ -392,9 +490,10 @@ class CColorizer:
             "(if|else|for|while|switch|case|break|continue|do|return)|" +
             "(typedef|bool|int|char|float|double|short|long|signed|unsigned|struct|union|enum)|" +
             "(//.*)|" +
+            "(/\*\*+/)|" + 
             "(/\*(\*[^/]|[^\*])*\*/)|" +
             "([a-zA-Z_0-9]+)")
-        
+
     def colorize(self, line, out):
         while line:
             m = self.re.search(line)
@@ -408,7 +507,7 @@ class CColorizer:
                 out.write("<font color='red'><b>%s</b></font>" % m.group(2))
             elif m.group(3):
                 out.write("<b>%s</b>" % m.group(3))
-            elif m.group(4) or m.group(5):
+            elif m.group(4) or m.group(5) or m.group(6):
                 out.write("<font color='green'><i>%s</i></font>" % m.group())
             else:
                 out.write(m.group())
@@ -531,7 +630,10 @@ def output_sources(path, main, task, stats):
             for l in range(maxl[f] + 1):
                 try:
                     v = lines[(s, f, l + 1)]
-                    c = round(float(v) * (len(COLORS) - 1) / maxv[s]) + 1
+                    if v == 0:
+                        c = 0
+                    else:
+                        c = round(float(v) * (len(COLORS) - 1) / maxv[s]) + 1
                 except KeyError:
                     c = 0
                 out.write("            %d,\n" % c)
@@ -618,15 +720,26 @@ parser.add_argument('--no-color', action="store_true", help="do not use colors i
 parser.add_argument('stats', nargs='*', type=str, help="statistics to display")
 parser.add_argument('--color-stat', '-s', action="store", help="statistics used to color the output")
 parser.add_argument('--source', '-S', action="store_true", help="output sources colored according to statistics")
+parser.add_argument('--cfg', '-G', action="store_true", help="output CFG colored according to statistics")
 args = parser.parse_args()
 task = args.task
 dir = args.task + "-otawa"
+
+
+# get all avalable stats
+stat_dir = os.path.join(dir, "stats")
+if not os.path.isdir(stat_dir):
+	sys.stderr.write("ERROR: no statistics generated!\n")
+	exit(1)
 stats = args.stats
 if stats == []:
     if args.all:
-        stats = get_all_stats(dir)
+        stats = get_all_stats(stat_dir)
     else:
         stats = ["ipet-total_time"]
+
+
+# select statistics to display
 main = stats[0]
 if args.color_stat:
     main = args.color_stat
@@ -639,26 +752,27 @@ if args.no_color:
 
 # list statistics
 if args.list:
-    for f in get_all_stats(os.path.join(dir, "stats")):
-        sys.stdout.write("%s\n" % f)
+	for f in get_all_stats(stat_dir):
+		sys.stdout.write("%s\n" % f)
 
 # produce output
 else:
-    
-    # read the CFG
-    task = read_cfg(dir)
-    
-    # collect the data
-    for s in stats:
-        read_stat(dir, task, s)
-    
-    # output the sources
-    if args.source:
-        output_sources(dir, main, task, stats)
-    
-    # output the CFG
-    else:
-        output_CFG(dir, task, decorator(main, task, stats))
+
+	# read the CFG
+	task = read_cfg(dir)
+
+	# collect the data
+	for s in stats:
+		read_stat(dir, task, s)
+
+	# output the CFG
+	if args.cfg:
+		for s in stats:
+			output_CFG(dir, task, decorator(s, task, stats), args.source)
+	
+	# output the sources
+	else:
+		output_sources(dir, main, task, stats)
 
 
 

@@ -106,6 +106,7 @@ public:
 	void invalidate(const AbstractFeature& feature);
 	Processor *getImpl(const AbstractFeature& feature) const;
 	bool provides(const AbstractFeature& feature);
+	bool provides(cstring name);
 	inline bool implements(const AbstractFeature& feature) { return provides(feature); }
 
 	// cancellation management

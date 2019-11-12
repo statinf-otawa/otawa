@@ -505,89 +505,6 @@ If you are using an helper processor, ''setup()'' and ''cleanup()'' are good poi
 The ''destroy''() is a bit special and is related to the lifecycle of a feature. When a feature is required, an implementing code processor is identified and created. The code processor is launched to perform the corresponding analysis and will still alive as long as the feature is provided in the workspace. As soon as the feature is invalidated, the code processor instance is destructed and, just before, the ''destroy''() function is called.
 
 
-==== Statistics Service ====
-
-@(OTAWA) provides a common statistics service that is in charge of collecting all statistics of all performed analyzes. 
-
-In @(OTAWA), statistics are values tied to a code range (for example a BB) for a particular context path that can combined to be displayed to the user. For example, the feature ''ipet::WCET_FEATURE'' provides as statistics for each BB their execution time, their number of execution on the WCET path and the total execution time on the WCET path.
-
-To provide a statistics item, a code processor has to provide an object implementing the class ''StatCollector'' that (a) provides all information about the statistics and (b) provides a way for a user application to visit all code pieces containing statistics information. Maybe, the easiest way to implement this is to make the code processor to inherit from ''StatCollector'' as ''InstructionCounter'' in the example below:
-<code c++>
-class InstructionCounter: public BBProcessor, public StatCollector {
-public:
-
-	void keywords(Vector<cstring>& k) override
-		{ k.add("count"); k.add("instruction"); }
-	cstring name() override { return "prog/icount"; }
-	cstring unit() const override { return "inst."; } 
-
-	cstring id() const override { return "InstructionCounter::count"; }
-	void mergeAggreg(int v1, v2) override { return v1 + v2; }
-	void mergeContext(int v1, v2) override { return max(v1, v2); }
-	int total() override;
-
-	void collect(Collector& c) override;	
-};
-</code>
-
-Some of the functions are targeting the human users, other ones provides the statistics or calculation for the statistics:
-  * ''name''() -- human-readable name of the statistics item.
-  * ''unit''() -- human-readable unit name.
-  * ''keywords''() -- keywords to lookout or sort the statistics item.
-  * ''id''() -- internal name for the statistics.  
-  * ''mergeAgreg''() -- function to derive a statistics value from the combination of two aggregated code pieces.
-  * ''mergeContext''() -- function to derive a statistics value from two value on the same code piece but from two different contexts.
-  * ''total''() provides the statistics value for the whole program.
-
-''InstructionCounter::total''() is given below:
-<code c++>
-int InstructionCounter::total() {
-	int r = 0;
-	for(auto b: COLLECTED_CFG_FEATURE.get(workspace())->blocks())
-		if(b->isBasic())
-			r += INSTRUCTION_COUNT(b);
-	return r;
-}
-</code>
-
-Yet, the most important function is ''collect''() that takes, as parameter, a caller object to which statistics values can be passed. This way, the ''collect''() can choose the best way (faster, simpler, etc) to visit all statistics values and to transmit them to the caller application. The caller object must implement the class ''Collector'' that defines only one function, ''collect''():
-<code c++>
-class Collector {
-public:
-	virtual void collect(const Address& address, t::uint32 size, int value, const ContextualPath& path) = 0;
-  };
-</code>
-
-''collect'' takes as parameter the address and the size of the piece of code, the context of the statistics and the statistics value.
-
-For instance, the ''collect''() function of ''InstructionCounter'' is:
-<code c++>
-void InstructionCounter::collect(Collector& c) {
-	ContextualPath p;
-	for(auto b: COLLECTED_CFG_FEATURE(workspace())->blocks())
-		if(b->isBasic()) {
-			BasicBlock *bb = b->toBasic();
-			c.collect(bb->address(), bb->size(), INSTRUCTION_COUNT(bb), p);
-		} 
-}
-</code>
-
-To record the code processor to the statistics system, one has to call the ''record''() function of ''Processor''() with itself as argument, for example, int the ''cleanup''() function:
-<code c++>
-void InstructionCounter::cleanup(WorkSpace *ws) {
-	...
-	if(recordsStats())
-		record(this);
-}
-</code>
-
-Then, the statistics can be used by standard @(OTAWA) commands as ''owcet'' or ''operform'' and displayed using ''otawa-stat.py'' (if the code processor is invoked):
-<code sh>
-$ owcet -s trivial -D crc.elf
-$ otawa-stat.py main prog/icount
-</code>
-
-
 ==== Providing a feature with interface ====
 
 Section~@ref:props:intf@ defines features with an interface (to provide not only data but also calculations). To define a code processors providing such type of feature, one has to override the function ''Processor::interfaceFor''(//F//) that takes as parameter the feature for which an interface is required. The general form of this functions is given below:
@@ -783,5 +700,146 @@ The ''.eld'' can be also used in the work of ''otawa-config'' when a plug-in is 
 <code make>
 LDFLAGS = $(shell $(OTAWA_CONFIG) --libs -r -p plugin)
 </code>
+
+
+===== Statistics System =====
+
+One service provide by code processor is a simplified connection with the statistics system of @(OTAWA). This system provides unified interface to produce and exploits statistics about the performed analysis. The statistics system allow to reduce the burden of managing statistics data in the analysis and allow to use common display facility as ''otawa-stat.py''.
+
+For example, the feature ''ipet::WCET_FEATURE'' provides as statistics for each BB their execution time, their number of execution on the WCET path and the total execution time on the WCET path.
+
+==== Definition ====
+
+A statistics item is defined by:
+  * a machine string identifier (for internal management),
+  * a name readable by humans,
+  * a list of keywords (for lookup by a human),
+  * a measurement unit name -- for instance cycle(s), hit(s), miss(es).
+
+The example below shows the declaration of a statistics collector dedicated to count the number of misses of a L1 instruction cache:
+<code c++>
+class L1ICacheMissStats: public StatCollector {
+public:
+	inline L1ICacheMissStats(WorkSpace *ws): _ws(ws) { }
+	
+	cstring id(void) const override { return "l1-icache/miss"; }
+	void keywords(Vector<cstring>& kws) override {
+		kws.add("cache");
+		kws.add("instruction");
+		kws.add("L1");
+		kws.add("miss");
+	}
+	cstring name(void) override const { return "L1 instruction cache miss count"; }
+	cstring unit(void) override const { return "miss(es)"; }
+	
+	...
+
+private:
+	WorkSpace *_ws;
+};
+</code>
+
+It is advised to structure the logical identifier of a statististics item in two parts separated by a "/". At the left, a generic category that the the statstics item belongs to -- ''l1-icache'' in our example and, at right, the statistics identifier itself, ''miss'' for example.
+
+==== Statistics Collection ====
+
+To provide statistics value, four functions have to be implemented:
+  * ''StatCollector::mergeAgreg''(a, b) takes 2 statistics values and combine them together to obtain cumulated statistics of 2 pieces of code,
+  * ''StatCollector::mergeContext''(a, b) is used to combine statistics values of the same piece of code but from two different contexts,
+  * ''StatCollector::total''() gives the amount of the current statistics all over the program,
+  * ''StatCollector::collect''(c) is used to collect statistics for the whole set of code pieces composing the processed program.
+
+The parameter //c// of ''StatCollector::collect''() is of type ''Collector''(), that represents an interface between a statistics provider (''StatCollector'') and an application using statistics. ''Collector'' is defined as:
+<code c++>
+class StatCollector {
+public:
+	...
+	class Collector {
+	public:
+		virtual void collect(const Address& address, t::uint32 size, int value, const ContextualPath& path) = 0;
+	};
+	...
+};
+</code>
+
+The ''StatCollector::collect''() function has to call ''Collector::collect''() for each code part that supports statistics. The parameters are:
+  * address -- base address of the code part,
+  * size -- size of the code part,
+  * value -- statistic value in this code part,
+  * path -- contextual path of this code part producing the statistic value.
+
+This way, the statistics collector can choose the more adapted method to cross th code parts and to extract statistic values.
+
+Going on with the L1 instruction cache miss statistics instance, we get the following implementation:
+<code c++>
+int L1ICacheMissStats::mergeContext(int v1, int v2) override {
+	return max(v1, v2);
+}
+
+int L1ICacheMissStats::mergeAgreg(int v1, int v2) override {
+	return v1 + v2;
+}
+
+void L1ICacheMissStats::collect(Collector& collector) override {
+	for(auto b: COLLECTED_CFG_FEATURE.get(ws)->blocks())
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
+			collector->collect(bb->address(), bb->size(), MISS_COUNT(bb), ContextualPath::null);
+		}
+}
+
+int L1ICacheMissStats::total() override {
+	int t = 0;
+	for(auto b: COLLECTED_CFG_FEATURE.get(ws)->blocks())
+		if(b->isBasic()) {
+			BasicBlock *bb = b->toBasic();
+			t += MISS_COUNT(bb);
+		}
+}
+</code>
+
+CFG and basic blocks are explained later in @ref:CFG@ in this document but to sum up, the program is split in blocks of code, called basic blocks, and a number of misses is determined for each block and stored using the ''MISS_COUNT'' property((''MISS_COUNT'' is only introduced here for the sake of example and is not provided as is by @(OTAWA) as is. )). The statistics collector just explores each basic block and call the collector ''collect'' function for each basic block without considering any context. In the same way, the total is simply the sum of all the ''MISS_COUNT'' all over the program.
+
+The aggregation merge is simply the sum: this is used, for instance, to aggregate the statistics for a complete function from the blocks that compose it. In the opposite, the context merge is used to aggregate statistics corresponding to a source line and the statistic value coming from different configuration of execution of the source line (call chains, unrolled loops, etc). As adding them together would not be meaningful compared to other source line, the maximum is taken.
+
+
+==== Producing Statistics ====
+
+Most often, as statistics are the result of an analysis performed on the program, the ''Processor'' class provides simple facilities to manage statistics. First statistics are not always required during the calculation of a WCET: this is the configuration that determines if statistics are produced. Second, the statistics providers has to be declared to a main statistics database. Finally, the statistics collector has to be removed when the the analysis feature is removed from the workspace.
+
+This complete life cycle of statistics collector is managed by the ''Processor'' class. One has just to override a function named ''Processor::collectStats()'' that is invoked when statistics need to be generated. For each statistics collector, this function has to call the function ''record''() to record a new statistics collector as in the example below (continuation of L1 instruction miss cache example):
+<code c++>
+class MyL1ICacheAnalysis: public Processor {
+public:
+	...
+protected:
+	
+	void collectStats(WorkSpace *ws) override {
+		recor(new L1ICacheMissStats(ws));
+		...
+	}
+	...
+};
+</code>
+
+As the way the statistics collectors for #CFG and basic block are written is recurring, @(OTAWA) provides ''BBStatCollector'', an helper class that let the analysis developer to focus on the more specific topic of the statistics collection, the production of the statistic value. As in the new version of ''L1ICacheMissStats'' displayed below, one has only to override the function ''get''():
+<code c++>
+class L1ICacheMissStats: public BBStatCollector {
+public:
+	L1ICacheMissStats(WorkSpace *ws): BBStatCollector(ws) { }
+protected:
+	int getStat(BasicBlock *bb) override { return MISS_COUNT(bb); }
+};
+</code>
+
+
+==== Displaying the Statistics ====
+
+The statistics can then be produced using standard @(OTAWA) commands as ''owcet'' or ''operform'' and displayed using ''otawa-stat.py'' (if the corresponding code processor is invoked):
+<code sh>
+$ owcet -s trivial -D crc.elf
+$ otawa-stat.py main l1-icache/miss
+</code>
+
 
 

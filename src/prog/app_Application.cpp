@@ -500,7 +500,7 @@ void Application::stats() {
 
 	// create the directory
 	try
-		{ sys::System::makeDir(spath); }
+		{ sys::System::makeDirs(spath); }
 	catch(sys::SystemException& e)
 		{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
 

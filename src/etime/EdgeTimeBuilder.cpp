@@ -394,6 +394,18 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		return;
 	target = b->toBasic();
 
+	// collect all predecessors BBs
+	BasicBlock::basic_preds_t ps;
+	target->basicPreds(ps);
+
+	// compute time for each case
+	for(auto p: ps) {
+		source = p.fst;
+		edge = p.snd;
+		processEdge(ws, cfg);
+	}
+
+#if 0
 	// look out all predecessors
 	for(auto e: b->inEdges()) {
 		source = nullptr;
@@ -438,7 +450,7 @@ void EdgeTimeBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		edge = e;
 		processEdge(ws, cfg);
 	}
-
+#endif
 #if 0
 	// use each basic edge
 	bool one = false;
@@ -877,7 +889,7 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
 	for(Identifier<Event *>::Getter event(bb, EVENT); event(); event++)
 		set.add(pair(*event, place));
 
-	//
+	// collect events on edge
 	if(place == IN_PREFIX)
 		for(Identifier<Event *>::Getter event(edge, PREFIX_EVENT); event(); event++)
 			set.add(pair(*event, IN_PREFIX));

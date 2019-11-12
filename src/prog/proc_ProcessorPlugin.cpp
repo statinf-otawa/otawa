@@ -175,6 +175,23 @@ ProcessorPlugin *ProcessorPlugin::get(string name) {
 
 
 /**
+ * Test if the named plug-in is plugged or not. If not plugged,
+ * does not try to figure out whether it exists or does not try to load it.
+ * @param name	Name of the plug-in (with separator "::").
+ * @return		True if the plug-in is plugged, false else.
+ */
+bool ProcessorPlugin::isPlugged(string name) {
+
+	// get canonical name
+	string cname = makeCanonical(name);
+
+	// look out in the already loaded plugins
+	return plugger.isPlugged(name);
+}
+
+
+
+/**
  * Add a path to the list of looked paths.
  * @param path	Path to add.
  */

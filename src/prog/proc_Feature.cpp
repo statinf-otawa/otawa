@@ -20,8 +20,10 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/proc/DynFeature.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/FeatureDependency.h>
+#include <otawa/proc/ProcessorPlugin.h>
 
 namespace otawa {
 
@@ -143,6 +145,52 @@ void *get_impl(WorkSpace *ws, const AbstractFeature& feature) {
 	else
 		return p->interfaceFor(feature);
 }
+
+
+/**
+ * Test if the given identifier is a feature identifier.
+ * @param id	Identifier to test.
+ * @return		True if it is a feature, false else.
+ * @ingroup proc
+ */
+bool is_feature(const AbstractIdentifier *id) {
+	return IS_FEATURE(id);
+}
+
+
+/**
+ * Retrieve a feature by its name, possibly loading corresponding plug-in.
+ * @param name	Full-qualified "::"-separated feature name.
+ * @return		Found feature or null.
+ * @ingroup proc
+ */
+AbstractFeature *find_feature(cstring name) {
+	return ProcessorPlugin::getFeature(name);
+}
+
+
+/**
+ * Find an identifierby its name.
+ * @param name	Name of the looked identifier.
+ * @return		Found identifier or null.
+ * @ingroup proc
+ */
+AbstractIdentifier *find_id(cstring name) {
+	return ProcessorPlugin::getIdentifier(name);
+}
+
+
+/**
+ * @fn p::id<T>& get_id(cstring name);
+ * Find and return an identifier for the given and which value type corresponds
+ * to the given type T. If the identifier cannot be found, perform an
+ * assertion failure.
+ *
+ * @param T		Type of identifier values.
+ * @param name	Name of the identifier.
+ * @return		Corresponding identifier.
+ * @ingroup proc
+ */
 
 
 /**

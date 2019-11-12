@@ -236,7 +236,7 @@ With:
 When the machine instruction is a conditional branch, two sets of abstract states have to be handled: abstract states containing a ''branch'' semantic instruction refers to the branch taken case. Other abstract states refers to the not-taken case. The iterator ''sem::StateIter'' can help the programer in this management but works on #CFG [[#CFG|basic blocks]].
 
 
-===== #CFG Representation =====
+===== CFG Representation =====
 @label CFG
 
 A Control Flow Graph (#CFG) is a very useful program representation very handy for machine code programs. A #CFG G is a graph represented by the tuple <V, G, α, ω> where V represents the set of nodes, called Basic Block (#BB), pieces of code only supporting branches as last instruction, and E ⊆ V × V, are the edges representing the program control flowing between BBs. In the following, an edge from BB //v// to BB //w// is denoted //v// → //w//. In @(OTAWA), a #CFG has two special nodes: α ∈ V is the entry point of the program (no predecessor) and ω ∈ V is the exit point of the program (no successor).
@@ -251,7 +251,7 @@ Basically, the nodes of the #CFG may be:
 Notice that @(OTAWA) is versatile enough to support other program representations. Yet, there are so many features working with #CFG that the #CFG program representation is the prefered one.
 
 
-==== #CFG collection #CFG and blocks ====
+==== CFG collection, CFG and blocks ====
 
 To otain the #CFG collection representing a real-time task, one has to require the feature ''COLLECTED_CFG_FEATURE''. The default implementation feature uses  the ''TASK_ADDRESS'' configuration property (address) or the the ''TASK_NAME'' configuration property (sub-program name) to select the task to compute #CFG for. If none of these configuration properties is set, the function ''main'' is used. If your analysis application derives from ''app::Application'', the configuration properties are automatically set from the command line arguments.
 
@@ -293,7 +293,7 @@ To make easier the processing of blocks, @(OTAWA) provides with function ''Block
 
 Notice also that the #CFG owner of a block can be obtained with function ''Block::cfg()''.
 
-==== Exploring a #CFG ====
+==== Exploring a CFG ====
 
 There are mainly two ways to access blocks of #CFG. First, one can explore the blocks in a random order using the function ''CFG::blocks()'' as:
 <code c++>
@@ -407,4 +407,4 @@ Some operations are specially dedicated to loops:
   * ''Loop::isTop()'' -- tests if the current loop is the top-level loop.
 
 
-===== #PCG Representation =====
+===== PCG Representation =====

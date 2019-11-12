@@ -47,6 +47,7 @@ public:
 	static void addPath(const elm::sys::Path& path);
 	static void removePath(const elm::sys::Path& path);
 	static ProcessorPlugin *get(string name);
+	static bool isPlugged(string name);
 	static Processor *getProcessor(string name);
 	static AbstractFeature *getFeature(string name);
 	static AbstractIdentifier *getIdentifier(string name);
