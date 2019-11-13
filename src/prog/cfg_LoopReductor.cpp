@@ -223,8 +223,8 @@ Block *LoopReductor::clone(CFGMaker& maker, Block *b, bool duplicate) {
 	else if(b->isSynth()) {
 		SynthBlock *sb = b->toSynth();
 		SynthBlock *nsb = new SynthBlock();
-		if(!sb->callee())
-			maker.call(nsb, 0);
+		if(sb->callee() == nullptr)
+			maker.call(nsb, nullptr);
 		else if(duplicate)
 			maker.call(nsb, sb->callee());
 		else

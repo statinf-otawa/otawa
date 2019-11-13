@@ -734,15 +734,18 @@ void ParExeGraph::addEdgesForFetch(void) {
 
 	// compute current cache line
 	Address current_cache_line = 0;
+	bool cached = true;
 	if(_cache_line_size != 0)
 		current_cache_line = first_cache_line_node->inst()->inst()->address().offset() / _cache_line_size;
+	else
+		cached = false;
 
-	bool cached = true;
+	// build fetch edges
 	ParExeNode *previous = nullptr;
 	for (ParExeStage::NodeIterator node(fetch_stage) ; node() ; node++) {
-		if (previous){
+		if(previous != nullptr){
 
-			// Address addr = inst->address();
+			// Is it cached?
 			const hard::Bank *bank = mem->get(node->inst()->inst()->address());
 			if(!bank)
 				log << "\t\t\t\t" << "WARNING: no memory bank for code at " << node->inst()->inst()->address() << ": block considered as cached.\n";
@@ -753,7 +756,7 @@ void ParExeGraph::addEdgesForFetch(void) {
 			}
 
 			// branch case
-			if (previous->inst()->inst()->topAddress() != node->inst()->inst()->address()) {
+			if(previous->inst()->inst()->topAddress() != node->inst()->inst()->address()) {
 
 				// look for the branch stage node
 				ParExeNode *branching_node = nullptr;
@@ -765,34 +768,29 @@ void ParExeGraph::addEdgesForFetch(void) {
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				if(_branch_penalty && cached)
+				if(_branch_penalty != 0 && cached)
 					new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
-//				if(_cache_line_size != 0 && cached)
-//					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(cache_inter_msg));
 			}
 
-			// no branch
-			else {
-				// no cache
-				if(_cache_line_size == 0) {
-					if(previous != nullptr)
-						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
-					cached = false;
-				}
-			}
+			// no branch case
+			else if(!cached && previous != nullptr)
+				new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 
-			// cache bound edges
-			if (cached) {
+			// cache case
+			if(cached) {
 				Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
+
+				// new cache line
 				if(cache_line != current_cache_line) {
 					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg)); // between the 1st appearence of instructions from different cache set
-
 					if(first_cache_line_node != previous)
 						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg)); // the last instruction of the difference cache set to the 1st instruction of the new cache set
 					first_cache_line_node = *node;
 					current_cache_line = cache_line;
 				}
-				else // same cache line
+
+				// same cache line
+				else
 					new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg)); // within the same cache set
 			}
 

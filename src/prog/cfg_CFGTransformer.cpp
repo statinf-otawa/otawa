@@ -138,15 +138,12 @@ SynthBlock *CFGTransformer::build(CFGMaker *callee) {
  * @return			Built block.
  */
 SynthBlock *CFGTransformer::build(CFG *callee) {
-	CFGMaker *m;
-	if(!callee)
-		m  = 0;
-	else
-		m = get(callee);
 	SynthBlock *nb = new SynthBlock();
-	cur->call(nb, *m);
+	if(callee == nullptr)
+		cur->add(nb);
+	else
+		cur->call(nb, *get(callee));
 	return nb;
-
 }
 
 /**

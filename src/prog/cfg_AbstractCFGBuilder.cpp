@@ -69,6 +69,7 @@ static bool isControl(Inst *i) {
 	return ((k & Inst::IS_CONTROL) && !IGNORE_CONTROL(i)) || IS_RETURN(i);
 }
 
+
 /**
  * Test if the instruction is a return.
  * @param i	Instruction to test.
@@ -78,6 +79,7 @@ static bool isReturn(Inst *i) {
 	Inst::kind_t k = kind(i);
 	return (k & Inst::IS_RETURN) || IS_RETURN(i);
 }
+
 
 /**
  * Test if the instruction is a call.
@@ -107,8 +109,22 @@ static bool isBlockStart(Inst *i) {
  * @return		True if flow can continue, false else.
  */
 static bool canFlowAfter(Inst *i) {
-	Inst::kind_t k = kind(i);
-	return ((k & Inst::IS_COND) || isCall(i)) && !IGNORE_SEQ(i);
+	auto k = kind(i);
+	if(IGNORE_SEQ(i))
+		return false;
+	else if(!(k & Inst::IS_CONTROL))
+		return true;
+	else if(k & Inst::IS_COND)
+		return true;
+	else if(!isCall(i))
+		return false;
+	else {
+		Inst *t = i->target();
+		if(t == nullptr)
+			return true;
+		else
+			return !*otawa::NO_RETURN(t);
+	}
 }
 
 
@@ -296,7 +312,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						if(!ts)
 							m.add(bb, m.unknown(), new Edge(Edge::TAKEN));
 
-						// create edges
+						// create edges target edges
 						else
 							for(Vector<Inst *>::Iter t(ts); t(); t++)
 								m.add(bb, BB(*t), new Edge(Edge::TAKEN));
@@ -317,9 +333,17 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 						// build call vertices
 						else {
+							bool no_return = false;
 							bool one = false;
 							for(Vector<Inst *>::Iter c(ts); c(); c++)
-								if(!NO_CALL(*c)) {
+								if(NO_RETURN(*c)) {
+									if(!no_return) {
+										no_return = true;
+										m.add(bb, m.exit(), new Edge(Edge::TAKEN));
+										one = true;
+									}
+								}
+								else if(!NO_CALL(*c)) {
 									SynthBlock *cb = new SynthBlock();
 									CFGMaker& cm = maker(*c);
 									m.call(cb, cm);

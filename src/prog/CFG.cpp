@@ -932,7 +932,8 @@ CFG *CFGMaker::build(void) {
  */
 void CFGMaker::call(SynthBlock *v, CFG *callee) {
 	v->_callee = callee;
-	callee->_callers.add(v);
+	if(callee != nullptr)
+		callee->_callers.add(v);
 	add(v);
 }
 
