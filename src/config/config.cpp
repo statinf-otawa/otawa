@@ -240,17 +240,17 @@ protected:
 
 		// display C flags
 		if(cflags) {
-			cout << "-I" << MANAGER.prefixPath() / "include" << io::endl;
+			cout << quote(_ << "-I" << MANAGER.prefixPath() / "include") << io::endl;
 			return;
 		}
 
 		// output libs
 		if(libs) {
-			cout << "-L" << getLibDir() << " -lotawa -lelm -lgel";
+			cout << quote (_ << "-L" << getLibDir()) << " -lotawa -lelm -lgel";
 
 			// output dependencies
 			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p(); p++)
-				cout << ' ' << p->path();
+				cout << ' ' << quote(p->path());
 
 			// output RPath
 			if(rpath) {
@@ -263,9 +263,9 @@ protected:
 					if(!rpaths.contains(rpath)) {
 						rpaths.add(rpath);
 						if(make_app)
-							cout << " -Wl,-rpath -Wl," << rpath;
+							cout << " -Wl,-rpath " << quote(_ << "-Wl," << rpath);
 						else
-							cout << " -Wl,-rpath -Wl," << rpath;
+							cout << " -Wl,-rpath " << quote(_ << "-Wl," << rpath);
 					}
 				}
 			}
@@ -275,6 +275,18 @@ protected:
 	}
 
 private:
+
+	/**
+	 * Put quotes around text containing spaces or tabulations.
+	 * @param s		String to quote.
+	 * @return		Quoted string if needed.
+	 */
+	string quote(string s) {
+		for(auto c: s)
+			if(c == ' ' || c == '\r')
+				return _ << '\'' << s << '\'';
+		return s;
+	}
 
 	/**
 	 * Lookup for a local plugin.

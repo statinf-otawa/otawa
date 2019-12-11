@@ -463,7 +463,7 @@ Edge *HalfAbsInt<FixPoint>::detectCalls(bool &enter_call, Vector<Edge*> &call_ed
 	Edge *next_edge = 0;
 	enter_call = true;
 	call_edges.clear();
-    for(Block::EdgeIter outedge = bb->outs(); outedge; outedge++)
+    for(Block::EdgeIter outedge = bb->outs(); outedge(); outedge++)
     	// TODO special support with unknown sink is needed here
     	if(outedge->sink()->isSynth() && !HAI_DONT_ENTER(outedge->sink()->toSynth()->callee())) {
     		call_edges.add(*outedge);
