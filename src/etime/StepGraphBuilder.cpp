@@ -342,6 +342,21 @@ void StepGraphBuilder::CircularQueue::reset() {
 }
 
 ///
+StepGraphBuilder::Stage::Stage() {
+}
+
+///
+StepGraphBuilder::Stage::Stage(const Stage& s): CircularQueue(s) {
+	st = s.st;
+}
+
+///
+void StepGraphBuilder::Stage::configure(ParExeStage *st) {
+	this->st = st;
+	CircularQueue::configure(st->width());
+}
+
+///
 StepGraphBuilder::ProcQueue::ProcQueue() {
 }
 

@@ -135,6 +135,7 @@ Factory& Factory::def = elm::single<StandardFactory>();
  * * @ref Engine object in charge of computing the execution considering all event configurations,
  * * @ref Generator object in charge of generating objective function and ILP constraints to
  * taken into account the different configurations and times.
+ * @ingroup etime
  */
 
 
@@ -324,7 +325,7 @@ void AbstractTimeBuilder::buildResources(void) {
 			for(auto resource: _resources) {
 				if(resource->type() == Resource::STAGE) {
 					StageResource *sresource = static_cast<StageResource *>(resource);
-					if(sresource->stage() == queue->emptyingStage()) {
+					if(sresource->stage() <= queue->emptyingStage()) {
 						if(i < queue->size() - sresource->stage()->width() - 1) {
 							if(sresource->slot() == sresource->stage()->width() - 1)
 								upper_bound = sresource;
