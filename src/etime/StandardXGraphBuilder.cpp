@@ -313,40 +313,45 @@ private:
 	void addEdgesForMemoryOrder(void) {
 		static string memory_order = "memory order";
 
-	    ParExeStage *stage = _proc->execStage();
+		// !!HUG!! Memory stage?
+		ParExeStage *stage = _proc->execStage();
 
-	    // looking in turn each FU
-	    for (int i=0 ; i<stage->numFus() ; i++) {
+		// looking in turn each FU
+		for(int i = 0; i< stage->numFus(); i++) {
 			ParExeStage *fu_stage = stage->fu(i)->firstStage();
-			ParExeNode * previous_load = NULL;
-			ParExeNode * previous_store = NULL;
+			ParExeNode * previous_load = nullptr;
+			ParExeNode * previous_store = nullptr;
 
 			// look for each node of this FU
-			for (int j=0 ; j<fu_stage->numNodes() ; j++){
+			for(int j = 0; j < fu_stage->numNodes(); j++){
+				ParExeNode *new_load = previous_load;
+				ParExeNode *new_store = previous_store;
 				ParExeNode *node = fu_stage->node(j);
 
 				// found a load instruction
-				if (node->inst()->inst()->isLoad()) {
+				if(node->inst()->inst()->isLoad()) {
+					new_load = node;
 
 					// if any, dependency on previous store
 					if(previous_store)
 						factory()->makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 					// current node becomes the new previous load
-					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
+					for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node(); last_node++)
 						if (last_node->stage()->category() == ParExeStage::FU)
 							previous_load = *last_node;
 				}
 
 				// found a store instruction
-				if (node->inst()->inst()->isStore()) {
+				if(node->inst()->inst()->isStore()) {
+					new_store = node;
 
 					// if any, dependency on previous store
-					if (previous_store)
+					if(previous_store)
 						factory()->makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 					// if any, dependency on previous load
-					if (previous_load)
+					if(previous_load)
 						factory()->makeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 					// current node becomes the new previous store
@@ -354,8 +359,12 @@ private:
 						if (last_node->stage()->category() == ParExeStage::FU)
 							previous_store = *last_node;
 				}
+
+				// update previous load and store
+				previous_load = new_load;
+				previous_store = new_store;
 			}
-	    }
+		}
 	}
 
 	/**
