@@ -77,6 +77,7 @@ public:
 	virtual ParExeGraph *build(ParExeSequence *seq) = 0;
 
 protected:
+	ParExeStage *findStage(cstring name) const;
 	virtual void configure(const PropList& props);
 
 	ParExeProc *processor(void) const;

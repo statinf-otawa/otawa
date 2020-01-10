@@ -45,6 +45,8 @@ protected:
 	virtual void addEdgesForDataDependencies();
 	virtual void addEdgesForQueues();
 	virtual void init();
+	virtual ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage);
+	virtual ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type = ParExeEdge::SOLID, int latency = 0, string name = "");
 
 	WorkSpace *_ws = nullptr;
 	int _cache_line_size = 0;

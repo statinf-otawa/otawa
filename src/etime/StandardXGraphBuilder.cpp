@@ -83,6 +83,24 @@ void XGraphBuilder::configure(const PropList& props) {
 }
 
 
+/**
+ * Find a stage or a functional unit by its name.
+ * @param name	Name of looked stage.
+ * @return		Found stage or null pointer.
+ */
+ParExeStage *XGraphBuilder::findStage(cstring name) const {
+	for(ParExePipeline::StageIterator s(processor()->pipeline()); s(); s++) {
+		if(s->name() == name)
+			return *s;
+		if(s->category() == ParExeStage::EXECUTE)
+			for(int i = 0; i < s->numFus(); i++)
+				for(auto ss(s->fu(i)->stages()); ss(); ss++)
+					if(ss->name() == name)
+						return *ss;
+	}
+	return nullptr;
+}
+
 
 /**
  * @fn ParExeGraph *XGraphBuilder::build(ParExeSequence *seq);
@@ -130,6 +148,24 @@ ParExeGraph *StandardXGraphBuilder::build(ParExeSequence *seq) {
 	return g;
 }
 
+
+/**
+ * TODO
+ */
+ParExeNode *StandardXGraphBuilder::makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) {
+	return factory()->makeNode(g, i, stage);
+}
+
+
+/**
+ * TODO
+ */
+ParExeEdge *StandardXGraphBuilder::makeEdge(ParExeNode *src, ParExeNode *snk,
+ParExeEdge::edge_type_t_t type, int latency, string name) {
+	return factory()->makeEdge(src, snk, type, latency, name);
+}
+
+
 /**
  * Creates nodes in the graph: one node for each (instruction/pipeline_stage) pair.
  * For the execution stage, creates as many nodes as stages in the pipeline of the required functional unit.
@@ -144,7 +180,7 @@ void StandardXGraphBuilder::createNodes(ParExeGraph *g, ParExeSequence *seq) {
 
 			// generic case
 			if(stage->category() != ParExeStage::EXECUTE) {
-				node = factory()->makeNode(g, *inst, *stage);
+				node = makeNode(g, *inst, *stage);
 				// register the new node to the related instruction and pipeline stage
 				inst->addNode(node);
 				stage->addNode(node);
@@ -158,7 +194,7 @@ void StandardXGraphBuilder::createNodes(ParExeGraph *g, ParExeSequence *seq) {
 				ASSERTP(fu != nullptr,
 					"cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
 				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++) {
-					ParExeNode *fu_node = factory()->makeNode(g, *inst, *fu_stage);
+					ParExeNode *fu_node = makeNode(g, *inst, *fu_stage);
 					if (!first)
 						first = fu_node;
 					last = fu_node;
@@ -177,6 +213,7 @@ void StandardXGraphBuilder::createNodes(ParExeGraph *g, ParExeSequence *seq) {
 	g->setLastNode(last_node);
 }
 
+
 /**
  * TODO
  */
@@ -186,17 +223,19 @@ void StandardXGraphBuilder::addEdgesForPipelineOrder(ParExeGraph *g, ParExeSeque
 		ParExeNode *previous = NULL;
 		for (ParExeInst::NodeIterator node(*inst); node() ; node++){
 			if (previous)
-				factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(pipeline_order));
+				makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(pipeline_order));
 			previous = *node;
 		}
 	}
 
 }
 
+
 /**
  * @fn string StandardXGraphBuilder::comment(string com);
  * TODO
  */
+
 
 /**
  * TODO
@@ -231,7 +270,7 @@ void StandardXGraphBuilder::addEdgesForFetch(void) {
 				// create the edges
 				factory()->makeEdge(branching_node, *node, ParExeEdge::SOLID, 0, comment(branch_msg));
 				if(_cache_line_size != 0)
-					factory()->makeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
+					makeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
 			}
 
 			// no branch
@@ -240,7 +279,7 @@ void StandardXGraphBuilder::addEdgesForFetch(void) {
 				// no cache
 				if(_cache_line_size == 0) {
 					if(previous != nullptr)
-						factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
+						makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 				}
 
 				// cache bound edges
@@ -249,18 +288,19 @@ void StandardXGraphBuilder::addEdgesForFetch(void) {
 					if(cache_line != current_cache_line) {
 						factory()->makeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg));
 						if(first_cache_line_node != previous)
-							factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
+							makeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg));
 						first_cache_line_node = *node;
 						current_cache_line = cache_line;
 					}
 					else
-						factory()->makeEdge(previous, *node, ParExeEdge::SLASHED);
+						makeEdge(previous, *node, ParExeEdge::SLASHED);
 				}
 			}
 		}
 		previous = *node;
 	}
 }
+
 
 /**
  * Adds edges to reflect processing of instruction in the order of the program.
@@ -281,12 +321,12 @@ void StandardXGraphBuilder::addEdgesForProgramOrder(void){
 		for(ParExeStage::NodeIterator node(*stage); node(); node++){
 			if(previous){
 				if(stage->width() == 1)
-					factory()->makeEdge(previous, *node, ParExeEdge::SOLID, 0, program_order);
+					makeEdge(previous, *node, ParExeEdge::SOLID, 0, program_order);
 				else {
 					factory()->makeEdge(previous, *node, ParExeEdge::SLASHED, 0, stage->name());
 					if (count == stage->width()){		// when stage width is reached, add edges to show precedence
 						ParExeNode *not_at_the_same_cycle = stage->node(prev_id);
-						factory()->makeEdge(not_at_the_same_cycle,*node,ParExeEdge::SOLID, 0, stage->name());
+						makeEdge(not_at_the_same_cycle,*node,ParExeEdge::SOLID, 0, stage->name());
 						prev_id++;
 					}
 					else
@@ -327,7 +367,7 @@ void StandardXGraphBuilder::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if(previous_store)
-					factory()->makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
+					makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous load
 				for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node(); last_node++)
@@ -341,11 +381,11 @@ void StandardXGraphBuilder::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if(previous_store)
-					factory()->makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
+					makeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// if any, dependency on previous load
 				if(previous_load)
-					factory()->makeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
+					makeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous store
 				for(ParExeGraph::InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
@@ -359,6 +399,7 @@ void StandardXGraphBuilder::addEdgesForMemoryOrder(void) {
 		}
 	}
 }
+
 
 /**
  * Adds edges for data dependencies, that is, if an instruction (a)
@@ -394,7 +435,7 @@ void StandardXGraphBuilder::addEdgesForDataDependencies(void){
 					if(producing_node == nullptr)
 						producing_node = prod->lastFUNode();
 				}
-				factory()->makeEdge(producing_node, node, ParExeEdge::SOLID, 0, comment(data));
+				makeEdge(producing_node, node, ParExeEdge::SOLID, 0, comment(data));
 			}
 		}
 	}
@@ -413,7 +454,7 @@ void StandardXGraphBuilder::addEdgesForQueues(void){
 			prod_stage = queue->fillingStage();
 			for (int i=0 ; i<stage->numNodes() - size ; i++) {
 				ASSERT(i+size < prod_stage->numNodes());
-				factory()->makeEdge(stage->node(i), prod_stage->node(i + size), ParExeEdge::SLASHED, 0, queue->name());
+				makeEdge(stage->node(i), prod_stage->node(i + size), ParExeEdge::SLASHED, 0, queue->name());
 			}
 		}
 	}
