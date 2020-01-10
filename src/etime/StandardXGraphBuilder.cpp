@@ -189,23 +189,34 @@ void StandardXGraphBuilder::createNodes(ParExeGraph *g, ParExeSequence *seq) {
 
 			// EXECUTE stage => expand functional unit's pipeline
 			else {
-				ParExePipeline *fu = stage->findFU(inst->inst()->kind());
-				ParExeNode *first = nullptr, *last = nullptr;
-				ASSERTP(fu != nullptr,
-					"cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
-				for(ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++) {
-					ParExeNode *fu_node = makeNode(g, *inst, *fu_stage);
-					if (!first)
-						first = fu_node;
-					last = fu_node;
-					inst->addNode(fu_node);
-					fu_stage->addNode(fu_node);
+
+				// no FU
+				if(stage->numFus() == 0) {
+					ParExeNode *node = makeNode(g, *inst, *stage);
+					inst->setFirstFUNode(node);
+					inst->setLastFUNode(node);
 				}
-				inst->setFirstFUNode(first);
-				inst->setLastFUNode(last);
-				// !!HUX!! Ensuring in-order for execute stage
-				if(stage->orderPolicy() == ParExeStage::IN_ORDER)
-					stage->addNode(first);
+
+				// multiple FUs: select one
+				else {
+					ParExePipeline *fu = stage->findFU(inst->inst()->kind());
+					ParExeNode *first = nullptr, *last = nullptr;
+					ASSERTP(fu != nullptr,
+						"cannot find FU for kind " << inst->inst()->getKind() << " at " << inst->inst()->address());
+					for(ParExePipeline::StageIterator fu_stage(fu); fu_stage(); fu_stage++) {
+						ParExeNode *fu_node = makeNode(g, *inst, *fu_stage);
+						if (!first)
+							first = fu_node;
+						last = fu_node;
+						inst->addNode(fu_node);
+						fu_stage->addNode(fu_node);
+					}
+					inst->setFirstFUNode(first);
+					inst->setLastFUNode(last);
+					// !!HUX!! Ensuring in-order for execute stage
+					if(stage->orderPolicy() == ParExeStage::IN_ORDER)
+						stage->addNode(first);
+				}
 			}
 		}
    }
