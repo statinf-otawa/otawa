@@ -325,14 +325,16 @@ void AbstractTimeBuilder::buildResources(void) {
 			for(auto resource: _resources) {
 				if(resource->type() == Resource::STAGE) {
 					StageResource *sresource = static_cast<StageResource *>(resource);
-					if(sresource->stage() <= queue->emptyingStage()) {
-						if(i < queue->size() - sresource->stage()->width() - 1) {
+					if(sresource->stage() == queue->emptyingStage()) {
+                        if(i <= queue->size() - sresource->stage()->width() - 1) {
 							if(sresource->slot() == sresource->stage()->width() - 1)
 								upper_bound = sresource;
 						}
 						else {
 							if(sresource->slot() == i - queue->size() + sresource->stage()->width())
+                            {
 								upper_bound = sresource;
+                            }
 						}
 					}
 				}

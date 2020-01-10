@@ -193,6 +193,8 @@ void StandardXGraphBuilder::createNodes(ParExeGraph *g, ParExeSequence *seq) {
 				// no FU
 				if(stage->numFus() == 0) {
 					ParExeNode *node = makeNode(g, *inst, *stage);
+					inst->addNode(node);
+					stage->addNode(node);
 					inst->setFirstFUNode(node);
 					inst->setLastFUNode(node);
 				}
@@ -271,11 +273,12 @@ void StandardXGraphBuilder::addEdgesForFetch(void) {
 
 				// look for the branch stage node
 				ParExeNode *branching_node = nullptr;
-				for(auto node = previous->inst()->nodes(); node(); node++)
+				for(auto node = previous->inst()->nodes(); node(); node++) {
 					if(node->stage() == branch_stage) {
 						branching_node = *node;
 						break;
 					}
+				}
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
@@ -490,7 +493,9 @@ void StandardXGraphBuilder::init(void) {
 	if(_proc != processor()) {
 		_proc = processor();
 		fetch_stage = _proc->fetchStage();
+		ASSERTP(fetch_stage != nullptr, "no fetch stage");
 		branch_stage = _proc->branchStage();
+		ASSERTP(branch_stage != nullptr, "no stage designed for banching");
 	}
 }
 

@@ -172,6 +172,8 @@ public:
 			ot::time cost = g->analyze();
 			ConfigSet *set = new ConfigSet(cost);
 			set->add(Config());
+			if(logFor(LOG_BB))
+				log << "\t\t\tcost = " << cost << io::endl;
 			return;
 		}
 
