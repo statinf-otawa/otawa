@@ -335,7 +335,6 @@ void AbstractTimeBuilder::buildResources(void) {
                             {
 								upper_bound = sresource;
                             }
-                                
 						}
 					}
 				}
