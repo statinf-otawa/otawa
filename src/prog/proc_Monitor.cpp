@@ -94,56 +94,82 @@ void Monitor::setWorkspace(WorkSpace *workspace) {
  * This property identifier is used for setting the output stream used by
  * the processor to write results.
  */
-Identifier<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &io::out);
+p::id<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &io::out);
 
 
 /**
  * This property identifier is used for setting the log stream used by
  * the processor to write messages (information, warning, error).
  */
-Identifier<elm::io::OutStream *> LOG("otawa::LOG", &io::err);
+p::id<elm::io::OutStream *> LOG("otawa::LOG", &io::err);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
  */
-Identifier<bool> VERBOSE("otawa::VERBOSE", false);
+p::id<bool> VERBOSE("otawa::VERBOSE", false);
 
 
 /**
  * Property passed in the configuration property list of a processor
  * to select the log level between LOG_PROC, LOG_CFG or LOG_BB.
  */
-Identifier<Monitor::log_level_t> LOG_LEVEL("otawa::LOG_LEVEL", Monitor::LOG_NONE);
+p::id<Monitor::log_level_t> LOG_LEVEL("otawa::LOG_LEVEL", Monitor::LOG_NONE);
 
 
+/**
+ * Display logs only for the named processor. If no LOG_FOR is defined, all processors
+ * are logged. Several LOG_FOR can be recorded in the configuration.
+ */
+p::id<string> LOG_FOR("otawa::LOG_FOR");
 
-void Monitor::configure(const PropList& props) {
+
+///
+void Monitor::configure(const PropList& props, string name) {
 
 	// Process output
 	out.setStream(*OUTPUT(props));
 	log.setStream(*LOG(props));
 
-	// process verbosity
+	// look to logging parameters
 	bool verbose;
 	if(props.hasProp(VERBOSE))
 		verbose = VERBOSE(props);
 	else
 		verbose = elm::sys::System::hasEnv(VERBOSE_ENV);
-	if(verbose) {
-		flags |= IS_VERBOSE;
-		log_level = LOG_BB;
-	}
-	else
-		flags &= ~IS_VERBOSE;
-
-	// get the log level
 	log_level_t level = LOG_LEVEL(props);
-	if(level) {
-		log_level = level;
-		if(level >= LOG_BLOCK)
+
+	// test named logging
+	bool log_auth = true;
+	if(name != "")
+		for(auto n: LOG_FOR.all(props))
+			if(n == name) {
+				log_auth = true;
+				if(!verbose || level == LOG_NONE)
+					verbose = true;
+				break;
+			}
+			else
+				log_auth = false;
+
+	// if logging authorized
+	if(log_auth) {
+
+		// process verbosity
+		if(verbose) {
 			flags |= IS_VERBOSE;
+			log_level = LOG_BB;
+		}
+		else
+			flags &= ~IS_VERBOSE;
+
+		// get the log level
+		if(level) {
+			log_level = level;
+			if(level >= LOG_BLOCK)
+				flags |= IS_VERBOSE;
+		}
 	}
 
 	// record in the children

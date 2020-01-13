@@ -60,7 +60,7 @@ public:
 	inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
 	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
 	inline log_level_t logLevel(void) const { return log_level; }
-	void configure(const PropList& props);
+	void configure(const PropList& props, string name = "");
 
 protected:
 	void setWorkspace(WorkSpace *workspace);
@@ -77,10 +77,11 @@ private:
 };
 
 // configuration
-extern Identifier<elm::io::OutStream *> OUTPUT;
-extern Identifier<elm::io::OutStream *> LOG;
-extern Identifier<bool> VERBOSE;
-extern Identifier<Monitor::log_level_t> LOG_LEVEL;
+extern p::id<elm::io::OutStream *> OUTPUT;
+extern p::id<elm::io::OutStream *> LOG;
+extern p::id<bool> VERBOSE;
+extern p::id<Monitor::log_level_t> LOG_LEVEL;
+extern p::id<string> LOG_FOR;
 
 }	// otawa
 

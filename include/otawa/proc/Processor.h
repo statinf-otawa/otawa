@@ -88,20 +88,21 @@ public:
 	virtual void configure(const PropList& props);
 
 	// Configuration Properties
-	static Identifier<PropList *> STATS;
-	static Identifier<bool> TIMED;
-	static Identifier<bool> RECURSIVE;
-	static Identifier<Progress *> PROGRESS;
-	static Identifier<bool> COLLECT_STATS;
+	static p::id<PropList *> STATS;
+	static p::id<bool> TIMED;
+	static p::id<bool> RECURSIVE;
+	static p::id<Progress *> PROGRESS;
+	static p::id<bool> COLLECT_STATS;
 
 	// deprecated
-	static Identifier<elm::io::OutStream *>& OUTPUT;
-	static Identifier<elm::io::OutStream *>& LOG;
-	static Identifier<bool>& VERBOSE;
-	static Identifier<log_level_t>& LOG_LEVEL;
+	static p::id<elm::io::OutStream *>& OUTPUT;
+	static p::id<elm::io::OutStream *>& LOG;
+	static p::id<bool>& VERBOSE;
+	static p::id<log_level_t>& LOG_LEVEL;
+	static p::id<string>& LOG_FOR;
 
 	// Statistics Properties
-	static Identifier<elm::sys::time_t> RUNTIME;
+	static p::id<elm::sys::time_t> RUNTIME;
 
 	// Deprecated
 	Processor(const PropList& props);

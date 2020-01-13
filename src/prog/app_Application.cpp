@@ -293,6 +293,7 @@ Application::Application(const Make& make):
 	ff(option::ListOption<string>::Make(*this).cmd("--flowfacts").cmd("-f").description("select the flowfacts to load").argDescription("PATH")),
 	work_dir(option::Value<string>::Make(*this).cmd("--work-dir").description("change the working directory").arg("PATH")),
 	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
+	log_for(option::ListOption<string>::Make(this).cmd("--log-for").help("only apply logging to the given processor")),
 	log_level(*this),
 	props2(0),
 	result(0),
@@ -354,6 +355,8 @@ int Application::run(int argc, char **argv) {
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
 			Processor::LOG_LEVEL(props) = log_level;
+		for(auto name: log_for)
+			Processor::LOG_FOR(props).add(name);
 
 		// process the sets
 		bool failed = false;

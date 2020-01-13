@@ -551,7 +551,7 @@ extern int fft_line;
  * @author H. Cassé <casse@irit.fr>
  */
 
-p::declare FlowFactLoader::reg = p::init("otawa::util::FlowFactLoader", Version(1, 4, 0))
+p::declare FlowFactLoader::reg = p::init("otawa::FlowFactLoader", Version(1, 4, 0))
 	.maker<FlowFactLoader>()
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.provide(FLOW_FACTS_FEATURE)
@@ -1100,7 +1100,6 @@ void FlowFactLoader::onIgnoreSeq(Address address) {
 		IGNORE_SEQ(inst) = true;
 }
 
-
 /**
  * Called for the F4 construction "multibranch ADDRESS to ADDRESS, ...".
  * @param control	Multi-branch instruction address.
@@ -1116,6 +1115,9 @@ void FlowFactLoader::onMultiBranch(Address control, const Vector<Address>& targe
 		onError(_ << " no instruction at  " << control << ".");
 
 	// List of targets
+	if(logFor(LOG_BB))
+		log << "\tmultibranch at " << control << " to "
+			<< io::list(targets, ", ") << io::endl;
 	for(int i = 0; i < targets.length(); i++)
 		if(!targets[i].isNull()) {
 			bool found = false;
@@ -1145,6 +1147,9 @@ void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets
 		onError(_ << " no instruction at  " << control << ".");
 
 	// List of targets
+	if(logFor(LOG_BB))
+		log << "\tmultibranch at " << control << " to "
+			<< io::list(targets, ", ") << io::endl;
 	for(int i = 0; i < targets.length(); i++)
 		if(!targets[i].isNull()) {
 			bool found = false;

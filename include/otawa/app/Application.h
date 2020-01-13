@@ -89,6 +89,7 @@ private:
 	option::ListOption<string> ff;
 	option::Value<string> work_dir;
 	option::SwitchOption record_stats;
+	option::ListOption<string> log_for;
 	LogOption log_level;
 	elm::sys::Path path;
 	Vector<string> _args;

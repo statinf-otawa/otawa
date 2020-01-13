@@ -250,7 +250,8 @@ p::declare Processor::reg = p::init("otawa::Processor", Version(1, 2, 0))
 	.config(VERBOSE)
 	.config(STATS)
 	.config(TIMED)
-	.config(LOG_LEVEL);
+	.config(LOG_LEVEL)
+	.config(LOG_FOR);
 
 
 /**
@@ -422,7 +423,7 @@ void Processor::processWorkSpace(WorkSpace *fw) {
  */
 void Processor::configure(const PropList& props) {
 	init(props);
-	Monitor::configure(props);
+	Monitor::configure(props, name());
 }
 
 
@@ -599,7 +600,7 @@ void Processor::warn(const String& message) {
  * the processor to write results.
  * @deprecated
  */
-Identifier<elm::io::OutStream *>& Processor::OUTPUT = otawa::OUTPUT;
+p::id<elm::io::OutStream *>& Processor::OUTPUT = otawa::OUTPUT;
 
 
 /**
@@ -607,14 +608,14 @@ Identifier<elm::io::OutStream *>& Processor::OUTPUT = otawa::OUTPUT;
  * the processor to write messages (information, warning, error).
  * @deprecated
  */
-Identifier<elm::io::OutStream *>& Processor::LOG = otawa::LOG;
+p::id<elm::io::OutStream *>& Processor::LOG = otawa::LOG;
 
 
 /**
  * This property allows to activate collection of statistics for the
  * work of the current processor. @see StatInfo class.
  */
-Identifier<bool>
+p::id<bool>
 	Processor::COLLECT_STATS("otawa::Processor::COLLECT_STATS", false);
 
 
@@ -623,7 +624,7 @@ Identifier<bool>
  * that will be used to store statistics about the performed work. Implicitly,
  * passing such a property activates the statistics recording facilities.
  */
-Identifier<PropList *> Processor::STATS("otawa::Processor::STATS", 0);
+p::id<PropList *> Processor::STATS("otawa::Processor::STATS", 0);
 
 
 /**
@@ -631,36 +632,42 @@ Identifier<PropList *> Processor::STATS("otawa::Processor::STATS", 0);
  * statistics will also be collected with other processor statistics. Passing
  * such a property without @ref PROC_STATS has no effects.
  */
-Identifier<bool> Processor::TIMED("otawa::Processor::TIMED", false);
+p::id<bool> Processor::TIMED("otawa::Processor::TIMED", false);
 
 
 /**
  * This property identifier is used to store in the statistics of a processor
  * the overall run time of the processor work.
  */
-Identifier<elm::sys::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 0);
+p::id<elm::sys::time_t> Processor::RUNTIME("otawa::Processor::RUNTIME", 0);
 
 
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
- * @deprecated
  */
-Identifier<bool>& Processor::VERBOSE = otawa::VERBOSE;
+p::id<bool>& Processor::VERBOSE = otawa::VERBOSE;
 
 
 /**
  * Property passed in the configuration property list of a processor
  * to select the log level between LOG_PROC, LOG_CFG or LOG_BB.
- * @deprecated
  */
-Identifier<Processor::log_level_t>& Processor::LOG_LEVEL = otawa::LOG_LEVEL;
+p::id<Processor::log_level_t>& Processor::LOG_LEVEL = otawa::LOG_LEVEL;
+
 
 
 /**
- * Install
+ * Logging message will only be displayed for the named processor.
+ * If no LOG_PROC is available in the configuration, all code processors are logged.
  */
-Identifier<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progress::null);
+p::id<string>& Processor::LOG_FOR = otawa::LOG_FOR;
+
+
+/**
+ * Record a progress listener for the execution of the processors.
+ */
+p::id<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progress::null);
 
 
 /**
