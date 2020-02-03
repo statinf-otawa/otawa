@@ -341,8 +341,17 @@ StandardILPGenerator::StandardILPGenerator(Monitor& mon):
 	_t_lts(-1),
 	_x_e(nullptr),
 	_x_hts(nullptr),
-	_t_lts_set(false)
+	_t_lts_set(false),
+	_eth(0)
 { }
+
+
+///
+void StandardILPGenerator::configure(const PropList& props) {
+	ILPGenerator::configure(props);
+	_eth = etime::EVENT_THRESHOLD(props);
+}
+
 
 /**
  */
@@ -467,8 +476,31 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 			get(e.event())->boundImprecise(e);
 }
 
-/**
- */
+///
+void StandardILPGenerator::process(Edge *e, ParExeSequence *seq, Vector<EventCase>& events, int dyn_cnt) {
+
+	// log events
+	if(logFor(LOG_BB))
+		for(auto e: events)
+			log << "\t\t\t" << e << io::endl;
+
+	// numbers the dynamic events
+	int cnt = 0;
+	for(int i = 0; i < events.count(); i++)
+		if(events[i].event()->occurrence() == SOMETIMES)
+			events[i].setIndex(cnt++);
+
+	// build the graph
+	prepare(e, events, dyn_cnt);
+	ParExeGraph *g = build(seq);
+	solve(e, g, events);
+	finish(events);
+
+	// clean up
+	delete g;
+}
+
+///
 void StandardILPGenerator::process(Edge *e) {
 	BasicBlock *w = nullptr;
 	if(e->source()->isBasic())
@@ -482,34 +514,73 @@ void StandardILPGenerator::process(Edge *e) {
 	collectEdge(events, e);
 	collectBlock(events, v);
 	sortEvents(events);
-	if(logFor(LOG_BB))
-		for(auto e: events)
-			log << "\t\t\t" << e << io::endl;
+	int dyn_cnt = countDyn(events);
 
-	// build the sequence
-	ParExeSequence *seq = new ParExeSequence();
-	int index = 0;
-	if(w)
-		for(auto i: *w)
-			seq->addLast(new ParExeInst(i, w, PROLOGUE, index++));
-	for(auto i: *v)
-		seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
+	// build the sequence (if event threshold not reached
+	if(dyn_cnt <= _eth) {
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+		if(w)
+			for(auto i: *w)
+				seq->addLast(new ParExeInst(i, w, PROLOGUE, index++));
+		for(auto i: *v)
+			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
+		process(e, seq, events, dyn_cnt);
+		delete seq;
+	}
 
-	// numbers the dynamic events
-	int cnt = 0;
-	for(int i = 0; i < events.count(); i++)
-		if(events[i].event()->occurrence() == SOMETIMES)
-			events[i].setIndex(cnt++);
+	// try with remove prolog
+	events.clear();
+	collectBlock(events, v);
+	sortEvents(events);
+	dyn_cnt = countDyn(events);
+	if(dyn_cnt <= _eth) {
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+		for(auto i: *v)
+			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
+		process(e, seq, events, dyn_cnt);
+		delete seq;
+	}
 
-	// build the graph
-	prepare(e, events, countDyn(events));
-	ParExeGraph *g = build(seq);
-	solve(e, g, events);
-	finish(events);
+	// starting split of the block
+	int ei = 0;
+	auto ii = v->insts();
+	while(ei < events.length()) {
+		Vector<EventCase> split_events;
 
-	// clean all
-	delete g;
-	delete seq;
+		// collect split events
+		dyn_cnt = 0;
+		Inst *faulty = nullptr;
+		while(ei < events.length()) {
+			split_events.add(events[ei]);
+			ei++;
+			if(events[ei].isDynamic())
+				dyn_cnt++;
+			if(dyn_cnt > _eth) {
+				faulty = events[ei].inst();
+				break;
+			}
+		}
+
+		// roll-back events of the faulty instruction
+		if(faulty != nullptr)
+			while(events[ei - 1].inst() == faulty) {
+				ei--;
+				if(events[ei - 1].isDynamic())
+					dyn_cnt++;
+				split_events.removeLast();
+			}
+
+
+		// compute the time
+		ParExeSequence *seq = new ParExeSequence();
+		int index = 0;
+		while(ii() && (ei >= events.length() || *ii != events[ei].event()->inst()))
+			seq->addLast(new ParExeInst(*ii, v, otawa::BLOCK, index++));
+		process(e, seq, split_events, dyn_cnt);
+		delete seq;
+	}
 }
 
 /**

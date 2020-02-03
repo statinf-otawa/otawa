@@ -43,11 +43,14 @@ public:
 	inline EventCase(void): _e(nullptr), _p(IN_SIZE), _i(-1) { }
 	inline EventCase(Event *e, part_t p): _e(e), _p(p), _i(-1) { }
 
-	inline Event *event(void) const { return _e; }
-	inline part_t part(void) const { return _p; }
-	inline int index(void) const { return _i; }
+	inline Event *event() const { return _e; }
+	inline part_t part() const { return _p; }
+	inline int index() const { return _i; }
 	inline void setIndex(int i) { _i = i; }
-	inline Event *operator->(void) const { return _e; }
+	inline Event *operator->() const { return _e; }
+	inline Inst *inst() const { return _e->inst(); }
+	inline bool isStatic() const { return _e->occurrence() == etime::ALWAYS || _e->occurrence() == etime::NEVER; }
+	inline bool isDynamic() const { return !isDynamic(); }
 
 private:
 	Event *_e;
@@ -187,6 +190,7 @@ private:
 	bool _record;
 	sys::Path _dir;
 	ilp::System *_sys;
+	bool _only_start;
 };
 
 } }	// otawa::etime

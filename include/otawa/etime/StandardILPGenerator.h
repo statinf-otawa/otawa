@@ -59,6 +59,7 @@ public:
 	void process(WorkSpace *ws) override;
 
 protected:
+	void configure(const PropList& props) override;
 	void contributeBase(ot::time time) override;
 	void contributeTime(ot::time t_hts) override;
 	void contributePositive(EventCase event, bool prec) override;
@@ -68,6 +69,7 @@ private:
 	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt);
 	void finish(const Vector<EventCase>& events);
 	void process(Edge *e);
+	void process(Edge *e, ParExeSequence *s, Vector<EventCase>& events, int dyn_cnt);
 	EventCollector *get(Event *event);
 
 	HashMap<Event *, EventCollector *> colls;
@@ -76,6 +78,7 @@ private:
 	ilp::Var *_x_e, *_x_hts;
 	bool _t_lts_set;
 	BitVector _done;
+	int _eth;
 };
 
 } }	// otawa::etime

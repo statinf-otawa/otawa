@@ -162,6 +162,8 @@ extern p::id<bool> RECORD_TIME;
 extern p::feature EDGE_TIME_FEATURE;
 extern p::id<ot::time> LTS_TIME;
 extern p::id<Pair<ot::time, ilp::Var *> > HTS_CONFIG;
+extern p::id<bool> ONLY_START;
+extern p::id<bool> NO_ILP_OBJECTIVE;
 
 } }	// otawa::etime
 
