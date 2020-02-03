@@ -554,13 +554,13 @@ void StandardILPGenerator::process(Edge *e) {
 		Inst *faulty = nullptr;
 		while(ei < events.length()) {
 			split_events.add(events[ei]);
-			ei++;
 			if(events[ei].isDynamic())
 				dyn_cnt++;
 			if(dyn_cnt > _eth) {
 				faulty = events[ei].inst();
 				break;
 			}
+			ei++;
 		}
 
 		// roll-back events of the faulty instruction
