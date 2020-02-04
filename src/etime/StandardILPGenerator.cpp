@@ -527,23 +527,29 @@ void StandardILPGenerator::process(Edge *e) {
 			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
 		process(e, seq, events, dyn_cnt);
 		delete seq;
+		return;
 	}
 
-	// try with remove prolog
+	// try to remove prolog
 	events.clear();
 	collectBlock(events, v);
 	sortEvents(events);
 	dyn_cnt = countDyn(events);
 	if(dyn_cnt <= _eth) {
+		if(logFor(LOG_BB))
+			log << "\t\ttoo many dynamic events (" << dyn_cnt << "): remove prefix\n";
 		ParExeSequence *seq = new ParExeSequence();
 		int index = 0;
 		for(auto i: *v)
 			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
 		process(e, seq, events, dyn_cnt);
 		delete seq;
+		return;
 	}
 
 	// starting split of the block
+	if(logFor(LOG_BB))
+		log << "\t\t\ttoo many dynamic events (" << dyn_cnt << "): split required\n";
 	int ei = 0;
 	auto ii = v->insts();
 	while(ei < events.length()) {
@@ -554,9 +560,9 @@ void StandardILPGenerator::process(Edge *e) {
 		Inst *faulty = nullptr;
 		while(ei < events.length()) {
 			split_events.add(events[ei]);
-			ei++;
 			if(events[ei].isDynamic())
 				dyn_cnt++;
+			ei++;
 			if(dyn_cnt > _eth) {
 				faulty = events[ei].inst();
 				break;
@@ -566,9 +572,9 @@ void StandardILPGenerator::process(Edge *e) {
 		// roll-back events of the faulty instruction
 		if(faulty != nullptr)
 			while(events[ei - 1].inst() == faulty) {
-				ei--;
 				if(events[ei - 1].isDynamic())
 					dyn_cnt++;
+				ei--;
 				split_events.removeLast();
 			}
 
@@ -576,8 +582,13 @@ void StandardILPGenerator::process(Edge *e) {
 		// compute the time
 		ParExeSequence *seq = new ParExeSequence();
 		int index = 0;
-		while(ii() && (ei >= events.length() || *ii != events[ei].event()->inst()))
+		while(ii() && (ei >= events.length() || *ii != events[ei].event()->inst())) {
 			seq->addLast(new ParExeInst(*ii, v, otawa::BLOCK, index++));
+			ii++;
+		}
+		if(logFor(LOG_BB))
+			log << "\t\t\tcomputing for " << seq->first()->inst()->address()
+				<< " to " << seq->last()->inst()->address() << io::endl;
 		process(e, seq, split_events, dyn_cnt);
 		delete seq;
 	}
