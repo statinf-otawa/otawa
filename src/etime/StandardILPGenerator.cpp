@@ -567,6 +567,7 @@ void StandardILPGenerator::process(Edge *e) {
 				faulty = events[ei].inst();
 				break;
 			}
+			ei++;
 		}
 
 		// roll-back events of the faulty instruction
