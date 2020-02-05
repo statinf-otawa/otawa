@@ -570,13 +570,16 @@ void StandardILPGenerator::process(Edge *e) {
 		}
 
 		// roll-back events of the faulty instruction
-		if(faulty != nullptr)
+		if(faulty != nullptr){
 			while(events[ei].inst() == faulty) {
 				if(events[ei].isDynamic())
 					dyn_cnt++;
 				ei--;
 				split_events.removeLast();
 			}
+		ei++;
+		}
+			
 
 
 		// compute the time
