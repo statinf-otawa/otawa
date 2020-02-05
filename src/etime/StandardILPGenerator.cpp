@@ -571,8 +571,8 @@ void StandardILPGenerator::process(Edge *e) {
 
 		// roll-back events of the faulty instruction
 		if(faulty != nullptr)
-			while(events[ei - 1].inst() == faulty) {
-				if(events[ei - 1].isDynamic())
+			while(events[ei].inst() == faulty) {
+				if(events[ei].isDynamic())
 					dyn_cnt++;
 				ei--;
 				split_events.removeLast();
