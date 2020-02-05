@@ -562,7 +562,6 @@ void StandardILPGenerator::process(Edge *e) {
 			split_events.add(events[ei]);
 			if(events[ei].isDynamic())
 				dyn_cnt++;
-			ei++;
 			if(dyn_cnt > _eth) {
 				faulty = events[ei].inst();
 				break;
