@@ -35,7 +35,7 @@
 #include <otawa/prog/File.h>
 #include <otawa/prog/Process.h>
 #include <otawa/prog/WorkSpace.h>
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/flowfact/FlowFactLoader.h>
 
 // Externals
 extern FILE *util_fft_in;
@@ -565,10 +565,16 @@ FlowFactLoader::FlowFactLoader(p::declare& r):
 	Processor(r),
 	_fw(0),
 	checksummed(false),
+	
+	
 	mandatory(false),
 	lines_available(false),
 	state(0),
-	lib(false)
+	lib(false),
+	
+	currentCteNum(0),  
+	numOfEdgeIntoCurrentCte(0),
+	intoConflictPath(false)
 {
 }
 
@@ -794,6 +800,48 @@ void FlowFactLoader::onLoop(address_t addr, int count, int total, int min, const
 }
 
 
+
+/**
+ * This method is called to count haw many conflict are present into an element.
+ * @param  element	... element
+ * @param count	number of inner conflict.
+ */
+
+int FlowFactLoader::containsNotALL(xom::Element *element){
+	int nb=0;
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *elt = (xom::Element *)child;
+			xom::String name = elt->getLocalName();
+			if	(name == "not-all" && elt->getAttributeValue("seq").value() == "true") nb++;
+		}
+	}
+	return nb;
+}
+
+/**
+ * This method is called when a edges are infeaseable path.
+ * @param edge_addr	vector of Address inpossible path.
+ * @param ...count	Bound on the loop iterations.
+ */
+void FlowFactLoader::onInfeasablePath(  address_t addr,  const ContextualPath& path) {
+	Address firtElement =addr;  
+	// find the instruction
+	Inst *inst = workSpace()->process()->findInstAt(firtElement);
+	if(!inst)
+		onError(_ << "unmarked instruction because instruction at " << firtElement << " not found");
+		
+		// put the infeasable path  
+		++currentCteNum;
+		numListOfUnclosedPath.push(currentCteNum);
+		numOfEdgeIntoCurrentCte=0;
+		LockPtr<ConflictOfPath  > ff  = path(INFEASABLE_PATH, inst);
+		if (!ff) ff=new ConflictOfPath(path, currentCteNum) ;
+		else ff->addConflictToPath( currentCteNum) ;
+		path.ref(INFEASABLE_PATH, inst) = ff;
+	}
+ 
 /**
  * Load a memory range instruction.
  * @param iaddr		Instruction address.
@@ -1193,6 +1241,61 @@ void FlowFactLoader::onUnknownMultiCall(Address control) {
 	onError(_ << "undefined targets for multi-call at " << control);
 }
 
+/** 
+ * Scan a not_all XML element.
+ * @param element	... element
+ * @param cpath		contextual path
+ */
+ 
+void FlowFactLoader::scanEdge(xom::Element* edge,  ContextualPath& cpath  ){
+	
+	    EdgeInfoOfConflict * edgeInfo = new EdgeInfoOfConflict();
+	    //LockPtr<EdgeInfoOfConflict> edgeInfo(new EdgeInfoOfConflict());
+		String countSrcStr = edge->getAttributeValue("src").value();
+		String countDstStr = edge->getAttributeValue("dst").value();
+		if (countSrcStr.charAt(1) == 'x' && countSrcStr.charAt(0) == '0'){
+			countSrcStr = countSrcStr.substring(2, (countSrcStr.length())-2); // addr format : "0x123456"
+			countDstStr = countDstStr.substring(2, (countDstStr.length())-2); // addr format : "0x123456"
+		}
+		else if (countSrcStr == "*"){ countSrcStr = "0";	}
+
+		unsigned int source = 0, dest = 0;
+		sscanf(countSrcStr.chars(), "%x", &source);
+		sscanf(countDstStr.chars(), "%x", &dest);			
+ 		if(source) {
+			edgeInfo->setSource( MemArea(source, 4).address());	
+			 
+			numOfEdgeIntoCurrentCte++;
+			edgeInfo->getInfoOfConflicts().push(Pair<int,int>(currentCteNum, numOfEdgeIntoCurrentCte));			 
+			if(dest) {
+				edgeInfo->setTarget(MemArea(dest, 4).address());
+				// Find the instruction
+ 				Inst *inst = _fw->process()->findInstAt(edgeInfo->getSource());
+				if(!inst)
+					onError(_ << " no instruction at  " << edgeInfo->getSource() << ".");
+				LockPtr<ListOfEdgeConflict > max  = cpath(EDGE_OF_INFEASABLE_PATH_I, inst);
+				
+ 				int trouve =false;
+				for(int k55=0;max &&!trouve && k55<max->length();k55++){	
+						LockPtr<EdgeInfoOfConflict> ct  = max->get(k55); //->item(k55);  
+						if (ct->getSource() == edgeInfo->getSource() && edgeInfo->getTarget()  == ct->getTarget() ) { 
+							trouve=true;
+							 
+							ct->getInfoOfConflicts().push(Pair<int,int>(currentCteNum, numOfEdgeIntoCurrentCte));
+						 
+							cpath.ref(EDGE_OF_INFEASABLE_PATH_I, inst) = max; 
+						}
+				}		
+				if (!trouve){
+					if (!max) max = new ListOfEdgeConflict();
+
+					max->push(edgeInfo);
+					cpath.ref(EDGE_OF_INFEASABLE_PATH_I, inst) = max; 
+				}		
+			}
+		}  				 
+} 
+	
 
 /**
  * Load the flow facts from an XML file.
@@ -1287,12 +1390,36 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 				scanRegSet(element, state);
 			else if(name == "state")
 				scanXState(element);
+			else if(name == "not-all") 	{		 	
+					if (intoConflictPath)  {
+						onWarning(_ << " Error of ffx not all into not all: " << xline(element));
+						return;
+					}
+					else  scanXNotAll(element, cpath);  
+			}
+			else if (name == "iteration") { 
+						scanXContent( element,   cpath);
+				}
+			else	 if(intoConflictPath&&name == "edge") 	{	 				
+					 scanEdge(element, cpath); 
+			} 
 			else
 				warn(_ << "garbage at \"" << xline(child) << "\"");
 		}
 	}
 }
 
+			
+void FlowFactLoader::scanXNotAll(xom::Element *element, ContextualPath& cpath){
+ 	 
+ 	intoConflictPath = true;
+ 	if (element->getAttributeValue("seq").value() == "true"){
+		currentCteNum++;
+		numOfEdgeIntoCurrentCte=0;
+		scanXContent( element,   cpath);
+	} 
+ 	intoConflictPath = false;
+}
 
 /**
  * Scan a noinline/doinline XML element.
@@ -1653,6 +1780,33 @@ void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path) {
 		throw ProcessorException(*this,
 			_ << " no instruction at  " << addr << " from " << xline(element));
 	path.push(ContextualStep::FUNCTION, addr);
+	
+	
+	int nb =containsNotALL	 (element);
+	if (nb>0) {
+		if (!intoConflictPath) {
+			if (!numListOfUnclosedPath.isEmpty() && !addr.isNull() ){
+							 LockPtr<ListOfEndConflict>  ff  = path(INFEASABLE_PATH_END, inst);
+							if (!numListOfUnclosedPath.isEmpty() && !ff) /* new vector*/ 
+								 ff =  new ListOfEndConflict();
+								 
+							while(!numListOfUnclosedPath.isEmpty() ){
+								int numOfUnclosedPath=numListOfUnclosedPath.pop();
+								ff->push(numOfUnclosedPath);
+							}
+							path.ref(INFEASABLE_PATH_END, inst) = ff;
+						
+						 
+					}
+			numListOfUnclosedPath.clear();
+		}
+		int num = currentCteNum;
+		int nbE = numOfEdgeIntoCurrentCte;
+		for (int j=0; j<nb;j++) this->onInfeasablePath( inst->address(),   path);
+	    currentCteNum=num;
+	    numOfEdgeIntoCurrentCte=nbE;
+	}
+	
 
 	// scan the content
 	scanXContent(element, path);
@@ -1722,6 +1876,37 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) {
 	// cleanup
 	delete elems;
 }
+
+
+ 
+void  FlowFactLoader::getQualifierAnd(xom::Element * element, Inst *inst, int *nbPath, bool nextLoop, 
+ContextualPath& path,/*genstruct::*/Vector<LoopOfConflict>  &infoLoop  ){
+	
+	for(int i = 0; i < element->getChildCount(); i++) {
+		xom::Node *child = element->getChild(i);
+		if(child->kind() == xom::Node::ELEMENT) {
+			xom::Element *elt = (xom::Element *)child;
+			xom::String name = elt->getLocalName();
+			if(name == "loop")
+				getQualifierAnd(elt, inst, nbPath , true, path, infoLoop);
+			 
+			else if(name == "not-all") {		 				
+					*nbPath = * nbPath+1;
+					getQualifierAnd(elt, inst, nbPath , nextLoop, path, infoLoop);
+			}
+			else if (nextLoop == false && name == "iteration")
+			{		String SrcStr = elt->getAttributeValue("number").value();
+					LoopOfConflict::conflictLoopQualifier qualifier = ( (SrcStr == "*") ? LoopOfConflict::ALL_IT : LoopOfConflict::LAST_IT);//id constrain+qualifier vector
+					LoopOfConflict info  (*nbPath, qualifier)  ;
+					infoLoop.add(info);
+					getQualifierAnd(elt,inst, nbPath , nextLoop, path, infoLoop);
+			}
+			else  getQualifierAnd(elt,inst, nbPath , nextLoop, path, infoLoop); 
+		}
+	}
+}
+
+ 
 
 // context version
 void FlowFactLoader::scanXState(xom::Element *element, ContextualPath& path) {
@@ -1805,12 +1990,35 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 			_ << " no instruction at  " << addr << " from " << xline(element));
 
 	// get the information
-	Option<long> max = scanBound(element, "maxcount");
-	Option<long> total = scanBound(element, "totalcount");
-	Option<long> min = scanBound(element, "mincount");
-	if(!max && !total)
-		warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
-	onLoop(addr, (max ? *max : -1), (total ? *total : -1), (min ? *min : -1), path);
+	int nbPath =currentCteNum ;
+
+	// find info loop du conflic
+	LockPtr <ListOfLoopConflict > aaa= path.ref(LOOP_OF_INFEASABLE_PATH_I, inst) ;
+	if (!aaa) 	aaa = new ListOfLoopConflict();
+	
+	getQualifierAnd(element,   inst , &nbPath, false, path , *aaa);
+ 
+	if (aaa->length() > 0)path(LOOP_OF_INFEASABLE_PATH_I, inst) = aaa;  
+    int nb =containsNotALL	 (element);
+	if (nb>0) { 
+		int nbE = numOfEdgeIntoCurrentCte;
+		int num = currentCteNum;
+		for (int j=0; j<nb;j++) this->onInfeasablePath( inst->address(),   path);
+	    currentCteNum=num;
+	    numOfEdgeIntoCurrentCte = nbE;
+		 
+	} 	
+	if (aaa->length() == 0) {
+		// get the information
+		Option<long> max = scanBound(element, "maxcount");
+		Option<long> total = scanBound(element, "totalcount");
+		Option<long> min = scanBound(element, "mincount");
+		if(!max && !total)
+			warn(_ << "loop exists at " <<  addr << " but no bound at " << xline(element));
+			
+		onLoop(addr, (max ? *max : -1), (total ? *total : -1), (min ? *min : -1), path);
+	}
+ 	//END ADD
 
 	// look for content
 	scanXContent(element, path);
@@ -2007,7 +2215,21 @@ void FlowFactLoader::scanXContent(xom::Element *element, ContextualPath& path) {
 			else if(name == "function")
 				this->scanXFun(element, path);
 			else if(name == "state")
-				scanXState(element, path);
+				scanXState(element, path);	
+			else if(name == "not-all") {		 				
+					if  (intoConflictPath) {
+						onWarning(_ << " Error of ffx not all into not all: " << xline(element));
+						return;
+					}
+					else this->scanXNotAll(element, path);  
+			}
+			else if (name == "iteration")
+			{ 
+					this->scanXContent( element,   path);
+			}
+			else if(intoConflictPath&&name == "edge") 	{	 				
+					scanEdge(element, path);  
+			}
 		}
 	}
 }
@@ -2315,5 +2537,47 @@ Identifier<bool> IGNORE_ENTRY("otawa::IGNORE_ENTRY", false);
  * @ingroup ff
  */
 Identifier<Pair<Address, Address> > ACCESS_RANGE("otawa::ACCESS_RANGE");
+/**
+ * Put on an infeasable path begining and end mark
+ * 
+ *
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier< LockPtr<ConflictOfPath  >> INFEASABLE_PATH("otawa::INFEASABLE_PATH",NULL);
+
+
+Identifier<  LockPtr<ListOfEndConflict> > INFEASABLE_PATH_END("otawa::INFEASABLE_PATH_END", NULL);  
+ /** Put on an infeasable path loop
+ * Mark a loop that contains or is into an path constrain
+ *
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+
+ 
+Identifier <LockPtr <ListOfLoopConflict > >    LOOP_OF_INFEASABLE_PATH_I ("otawa::LOOP_OF_INFEASABLE_PATH_I", NULL) ;
+ 
+/**
+ * Put on an infeasable path edge
+ * Mark a edge that  is into an path constrain  
+ *
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ *
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+
+Identifier<LockPtr<ListOfEdgeConflict > > EDGE_OF_INFEASABLE_PATH_I ("otawa::EDGE_OF_INFEASABLE_PATH_I", NULL) ;
 
 } // otawa

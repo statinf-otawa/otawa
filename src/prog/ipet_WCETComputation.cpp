@@ -27,6 +27,8 @@
 #include <otawa/ipet/BasicConstraintsBuilder.h>
 #include <otawa/ipet/BasicObjectFunctionBuilder.h>
 #include <otawa/ipet/FlowFactConstraintBuilder.h>
+#include <otawa/ipet/FlowFactConflictConstraintBuilder.h>//MDM
+
 #include <otawa/proc/Registry.h>
 #include <otawa/ipet/ILPSystemGetter.h>
 #include <otawa/stats/BBStatCollector.h>
@@ -45,6 +47,8 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
 	.require(CONTROL_CONSTRAINTS_FEATURE)
 	.require(OBJECT_FUNCTION_FEATURE)
 	.require(FLOW_FACTS_CONSTRAINTS_FEATURE)
+	.require(FLOW_FACTS_CONFLICT_CONSTRAINTS_FEATURE)//MDM
+	
 	.provide(WCET_FEATURE)
 	.maker<WCETComputation>();
 
