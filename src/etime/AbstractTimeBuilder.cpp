@@ -166,7 +166,8 @@ AbstractTimeBuilder::AbstractTimeBuilder(p::declare& r)
 	_predump(false),
 	_event_th(0),
 	_record(false),
-	_sys(nullptr)
+	_sys(nullptr),
+	_only_start(false)
 {
 }
 
@@ -191,6 +192,7 @@ void AbstractTimeBuilder::configure(const PropList& props) {
 	_dir = GRAPHS_OUTPUT_DIRECTORY(props);
 	if(_dir != sys::Path(""))
 		_explicit = true;
+	_only_start = ONLY_START(props);
 
 	// select components
 	if(_builder == nullptr)
@@ -282,6 +284,8 @@ void AbstractTimeBuilder::buildResources(void) {
     // build the start resource
     StartResource * new_resource = new StartResource("start", resource_index++);
     _resources.add(new_resource);
+    if(_only_start)
+    	return;
 
     // build resource for stages and FUs
     for(ParExePipeline::StageIterator stage(_proc->pipeline()); stage(); stage++) {

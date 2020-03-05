@@ -29,7 +29,6 @@ public:
 	ParExeGraph *build(ParExeSequence *seq) override;
 
 protected:
-
 	inline string comment(string com) {
 		if(isExplicit())
 			return com;

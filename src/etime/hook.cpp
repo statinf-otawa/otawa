@@ -587,6 +587,25 @@ p::feature UNIT_FEATURE("otawa::etime::UNIT_FEATURE", p::make<TimeUnitBuilder>()
 p::id<Unit *> TIME_UNIT("otawa::etime::TIME_UNIT", 0);
 
 
+/**
+ * Configuration for EDGE_TIME_FEATURE indicating that only the start resource
+ * must be computed.
+ *
+ * @ingroup etime
+ */
+p::id<bool> ONLY_START("otawa::etime::ONLY_START");
+
+
+/**
+ * Configuration for EDGE_TIME_FEATURE indicating that only the start resource
+ * must be computed.
+ *
+ * @ingroup etime
+ */
+p::id<bool> NO_ILP_OBJECTIVE("otawa::etime::NO_ILP_OBJECTIVE");
+
+
+///
 class Plugin: public ProcessorPlugin {
 public:
 	Plugin(void): ProcessorPlugin("otawa::etime", Version(1, 0, 0), OTAWA_PROC_VERSION) { }

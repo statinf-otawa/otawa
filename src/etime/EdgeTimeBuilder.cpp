@@ -1730,6 +1730,7 @@ void EdgeTimeBuilder::contributeConst(void) {
  * @p Properties
  * @li @ref LTS_TIME
  * @li @ref HTS_OFFSET
+ * @li @ref ONLY_START
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
 
