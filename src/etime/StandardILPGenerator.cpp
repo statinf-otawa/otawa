@@ -222,10 +222,16 @@ void ILPGenerator::sortEvents(Vector<EventCase>& events) {
 	class EventCaseComparator {
 	public:
 		static inline int compare(const EventCase& c1, const EventCase& c2) {
-			if(c1.part() != c2.part())
+			if(c1.part() != c2.part()){
 				return c1.part() - c2.part();
-			else
-				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+			}
+			else{
+				if (c1.event()->inst()->address() != c2.event()->inst()->address())
+					return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+				else
+					//return reinterpret_cast<intptr_t>(c2.event()->unit()) - reinterpret_cast<intptr_t>(c1.event()->unit());
+					return -Comparator<const hard::PipelineUnit *>::compare(c2.event()->unit(),c1.event()->unit());
+			}
 		}
 	};
 	elm::quicksort(events, EventCaseComparator());
