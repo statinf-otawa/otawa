@@ -65,7 +65,7 @@ public:
 	: _prob(prob), _set(set), _id(id) {
 		const CFGCollection *col = INVOLVED_CFGS(ws);
 		for(int i = 0; i < col->count();  i++)
-			for(CFG::BlockIter bb = col->get(i)->blocks(); bb; bb++)
+			for(CFG::BlockIter bb = col->get(i)->blocks(); bb(); bb++)
 				prob.init(_id(bb)[_set], prob.bottom());
 	}
 
