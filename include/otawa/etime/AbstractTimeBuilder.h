@@ -50,7 +50,7 @@ public:
 	inline Event *operator->() const { return _e; }
 	inline Inst *inst() const { return _e->inst(); }
 	inline bool isStatic() const { return _e->occurrence() == etime::ALWAYS || _e->occurrence() == etime::NEVER; }
-	inline bool isDynamic() const { return !isDynamic(); }
+	inline bool isDynamic() const { return !isStatic(); }
 
 private:
 	Event *_e;

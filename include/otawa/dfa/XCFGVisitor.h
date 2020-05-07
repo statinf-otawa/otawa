@@ -75,8 +75,8 @@ XCFGVisitor<D>::XCFGVisitor(const CFGCollection& _cfgs, D& domain)
 	
 	// Record nodes and CFG next nodes
 	int bbi = 0, cfgi = 0;
-	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++, cfgi++)
-		for(CFG::BlockIter bb = cfg->blocks(); bb; bb++, bbi++) {
+	for(CFGCollection::Iter cfg(cfgs); cfg(); cfg++, cfgi++)
+		for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++, bbi++) {
 			nodes[bbi].bb = bb;
 			nodes[bbi].cfg = cfgi;
 			if(bb->isSynth()) {
@@ -94,7 +94,7 @@ template <class D>
 XCFGVisitor<D>::~XCFGVisitor(void) {
 	
 	// Release INDEX on CFGs
-	for(CFGCollection::Iter cfg(cfgs); cfg; cfg++)
+	for(CFGCollection::Iter cfg(cfgs); cfg(); cfg++)
 		cfg->removeProp(&INDEX);
 	
 	// Free memory
@@ -115,7 +115,7 @@ void XCFGVisitor<D>::visitPreds(XIterativeDFA< XCFGVisitor<D> >& engine, int nod
 	else if(info.from != -1)
 		engine.nextPred(info.from);
 	else
-		for(BasicBlock::EdgeIter edge = info.bb->ins(); edge; edge++)
+		for(BasicBlock::EdgeIter edge = info.bb->ins(); edge(); edge++)
 			engine.nextPred(offs[info.cfg] + edge->source()->index());
 }
 

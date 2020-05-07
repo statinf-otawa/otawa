@@ -300,12 +300,16 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 
 	// look if instruction cacheL1 is available
 	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
+	if(has_il1 && logFor(LOG_CFG))
+		log << "\tevents for instruction cache L1\n";
 	has_dl1 = ws->isProvided(dcache::CONSTRAINTS_FEATURE);
 	if(has_dl1) {
 		const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
 		wb = caches->dataCache()->writePolicy() == hard::Cache::WRITE_BACK;
 		if(wb && !ws->isProvided(dcache::PURGE_FEATURE))
 			throw ProcessorException(*this, "write-back L1 data cache but no purge analysis provided (dcache::PURGE_FEATURE)!");
+		if(logFor(LOG_CFG))
+			log << "\tevents for data cache L1\n";
 	}
 
 	// look if branch prediction is available

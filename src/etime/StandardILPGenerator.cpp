@@ -222,10 +222,16 @@ void ILPGenerator::sortEvents(Vector<EventCase>& events) {
 	class EventCaseComparator {
 	public:
 		static inline int compare(const EventCase& c1, const EventCase& c2) {
-			if(c1.part() != c2.part())
+			if(c1.part() != c2.part()){
 				return c1.part() - c2.part();
-			else
-				return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+			}
+			else{
+				if (c1.event()->inst()->address() != c2.event()->inst()->address())
+					return c1.event()->inst()->address().compare(c2.event()->inst()->address());
+				else
+					//return reinterpret_cast<intptr_t>(c2.event()->unit()) - reinterpret_cast<intptr_t>(c1.event()->unit());
+					return -Comparator<const hard::PipelineUnit *>::compare(c2.event()->unit(),c1.event()->unit());
+			}
 		}
 	};
 	elm::quicksort(events, EventCaseComparator());
@@ -527,9 +533,10 @@ void StandardILPGenerator::process(Edge *e) {
 			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
 		process(e, seq, events, dyn_cnt);
 		delete seq;
+		return;
 	}
 
-	// try with remove prolog
+	// try to remove prolog
 	events.clear();
 	collectBlock(events, v);
 	sortEvents(events);
@@ -541,9 +548,12 @@ void StandardILPGenerator::process(Edge *e) {
 			seq->addLast(new ParExeInst(i, v, otawa::BLOCK, index++));
 		process(e, seq, events, dyn_cnt);
 		delete seq;
+		return;
 	}
 
 	// starting split of the block
+	if(logFor(LOG_BB))
+		log << "\t\t\ttoo many dynamic events (" << dyn_cnt << "): split required\n";
 	int ei = 0;
 	auto ii = v->insts();
 	while(ei < events.length()) {
@@ -554,30 +564,37 @@ void StandardILPGenerator::process(Edge *e) {
 		Inst *faulty = nullptr;
 		while(ei < events.length()) {
 			split_events.add(events[ei]);
-			ei++;
 			if(events[ei].isDynamic())
 				dyn_cnt++;
 			if(dyn_cnt > _eth) {
 				faulty = events[ei].inst();
 				break;
 			}
+			ei++;
 		}
 
 		// roll-back events of the faulty instruction
-		if(faulty != nullptr)
-			while(events[ei - 1].inst() == faulty) {
-				ei--;
-				if(events[ei - 1].isDynamic())
+		if(faulty != nullptr){
+			while(events[ei].inst() == faulty) {
+				if(events[ei].isDynamic())
 					dyn_cnt++;
+				ei--;
 				split_events.removeLast();
 			}
+			ei++;
+		}
 
 
 		// compute the time
 		ParExeSequence *seq = new ParExeSequence();
 		int index = 0;
-		while(ii() && (ei >= events.length() || *ii != events[ei].event()->inst()))
+		while(ii() && (ei >= events.length() || *ii != events[ei].event()->inst())) {
 			seq->addLast(new ParExeInst(*ii, v, otawa::BLOCK, index++));
+			ii++;
+		}
+		if(logFor(LOG_BB))
+			log << "\t\t\tcomputing for " << seq->first()->inst()->address()
+				<< " to " << seq->last()->inst()->address() << io::endl;
 		process(e, seq, split_events, dyn_cnt);
 		delete seq;
 	}
