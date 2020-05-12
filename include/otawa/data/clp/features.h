@@ -21,6 +21,7 @@
 #ifndef OTAWA_CLP_FEATURES_H_
 #define OTAWA_CLP_FEATURES_H_
 
+#include <otawa/cfg/BasicBlock.h>
 #include <otawa/data/clp/ClpState.h>
 #include <otawa/dfa/State.h>
 #include <otawa/prog/sem.h>

@@ -118,7 +118,7 @@ class StandardXGraphSolver: public XGraphSolver {
 public:
 	typedef t::uint32 mask_t;
 
-	StandardXGraphSolver(Monitor& mon): XGraphSolver(mon), bedge(nullptr) {
+	StandardXGraphSolver(Monitor& mon): XGraphSolver(mon), bedge(nullptr), no_ilp(false) {
 	}
 
 	/**
@@ -174,6 +174,8 @@ public:
 			set->add(Config());
 			if(logFor(LOG_BB))
 				log << "\t\t\tcost = " << cost << io::endl;
+			if(!no_ilp)
+				contributeBase(cost);
 			return;
 		}
 
@@ -266,7 +268,8 @@ public:
 		}
 
 		// process the times
-		split(entity, all_events, times);
+		if(!no_ilp)
+			split(entity, all_events, times);
 	}
 
 	/**
@@ -822,6 +825,7 @@ public:
 
 	// TODO so ugly
 	ParExeEdge *bedge;
+	bool no_ilp;
 };
 
 /**

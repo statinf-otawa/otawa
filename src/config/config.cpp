@@ -127,7 +127,7 @@ protected:
 				plugs.add(plugin);
 		}
 		else
-			throw OptionException(_ << " plugin " << arg << " cannot be found!");
+			throw otawa::Exception(_ << " plugin " << arg << " cannot be found!");
 	}
 
 	virtual void run(void) {
@@ -212,7 +212,7 @@ protected:
 							plugs.add(plugin);
 					}
 					else if(!lookupLocal(deps[i]))
-						throw option::OptionException(_ << "cannot find the plugin " << deps[i]);
+						throw otawa::Exception(_ << "cannot find the plugin " << deps[i]);
 				}
 
 				// get the name and directory

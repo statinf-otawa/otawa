@@ -542,8 +542,6 @@ void StandardILPGenerator::process(Edge *e) {
 	sortEvents(events);
 	dyn_cnt = countDyn(events);
 	if(dyn_cnt <= _eth) {
-		if(logFor(LOG_BB))
-			log << "\t\ttoo many dynamic events (" << dyn_cnt << "): remove prefix\n";
 		ParExeSequence *seq = new ParExeSequence();
 		int index = 0;
 		for(auto i: *v)
@@ -583,9 +581,8 @@ void StandardILPGenerator::process(Edge *e) {
 				ei--;
 				split_events.removeLast();
 			}
-		ei++;
+			ei++;
 		}
-			
 
 
 		// compute the time

@@ -614,11 +614,11 @@ protected:
 	void processWorkSpace(WorkSpace *ws) override {
 
 		// find the memory configuration
-		if(mem) {
+		if(mem != nullptr) {
 			if(logFor(LOG_DEPS))
 				log << "\tcustom memory configuration\n";
 		}
-		else if(xml) {
+		else if(xml != nullptr) {
 			mem = Memory::load(xml);
 			to_free = true;
 			if(logFor(LOG_DEPS))
@@ -630,14 +630,15 @@ protected:
 			mem = Memory::load(path);
 			to_free = true;
 		}
-		else if(logFor(LOG_DEPS)) {
+		else {
+			if(logFor(LOG_DEPS))
+				log << "\tno memory configuration\n";
 			mem = &Memory::full;
 			to_free = false;
-			log << "\tno memory configuration\n";
 		}
 
 		// verbose display
-		if(isVerbose() && mem)
+		if(isVerbose() && mem != nullptr)
 			for(auto b: mem->banks())
 			//for(int i = 0; i < mem->banks().count(); i++)
 				log << "\t\t" << b->name() << "\t"
