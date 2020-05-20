@@ -376,7 +376,7 @@ int Application::run(int argc, char **argv) {
 			// find the identifier
 			AbstractIdentifier *id = AbstractIdentifier::find(name);
 			if(!id) {
-				id = ProcessorPlugin::getIdentifier(&name);
+				id = ProcessorPlugin::getIdentifier(name.toCString());
 				if(!id) {
 					error(_ << " unknown identifier \"" << name << "\"");
 					failed = true;

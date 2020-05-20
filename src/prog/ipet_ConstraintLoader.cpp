@@ -418,7 +418,7 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 	// Open the file
 	if(logFor(LOG_DEPS))
 		log << "\tloading constraints from " << path << io::endl;
-	ipet_in = fopen(&path.toCString(), "r");
+	ipet_in = fopen(path.asSysString(), "r");
 	if(!ipet_in)
 		throw ProcessorException(*this, _ << "cannot open the constraint file \"" << &path << "\".");
 

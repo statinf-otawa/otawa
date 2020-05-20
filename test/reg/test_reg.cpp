@@ -68,7 +68,7 @@ int main(void) {
 		}
 		
 		// Existence test
-		const AbstractRegistration *found = Registry::find(&reg->name());
+		const AbstractRegistration *found = Registry::find(reg->name());
 		cout << "\treg = " << (void *)*reg << ", found = " << (void *)found << "\n\n";
 	}
 	

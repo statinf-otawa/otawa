@@ -118,7 +118,7 @@ DynFeature::DynFeature(string name)
  * @throw FeatureNotFound	Launched when the feature can not be resolved.
  */
 void DynFeature::init(void) const {
-	feature = ProcessorPlugin::getFeature(&_name);
+	feature = ProcessorPlugin::getFeature(_name.toCString());
 	if(!feature)
 		throw FeatureNotFound(_name);
 }

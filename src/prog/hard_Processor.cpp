@@ -573,14 +573,14 @@ const Processor Processor::null;
 hard::Processor *Processor::load(const elm::sys::Path& path) {
 	Processor *_processor = new Processor();
 	try {
-		elm::serial2::XOMUnserializer unser(&path);
+		elm::serial2::XOMUnserializer unser(path);
 		unser >> *_processor;
 		unser.flush();
 		return _processor;
 	}
 	catch(elm::io::IOException& e) {
 		delete _processor;
-		throw LoadException(&e.message());
+		throw LoadException(e.message());
 	}
 	catch(otawa::MessageException& e) {
 		ASSERT(false);
@@ -604,11 +604,11 @@ hard::Processor *Processor::load(xom::Element *element) {
 	}
 	catch(elm::io::IOException& e) {
 		delete _processor;
-		throw LoadException(&e.message());
+		throw LoadException(e.message());
 	}
 	catch(elm::Exception& e) {
 		delete _processor;
-		throw LoadException(&e.message());
+		throw LoadException(e.message());
 	}
 }
 

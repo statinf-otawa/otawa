@@ -131,17 +131,17 @@ void Output::processCFG(WorkSpace *ws, CFG *cfg) {
 	string label = cfg->label();
 	string num = _ << cfg->index();
 	string _id = id(cfg);
-	cfg_node->addAttribute(new xom::Attribute("id", &_id));
-	cfg_node->addAttribute(new xom::Attribute("address", &addr));
-	cfg_node->addAttribute(new xom::Attribute("label", &label));
-	cfg_node->addAttribute(new xom::Attribute("number", &num));
+	cfg_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("label", label.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 	processProps(cfg_node, *cfg);
 
 	// build the entry BB
 	xom::Element *entry = new xom::Element("entry");
 	cfg_node->appendChild(entry);
 	string entry_id = id(cfg->entry());
-	entry->addAttribute(new xom::Attribute("id", &entry_id));
+	entry->addAttribute(new xom::Attribute("id", entry_id.asNullTerminated()));
 	last_bb = cfg_node->getChildCount();
 
 	// usual processing
@@ -151,7 +151,7 @@ void Output::processCFG(WorkSpace *ws, CFG *cfg) {
 	xom::Element *exit = new xom::Element("exit");
 	cfg_node->insertChild(exit, last_bb);
 	string exit_id = id(cfg->exit());
-	exit->addAttribute(new xom::Attribute("id", &exit_id));
+	exit->addAttribute(new xom::Attribute("id", exit_id.asNullTerminated()));
 }
 
 
@@ -167,20 +167,20 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		string _id = id(b);
 		string num = _ << b->index();
 		cfg_node->insertChild(bb_node, last_bb++);
-		bb_node->addAttribute(new xom::Attribute("id", &_id));
-		bb_node->addAttribute(new xom::Attribute("number", &num));
+		bb_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+		bb_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 
 		// basic block specialization
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
 			string addr = _ << "0x" << bb->address();
 			string size = _ << bb->size();
-			bb_node->addAttribute(new xom::Attribute("address", &addr));
-			bb_node->addAttribute(new xom::Attribute("size", &size));
+			bb_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
+			bb_node->addAttribute(new xom::Attribute("size", size.asNullTerminated()));
 		}
 		else if(b->isSynth()) {
 			CFG *cfg = b->toSynth()->callee();
-			bb_node->addAttribute(new xom::Attribute("call", !cfg ? "" : &id(cfg)));
+			bb_node->addAttribute(new xom::Attribute("call", !cfg ? "" : id(cfg).asNullTerminated()));
 		}
 		processProps(bb_node, *b);
 
@@ -190,12 +190,12 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				xom::Element *inst_node = new xom::Element("inst");
 				bb_node->appendChild(inst_node);
 				string addr = _ << "0x" << inst->address();
-				inst_node->addAttribute(new xom::Attribute("address", &addr));
+				inst_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
 				Option<Pair<cstring, int> > line_info = ws->process()->getSourceLine(inst->address());
 				if(line_info) {
 					string line = _ << (*line_info).snd;
 					inst_node->addAttribute(new xom::Attribute("file", (*line_info).fst));
-					inst_node->addAttribute(new xom::Attribute("line", &line));
+					inst_node->addAttribute(new xom::Attribute("line", line.asNullTerminated()));
 				}
 			}
 
@@ -210,7 +210,7 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 					bb_node->appendChild(line_node);
 					line_node->addAttribute(new xom::Attribute("file", cur.fst));
 					string line = _ << cur.snd;
-					line_node->addAttribute(new xom::Attribute("line", &line));
+					line_node->addAttribute(new xom::Attribute("line", line.asNullTerminated()));
 				}
 			}
 		}
@@ -222,9 +222,9 @@ void Output::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		xom::Element *edge_node = new xom::Element("edge");
 		cfg_node->appendChild(edge_node);
 		string source = id(edge->source());
-		edge_node->addAttribute(new xom::Attribute("source", &source));
+		edge_node->addAttribute(new xom::Attribute("source", source.asNullTerminated()));
 		string target = id(edge->target());
-		edge_node->addAttribute(new xom::Attribute("target", &target));
+		edge_node->addAttribute(new xom::Attribute("target", target.asNullTerminated()));
 		processProps(edge_node, **edge);
 	}
 }
@@ -238,7 +238,7 @@ void Output::configure(const PropList& props) {
 	// scan INCLUDE
 	all = true;
 	for(Identifier<cstring>::Getter name(props, INCLUDE); name(); name++) {
-		AbstractIdentifier *id = ProcessorPlugin::getIdentifier(&*name);
+		AbstractIdentifier *id = ProcessorPlugin::getIdentifier((*name).chars());
 		if(!id)
 			log << "WARNING: cannot find identifier " << *name << ". Output will ignore it!";
 		else {
@@ -309,13 +309,13 @@ void Output::processProps(xom::Element *parent, const PropList& props) {
 			parent->appendChild(prop_node);
 
 			// add identifier attribute
-			prop_node->addAttribute(new xom::Attribute("identifier", &prop->id()->name()));
+			prop_node->addAttribute(new xom::Attribute("identifier", prop->id()->name().asNullTerminated()));
 
 			// add value
 			StringBuffer buf;
 			prop->id()->print(buf, *prop);
 			string s = buf.toString();
-			prop_node->appendChild(&s);
+			prop_node->appendChild(s.asNullTerminated());
 		}
 }
 

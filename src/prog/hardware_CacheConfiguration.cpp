@@ -106,7 +106,7 @@ CacheConfiguration *CacheConfiguration::load(elm::xom::Element *element) {
  * @return		Built cache configuration.
  */
 CacheConfiguration *CacheConfiguration::load(const elm::sys::Path& path) {
-	elm::serial2::XOMUnserializer unserializer(&path);
+	elm::serial2::XOMUnserializer unserializer(path);
 	CacheConfiguration *conf = new CacheConfiguration();
 	try {
 		unserializer >> *conf;

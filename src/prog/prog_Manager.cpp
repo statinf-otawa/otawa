@@ -405,7 +405,7 @@ WorkSpace *Manager::loadBin(
 
 	// Try to load the binary
 	resetVerbosity();
-	return new WorkSpace(loader->load(this, &path, used_props));
+	return new WorkSpace(loader->load(this, path.asSysString(), used_props));
 }
 
 
@@ -424,7 +424,7 @@ WorkSpace *Manager::loadXML(
 
 	// Load the file
 	xom::Builder builder;
-	xom::Document *doc = builder.build(&path);
+	xom::Document *doc = builder.build(path.asSysString());
 	if(!doc) {
 		resetVerbosity();
 		throw LoadException(_ << "cannot load \"" << path << "\".");

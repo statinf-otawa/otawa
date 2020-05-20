@@ -49,7 +49,7 @@ protected:
 
 	virtual void prepare(PropList &props) {
 		for(int i = 0; i < ids.count(); i++)
-			cfgio::INCLUDE(props).add(&ids[i]);
+			cfgio::INCLUDE(props).add(ids[i].toCString());
 		if(no_insts)
 			cfgio::NO_INSTS(props) = true;
 	}
@@ -63,7 +63,7 @@ protected:
 			if(a.startsWith("require:")) {
 				setTask(props, "main");
 				string n = a.substring(8);
-				AbstractFeature *f = ProcessorPlugin::getFeature(&n);
+				AbstractFeature *f = ProcessorPlugin::getFeature(n);
 				if(!f)
 					throw otawa::Exception(_ << "cannot find feature " << n);
 				else
@@ -72,7 +72,7 @@ protected:
 			else if(a.startsWith("process:")) {
 				setTask(props, "main");
 				string n = a.substring(8);
-				Processor *p = ProcessorPlugin::getProcessor(&n);
+				Processor *p = ProcessorPlugin::getProcessor(n);
 				if(!p)
 					throw otawa::Exception(_ << "cannot find feature " << n);
 				else

@@ -425,7 +425,7 @@ ilp::System *WorkSpace::newILPSystem(bool max) {
  */
 void WorkSpace::loadConfig(const elm::sys::Path& path) {
 	xom::Builder builder;
-	xom::Document *doc = builder.build(&path);
+	xom::Document *doc = builder.build(path.asSysString());
 	if(!doc)
 		throw LoadException(_ << "cannot load \"" << path << "\".");
 	xom::Element *conf = doc->getRootElement();

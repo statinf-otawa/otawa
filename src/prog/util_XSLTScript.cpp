@@ -58,7 +58,7 @@ XSLTScript::XSLTScript(const elm::sys::Path& path, Monitor& monitor, bool verbos
 
 	// open the file
 	xom::Builder builder;
-	doc = builder.build(&path);
+	doc = builder.build(path.asSysString());
 	if(!doc)
 		throw otawa::Exception(_ << "script " << path << " is not valid XML !");
 
@@ -136,7 +136,7 @@ void XSLTScript::setConfiguration(xom::Element *element) {
 				string value = (_ << '\'' << *def << '\'');
 				if(verbose)
 					log << "\t\tdefault value is " << value << io::endl;
-				param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, &value));
+				param->addAttribute(new xom::Attribute("xsl:select", XSL_URI, value.asNullTerminated()));
 			}
 			else if(verbose)
 				log << "\t\tno default value\n";

@@ -58,7 +58,7 @@ namespace otawa {
 
 template<>
 void Identifier<fmlevel_t>::fromString (PropList &props, const string &str) const {
-	int val = fmtlevel_type.valueFor(&str);
+	int val = fmtlevel_type.valueFor(str);
 	if(val >= 0)
 		set(props, fmlevel_t(val));
 	else

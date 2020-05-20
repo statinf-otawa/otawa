@@ -423,7 +423,7 @@ Memory *Memory::load(elm::xom::Element *element) {
  * @return		Built cache configuration.
  */
 Memory *Memory::load(const elm::sys::Path& path) {
-	elm::serial2::XOMUnserializer unserializer(&path);
+	elm::serial2::XOMUnserializer unserializer(path);
 	Memory *conf = new Memory();
 	try {
 		unserializer >> *conf;

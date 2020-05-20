@@ -689,7 +689,7 @@ void FlowFactLoader::loadF4(const string& path) {
 		log << "\tloading " << path << io::endl;
 
 	// Open the file
-	util_fft_in = fopen(&path, "r");
+	util_fft_in = fopen(path.asSysString(), "r");
 	if(!util_fft_in) {
 		string msg = _ << "cannot open the constraint file \"" << path << "\".";
 		if(mandatory)
@@ -1202,7 +1202,7 @@ void FlowFactLoader::loadXML(const string& path) {
 
 	// open the file
 	xom::Builder builder;
-	xom::Document *doc = builder.build(&path);
+	xom::Document *doc = builder.build(path.asSysString());
 	if(!doc)
 		throw ProcessorException(*this, _ << "cannot open " << path);
 

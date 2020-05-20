@@ -242,7 +242,7 @@ protected:
 	virtual void work(const string &entry, PropList &props) {
 
 		// Build the PCG
-		TASK_ENTRY(props) = &entry;
+		TASK_ENTRY(props) = entry;
 		workspace()->run<PCGBuilder>(props);
 		PCG *pcg = PROGRAM_CALL_GRAPH(workspace());
 		ASSERT(pcg);

@@ -873,14 +873,14 @@ void XMLOutput::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		string _id = id(b);
 		string num = _ << b->index();
 		cfg_node->insertChild(bb_node, last_bb++);
-		bb_node->addAttribute(new xom::Attribute("id", &_id));
-		bb_node->addAttribute(new xom::Attribute("number", &num));
+		bb_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+		bb_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 
 		// add the cafe babe instruction
 		xom::Element *inst_node = new xom::Element("inst");
 		bb_node->appendChild(inst_node);
 		string addr = _ << "0xCAFEBABE";
-		inst_node->addAttribute(new xom::Attribute("address", &addr));
+		inst_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
 	}
 
 	// add the output edges
@@ -888,9 +888,9 @@ void XMLOutput::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		xom::Element *edge_node = new xom::Element("edge");
 		cfg_node->appendChild(edge_node);
 		string source = id(edge->source());
-		edge_node->addAttribute(new xom::Attribute("source", &source));
+		edge_node->addAttribute(new xom::Attribute("source", source.asNullTerminated()));
 		string target = id(edge->target());
-		edge_node->addAttribute(new xom::Attribute("target", &target));
+		edge_node->addAttribute(new xom::Attribute("target", target.asNullTerminated()));
 		processProps(edge_node, **edge);
 	}
 }
@@ -915,8 +915,8 @@ protected:
 			string _id = id(b);
 			string num = _ << b->index();
 			cfg_node->insertChild(bb_node, last_bb++);
-			bb_node->addAttribute(new xom::Attribute("id", &_id));
-			bb_node->addAttribute(new xom::Attribute("number", &num));
+			bb_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+			bb_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 
 			// add the each instruction
 			if(b->isBasic()) {
@@ -924,7 +924,7 @@ protected:
 					xom::Element *inst_node = new xom::Element("inst");
 					bb_node->appendChild(inst_node);
 					string addr = _ << "0x" << inst->address();
-					inst_node->addAttribute(new xom::Attribute("address", &addr));
+					inst_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
 				}
 			}
 		}
@@ -934,9 +934,9 @@ protected:
 			xom::Element *edge_node = new xom::Element("edge");
 			cfg_node->appendChild(edge_node);
 			string source = id(edge->source());
-			edge_node->addAttribute(new xom::Attribute("source", &source));
+			edge_node->addAttribute(new xom::Attribute("source", source.asNullTerminated()));
 			string target = id(edge->target());
-			edge_node->addAttribute(new xom::Attribute("target", &target));
+			edge_node->addAttribute(new xom::Attribute("target", target.asNullTerminated()));
 			processProps(edge_node, **edge);
 		}
 	}

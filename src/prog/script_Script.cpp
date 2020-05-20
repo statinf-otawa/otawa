@@ -357,7 +357,7 @@ void Script::work(WorkSpace *ws) {
 
 	// load the script
 	xom::Builder builder;
-	xom::Document *doc = builder.build(&path);
+	xom::Document *doc = builder.build(path.asSysString());
 	if(!doc)
 		throw otawa::Exception(_ << "script " << path << " is not valid XML !");
 	xom::XIncluder::resolveInPlace(doc);

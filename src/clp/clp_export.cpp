@@ -132,17 +132,17 @@ void CLPExport::processCFG(WorkSpace *ws, CFG *cfg) {
 	string label = cfg->label();
 	string num = _ << cfg->index();
 	string _id = id(cfg);
-	cfg_node->addAttribute(new xom::Attribute("id", &_id));
-	cfg_node->addAttribute(new xom::Attribute("address", &addr));
-	cfg_node->addAttribute(new xom::Attribute("label", &label));
-	cfg_node->addAttribute(new xom::Attribute("number", &num));
+	cfg_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("label", label.asNullTerminated()));
+	cfg_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 	//processProps(cfg_node, *cfg);
 
 	// build the entry BB
 	xom::Element *entry = new xom::Element("entry");
 	cfg_node->appendChild(entry);
 	string entry_id = id(cfg->entry());
-	entry->addAttribute(new xom::Attribute("id", &entry_id));
+	entry->addAttribute(new xom::Attribute("id", entry_id.asNullTerminated()));
 	last_bb = cfg_node->getChildCount();
 
 	// usual processing
@@ -152,7 +152,7 @@ void CLPExport::processCFG(WorkSpace *ws, CFG *cfg) {
 	xom::Element *exit = new xom::Element("exit");
 	cfg_node->insertChild(exit, last_bb);
 	string exit_id = id(cfg->exit());
-	exit->addAttribute(new xom::Attribute("id", &exit_id));
+	exit->addAttribute(new xom::Attribute("id", exit_id.asNullTerminated()));
 }
 
 
@@ -168,16 +168,16 @@ void CLPExport::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		string _id = id(b);
 		string num = _ << b->index();
 		cfg_node->insertChild(bb_node, last_bb++);
-		bb_node->addAttribute(new xom::Attribute("id", &_id));
-		bb_node->addAttribute(new xom::Attribute("number", &num));
+		bb_node->addAttribute(new xom::Attribute("id", _id.asNullTerminated()));
+		bb_node->addAttribute(new xom::Attribute("number", num.asNullTerminated()));
 
 		// basic block specialization
 		if(b->isBasic()) {
 			BasicBlock *bb = b->toBasic();
 			string addr = _ << "0x" << bb->address();
 			string size = _ << bb->size();
-			bb_node->addAttribute(new xom::Attribute("address", &addr));
-			bb_node->addAttribute(new xom::Attribute("size", &size));
+			bb_node->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
+			bb_node->addAttribute(new xom::Attribute("size", size.asNullTerminated()));
 
 			// now for each instruction
 			for(BasicBlock::InstIter bbii(bb); bbii(); bbii++) {
@@ -185,8 +185,8 @@ void CLPExport::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 				bb_node->appendChild(instNode);
 				string addr = _ << "0x" << bbii->address();
 				string size = _ << bbii->size();
-				instNode->addAttribute(new xom::Attribute("address", &addr));
-				instNode->addAttribute(new xom::Attribute("size", &size));
+				instNode->addAttribute(new xom::Attribute("address", addr.asNullTerminated()));
+				instNode->addAttribute(new xom::Attribute("size", size.asNullTerminated()));
 				processProps(instNode, **bbii);
 			}
 
@@ -194,7 +194,7 @@ void CLPExport::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		}
 		else if(b->isSynth()) {
 			CFG *cfg = b->toSynth()->callee();
-			bb_node->addAttribute(new xom::Attribute("call", !cfg ? "" : &id(cfg)));
+			bb_node->addAttribute(new xom::Attribute("call", !cfg ? "" : id(cfg).asNullTerminated()));
 		}
 		processProps(bb_node, *b);
 	}
@@ -264,23 +264,23 @@ void CLPExport::processState(xom::Element *parent, const clp::State& clpState) {
 				StringBuffer buf;
 				buf << clpsi.id().lower();
 				String str = buf.toString();
-				nodeReg->addAttribute(new xom::Attribute("id", &str ));
+				nodeReg->addAttribute(new xom::Attribute("id", str.asNullTerminated()));
 				parent->appendChild(nodeReg);
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).lower());
 				str = buf.toString();
-				nodeReg->addAttribute(new xom::Attribute("base", &str));
+				nodeReg->addAttribute(new xom::Attribute("base", str.asNullTerminated()));
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).delta());
 				str = buf.toString();
-				nodeReg->addAttribute(new xom::Attribute("delta", &str));
+				nodeReg->addAttribute(new xom::Attribute("delta", str.asNullTerminated()));
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).mtimes());
 				str = buf.toString();
-				nodeReg->addAttribute(new xom::Attribute("mtimes", &str));
+				nodeReg->addAttribute(new xom::Attribute("mtimes", str.asNullTerminated()));
 			}
 		}
 		else { // memory
@@ -289,23 +289,23 @@ void CLPExport::processState(xom::Element *parent, const clp::State& clpState) {
 				StringBuffer buf;
 				buf << clpsi.id().lower();
 				String str = buf.toString();
-				nodeMem->addAttribute(new xom::Attribute("addr", &str ));
+				nodeMem->addAttribute(new xom::Attribute("addr", str.asNullTerminated()));
 				parent->appendChild(nodeMem);
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).lower());
 				str = buf.toString();
-				nodeMem->addAttribute(new xom::Attribute("base", &str));
+				nodeMem->addAttribute(new xom::Attribute("base", str.asNullTerminated()));
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).delta());
 				str = buf.toString();
-				nodeMem->addAttribute(new xom::Attribute("delta", &str));
+				nodeMem->addAttribute(new xom::Attribute("delta", str.asNullTerminated()));
 
 				buf.reset();
 				buf << "0x" << hex((*clpsi).mtimes());
 				str = buf.toString();
-				nodeMem->addAttribute(new xom::Attribute("mtimes", &str));
+				nodeMem->addAttribute(new xom::Attribute("mtimes", str.asNullTerminated()));
 			}
 		}
 	}

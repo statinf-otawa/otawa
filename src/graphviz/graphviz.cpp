@@ -247,7 +247,7 @@ public:
 			builder.addArgument(outputOption());
 			if(_path) {
 				builder.addArgument("-o");
-				builder.addArgument(&_path);
+				builder.addArgument(_path.asSysString());
 			}
 			Pair<sys::SystemInStream *, sys::SystemOutStream *> pipe = sys::System::pipe();
 			builder.setInput(pipe.fst);
