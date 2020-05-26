@@ -21,7 +21,7 @@
  */
 #ifndef OTAWA_UTIL_FLOW_FACT_LOADER_H
 #define OTAWA_UTIL_FLOW_FACT_LOADER_H
-
+#include <otawa/flowfact/conflict.h>
 #include <elm/data/Vector.h>
 #include <elm/io.h>
 #include <elm/string.h>
@@ -80,6 +80,9 @@ protected:
 	virtual void onMultiCall(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
 	virtual void onIgnoreEntry(string name);
+	virtual void onInfeasablePath( address_t addr,const ContextualPath& path);  
+    virtual int containsNotALL(xom::Element *element); 
+	
 	virtual void onForceBranch(Address address);
 	virtual void onForceCall(Address address);
 
@@ -108,6 +111,11 @@ private:
 	bool lines_available;
 	dfa::State *state;
 	bool lib;
+	Vector<int> numListOfUnclosedPath; 
+	int currentCteNum; 
+	int numOfEdgeIntoCurrentCte; 
+	bool intoConflictPath; 
+
 
 	// F4 support
 	void loadF4(const string& path);
@@ -136,6 +144,9 @@ private:
 	void scanIgnoreControl(xom::Element *element, ContextualPath& cpath);
 	void scanIgnoreSeq(xom::Element *element, ContextualPath& cpath);
 	dfa::Value scanValue(xom::Element *element);
+	void scanXNotAll(xom::Element *element, ContextualPath& cpath);  
+	void scanEdge(xom::Element* edge,  ContextualPath& cpath  ); 
+	void getQualifierAnd(xom::Element * element, Inst *inst, int *nbPath, bool nextLoop, ContextualPath& path, Vector< LoopOfConflict >  & infoLoop); 
 	void scanMemAccess(xom::Element *element);
 	void scanRegSet(xom::Element *element, dfa::State* state);
 	void scanMemSet(xom::Element *element, dfa::State* state);

@@ -38,6 +38,13 @@ private:
 	bool lines_available;
 	int total_loop, found_loop, line_loop;
 	int max, total, min;
+	bool isIntoConstraint;//MDM 
+	/*genstruct::*/Vector<  Block *> seenFunction;//MDM endListContraint
+	/*genstruct::*/Vector <Pair < ContextualPath, ContextualPath> >  ListOfPathOfBenginingOfConstraint;//MDM  
+
+	 
+	void transferConflict(Inst *source, /*BasicBlock*/Block *bb, const ContextualPath& path, bool intoLoop);//MDM
+	
 	DomInfo *dom;
 
 	bool scan(Block *v, Block *t, const ContextualPath& path);

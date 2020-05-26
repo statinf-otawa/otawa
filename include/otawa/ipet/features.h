@@ -67,6 +67,8 @@ extern Identifier<otawa::ilp::Constraint *> CALLING_CONSTRAINT;
 
 extern p::feature FLOW_FACTS_CONSTRAINTS_FEATURE;
 
+extern p::feature FLOW_FACTS_CONFLICT_CONSTRAINTS_FEATURE;  // conflict MDM
+
 extern p::feature FLOW_FACTS_FEATURE;
 
 extern p::id<bool> MAXIMIZE;

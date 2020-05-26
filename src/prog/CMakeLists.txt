@@ -95,6 +95,7 @@ set(libotawa_SOURCES
 	"ipet_ConstraintLoader.cpp"
 	"ipet_FlowFactLoader.cpp"
 	"ipet_FlowFactConstraintBuilder.cpp"
+	"ipet_FlowFactConflictConstraintBuilder.cpp"
 	"ipet_ILPSystemGetter.cpp"
 	"ipet_IPET.cpp"
 	"ipet_VarAssignment.cpp"

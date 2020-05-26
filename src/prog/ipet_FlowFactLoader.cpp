@@ -25,11 +25,13 @@
 #include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/Loop.h>
 #include <otawa/flowfact/features.h>
+#include <otawa/flowfact/conflict.h>  
 #include <otawa/ipet/FlowFactLoader.h>
 #include <otawa/ipet/IPET.h>
 #include <otawa/proc/ProcessorException.h>
 #include <otawa/prog/Inst.h>
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/flowfact/FlowFactLoader.h>
+#include <otawa/ipet/FlowFactLoader.h>
 
 namespace otawa { namespace ipet {
 
@@ -68,9 +70,130 @@ FlowFactLoader::FlowFactLoader(p::declare& r)
  	max(0),
  	total(0),
  	min(0),
+ 	isIntoConstraint(false),
 	dom(nullptr)
 {
 }
+
+
+/**
+ * One edge may be present on many conflict and be anotated for several contextual path (partial 
+ * @param 	path current path
+ * @param 	ListOfPathOfBenginingOfConstraint
+ * @return	list of compatibles path	
+ */
+ 
+Vector  < Pair<ContextualPath,ContextualPath >  > getListOfCompatiblePath(const ContextualPath& path , /*genstruct::*/Vector  < Pair<ContextualPath,ContextualPath > >&ListOfPathOfBenginingOfConstraint){
+	 Vector < Pair<ContextualPath,ContextualPath >  > res;
+	int lg = ListOfPathOfBenginingOfConstraint.length();
+	for(int i=0;i<lg;i++){
+		Pair<ContextualPath,ContextualPath >  current = ListOfPathOfBenginingOfConstraint.get(i);
+		 
+		bool isCompa = true;
+		for (int j=0;isCompa && j<current.fst.count();j++){
+			if (path[j] != current.fst[j]) isCompa = false;
+		}
+		if (isCompa) res.push(current);
+	}
+	return res;
+}
+
+
+/**
+ * One edge may be present on many conflict and be anotated for several contextual path (partial
+ * @param current one of compatible path	 
+ * @param 	path currnt complet  path
+ * @param 	currentIncomplet created partial path from the precedents one 		
+ */
+void consCurrentContextualPath(const Pair<ContextualPath,ContextualPath >  &current,const ContextualPath& path,	ContextualPath &currentIncomplet ){
+	int lgffx = current.fst.count() ;
+	int cp =0;
+	
+	for(  cp = 0 ;cp <lgffx && current.fst[cp] !=  current.snd[0];  cp ++ );//find beggining of ffx
+	for( cp++ ;cp <path.count(); currentIncomplet.push(path[cp]), cp ++ );//cp++ bug
+ 	
+}
+
+/**
+ * Transfer conflict flow information from the given source instruction to the given BB.
+ * @param source	Source instruction.
+ * @param bb		Target BB.
+ * @param path	    Current path
+ * @param intoLoop     
+ */
+void FlowFactLoader::transferConflict(Inst *source, otawa::Block *b, const ContextualPath& path, bool intoLoop){  
+	BasicBlock * bb=b->toBasic();
+	  
+	LockPtr<ConflictOfPath > 	currentCteNum = path(INFEASABLE_PATH, source) ; 
+	
+	if (currentCteNum ){	 
+
+	 	isIntoConstraint = true;
+		INFEASABLE_PATH(bb)= currentCteNum;
+		ListOfPathOfBenginingOfConstraint.push(Pair<ContextualPath,ContextualPath >(path,currentCteNum->getIPath()) );
+	}
+	
+	
+	if (!seenFunction.contains(b)) {  
+		LockPtr<ListOfEndConflict> currentCteEndNum = path(INFEASABLE_PATH_END, source) ; 
+		if ( currentCteEndNum  ){
+			seenFunction.push(b);   
+			INFEASABLE_PATH_END(bb)= currentCteEndNum;
+		}
+	}	
+		 	 
+ 	if (isIntoConstraint) {
+		//seach all begining of conflict path matching with current path
+		Vector  < Pair<ContextualPath,ContextualPath > > pathList =  getListOfCompatiblePath( path ,  ListOfPathOfBenginingOfConstraint);
+			
+		int lg = pathList.length();
+		LockPtr <ListOfEdgeConflict > edgeInfo = new ListOfEdgeConflict() ;	// generate o new vector to merge into;
+		LockPtr <ListOfLoopConflict > loopInfo = (intoLoop ? new ListOfLoopConflict():NULL);	// generate o new vector to merge into;
+        bool hasSomething = false;
+        bool hasLoop = false;
+ 
+ 		for (int i = 0; i< 	lg;i++) { //for each matching sub path
+			Pair<ContextualPath,ContextualPath >  current;
+			ContextualPath currentIncomplet; 
+			if (lg>1 ) {
+				current = pathList.get(i); 
+				if (lg>1 && current.fst.count() < path.count())  consCurrentContextualPath(current,path,	currentIncomplet );
+				else currentIncomplet = path;
+			}else currentIncomplet = path;	
+				
+			//transfert loop info into conflict   
+			if(intoLoop){
+				LockPtr <ListOfLoopConflict > loopInfoForConflict  = currentIncomplet.ref(LOOP_OF_INFEASABLE_PATH_I, source);
+					
+				if (loopInfoForConflict&&loopInfoForConflict->length()>0) {
+					int lg2= loopInfoForConflict->length();
+					hasLoop = true;
+					for (int itoMerge=0; itoMerge<lg2;itoMerge++){//merge
+						LoopOfConflict loop = loopInfoForConflict->get(itoMerge);
+						loopInfo->push( loop); 
+					}	 
+				}	 
+			}
+			//transfert edge of loop info into conflict 
+			LockPtr<ListOfEdgeConflict > edgeInfoCur;
+			for(BasicBlock::InstIter inst = bb->insts(); inst(); inst++){ 
+				edgeInfoCur = currentIncomplet(EDGE_OF_INFEASABLE_PATH_I, *inst)  ;
+									
+				if (edgeInfoCur&&edgeInfoCur->length()>0) {				 
+					int lg2= edgeInfoCur->length();
+					hasSomething= true;
+					for (int itoMerge=0; itoMerge<lg2;itoMerge++){
+						 LockPtr<EdgeInfoOfConflict> ed = edgeInfoCur->get(itoMerge);
+						edgeInfo->push( ed);
+					}	 
+				}					
+			} 
+		}
+			
+		if (hasSomething)	  EDGE_OF_INFEASABLE_PATH_I(bb)= edgeInfo;
+		if (intoLoop && hasLoop)	   LOOP_OF_INFEASABLE_PATH_I(bb)= loopInfo;
+	}
+} 
 
 
 /**
@@ -81,6 +204,7 @@ FlowFactLoader::FlowFactLoader(p::declare& r)
  */
 bool FlowFactLoader::transfer(Inst *source, Block *bb, const ContextualPath& path) {
 	bool all = true;
+	transferConflict( source,  bb,   path, true); 
 
 	// look for MAX_ITERATION
 	if(max < 0) {
@@ -187,6 +311,14 @@ bool FlowFactLoader::lookLineAt(Inst *inst, Block *bb, const ContextualPath& pat
  */
 void FlowFactLoader::processBB(WorkSpace *ws, CFG *cfg, Block *b, const ContextualPath& path) {
 
+	 
+	
+	if(  !LOOP_HEADER(b)&& b->isBasic()) { 
+		BasicBlock::InstIter source(b->toBasic());	 
+		transferConflict( *source,  b,   path, false); 
+	}
+	
+	
 	// only for loop headers
 	if(!LOOP_HEADER(b))
 		return;
