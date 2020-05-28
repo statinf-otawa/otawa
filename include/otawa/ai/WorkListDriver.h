@@ -236,7 +236,7 @@ public:
 	OrderedDriver(D& dom, const G& graph, S& store, O *order)
 	: _dom(dom), _graph(graph), _store(store), wl_set(graph.count()), end(false), _order(order) {
 		store.set(_graph.entry(), dom.init());
-		for(typename G::Successor succ(graph, _graph.entry()); succ; succ++)
+		for(typename G::Successor succ(graph, _graph.entry()); succ(); succ++)
 			push(graph.sinkOf(*succ));
 		next();
 	}
@@ -274,7 +274,7 @@ public:
 	 * (and successors must be updated).
 	 */
 	inline void change(void) {
-		for(typename G::Successor succ(_graph, cur); succ; succ++)
+		for(typename G::Successor succ(_graph, cur); succ(); succ++)
 			push(*succ);
 	}
 
@@ -354,7 +354,7 @@ public:
 	 */
 	inline typename D::t input(vertex_t vertex) {
 		typename D::t s = _dom.bot();
-		for(typename G::Predecessor pred(_graph, vertex); pred; pred++) {
+		for(typename G::Predecessor pred(_graph, vertex); pred(); pred++) {
 			s = _dom.join(s, _store.get(*pred));
 		}
 		return s;
