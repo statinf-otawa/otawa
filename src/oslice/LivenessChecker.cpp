@@ -61,7 +61,9 @@ LivenessChecker::LivenessChecker(AbstractRegistration& _reg) : otawa::Processor(
 void LivenessChecker::configure(const PropList &props) {
 	Processor::configure(props);
 	_debugLevel = LIVENESS_DEBUG_LEVEL(props);
-	LIVENESS_DEBUG_LEVEL(workspace()) = _debugLevel;
+	if (workspace() != nullptr) {
+		LIVENESS_DEBUG_LEVEL(workspace()) = _debugLevel;
+	}
 }
 
 /**
