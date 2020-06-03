@@ -178,13 +178,17 @@ void DiGraphBuilder::add(Vertex *v) {
  * @param v		Source vertex.
  * @param w		Sink vertex.
  * @param e		Edge.
+ * @param off	If set to true (default false), the edge is not recorded
+ * 				in sink and source edge.
  */
-void DiGraphBuilder::add(Vertex *v, Vertex *w, Edge *e) {
+void DiGraphBuilder::add(Vertex *v, Vertex *w, Edge *e, bool off) {
 	ASSERTP(_g, "graph is not yet built!");
 	e->src = v;
 	e->snk = w;
-	v->_outs.add(e);
-	w->_ins.add(e);
+	if(!off) {
+		v->_outs.add(e);
+		w->_ins.add(e);
+	}
 }
 
 

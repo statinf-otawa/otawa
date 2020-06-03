@@ -357,7 +357,7 @@ WorkSpace *Manager::loadBin(
 
 	// Try with gel
 	if(!loader) {
-		gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
+		gel_file_t *file = gel_open(path.asSysString(), 0, GEL_OPEN_QUIET);
 		if(!file) {
 			resetVerbosity();
 			throw LoadException(gel_strerror());

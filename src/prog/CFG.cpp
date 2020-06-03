@@ -433,7 +433,11 @@ io::Output& operator<<(io::Output& out, Block *block) {
  * Build a synthetic block.
  * @param type		Type of block (it will be at least marked as synthetic).
  */
-SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0) {
+SynthBlock::SynthBlock(t::uint32 type):
+	Block(type | IS_SYNTH), _callee(0),
+	_call(Edge::CALL),
+	_ret(Edge::RETURN)
+{
 }
 
 
@@ -932,8 +936,13 @@ CFG *CFGMaker::build(void) {
  */
 void CFGMaker::call(SynthBlock *v, CFG *callee) {
 	v->_callee = callee;
-	if(callee != nullptr)
+	if(callee != nullptr) {
 		callee->_callers.add(v);
+		graph::GenDiGraphBuilder<Block, Edge>::add(v, callee->entry(), v->callEdge(), true);
+		graph::GenDiGraphBuilder<Block, Edge>::add(callee->exit(), v, v->returnEdge(), true);
+		callee->entry();
+		callee->exit();
+	}
 	add(v);
 }
 
@@ -948,9 +957,13 @@ void CFGMaker::add(Block *v) {
  * @param v		Added synthetic block.
  * @param maker	Maker of the CFG.
  */
-void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
+void CFGMaker::call(SynthBlock *v, CFGMaker& maker) {
 	v->_callee = maker.cfg;
 	maker.cfg->_callers.add(v);
+	graph::GenDiGraphBuilder<Block, Edge>::add(v, maker.entry(), v->callEdge(), true);
+	graph::GenDiGraphBuilder<Block, Edge>::add(maker.exit(), v, v->returnEdge(), true);
+	maker.entry();
+	maker.exit();
 	add(v);
 }
 

@@ -44,14 +44,21 @@ class Edge: public PropList, public graph::GenEdge<Block, Edge> {
 public:
 	inline Edge(t::uint32 flags): _flags(flags) { }
 	inline Block *target(void) const { return sink(); }
-	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN & !isBoth(); }
-	inline bool isTaken(void) const { return !isNotTaken() & !isBoth(); }
-	inline bool isBoth(void) const { return (_flags & TAKEN) && (_flags & NOT_TAKEN); }
+
 	inline t::uint32 flags(void) const { return _flags; }
-	static const t::uint32 NOT_TAKEN = 0x00000001;
-	static const t::uint32 TAKEN = 0x00000002;	// if the PC is altered
+	static const t::uint32 NOT_TAKEN	= 0x00000001;
+	static const t::uint32 TAKEN		= 0x00000002;	// if the PC is altered
+	static const t::uint32 CALL			= 0x00000004;
+	static const t::uint32 RETURN		= 0x00000008;
+	inline bool isNotTaken(void) const { return _flags & NOT_TAKEN & !isBoth(); }
+	inline bool isTaken() const { return !isNotTaken() & !isBoth(); }
+	inline bool isBoth() const { return (_flags & TAKEN) && (_flags & NOT_TAKEN); }
+	inline bool isCall() const { return (_flags & CALL) != 0; }
+	inline bool isReturn() const { return (_flags & RETURN) != 0; }
+
 	inline bool isForward(void) const;
 	inline bool isBackward(void) const { return !isForward(); }
+
 private:
 	t::uint32 _flags;
 };
@@ -112,12 +119,15 @@ class SynthBlock: public Block {
 	friend class CFGMaker;
 public:
 	SynthBlock(t::uint32 type = IS_CALL);
-	inline CFG *callee(void) const { return _callee; }
-	inline CFG *caller(void) const { return cfg(); }
+	inline CFG *callee() const { return _callee; }
+	inline CFG *caller() const { return cfg(); }
+	inline Edge *callEdge() { return &_call; }
+	inline Edge *returnEdge() { return &_ret; }
 	Inst *callInst(void);
 	inline Address address(void) const;
 private:
-	CFG *_callee;
+	CFG *_callee;	// obsolete
+	Edge _call, _ret;
 };
 
 
@@ -231,7 +241,6 @@ inline io::Output& operator<<(io::Output& out, const CFG::BlockIter& i) { return
 
 
 // delayed inlines
-//inline Block *Edge::target(void) const	{ return sink(); }
 inline bool Edge::isForward(void) const { ASSERT(isTaken()); return source()->address() < sink()->address(); }
 inline int Block::id(void) const { return index() + _cfg->offset(); }
 inline BasicBlock *Block::toBasic(void) { ASSERT(isBasic()); return static_cast<BasicBlock *>(this); }
@@ -254,7 +263,7 @@ public:
 	CFG *build(void);
 	void add(Block *v);
 	void call(SynthBlock *v, CFG *cfg);
-	void call(SynthBlock *v, const CFGMaker& cfg);
+	void call(SynthBlock *v, CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { graph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
 	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
 	int count(void);
