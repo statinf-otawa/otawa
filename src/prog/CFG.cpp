@@ -796,6 +796,14 @@ void CFG::clean(const AbstractIdentifier& id) {
 
 
 /**
+ * @fn bool CFG::isTop() const;
+ * Test if the current CFG is the top CFG, that is, the CFG representing
+ * the start of the analysis (usually of a task).
+ * @return	True if the CFG is the top one, false else.
+ */
+
+
+/**
  * @fn int CFG::index(void) const;
  * Get index of the CFG in the current task.
  * @return	CFG index.

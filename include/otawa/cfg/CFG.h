@@ -224,6 +224,7 @@ public:
 	inline const List<SynthBlock *>& callers(void) const { return _callers; }
 	int callCount(void) const;
 	void clean(const AbstractIdentifier& id);
+	inline bool isTop() const { return idx == 0; }
 
 private:
 	CFG(Inst *first, type_t type = SUBPROG);
