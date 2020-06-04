@@ -44,7 +44,7 @@ public:
 	}
 
 	void set(vertex_t v, t s) {
-		for(auto e =_graph.succs(v); e; e++)
+		for(typename G::Successor e(_graph, v); e(); e++)
 			map.put(*e, s);
 	}
 
@@ -52,7 +52,7 @@ public:
 
 	t get(vertex_t v) const {
 		t s = _dom.bot();
-		for(auto e =_graph.succs(v); e; e++)
+		for(typename G::Successor e(_graph, v); e(); e++)
 			_dom.join(s, map.get(e, _dom.bot()));
 		return s;
 	}
