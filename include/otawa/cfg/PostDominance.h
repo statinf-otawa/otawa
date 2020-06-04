@@ -26,13 +26,17 @@
 
 namespace otawa {
 
-class PostDominance: public CFGProcessor {
+class PostDominance: public CFGProcessor, public PostDomInfo {
 public:
 	static p::declare reg;
 	PostDominance(p::declare& r = reg);
 
+	bool pdom(Block *b1, Block *b2) override;
+	void *interfaceFor(const AbstractFeature& feature) override;
+
 protected:
-	virtual void processCFG(WorkSpace *fw, CFG *cfg);
+	void processCFG(WorkSpace *fw, CFG *cfg) override;
+	void destroyCFG(WorkSpace *ws, CFG *g) override;
 };
 
 } // otawa

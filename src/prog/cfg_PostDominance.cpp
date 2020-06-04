@@ -138,6 +138,27 @@ void PostDominance::processCFG(WorkSpace *fw, CFG *cfg) {
 	}
 }
 
+///
+bool PostDominance::pdom(Block *b1, Block *b2) {
+	ASSERT(b1);
+	ASSERT(b2);
+	const BitSet *set = REVERSE_POSTDOM(b2);
+	ASSERT(set);
+	return set->contains(b1->index());
+}
+
+///
+void *PostDominance::interfaceFor(const AbstractFeature& feature) {
+	if(&feature == &POSTDOMINANCE_FEATURE)
+		return static_cast<PostDomInfo *>(this);
+	else
+		return nullptr;
+}
+
+///
+void PostDominance::destroyCFG(WorkSpace *ws, CFG *g) {
+	g->clean(REVERSE_POSTDOM);
+}
 
 /**
  */
@@ -168,7 +189,7 @@ PostDominance::PostDominance(p::declare& r): CFGProcessor(reg) {
  * @par Properties
  * @li @ref REVERSE_DOM (BasicBlock)
  */
-p::feature POSTDOMINANCE_FEATURE("otawa::POSTDOMINANCE_FEATURE", new Maker<PostDominance>());
+p::interfaced_feature<PostDomInfo> POSTDOMINANCE_FEATURE("otawa::POSTDOMINANCE_FEATURE", new Maker<PostDominance>());
 
 /**
  * Provide post-domination information.
