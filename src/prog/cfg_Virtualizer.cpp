@@ -322,8 +322,18 @@ void Virtualizer::make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Opt
 
 	// add edges
 	for(CFG::BlockIter v = cfg->blocks(); v(); v++)
-		for(BasicBlock::EdgeIter e = v->outs(); e(); e++)
-			maker.add(bmap.get(e->source()), bmap.get(e->sink()), new Edge(e->flags()));
+		for(BasicBlock::EdgeIter e = v->outs(); e(); e++) {
+			auto flags = e->flags();
+			Block *nsrc = bmap.get(e->source());
+			Block *nsnk = bmap.get(e->sink());
+			if((flags & (Edge::CALL | Edge::RETURN)) != 0) {
+				if((flags & Edge::CALL) != 0 && !nsnk->isSynth())
+					flags &= ~Edge::CALL;
+				if((flags & Edge::RETURN) != 0 && !nsrc->isSynth())
+					flags &= ~Edge::RETURN;
+			}
+			maker.add(nsrc, nsnk, new Edge(flags));
+		}
 
 	// leaving call
 	if(logFor(LOG_CFG))

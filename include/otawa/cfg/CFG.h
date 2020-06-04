@@ -121,13 +121,10 @@ public:
 	SynthBlock(t::uint32 type = IS_CALL);
 	inline CFG *callee() const { return _callee; }
 	inline CFG *caller() const { return cfg(); }
-	inline Edge *callEdge() { return &_call; }
-	inline Edge *returnEdge() { return &_ret; }
 	Inst *callInst(void);
 	inline Address address(void) const;
 private:
-	CFG *_callee;	// obsolete
-	Edge _call, _ret;
+	CFG *_callee;
 };
 
 
