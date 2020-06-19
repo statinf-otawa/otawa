@@ -353,7 +353,8 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 		case hard::Stage::EXEC:
 			policy = ostages[i]->isOrdered() ? ParExeStage::IN_ORDER : ParExeStage::OUT_OF_ORDER;
 			category = ParExeStage::EXECUTE;
-			latency = 0;
+			if(!hstage->getFUs().isEmpty())
+				latency = 0;
 			break;
 		case hard::Stage::COMMIT:
 			category = ParExeStage::COMMIT;
