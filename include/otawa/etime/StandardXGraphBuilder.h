@@ -19,6 +19,8 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef OTAWA_ETIME_STANDARDXGRAPHBUILDER_H_
+#define OTAWA_ETIME_STANDARDXGRAPHBUILDER_H_
 #include <otawa/etime/AbstractTimeBuilder.h>
 
 namespace otawa { namespace etime {
@@ -56,3 +58,4 @@ protected:
 
 } }	// otawa::etime
 
+#endif  /* OTAWA_ETIME_STANDARDXGRAPHBUILDER_H_ */
