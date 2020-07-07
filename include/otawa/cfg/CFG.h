@@ -322,7 +322,7 @@ private:
 
 
 // exit access
-extern Identifier<elm::Vector<Edge*> *> EXIT_LIST;
+extern p::id<elm::Vector<Edge*> *> EXIT_LIST;
 class EXIT_EDGES {
 public:
 	inline EXIT_EDGES(const Block *b): _b(b) { ASSERT(b->hasProp(EXIT_LIST)); }
