@@ -3416,8 +3416,8 @@ void Analysis::setup(WorkSpace *ws) {
  */
 void Analysis::processWorkSpace(WorkSpace *ws) {
 	otawa::clp::PF = ws->platform();
-	clock_t clockWorkSpace;
-	clockWorkSpace = clock();
+	//clock_t clockWorkSpace;
+	//clockWorkSpace = clock();
 
 	sys::StopWatch watchWorkSpace;
 	watchWorkSpace.start();
@@ -3524,9 +3524,9 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	_nb_top_filters = prob.get_nb_top_filters();
 	_nb_top_load = prob.get_nb_top_load();
 
-	clockWorkSpace = clock() - clockWorkSpace;
-	if(verbose)
-		elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob.get_nb_clp_bb_count() << " blocks" << io::endl;
+	//clockWorkSpace = clock() - clockWorkSpace;
+	//if(verbose)
+	//	elm::cerr << "CLP Analyse takes " << clockWorkSpace << " micro-seconds for processing " << prob.get_nb_clp_bb_count() << " blocks" << io::endl;
 
 //	watchWorkSpace.stop();
 //	otawa::ot::time t = watchWorkSpace.delay();

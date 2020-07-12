@@ -209,8 +209,8 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	}
 
 	// start measuring the time taken by the slicer
-	clock_t clockWorkSpace;
-	clockWorkSpace = clock();
+//	clock_t clockWorkSpace;
+//	clockWorkSpace = clock();
 //	system::StopWatch watchWorkSpace;
 //	watchWorkSpace.start();
 
@@ -298,15 +298,15 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 		}
 	}
 
-	clock_t clockWorkCFGReconstruction;
-	clockWorkCFGReconstruction = clock();
+//	clock_t clockWorkCFGReconstruction;
+//	clockWorkCFGReconstruction = clock();
 //	system::StopWatch watchWorkCFGReconstruction;
 //	watchWorkCFGReconstruction.start();
 
 	slicing();
 
-	clockWorkCFGReconstruction = clock() - clockWorkCFGReconstruction;
-	elm::cerr << "CFG SLI takes " << clockWorkCFGReconstruction << " micro-seconds" << io::endl;
+//	clockWorkCFGReconstruction = clock() - clockWorkCFGReconstruction;
+//	elm::cerr << "CFG SLI takes " << clockWorkCFGReconstruction << " micro-seconds" << io::endl;
 
 	if(_outputCFG) {
 		for(CFGCollection::Iter cfg(sliced_coll); cfg(); cfg++) {
@@ -333,10 +333,10 @@ void Slicer::processWorkSpace(WorkSpace *fw) {
 	}
 
 
-	clockWorkSpace = clock() - clockWorkSpace;
+//	clockWorkSpace = clock() - clockWorkSpace;
 //	watchWorkCFGReconstruction.stop();
 //	otawa::ot::time t2 = watchWorkCFGReconstruction.delay();
-	elm::cerr << "OSlicer takes " << clockWorkSpace << " micro-seconds" << io::endl;
+//	elm::cerr << "OSlicer takes " << clockWorkSpace << " micro-seconds" << io::endl;
 
 	// compute how many instructions after slicing
 	{
