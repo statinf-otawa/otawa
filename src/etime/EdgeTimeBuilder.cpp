@@ -578,6 +578,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// perform the computation
 		processSequence();
+		delete seq;
 		return;
 	}
 
@@ -597,9 +598,11 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 		// perform the computation
 		processSequence();
+		delete seq;
 		return;
 	}
 
+#if 0
 	// for now, just crash
 	else {
 		if(logFor(LOG_BLOCK)) {
@@ -611,69 +614,61 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 		}
 		ASSERTP(false, "too many events! (" << countDynEvents(all_events) << ")")
 	}
-
-#	if 0
-
-	// split case
+#endif
 
 	// find bounds in event list
 	event_list_t events = all_events;
-	all_events.clear();
-	Vector<Inst *> bnds;
-	int ecnt = 0, instp = 0;
-	Inst *inst = 0;
+	Vector<Inst *> bounds;
+	int dyn_cnt = 0, inst_cnt = 0;
+	Inst *inst = target->first();
 	for(int i = 0; i < events.length(); i++) {
-
-		// determine current instruction
-		if(inst != events[i].fst->inst()) {
-
-			// too many events ?
-			if(ecnt >= event_th) {
-				if(bnds)
-					bnds.add(inst);
-				else
-					bnds.add(events[i].fst->inst());
-			}
-
-			// process next instruction
+		if(events[i].fst->inst() != inst) {
 			inst = events[i].fst->inst();
-			instp = i;
+			inst_cnt = 0;
 		}
-
-		// variable event?
-		if(events[i].fst->occurrence() == SOMETIMES)
-			ecnt++;
+		if(events[i].fst->occurrence() == SOMETIMES) {
+			dyn_cnt++;
+			inst_cnt++;
+		}
+		if(dyn_cnt > event_th && dyn_cnt != inst_cnt) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\t\tsub-BB ending at " << inst->address()
+					<< ": " << (dyn_cnt - inst_cnt) << " events\n";
+			bounds.add(inst);
+			dyn_cnt = inst_cnt;
+		}
 	}
-	if(ecnt == 0)	// no more event, aggregate
-		bnds.pop();
+	if(logFor(LOG_BLOCK))
+		log << "\t\t\tsub-BB ending at end: " << dyn_cnt << " events\n";
 
-	// process the different blocks
-	Inst *next = bnds ? bnds[0] : 0;
-	int ei = 0, index = 0, bi = 0;
-	for(BasicBlock::InstIter inst(target); inst; inst++) {
+	// process the different sub-blocks
+	int bi = 0, ei = 0, ni = 0;
+	all_events.clear();
+	for(const auto inst: *target) {
 
-		// limit found?
-		if(*inst == next) {
-
-			// launch computation
+		// process limit
+		if(bi < bounds.length() && inst == bounds[bi]) {
+			ASSERT(seq->length() != 0);
 			processSequence();
-			next = bnds ? bnds[bi++] : 0;
-
-			// reset state
 			all_events.clear();
+			delete seq;
 			seq = new ParExeSequence();
+			ni = 0;
+			bi++;
 		}
 
-		// append current instruction
-		ParExeInst * par_exe_inst = new ParExeInst(inst, target, BODY, index++);
+		// process current instruction
+		ParExeInst * par_exe_inst = new ParExeInst(inst, target, otawa::BLOCK, ni++);
 		seq->addLast(par_exe_inst);
-		while(ei < events.length() && events[ei].fst->inst() == *inst)
-			all_events.add(events[ei++]);
+		while(ei < events.length() && events[ei].fst->inst() == inst) {
+			all_events.add(events[ei]);
+			ei++;
+		}
 	}
 
 	// compute for last block
 	processSequence();
-#	endif
+	delete seq;
 }
 
 
@@ -1644,7 +1639,7 @@ void EdgeTimeBuilder::contributeSplit(const config_list_t& confs, t::uint32 pos,
 	sys->addObjectFunction(hts_time - lts_time, x_hts);
 	if(record) {
 		LTS_TIME(edge) = lts_time;
-		HTS_CONFIG(edge) = pair(hts_time - lts_time, x_hts);
+		HTS_CONFIG(edge).add(pair(hts_time - lts_time, x_hts));
 	}
 
 	// 0 <= x_hts <= x_edge
