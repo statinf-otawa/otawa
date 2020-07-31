@@ -206,6 +206,8 @@ public:
 
 // NoProcessorException class
 class NoProcessorException: public Exception {
+public:
+	String message() override;
 };
 
 

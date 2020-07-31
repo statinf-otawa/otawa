@@ -90,7 +90,7 @@ private:
  * @param parent	Parent context tree.
  * @param _inline	If true, inline the call BB.
  */
-ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
+ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool do_inline):
 	_kind(ROOT),
 	_cfg(cfg),
 	_parent(parent)
@@ -107,7 +107,7 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 	for(CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 		if (LOOP_HEADER(*bb)) {
 			OWNER_CONTEXT_TREE(*bb) = new ContextTree(bb->toBasic(), cfg, this);
-			OWNER_CONTEXT_TREE(*bb)->addBlock(*bb, _inline);
+			OWNER_CONTEXT_TREE(*bb)->addBlock(*bb, do_inline);
 		}
 	}
 
@@ -128,12 +128,12 @@ ContextTree::ContextTree(CFG *cfg, ContextTree *parent, bool _inline):
 			/* Not loop header: add the BasicBlock to its ContextTree */		
 			if (!ENCLOSING_LOOP_HEADER(*bb)) {
 				/* bb is not in a loop: add bb to the root ContextTree */
-				addBlock(*bb, _inline);
+				addBlock(*bb, do_inline);
 				OWNER_CONTEXT_TREE(*bb)=this;
 			} else {
 				/* The bb is in a loop: add the bb to the loop's ContextTree. */
 				ContextTree *parent = OWNER_CONTEXT_TREE(ENCLOSING_LOOP_HEADER(*bb));
-				parent->addBlock(*bb, _inline);
+				parent->addBlock(*bb, do_inline);
 				OWNER_CONTEXT_TREE(*bb) = parent;
 			}
 		}
@@ -172,7 +172,7 @@ ContextTree::~ContextTree(void) {
  * @param bb	Added BB.
  * @param bb	If true, inline the call.
  */
-void ContextTree::addBlock(Block *bb, bool _inline) {
+void ContextTree::addBlock(Block *bb, bool do_inline) {
 	ASSERT(bb);
 	TRACE("inline=" << _inline);
 	
@@ -180,7 +180,7 @@ void ContextTree::addBlock(Block *bb, bool _inline) {
 	_bbs.add(bb);
 	
 	// Process call
-	if(_inline && bb->isCall()) {
+	if(do_inline && bb->isCall()) {
 			if(bb->toSynth()->callee()) {
 
 				

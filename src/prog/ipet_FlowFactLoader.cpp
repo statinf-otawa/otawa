@@ -122,6 +122,8 @@ void consCurrentContextualPath(const Pair<ContextualPath,ContextualPath >  &curr
  * @param intoLoop     
  */
 void FlowFactLoader::transferConflict(Inst *source, otawa::Block *b, const ContextualPath& path, bool intoLoop){  
+	if(!b->isBasic())
+		return;
 	BasicBlock * bb=b->toBasic();
 	  
 	LockPtr<ConflictOfPath > 	currentCteNum = path(INFEASABLE_PATH, source) ; 

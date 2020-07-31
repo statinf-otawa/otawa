@@ -906,19 +906,29 @@ NullProcessor::NullProcessor(void):
  * @ingroup proc
  */
 
-
-/**
- */
+///
 void NoProcessor::processWorkSpace(WorkSpace *fw) {
 	throw NoProcessorException();
 }
 
 
-/**
- */
-NoProcessor::NoProcessor(void):
+///
+NoProcessor::NoProcessor():
 	Processor("otawa::NoProcessor", Version(1, 0, 0))
 {
+}
+
+/**
+ * @class NoProcessorException
+ * This exception is raised by the NoProcessor class when it is called
+ * to implement a feature. The NoProcessor is used to denote features
+ * without default processor.
+ * @ingroup proc
+ */
+ 
+///
+String NoProcessorException::message() {
+	return "no processor defined for this feature";
 }
 
 

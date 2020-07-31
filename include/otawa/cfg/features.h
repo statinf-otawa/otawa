@@ -190,14 +190,13 @@ public:
 extern p::interfaced_feature<DomInfo> DOMINANCE_FEATURE;
 
 // Post-domination
-extern p::feature POSTDOMINANCE_FEATURE;
 class PostDomInfo {
 public:
 	virtual ~PostDomInfo(void) = 0;
 	virtual bool pdom(Block *b1, Block *b2) = 0;
 };
 namespace dfa { class BitSet; }
-extern Identifier<PostDomInfo *> PDOM_INFO;
+extern p::interfaced_feature<PostDomInfo> POSTDOMINANCE_FEATURE;
 
 // Loop support
 class Loop;

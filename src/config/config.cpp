@@ -23,7 +23,9 @@
 #include <elm/options.h>
 #include <elm/string/StringBuffer.h>
 #include <elm/data/HashMap.h>
+#include <elm/data/quicksort.h>
 #include <elm/sys/Plugger.h>
+#include <elm/data/Vector.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <elm/sys/Directory.h>
 #include <elm/sys/System.h>
@@ -32,11 +34,21 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/prog/Loader.h>
-#include <elm/data/Vector.h>
+#include <otawa/proc/Registry.h>
+#include <elm/data/HashSet.h>
 
 using namespace elm;
 using namespace elm::option;
 using namespace otawa;
+
+class RegistrationComparator {
+public:
+	static int compare(const AbstractRegistration *r1, const AbstractRegistration *r2)
+		{ return r1->name().compare(r2->name()); }
+	int doCompare(const AbstractRegistration *r1, const AbstractRegistration *r2) const
+		{ return r1->name().compare(r2->name()); }
+};
+
 
 /**
  * @addtogroup commands
@@ -113,6 +125,8 @@ public:
 		libs			(SwitchOption::Make(*this).cmd("--libs")							.description("output linkage C++ flags")),
 		installdir		(SwitchOption::Make(*this).cmd("-i").cmd("--install")				.description("Output path to install the component")),
 		rpath			(SwitchOption::Make(*this).cmd("--rpath").cmd("-r")					.description("output options to control RPATH")),
+		analyzes		(SwitchOption::Make(*this).cmd("--analyzes")						.description("display all available analyzes")),
+		feature_deps	(SwitchOption::Make(*this).cmd("--feature-deps")					.description("output a feature depency graph (in GraphViz format)")),
 		verbose			(SwitchOption::Make(*this).cmd("--verbose").cmd("-V")				.description("provide details on the configuration process")),
 		locals			(ListOption<string>::Make(*this).cmd("-L").cmd("--local")			.description("path for local dependent plugin").argDescription("PATH"))
 	{
@@ -183,6 +197,20 @@ protected:
 		// other information
 		if(otawa_version) {
 			cout << "Otawa " << MANAGER.VERSION << " (" << MANAGER.COMPILATION_DATE << ")";
+			return;
+		}
+		if(analyzes) {
+			Vector<const AbstractRegistration *> regs;
+			for(auto i = Registry::Iter(); i(); i++)
+				if(*i != &AbstractRegistration::null)
+					regs.add(*i);
+			quicksort(regs, RegistrationComparator());
+			for(auto r: regs)
+				cout << r->name() << " (" << r->version() << ")\n";
+			return;
+		}
+		if(feature_deps) {
+			outputFeatureDeps();
 			return;
 		}
 
@@ -275,6 +303,35 @@ protected:
 	}
 
 private:
+
+	string shortenName(string name) {
+		int s = 0, e = name.length();
+		if(name.startsWith("otawa::"))
+			s += 7;
+		if(name.endsWith("_FEATURE"))
+			e -= 8;
+		return name.substring(s, e - s);
+	}
+
+	void outputFeatureDeps() {
+		HashSet<Pair<const AbstractFeature *, const AbstractFeature *> > edges;
+		cout << "digraph features {\n";
+		for(auto i = Registry::Iter(); i(); i++) {
+			for(auto u: i->features())
+				if(u.kind() == FeatureUsage::provide) {
+					for(auto r = *i; !r->isNull(); r = &r->base())
+						for(auto uu: r->features())
+							if(uu.kind() == FeatureUsage::require
+							&& !edges.contains(pair(&uu.feature(), &u.feature()))) {
+								cout << '"' << shortenName(uu.feature().name())
+									<< "\" -> \""
+									<< shortenName(u.feature().name()) << "\";\n";
+								edges.add(pair(&uu.feature(), &u.feature()));
+							}
+				}
+		}
+		cout << "}\n";
+	}
 
 	/**
 	 * Put quotes around text containing spaces or tabulations.
@@ -432,6 +489,8 @@ private:
 		libs,
 		installdir,
 		rpath,
+		analyzes,
+		feature_deps,
 		verbose;
 	option::ListOption<string> locals;
 

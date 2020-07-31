@@ -77,7 +77,7 @@ public:
 	}
 
 	virtual bool isEstimating(bool on) {
-		return on;	// only when on = true!
+		return on && CATEGORY(_lb) != NOT_CLASSIFIED;	// only when on = true!
 	}
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
@@ -172,7 +172,7 @@ public:
 	}
 
 	virtual bool isEstimating(bool on) {
-		return on;	// only when on = true!
+		return on && dcache::CATEGORY(_acc) != NOT_CLASSIFIED;	// only when on = true!
 	}
 
 	virtual void estimate(ilp::Constraint *cons, bool on) {
@@ -397,7 +397,7 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 					goto error;
 				break;
 			error:
-				warn(_ << "memory instruction at " << acc.instruction()->address() << " access address " << acc.block().address() << " that is out of banks!");
+				warn(_ << "memory instruction at " << acc.instruction()->address() << " access " << acc << " that is out of banks!");
 				break;
 			}
 			if(cost == -1)

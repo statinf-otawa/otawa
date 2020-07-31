@@ -56,11 +56,11 @@ private:
 	ContextTree *_parent;
 	ContextTree(BasicBlock *bb, CFG *cfg, ContextTree *parent);
 	void addChild(ContextTree *tree);
-	void addBlock(Block *bb, bool _inline);
+	void addBlock(Block *bb, bool do_inline);
 public:
 
 	// Methods
-	ContextTree(CFG *cfg, ContextTree *parent = 0, bool _inline = true);
+	ContextTree(CFG *cfg, ContextTree *parent = 0, bool do_inline = true);
 	~ContextTree(void);
 	inline BasicBlock *bb(void) const;
 	inline kind_t kind(void) const;
