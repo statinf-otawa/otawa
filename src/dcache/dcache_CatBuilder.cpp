@@ -60,9 +60,9 @@ p::declare CATBuilder::reg = p::init("otawa::dcache::CATBuilder", Version(1, 0, 
 CATBuilder::CATBuilder(p::declare& r)
 :	Processor(r),
 	firstmiss_level(DFML_NONE),
+	wt_def_cat(cache::INVALID_CATEGORY),
 	prob(nullptr),
 	probMay(nullptr),
-	wt_def_cat(cache::INVALID_CATEGORY),
 	has_pers(false)
 {
 }
