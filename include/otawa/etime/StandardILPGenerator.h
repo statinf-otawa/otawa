@@ -68,7 +68,7 @@ protected:
 private:
 	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt);
 	void finish(const Vector<EventCase>& events);
-	void process(Edge *e);
+	virtual void process(Edge *e);
 	void process(Edge *e, ParExeSequence *s, Vector<EventCase>& events, int dyn_cnt);
 	EventCollector *get(Event *event);
 
