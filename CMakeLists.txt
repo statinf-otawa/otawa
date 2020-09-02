@@ -113,47 +113,8 @@ if(WIN32 AND NOT MINGW_LINUX)
     string(REGEX REPLACE "([0-9][0-9])/([0-9][0-9])/([0-9][0-9][0-9][0-9]).*" "\\1\\2\\3" RESULT ${RESULT})
 endif()
 set(OTAWA_DATE "${RESULT}")
-#add_definitions(-DDAYDATE=\"${RESULT}\")
-#	message(STATUS ${RESULT})
 message(STATUS "OTAWA date: ${OTAWA_DATE}")
 
-###########################
-#adding Doxygen support
-if(UNIX OR APPLE)
-	#if using a unix system
-	message(STATUS "Using Unix system, not MacOS")
-	find_program(DOXYGEN doxygen
-		/usr/local/bin
-		/usr/bin
-		)
-elseif(WIN32 OR MINGW)
-	#not tested
-	message(STATUS "Using Win32 system")
-	find_program(DOXYGEN doxygen
-		PATH
-		)
-elseif(APPLE)
-	#not tested either, and shall not test
-	message(WARNING "MacOS not supported")
-else(UNIX AND NOT APPLE)
-	#in case of some more exotic OS
-	message(WARNING "OS not supported")
-endif()
-
-#once Doxygen path has been searched for
-#generation of documentation IF Doxygen has been found
-#tried testing for DEFINED DOXYGEN_DIR, doesn't work
-if(DOXYGEN AND WIN32)
-	message(STATUS "Doxygen found, generation of documentation")
-	execute_process(COMMAND "cmd" "/C doxygen Doxyfile")
-elseif(DOXYGEN AND UNIX) #not tested
-	message(STATUS "Doxygen found, generation of documentation")
-	execute_process(COMMAND bash "-c" "doxygen Doxyfile")
-else(DOXYGEN AND WIN32)
-	message(WARNING "Doxygen not found, cannot generate documentation")
-endif(DOXYGEN AND WIN32)
-
-###########################
 
 
 # linking to elm and gel libraries
@@ -268,12 +229,15 @@ configure_file (
 
 
 # handle autodoc
-if(DOXYGEN AND INSTALL_DOC)
-	add_custom_target("make-autodoc" ALL DEPENDS "autodoc")
-	add_custom_command(
-		OUTPUT "autodoc"
-		DEPENDS "Doxyfile"
+find_program(DOXYGEN doxygen)
+if(DOXYGEN)
+	add_custom_target("autodoc"
 		COMMAND "${DOXYGEN}"
+		COMMENT "Building automatic documentation."
+		SOURCES "Doxyfile" "${SOURCES}"
 	)
-	install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
+	if(INSTALL_DOC)
+		install(DIRECTORY autodoc DESTINATION "${CMAKE_INSTALL_PREFIX}/share/Otawa/")
+	endif()
 endif()
+

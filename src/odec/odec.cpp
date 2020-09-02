@@ -229,7 +229,7 @@ private:
 
 			// Follow the instruction until a branch
 			address_t next;
-			Inst *control = NULL;
+			Inst *control = nullptr;
 			while(inst && !MARKER(inst)) {
 				if(isVerbose()) {
 					cerr << "process " << inst->address() << " : ";
