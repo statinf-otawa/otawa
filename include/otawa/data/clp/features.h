@@ -63,7 +63,6 @@ public:
 
 private:
 	ClpProblem *p;
-	//BasicBlock::InstIter mi;
 	BasicBlock::BundleIter mi;
 	clp::State s, *cs;
 	BasicBlock* b;

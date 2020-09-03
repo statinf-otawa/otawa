@@ -231,6 +231,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				else if(b.block().set() == line)
 					processLBlock(*bb, b, dom, domMay);
 
+				// record stat
+				stats[0]++;
+				stats[CATEGORY(b)]++;
+
 				// update ACSs
 				prob->update(dom, b);
 				probMay->update(domMay, b);
@@ -258,14 +262,26 @@ void CATBuilder::configure(const PropList &props) {
 /**
  */
 void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
-	//int i;
 	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
 	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->dataCache();
 
+	// compute the categories
+	array::set(stats, cache::TOP_CATEGORY, 0);
 	for (int i = 0; i < cache->rowCount(); i++) {
 		ASSERT(i == colls[i].cacheSet());
 		processLBlockSet(fw, colls[i], cache );
 	}
+
+	// display the statistics
+	if(logFor(LOG_FUN))
+		if(stats[0] != 0) {
+			for(int i = 1; i < cache::TOP_CATEGORY; i++)
+				log << "\t" << cache::category_t(i)
+					<< ": " << stats[i]
+					<< " (" << io::fmt(stats[i] * 100. / stats[0]).width(6, 2)
+					<< "%)\n";
+			log << "\ttotal: " << stats[0] << io::endl;
+		}
 }
 
 

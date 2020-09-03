@@ -205,6 +205,7 @@ private:
 			break;
 		case INVALID_CATEGORY:
 		case FIRST_HIT:
+		case TOP_CATEGORY:
 			ASSERTP(false, "unsupported category");
 			break;
 		}
