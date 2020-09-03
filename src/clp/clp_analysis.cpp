@@ -17,7 +17,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 //#define CATCH_STT
-//#define HAI_DEBUG
+#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
 #include <elm/data/HashMap.h>
@@ -148,7 +148,7 @@ Identifier<Analysis::init_t> Analysis::INITIAL(
 		pair((const hard::Register *)0, Address::null));
 
 
-Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", false);
+Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", true);
 Identifier<Vector<FlowFactStateInfo>*> FLOW_FACT_STATE_INFO("otawa::clp::FLOW_FACT_STATE_INFO", nullptr);;
 
 static hard::Platform *PF = 0;
@@ -2522,6 +2522,7 @@ public:
 		TRACEA(Domain di = a);
 		TRACEP(cerr << "*** widening ****\n");
 		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
+		cerr << "DEBUG: widening " << bb << ": " << MAX_ITERATION(bb) << io::endl;
 		a.widening(b, MAX_ITERATION(bb));
 		TRACEA(checkWideningAlarm(a, di, b));
 		TRACEP(cerr << a << io::endl);
