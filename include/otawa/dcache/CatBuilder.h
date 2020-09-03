@@ -48,6 +48,7 @@ private:
 	MUSTPERS *prob;
 	MAYProblem *probMay;
 	bool has_pers;
+	int stats[cache::TOP_CATEGORY];
 };
 
 } }	// otawa::dcache

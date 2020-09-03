@@ -38,7 +38,8 @@ typedef enum category_t {
 	FIRST_HIT = 2,
 	FIRST_MISS = 3,
 	ALWAYS_MISS = 4,
-	NOT_CLASSIFIED = 5
+	NOT_CLASSIFIED = 5,
+	TOP_CATEGORY = 6
 } category_t;
 io::Output& operator<<(io::Output& out, category_t stats);
 
