@@ -470,7 +470,7 @@ void Processor::run(WorkSpace *ws) {
 			log << "INFO: time = " << ((double)swatch.delay() / 1000) << "ms";
 	}
 	if(logFor(LOG_CFG))
-		log << io::endl;
+		log << io::endl << io::endl;
 
 	// record statistics
 	if(isCollectingStats())

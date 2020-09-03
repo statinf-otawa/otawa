@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <otawa/prog/Process.h>
 #include <otawa/app/CFGApplication.h>
 
 namespace otawa {
@@ -49,7 +50,8 @@ CFGApplication::CFGApplication(const Make& make)
 	:	Application(make),
 		cfg_raw(make_switch().cmd("--cfg-raw").help("do not perform any CFG transformation to support architecture features")),
 		cfg_virtualize(make_switch().cmd("--cfg-virtualize").help("duplicate called CFG according to their call sites")),
-		cfg_unroll(make_switch().cmd("--cfg-unroll").help("unroll the first iteration of each loop"))
+		cfg_unroll(make_switch().cmd("--cfg-unroll").help("unroll the first iteration of each loop")),
+		no_cfg_tune(option::SwitchOption::Make(*this).cmd("--cfg-no-tune").description("disable tuning of CFGs for more user friendly work"))
 { }
 
 
@@ -66,6 +68,13 @@ void CFGApplication::processTask(const CFGCollection& coll, PropList& props) {
 
 ///
 void CFGApplication::work(const string& entry, PropList &props) {
+
+	// tune the CFGs
+	if(!no_cfg_tune) {
+		Inst *i = workspace()->process()->findInstAt("__stack_chk_fail");
+		if(i != nullptr)
+			otawa::NO_CALL(i) = true;
+	}
 
 	// prepare the CFGs
 	if(!cfg_raw) {

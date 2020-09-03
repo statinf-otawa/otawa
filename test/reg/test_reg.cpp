@@ -58,7 +58,7 @@ int main(void) {
 		for(FeatureIter feature(**reg); feature(); feature++) {
 			cout << "\t\t";
 			switch((*feature)->kind()) {
-			case FeatureUsage::none: ASSERT(false);
+			case FeatureUsage::none: ASSERT(false); break;
 			case FeatureUsage::require: cout << "require "; break;
 			case FeatureUsage::provide: cout << "provide "; break;
 			case FeatureUsage::invalidate: cout << "invalidate "; break;

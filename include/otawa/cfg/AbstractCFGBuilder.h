@@ -57,7 +57,7 @@ private:
 	void buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs);
 	void buildEdges(CFGMaker& maker);
 	void cleanBBs(const FragTable<Inst *>& bbs);
-	void seq(CFGMaker& m, BasicBlock *b, Block *src);
+	void seq(CFGMaker& m, BasicBlock *b, Block *src, t::uint32 flags = Edge::NOT_TAKEN);
 
 	makers_t makers;
 	Bag<Address> bounds;
