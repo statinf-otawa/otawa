@@ -29,10 +29,23 @@
 namespace otawa { namespace dfa {
 
 /**
- * @class State
- * Represents a value of the data state.
+ * @defgroup dfa Data Flow Analysis
+ * This group is dedicated to the data flow analysis. In OTAWA, data flow
+ * analysis is mainly based on the expression of instruction behavior
+ * using so-called "semantic instruction". They allow to have a representation
+ * of data flow transformation independent from a particular ISA.
+ *
+ * This group consists in common services to perform data flow analysis
+ * (mainly by abstract interpretation) but also already implemented data flow
+ * analysis like stack analysis, CLP analysis, k-set analysis, etc.
  */
 
+
+/**
+ * @class Value
+ * Definition of a value independent of a particular data flow analysis.
+ * @ingroup dfa
+ */
 
 /**
  * Parse value from a string. Supported forms includes:
@@ -207,19 +220,23 @@ Value::Value(t::uint32 base, t::uint32 delta, t::uint32 count) {
  * Data flow state. Often used to describe the initial state as the join
  * of the user external information on data state and from the initialized data state
  * from the executable content.
+ * @ingroup dfa
  */
 
 
 /**
  * Build the initial state.
  * @param process	Current process.
+ * @param csts		Additional constant part of the memory.
  */
-State::State(Process& process): proc(process) {
+State::State(Process& process, const Vector<MemArea>& csts): proc(process) {
 	stree::SegmentBuilder<address_t, bool> builder(false);
 	for(Process::FileIter file(&proc); file(); file++)
 		for(File::SegIter seg(*file); seg(); seg++)
 			if(seg->isExecutable() || (seg->isInitialized() && !seg->isWritable()))
 				builder.add(seg->address().offset(), seg->topAddress().offset() - 1, true);
+	for(auto m: csts)
+		builder.add(m.address().offset(), m.topAddress().offset() - 1, true);
 	builder.make(mem);
 }
 
@@ -326,6 +343,16 @@ void State::record(const MemCell& cell) {
 }
 
 
+/**
+ * Code processor building the initial state of a task. The state is made of
+ * initialized registers, initialized memories and memories areas considered
+ * as constants (they are equal to their initial value in the executable file).
+ *
+ * @p Provided Features
+ *	* INITIAL_STATE_FEATURE
+ *
+ * @ingroup dfa
+ */
 class InitialStateBuilder: public Processor {
 public:
 	static p::declare reg;
@@ -336,19 +363,54 @@ protected:
 	void configure(const PropList& props) {
 		Processor::configure(props);
 		reg_inits.clear();
-		for(Identifier<Pair<const hard::Register *, Value> >::Getter init(props, REG_INIT); init(); init++)
-			reg_inits.add(*init);
-		for(Identifier<MemCell>::Getter init(props, MEM_INIT); init(); init++)
-			mem_inits.add(*init);
+		for(auto reg: REG_INIT.all(props))
+			reg_inits.add(reg);
+		for(auto mem: MEM_INIT.all(props))
+			mem_inits.add(mem);
+		for(auto name: CONST_SECTION.all(props))
+			const_sects.add(name);
+		for(auto area: CONST_MEM.all(props))
+			const_areas.add(area);
 	}
 
 	void processWorkSpace(WorkSpace *ws) {
-		State *state = new State(*ws->process());
-		for(int i = 0; i < reg_inits.count(); i++)
-			state->set(reg_inits[i].fst, reg_inits[i].snd);
-		for(int i = 0; i < mem_inits.count(); i++)
-			state->record(mem_inits[i]);
+
+		// complete constant areas
+		for(auto name: const_sects) {
+			bool one = false;
+			for(auto file: ws->process()->files())
+				for(auto seg: file->segments())
+					if(name == seg->name()) {
+						one = true;
+						MemArea m(seg->address(), seg->size());
+						const_areas.add(m);
+						if(logFor(LOG_INST))
+							log << "\tconstant section " << name << ": " << m << io::endl;
+					}
+			if(!one)
+				throw ProcessorException(*this, _ << "cannot find any segment named '" << name << "'.");
+		}
+		if(logFor(LOG_INST))
+			for(auto m: const_areas)
+				log << "\tconstant memory area: " << m << io::endl;
+
+		// build the state
+		State *state = new State(*ws->process(), const_areas);
 		track(INITIAL_STATE_FEATURE, INITIAL_STATE(ws) = state);
+
+		// record initialized registers
+		for(int i = 0; i < reg_inits.count(); i++) {
+			state->set(reg_inits[i].fst, reg_inits[i].snd);
+			if(logFor(LOG_INST))
+				log << "\tregister " << reg_inits[i].fst->name() << " set to " << reg_inits[i].snd << io::endl;
+		}
+
+		// record initialized memory
+		for(int i = 0; i < mem_inits.count(); i++) {
+			state->record(mem_inits[i]);
+			if(logFor(LOG_INST))
+				log << "\tmemory " << mem_inits[i].address() << ": " << mem_inits[i].type() << " set to " << mem_inits[i].value() << io::endl;
+		}
 	}
 
 private:
@@ -377,6 +439,8 @@ private:
 
 	Vector<Pair<const hard::Register *, Value> > reg_inits;
 	Vector<MemCell> mem_inits;
+	Vector<string> const_sects;
+	Vector<MemArea> const_areas;
 };
 
 p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder", Version(1, 0, 0))
@@ -389,11 +453,14 @@ p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder",
  * state of the task.
  *
  * @p Configuration
- * @li @ref REG_INIT
- * @li @ref MEM_INIT
+ *	* CONST_MEM
+ *	* CONST_SECTION
+ *	* MEM_INIT
+ *	* REG_INIT
  *
  * @p Attributes
- * @li @ref INITIAL_STATE
+ *	* INITIAL_STATE
+ * @ingroup dfa
  */
 p::feature INITIAL_STATE_FEATURE("otawa::dfa::INITIAL_STATE_FEATURE", new Maker<InitialStateBuilder>());
 
@@ -403,8 +470,9 @@ p::feature INITIAL_STATE_FEATURE("otawa::dfa::INITIAL_STATE_FEATURE", new Maker<
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
+ * @ingroup dfa
  */
-Identifier<Pair<const hard::Register *, Value> > REG_INIT("otawa::dfa::REG_INIT");
+p::id<Pair<const hard::Register *, Value> > REG_INIT("otawa::dfa::REG_INIT");
 
 
 /**
@@ -413,8 +481,9 @@ Identifier<Pair<const hard::Register *, Value> > REG_INIT("otawa::dfa::REG_INIT"
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
+ * @ingroup dfa
  */
-Identifier<MemCell> MEM_INIT("otawa::dfa::MEM_INIT");
+p::id<MemCell> MEM_INIT("otawa::dfa::MEM_INIT");
 
 
 /**
@@ -425,7 +494,28 @@ Identifier<MemCell> MEM_INIT("otawa::dfa::MEM_INIT");
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
+ * @ingroup dfa
  */
-Identifier<State *> INITIAL_STATE("otawa::dfa::INITIAL_STATE", 0);
+p::id<State *> INITIAL_STATE("otawa::dfa::INITIAL_STATE", 0);
+
+
+/**
+ * The named section is considered as constant.
+ *
+ * @p Feature
+ *	* INITAL_STATE_FEATURE
+ * @ingroup dfa
+ */
+p::id<string> CONST_SECTION("otawa::dfa::CONST_SECTION");
+
+
+/**
+ * The memory designed by the argument is considered as constant.
+ *
+ * @p Feature
+ *	* INITAL_STATE_FEATURE
+ * @ingroup dfa
+ */
+p::id<otawa::MemArea> CONST_MEM("otawa::dfa::CONST_MEM", MemArea::null);
 
 } }	// otawa::dfa

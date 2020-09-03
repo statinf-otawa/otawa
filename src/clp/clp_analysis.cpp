@@ -3799,7 +3799,7 @@ namespace clp {
  * Create a manager for the current workspace.
  * @param ws	Workspace to work with.
  */
-Manager::Manager(WorkSpace *ws) {
+Manager::Manager(WorkSpace *ws): cs(nullptr), b(nullptr), i(0) {
 	p = new ClpProblem(ws->process());
 	p->setInitialState(dfa::INITIAL_STATE(ws));
 }
