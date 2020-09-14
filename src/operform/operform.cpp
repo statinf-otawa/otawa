@@ -78,9 +78,10 @@ protected:
 				else
 					workspace()->run(p, props);
 			}
-			else if(!setTask(props, a))
+			else if(!setTask(props, a)){
 				cerr << "WARNING: don't know what to do with: " << a << ". Ignoring it.\n";
-
+				cerr << "Maybe you have forgot to specify \'require\' or \'process\' for one of the feature/processor?\n";
+			}
 		}
 
 	}
