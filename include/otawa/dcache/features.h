@@ -153,7 +153,7 @@ public:
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
 	inline int first(void) const { ASSERT(_kind == RANGE); return data.range->fst; }
 	inline int last(void) const { ASSERT(_kind == RANGE); return data.range->lst; }
-	inline bool inRange(int block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
+	inline bool inRange(int block) const { if(first() <= last()) return first() <= block && block <= last(); else return block <= last() || first() <= block; }
 	bool inSet(int set, const hard::Cache *cache) const;
 	bool in(const Block& block) const;
 
