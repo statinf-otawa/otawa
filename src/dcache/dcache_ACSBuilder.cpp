@@ -733,20 +733,11 @@ const MUSTPERS::Domain& MUSTPERS::entry(void) const {
  */
 void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 	MUST_DEBUG("\t\t\tupdating with " << acc);
-#ifdef OLD_IMPLEMENTATION
 	switch(access.action()) {
-	case BlockAccess::STORE:
+
+	// load access (any replacement policy)
 	case BlockAccess::LOAD:
 		switch(access.kind()) {
-		case BlockAccess::RANGE:
-			// set ------- first ------- last -------- set, if the current set is outside the block access range
-			if((access.first() < access.last()) && (set < access.first() || set > access.last()))
-				break;
-			// set ------- last ---------first --------- set, the 2nd outside case
-			else if((access.first() > access.last()) && (access.first() < set || set < access.last()))
-				break;
-			ageAll(s);
-			break;
 		case BlockAccess::ANY:
 			ageAll(s);
 			break;
@@ -754,92 +745,72 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
 			if(access.block().set() == set)
 				inject(s, access.block().index());
 			break;
+		case BlockAccess::RANGE: {
+				auto b = access.blockIn(set);
+				if(b != nullptr)
+					inject(s, b->index());
+			}
+			break;
 		}
 		break;
 
+	// store access
+	case BlockAccess::STORE:
+
+		// write-through replacement policy
+		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH)
+			switch(access.kind()) {
+			case BlockAccess::ANY:
+				ageAll(s);
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					injectWriteThrough(s, access.block().index());
+				break;
+			case BlockAccess::RANGE: {
+					auto b = access.blockIn(set);
+					if(b != nullptr)
+						injectRange(s, b->index());
+				}
+				break;
+			}
+
+		// write-back replacement policy
+		else if(cache->writePolicy() == hard::Cache::WRITE_BACK)
+			switch(access.kind()) {
+			case BlockAccess::ANY:
+				ageAll(s);
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					inject(s, access.block().index());
+				break;
+			case BlockAccess::RANGE: {
+					auto b = access.blockIn(set);
+					if(b != nullptr)
+						injectRange(s, b->index());
+				}
+				break;
+			}
+
+		// unknown
+		else {
+			ASSERTP(false, "unsupported replacement strategy");
+		}
+
+		break;
+
+	// purge access
 	case BlockAccess::PURGE:
 		mustProb.purge(s.must, access);
 		persProb.purge(s.pers, access);
 		break;
 
+	// unknown access
 	default:
 		ASSERTP(false, "bad block access action: " << access.kind());
 		break;
 	}
-#else
-
-	if(access.action () == BlockAccess::LOAD) {
-		if(access.kind() == BlockAccess::ANY) {
-			ageAll(s); // this means the access may an a memory block which is not associated with the cache. So age++ for all the blocks
-		}
-		else if(access.kind() == BlockAccess::RANGE) {
-			// set ------- first ------- last -------- set, if the current set is outside the block access range, do nothing
-			if((access.first() < access.last()) && (set < access.first() || set > access.last())) { }
-			// set ------- last ---------first --------- set, the 2nd outside case, do nothing
-			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { }
-			// first -------------- set ------------ last, if the set lies inside the range
-			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-					if(vbi->set() == set) {
-						Domain t = s;
-						inject(t, vbi->index());
-						s.join(t); // find the max
-					}
-			} // end each SET
-		} // end RANGE
-		else if(access.kind() == BlockAccess::BLOCK && access.block().set() == set) {
-			inject(s, access.block().index());
-		}
-	}
-	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
-		if(access.kind() == BlockAccess::ANY) {
-			ageAll(s); // there may be an unknown block in the set whose age is larger then any block
-		}
-		else if(access.kind() == BlockAccess::RANGE) {
-			if((access.first() < access.last()) && (set < access.first() || set > access.last())) { } // outside
-			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { } // outside
-			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-					if(vbi->set() == set) {
-						Domain t = s;
-						injectWriteThrough(t, vbi->index());
-						s.join(t); // find the max
-					}
-			} // end each SET
-		}
-		else if(access.kind() == BlockAccess::BLOCK && access.block().set() == set) {
-			injectWriteThrough(s, access.block().index()); // only set the age to 0 when it is already in the cache
-		}
-	}
-	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_BACK) { // currently it follows the same strategy as the LOAD
-		if(access.kind() == BlockAccess::ANY) {
-			ageAll(s);
-		}
-		else if(access.kind() == BlockAccess::RANGE) {
-			if((access.first() < access.last()) && (set < access.first() || set > access.last())) { } // outside
-			else if((access.first() > access.last()) && (access.first() < set || set < access.last())) { } // outside
-			else {
-				for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-					if(vbi->set() == set) {
-						Domain t = s;
-						inject(t, vbi->index());
-						s.join(t); // find the max
-					}
-			} // end each SET
-		}
-		else if(access.kind() == BlockAccess::BLOCK && access.block().set() == set) {
-			inject(s, access.block().index());
-		}
-	}
-	else if(access.action () == BlockAccess::PURGE) {
-		mustProb.purge(s.must, access);
-		persProb.purge(s.pers, access);
-	}
-	else {
-		ASSERTP(false, "bad block access action: " << access.kind());
-	}
-
-#endif
 }
 
 

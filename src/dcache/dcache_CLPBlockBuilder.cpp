@@ -79,9 +79,12 @@ CLPBlockBuilder::CLPBlockBuilder(p::declare& r): BBProcessor(r), cache(0), mem(0
 void CLPBlockBuilder::setup(WorkSpace *ws) {
 
 	// get cache
-	cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->dataCache();
-	if(!cache)
-		throw otawa::Exception("no data cache !");
+	auto conf = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
+	if(conf == nullptr)
+		throw otawa::Exception("no data cache!");
+	cache = conf->dataCache();
+	if(cache == nullptr)
+		throw otawa::Exception("no data cache!");
 	if(cache->replacementPolicy() != hard::Cache::LRU)
 		throw otawa::Exception("unsupported replacement policy in data cache !");
 
@@ -135,7 +138,6 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 
 		// add the access
 		if(action != BlockAccess::NONE && (i.memIndex() != 0)) {
-			// clp::Value addr = man->state()->get(clp::Value(clp::REG, i.addr())); // if LOAD T1, T1, uint32, then T1 is already over-written
 			clp::Value addr = man->getCurrentAccessAddress();
 			while(addrs.length() <= man->ipc())
 				addrs.push(pair(clp::Value::none, BlockAccess::NONE));
@@ -176,50 +178,37 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 
 					// range access
 					else {
-						bool over; // see if the memory range is limited (without overflow)
-						t::uint32 m = elm::mult(elm::abs(p.fst.delta()), p.fst.mtimes(), over);
-						// (l % b) + d * n > (R - 1)b		/ R = row count, b = block size
-						if(over || m >= (cache->rowCount() - 1) * cache->blockSize() - cache->offset(p.fst.lower()))
+						if(p.fst.isInf() || cache->countBlocks(p.fst.start(), p.fst.stop()) > cache->setCount())
 							accs.add(BlockAccess(inst, p.snd));
 						else {
 							clp::uintn_t l = p.fst.start(), h = p.fst.stop();
 							const hard::Bank *bank = mem->get(l);
-							const hard::Bank *bankh = mem->get(h);
 							if(!bank)
 								throw otawa::Exception(_ << "no memory bank for address " << Address(l)
 										<< " accessed from " << man->inst()->address());
-							else if(!bank->isCached()) { // FIXME: what if l is not cacheable but h is cacheable?
-								if(bank == bankh && !p.fst.isInf()) { // if the range all falls into the same bank
+							else if(bank != mem->get(h)) {
+								warn(_ << "access at " << inst->address() << " spanning over several banks considered as any.\n");
+								accs.add(BlockAccess(inst, p.snd));
+							}
+							else if(!bank->isCached()) {
+								if(!p.fst.isInf())	// if the range all falls into the same bank
 									ncaccs.add(NonCachedAccess(inst, p.snd, Address(p.fst.lower())));
-								}
-								else {
-									ASSERTP(false, "The memory access is throughout different memory banks, some are cacheable, some are not.");
-								}
 								if(logFor(LOG_INST))
 									log << "\t\t\t" << p.snd << " at " << inst->address() << " is not cached!\n";
 								continue;
-
 							}
 							else if(cache->block(l) == cache->block(h)) { // if all the access addresses are in the same cached block
 								const Block& block = colls[cache->set(l)].obtain(cache->round(l));
 								accs.add(BlockAccess(inst, p.snd, block));
 							}
 							else {
-								BlockAccess ba = BlockAccess(inst, p.snd, cache->set(l), cache->set(h));
-								Address begin = 0, end = 0;
-								if(h > l) {
-									begin = cache->round(l);
-									end = cache->round(h);
+								Vector<const Block *> bs;
+								cerr << "DEBUG: l = " << io::hex(l) << ", h = " << io::hex(h) << io::endl;
+								for(Address a = cache->round(l); a <= cache->round(h); a = a + cache->blockSize()) {
+									auto& block = colls[cache->set(a)].obtain(a);
+									bs.add(&block);
 								}
-								else {
-									begin = cache->round(h);
-									end = cache->round(l);
-								}
-								for(Address curr = begin; curr <= end; curr = curr + cache->blockSize()) {
-									const Block& block = colls[cache->set(curr)].obtain(cache->round(curr));
-									ba.addBlock(&block);
-								}
-								accs.add(ba);
+								accs.add(BlockAccess(inst, p.snd, bs, cache->setCount()));
 							}
 						}
 					}

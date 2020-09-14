@@ -178,7 +178,10 @@ public:
 	virtual void estimate(ilp::Constraint *cons, bool on) {
 		if(on) {
 			ASSERT(*dcache::MISS_VAR(_acc) != nullptr);
-			cons->addLeft(1, dcache::MISS_VAR(_acc));
+			if(_acc.kind() == dcache::BlockAccess::BLOCK)
+				cons->addLeft(1, dcache::MISS_VAR(_acc));
+			else
+				cons->addLeft(_acc.blocks().length(), dcache::MISS_VAR(_acc));
 		}
 	}
 

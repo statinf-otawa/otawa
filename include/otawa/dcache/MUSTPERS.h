@@ -75,6 +75,7 @@ public:
 	void update(Domain& s, const BlockAccess& access);
 	inline void ageAll(Domain& d) const { d.must.ageAll(); d.pers.ageAll();  }
 	inline void inject(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.inject(id); }
+	inline void injectRange(Domain& d, const int id) const { d.pers.inject(&d.must, id); d.must.ageYounger(id); }
 	inline void injectWriteThrough(Domain& d, const int id) const { d.pers.injectWriteThrough(&d.must, id); d.must.injectWriteThrough(id); }
 
 
@@ -87,6 +88,8 @@ public:
 		persProb.leaveContext(dom.pers, header, ctx);
 		mustProb.leaveContext(dom.must, header, ctx);
 	}
+
+	inline const hard::Cache& getCache() const { return *cache; }
 
 private:
 	Domain _top;

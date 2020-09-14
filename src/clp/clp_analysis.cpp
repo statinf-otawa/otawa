@@ -48,7 +48,8 @@
 #include <otawa/dfa/State.h>
 #include <otawa/proc/ProcessorPlugin.h>
 #include <elm/log/Log.h>
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/flowfact/FlowFactLoader.h>
+#include <otawa/ipet.h>
 
 using namespace elm;
 using namespace otawa;
@@ -2522,7 +2523,7 @@ public:
 		TRACEA(Domain di = a);
 		TRACEP(cerr << "*** widening ****\n");
 		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
-		cerr << "DEBUG: widening " << bb << ": " << MAX_ITERATION(bb) << io::endl;
+		//cerr << "DEBUG: widening " << bb << ": " << MAX_ITERATION(bb) << io::endl;
 		a.widening(b, MAX_ITERATION(bb));
 		TRACEA(checkWideningAlarm(a, di, b));
 		TRACEP(cerr << a << io::endl);
@@ -3377,12 +3378,12 @@ private:
 
 p::declare Analysis::reg = p::init("otawa::clp::CLPAnalysis", Version(0, 1, 0))
 	.maker<Analysis>()
-	//.require(VIRTUALIZED_CFG_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(FLOW_FACTS_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.require(hard::MEMORY_FEATURE)
+	.require(ipet::FLOW_FACTS_FEATURE)
 	.provide(clp::CLP_ANALYSIS_FEATURE);
 
 Analysis::Analysis(p::declare& r)

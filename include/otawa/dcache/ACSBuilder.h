@@ -71,6 +71,16 @@ public:
 			age[id] = 0;
 		}
 
+		inline void load(int id) {
+			age[id] = 0;
+		}
+
+		inline void ageYounger(int id) {
+			for(int i = 0; i < size; i++)
+				if (age[i] != -1 && age[i] < age[id])
+					age[i]++;
+		}
+
 		inline void injectWriteThrough(const int id) {
 			if(id == -1) {
 				for (int i = 0; i < size; i++) {

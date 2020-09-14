@@ -22,12 +22,14 @@
 #include <otawa/hard/Platform.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/cfg/CFGCollector.h>
+#include <otawa/cfg/Loop.h>
 #include <otawa/dcache/CatBuilder.h>
 #include <otawa/dcache/ACSMayBuilder.h>
 #include <otawa/dcache/features.h>
 #include <otawa/dcache/MUSTPERS.h>
 
 namespace otawa { namespace dcache {
+
 
 /**
  * @class CATBuilder
@@ -70,43 +72,16 @@ CATBuilder::CATBuilder(p::declare& r)
 
 /**
  */
-void CATBuilder::cleanup(WorkSpace *ws) {
-	static cstring cat_names[] = {
-			"INV",
-			"AH",
-			"FH",
-			"FM",
-			"AM",
-			"NC"
-	};
-
-	if(!logFor(LOG_BB))
-		return;
-	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
-	ASSERT(cfgs);
-	for(int i = 0; i < cfgs->count(); i++) {
-		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++) {
-			cerr << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
-			for(int j = 0; j < ab.fst; j++) {
-				BlockAccess& b = ab.snd[j];
-				cerr << "\t\t" << b << " -> " << cat_names[dcache::CATEGORY(b)] << io::endl;
-			}
-		}
-	}
-}
-
-
-/**
- */
-void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay) {
+void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay, const Block *block) {
+	ASSERT(bb != nullptr);
+	ASSERT(block != nullptr);
 
 	// initialization
 	bool done = false;
 	IN_ASSERT(bool alwaysHit = false);
 	CATEGORY(b) = cache::NOT_CLASSIFIED;
 
-	if(dom.getMust().contains(b.block().index())) {
+	if(dom.getMust().contains(block->index())) {
 		CATEGORY(b) = cache::ALWAYS_HIT;
 		IN_ASSERT(alwaysHit = true);
 	}
@@ -130,7 +105,7 @@ void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domai
 
 		// look in the different levels
 		for(int k = dom.getPers().length() - 1; k >= 0 && header; k--) {
-			if(dom.getPers().isPersistent(b.block().index(), k)) {
+			if(dom.getPers().isPersistent(block->index(), k)) {
 				CATEGORY(b) = cache::FIRST_MISS;
 				CATEGORY_HEADER(b) = header;
 				done = true;
@@ -152,9 +127,43 @@ void CATBuilder::processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domai
 	} // end of else if(has_pers)
 
 	// out of MAY ?
-	if(!done && !domMay.contains(b.block().index())) {
+	if(!done && !domMay.contains(block->index())) {
 		CATEGORY(b) = cache::ALWAYS_MISS;
 		ASSERTP(alwaysHit == false, "AH has been set, this creates a conflict.")
+	}
+}
+
+
+///
+void CATBuilder::join(otawa::Block *v, BlockAccess& b, cache::category_t c1, otawa::Block *h1) {
+	cache::category_t c2 = CATEGORY(b);
+	if(c1 == c2) {
+		if(c1 == cache::FIRST_MISS) {
+			auto h2 = *CATEGORY_HEADER(b);
+			if(h1 != h2) {
+				if(h1->cfg() != h2->cfg())
+					CATEGORY_HEADER(b) = Loop::of(v)->header();
+				else if(!Loop::of(h1)->includes(Loop::of(h2)))
+					CATEGORY_HEADER(b) = h1;
+			}
+		}
+		return;
+	}
+	else if(c1 == cache::INVALID_CATEGORY)
+		return;
+	else if(c2 == cache::INVALID_CATEGORY) {
+		CATEGORY(b) = c1;
+		CATEGORY_HEADER(b) = h1;
+	}
+	else if(c1 == cache::ALWAYS_HIT && c2 == cache::FIRST_MISS)
+		return;
+	else if(c1 == cache::FIRST_MISS && c2 == cache::ALWAYS_HIT) {
+		CATEGORY(b) = c1;
+		CATEGORY_HEADER(b) = h1;
+	}
+	else {
+		CATEGORY(b) = cache::NOT_CLASSIFIED;
+		CATEGORY_HEADER(b).remove();
 	}
 }
 
@@ -166,7 +175,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 		return;
 
 	// prepare problem
-	int line = coll.cacheSet();
+	int set = coll.cacheSet();
 	prob = new MUSTPERS(&coll, ws, cache);
 	MUSTPERS::Domain dom = prob->bottom();
 
@@ -175,7 +184,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 	acs_stack_t empty_stack;
 	if(logFor(LOG_FUN))
-		log << "\tSET " << line << io::endl;
+		log << "\tSET " << set << io::endl;
 
 	// traverse all CFGs
 	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
@@ -192,7 +201,7 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 
 			// get the MUST ACS at block entry
 			acs_table_t *ins = MUST_ACS(*bb); // get the entry ACS
-			prob->setMust(dom, *ins->get(line)); // set the MUST domain
+			prob->setMust(dom, *ins->get(set)); // set the MUST domain
 
 			// get the PERS ACS at block entry
 			acs_table_t *pers = PERS_ACS(*bb);
@@ -203,15 +212,15 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				acs_stack_t *stack;
 				acs_stack_table_t *stack_table = LEVEL_PERS_ACS(*bb);
 				if(stack_table)
-					stack = &stack_table->get(line);
+					stack = &stack_table->get(set);
 				else
 					stack = &empty_stack;
-				prob->setPers(dom, *pers->get(line), *stack);
+				prob->setPers(dom, *pers->get(set), *stack);
 			}
 
 			// get the MAY ACS at block entry
 			if(MAY_ACS(*bb))
-				domMay = *(MAY_ACS(*bb)->get(line));
+				domMay = *(MAY_ACS(*bb)->get(set));
 
 			// traverse all accesses
 			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
@@ -222,18 +231,32 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				if(cache->writePolicy() == hard::Cache::WRITE_THROUGH && b.action() == dcache::BlockAccess::STORE)
 					CATEGORY(b) = wt_def_cat;
 
-				// not block: can't do anything
-				// TODO improve it in case of range smaller than the cache
-				else if(b.kind() != BlockAccess::BLOCK)
-					CATEGORY(b) = cache::NOT_CLASSIFIED;
-
-				// for a single block: compute more precise category
-				else if(b.block().set() == line)
-					processLBlock(*bb, b, dom, domMay);
-
-				// record stat
-				stats[0]++;
-				stats[CATEGORY(b)]++;
+				// other cases
+				else
+					switch(b.kind()) {
+					case BlockAccess::ANY:
+						CATEGORY(b) = cache::NOT_CLASSIFIED;
+						break;
+					case BlockAccess::BLOCK:
+						if(b.block().set() == set)
+							processLBlock(*bb, b, dom, domMay, &b.block());
+						break;
+					case BlockAccess::RANGE: {
+							auto ab = b.blockIn(set);
+							if(ab != nullptr) {
+								if(!CATEGORY(b).exists())
+									processLBlock(*bb, b, dom, domMay, ab);
+								else {
+									cache::category_t oc = *CATEGORY(b);
+									otawa::Block *oh = *CATEGORY_HEADER(b);
+									processLBlock(*bb, b, dom, domMay, ab);
+									join(*bb, b, oc, oh);
+								}
+							}
+							break;
+						}
+						break;
+					}
 
 				// update ACSs
 				prob->update(dom, b);
@@ -261,18 +284,46 @@ void CATBuilder::configure(const PropList &props) {
 
 /**
  */
-void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
-	const BlockCollection *colls = DATA_BLOCK_COLLECTION(fw);
-	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(fw)->dataCache();
+void CATBuilder::processWorkSpace(otawa::WorkSpace *ws) {
+	const BlockCollection *colls = DATA_BLOCK_COLLECTION(ws);
+	const hard::Cache *cache = hard::CACHE_CONFIGURATION_FEATURE.get(ws)->dataCache();
 
 	// compute the categories
-	array::set(stats, cache::TOP_CATEGORY, 0);
 	for (int i = 0; i < cache->rowCount(); i++) {
 		ASSERT(i == colls[i].cacheSet());
-		processLBlockSet(fw, colls[i], cache );
+		processLBlockSet(ws, colls[i], cache );
 	}
 
 	// display the statistics
+	displayStats(ws);
+}
+
+
+///
+void CATBuilder::displayStats(WorkSpace *ws) {
+	int stats[cache::TOP_CATEGORY];
+	if(!logFor(LOG_FUN))
+		return;
+
+	// compute stats
+	array::set(stats, cache::TOP_CATEGORY, 0);
+	const CFGCollection *cfgs = INVOLVED_CFGS(ws);
+	ASSERT(cfgs);
+	for(int i = 0; i < cfgs->count(); i++) {
+		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++) {
+			if(logFor(LOG_INST))
+				log << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
+			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
+			for(int j = 0; j < ab.fst; j++) {
+				BlockAccess& b = ab.snd[j];
+				if(logFor(LOG_INST))
+					log << "\t\t" << b << " -> " << *dcache::CATEGORY(b) << io::endl;
+				stats[0]++;
+				stats[dcache::CATEGORY(b)]++;
+			}
+		}
+	}
+
 	if(logFor(LOG_FUN))
 		if(stats[0] != 0) {
 			for(int i = 1; i < cache::TOP_CATEGORY; i++)
@@ -282,7 +333,9 @@ void CATBuilder::processWorkSpace(otawa::WorkSpace *fw) {
 					<< "%)\n";
 			log << "\ttotal: " << stats[0] << io::endl;
 		}
+
 }
+
 
 
 /**

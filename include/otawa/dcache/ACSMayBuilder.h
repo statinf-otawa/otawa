@@ -71,6 +71,10 @@ public:
 			any_age = min(A, any_age + damage);
 		}
 
+		inline void set(int id, int a) {
+			age[id] = a;
+		}
+
 		inline void inject(const int id) {
 			if (contains(id)) {
 				for (int i = 0; i < size; i++)
