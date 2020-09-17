@@ -882,7 +882,7 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// if any, dependency on previous load
-				if (previous_load)
+				if (previous_load && (previous_load != node))
 					new ParExeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous store
