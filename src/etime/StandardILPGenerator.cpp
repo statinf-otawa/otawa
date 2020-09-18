@@ -379,6 +379,7 @@ void StandardILPGenerator::process(WorkSpace *ws) {
 					process(e);
 				}
 	}
+	STATS_ILP_VARS_COUNT(log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << "\n");
 
 	// generate the bounding constraints of the events
 	for(auto coll: colls) {
@@ -460,7 +461,6 @@ void StandardILPGenerator::prepare(Edge *e, const Vector<EventCase>& events, int
 	_t_lts_set = false;
 	_x_e = ipet::VAR(e);
 	_x_hts = nullptr;
-	_ilp_var_count = 0;
 	if(dyn_cnt > 0)
 		_done.resize(dyn_cnt);
 	_done.clear();
@@ -485,7 +485,6 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 		&& !_done.bit(e.index()))
 			get(e.event())->boundImprecise(e);
 
-	STATS_ILP_VARS_COUNT(log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << "\n");
 }
 
 ///
