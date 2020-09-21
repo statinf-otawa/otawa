@@ -17,7 +17,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 //#define CATCH_STT
-#define HAI_DEBUG
+//#define HAI_DEBUG
 //#define HAI_JSON
 #include <math.h>
 #include <elm/data/HashMap.h>

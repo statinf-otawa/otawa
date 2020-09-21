@@ -78,6 +78,7 @@ private:
 	bool _t_lts_set;
 	BitVector _done;
 	int _eth;
+	int _ilp_var_count;
 };
 
 } }	// otawa::etime

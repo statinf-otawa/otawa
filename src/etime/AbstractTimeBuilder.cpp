@@ -260,9 +260,6 @@ void AbstractTimeBuilder::setup(WorkSpace *ws) {
  */
 void AbstractTimeBuilder::cleanup(WorkSpace *ws) {
 
-	// finalize generator
-	_generator->process(ws);
-
 	// cleanup
 	delete _builder;
 	delete _solver;

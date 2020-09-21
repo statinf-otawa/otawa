@@ -22,6 +22,7 @@
 #include <elm/data/quicksort.h>
 #include <otawa/ipet.h>
 #include <otawa/etime/StandardILPGenerator.h>
+#define STATS_ILP_VARS_COUNT(t) t
 
 namespace otawa { namespace etime {
 
@@ -348,7 +349,8 @@ StandardILPGenerator::StandardILPGenerator(Monitor& mon):
 	_x_e(nullptr),
 	_x_hts(nullptr),
 	_t_lts_set(false),
-	_eth(0)
+	_eth(0),
+	_ilp_var_count(0)
 { }
 
 
@@ -377,6 +379,7 @@ void StandardILPGenerator::process(WorkSpace *ws) {
 					process(e);
 				}
 	}
+	STATS_ILP_VARS_COUNT(log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << "\n");
 
 	// generate the bounding constraints of the events
 	for(auto coll: colls) {
@@ -406,6 +409,7 @@ void StandardILPGenerator::contributeBase(ot::time time) {
 /**
  */
 void StandardILPGenerator::contributeTime(ot::time t_hts) {
+	_ilp_var_count++;
 	ASSERTP(_t_lts_set, "perform contributeBase() first");
 
 	// new HTS variable
@@ -480,6 +484,7 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 		if(e->occurrence() == SOMETIMES
 		&& !_done.bit(e.index()))
 			get(e.event())->boundImprecise(e);
+
 }
 
 ///
