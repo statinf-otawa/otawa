@@ -148,21 +148,18 @@ int ParExeGraph::cost() {
 	int wcc = delta(_last_node, _resources[0]);
 	for (Vector<Resource *>::Iter res(_resources) ; res() ; res++) {
 		if (res->type() != Resource::BLOCK_START){
-			//		if (res->type() != Resource::INTERNAL_CONFLICT) {											// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 			int r_id = res->index();
 			if (res->type() == Resource::QUEUE) {
-				int u_id = ((QueueResource *)(*res))->uid();
-				if ((_last_node->delay(r_id)>=0) && (_last_node->delay(u_id)>=0)){
-					if (_last_node->delay(r_id) <= _last_node->delay(u_id) + ((QueueResource *)(*res))->offset()) {
+				auto qres = static_cast<QueueResource *>(*res);
+				int u_id = qres->uid();
+				if ((_last_node->delay(r_id) >= 0) && (_last_node->delay(u_id) >= 0)) {
+					if (_last_node->delay(r_id) <= _last_node->delay(u_id) + qres->offset())
 						continue;     // do not compute Delta
-					}
 				}
 			}
 			int diff = delta(_last_node, *res);
-			if (diff > wcc) {
+			if (diff > wcc)
 				wcc = diff;
-			}
-			//		}																							// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
 		}
 	}
 
@@ -529,9 +526,7 @@ RegResource *ParExeGraph::newRegResource(const hard::Register *r) {
 
 
 void ParExeGraph::createSequenceResources(){
-
     int resource_index = _resources.length();
-    //int reg_num = _ws->platform()->regCount();
     int reg_num = _microprocessor->processor()->platform()->regCount();
 
     // prepare table of registers
@@ -582,26 +577,26 @@ void ParExeGraph::createSequenceResources(){
     }
 
     // build the resources for out-of-order execution															// ========= DISABLED UNTIL OOO IS SUPPORTED AGAIN
-//    if (is_ooo_proc) {
-//		int i = 0;
-//		for (InstIterator inst(_sequence) ; inst ; inst++) {
-//			StringBuffer buffer;
-//			buffer << "extconf[" << i << "]";
-//			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);
-//			_resources.add(new_resource);
-//			StringBuffer another_buffer;
-//			another_buffer << "intconf[" << i << "]";
-//			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);
-//			_resources.add(another_new_resource);
-//			i++;
-//		}
-//    }
+	//    if (is_ooo_proc) {
+	//		int i = 0;
+	//		for (InstIterator inst(_sequence) ; inst ; inst++) {
+	//			StringBuffer buffer;
+	//			buffer << "extconf[" << i << "]";
+	//			ExternalConflictResource * new_resource = new ExternalConflictResource(buffer.toString(), inst, resource_index++);
+	//			_resources.add(new_resource);
+	//			StringBuffer another_buffer;
+	//			another_buffer << "intconf[" << i << "]";
+	//			InternalConflictResource * another_new_resource = new InternalConflictResource(another_buffer.toString(), inst, resource_index++);
+	//			_resources.add(another_new_resource);
+	//			i++;
+	//		}
+	//    }
 
     // clean up
-//    for(int i = 0; i <r ; i++) {
-//		delete inputs[i]._is_input;
-//		delete inputs[i]._resource_index;
-//    }
+	//    for(int i = 0; i <r ; i++) {
+	//		delete inputs[i]._is_input;
+	//		delete inputs[i]._resource_index;
+	//    }
 }
 
 
@@ -747,12 +742,11 @@ void ParExeGraph::addEdgesForFetch(void) {
 
 			// Is it cached?
 			const hard::Bank *bank = mem->get(node->inst()->inst()->address());
-			if(!bank)
+			if(bank == nullptr)
 				log << "\t\t\t\t" << "WARNING: no memory bank for code at " << node->inst()->inst()->address() << ": block considered as cached.\n";
 			else if(!bank->isCached()) {
 				cached = false;
-				if(isVerbose())
-					log << "\t\t\t\t" << "Address " << node->inst()->inst()->address() << " not cached. No need to create edge for cache\n";
+				current_cache_line = Address::null;
 			}
 
 			// branch case
@@ -768,30 +762,30 @@ void ParExeGraph::addEdgesForFetch(void) {
 				ASSERT(branching_node != nullptr);
 
 				// create the edges
-				if(_branch_penalty != 0 && cached)
-					new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
+				new ParExeEdge(branching_node, *node, ParExeEdge::SOLID, _branch_penalty, comment(branch_msg));
+				if(cached)
+					current_cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
 			}
 
-			// no branch case
-			else if(!cached && previous != nullptr)
+			// no branch, not cached case
+			else if(!cached)
 				new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(in_order));
 
-			// cache case
-			if(cached) {
+			// no branch, not cached case
+			else {
 				Address cache_line = node->inst()->inst()->address().offset() / _cache_line_size;
 
 				// new cache line
-				if(cache_line != current_cache_line) {
+				if(cache_line == current_cache_line)
+					new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg)); // within the same cache set
+
+				else {
 					new ParExeEdge(first_cache_line_node, *node, ParExeEdge::SOLID, 0, comment(cache_trans_msg)); // between the 1st appearence of instructions from different cache set
 					if(first_cache_line_node != previous)
 						new ParExeEdge(previous, *node, ParExeEdge::SOLID, 0, comment(cache_inter_msg)); // the last instruction of the difference cache set to the 1st instruction of the new cache set
 					first_cache_line_node = *node;
 					current_cache_line = cache_line;
 				}
-
-				// same cache line
-				else
-					new ParExeEdge(previous, *node, ParExeEdge::SLASHED, 0, comment(cache_intra_msg)); // within the same cache set
 			}
 
 		}
@@ -882,7 +876,7 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// if any, dependency on previous load
-				if (previous_load)
+				if (previous_load && (previous_load != node))
 					new ParExeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
 
 				// current node becomes the new previous store
@@ -1062,9 +1056,8 @@ ParExeGraph::~ParExeGraph() {
 			}
 		}
     }
-    for (ParExeSequence::InstIterator inst(_sequence) ; inst() ; inst++) {
+    for (ParExeSequence::InstIterator inst(_sequence) ; inst() ; inst++)
 		inst->deleteNodes();
-    }
 }
 
 

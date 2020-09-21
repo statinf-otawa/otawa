@@ -779,8 +779,8 @@ protected:
 		}
 
 		// no processor
-		else if(logFor(LOG_DEPS))
-			log << "\tno processor configuration\n";
+		else
+			throw ProcessorException(*this, "no processor description available !\n");
 	}
 
 private:

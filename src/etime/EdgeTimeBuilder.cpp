@@ -332,6 +332,7 @@ p::declare EdgeTimeBuilder::reg = p::init("otawa::etime::EdgeTimeBuilder", Versi
 	.require(ipet::ILP_SYSTEM_FEATURE)
 	.require(WEIGHT_FEATURE)
 	.require(EVENTS_FEATURE)
+	.require(hard::PROCESSOR_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
 	.provide(EDGE_TIME_FEATURE);
 
@@ -1253,7 +1254,6 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 
 	case BRANCH:
 		ASSERT(bedge);
-		//cerr << "DEBUG: rollbacking " << (void *)bedge << io::endl;
 		graph->remove(bedge);
 		bedge = 0;
 		break;
@@ -1720,12 +1720,15 @@ void EdgeTimeBuilder::contributeConst(void) {
  * of events has been added to the ILP system.
  *
  * @p Configuration
+ * @li @ref EVENT_THRESHOLD
+ * @li @ref GRAPHS_OUTPUT_DIRECTORY
+ * @li @ref ONLY_START
+ * @li @ref PREDUMP
  * @li @ref RECORD_TIME
  *
  * @p Properties
  * @li @ref LTS_TIME
  * @li @ref HTS_OFFSET
- * @li @ref ONLY_START
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
 

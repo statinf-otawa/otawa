@@ -35,6 +35,34 @@ using namespace otawa::cache;
 namespace otawa { namespace etime {
 
 
+class AlwaysMissEvent: public Event {
+public:
+	AlwaysMissEvent(Inst *inst, ot::time cost)
+		: Event(inst), _cost(cost) {	}
+	kind_t kind(void) const override { return FETCH; }
+	ot::time cost(void) const override { return _cost; }
+	type_t type(void) const override { return LOCAL; }
+	occurrence_t occurrence(void) const override { return ALWAYS; }
+	cstring name(void) const override { return "fetch stage"; }
+	string detail(void) const override { return _ << "instruction fetch @ " << inst()->address(); }
+	int weight(void) const override { return 0; }
+	bool isEstimating(bool on) override { return on; }
+	void estimate(ilp::Constraint *cons, bool on) override { }
+
+private:
+	ot::time _cost;
+};
+
+class DataAlwaysMissEvent: public AlwaysMissEvent {
+public:
+	DataAlwaysMissEvent(Inst *inst, ot::time cost)
+		: AlwaysMissEvent(inst, cost) {	}
+	kind_t kind(void) const override { return MEM; }
+	cstring name(void) const override { return "memory stage"; }
+	string detail(void) const override { return _ << "data access @ " << inst()->address(); }
+};
+
+
 class MissEvent: public Event {
 public:
 	MissEvent(Inst *inst, ot::time cost, LBlock *lb)
@@ -249,6 +277,209 @@ private:
 
 
 /**
+ * Abstract classes for event builders based on memory.
+ */
+class MemBuilder: public Monitor {
+public:
+	MemBuilder(Monitor& mon, const hard::Memory *_mem)
+	: Monitor(mon), mem(_mem) {
+		bank = mem->banks()[0];
+	}
+
+	ot::time costOf(Address addr, bool write = false) {
+		if(!bank->contains(addr)) {
+			const hard::Bank *new_bank = mem->get(addr);
+			if(!new_bank)
+				return -1;
+			bank = new_bank;
+		}
+		return write ? bank->writeLatency() : bank->latency();
+	}
+
+	inline const hard::Memory *memory() const { return mem; }
+
+private:
+	const hard::Memory *mem;
+	const hard::Bank *bank;
+};
+
+
+/**
+ * Abstract class to manage instruction fetch events.
+ */
+class FetchBuilder: public MemBuilder {
+public:
+	using MemBuilder::MemBuilder;
+	virtual ~FetchBuilder() { }
+
+	virtual void process(WorkSpace *ws, BasicBlock *bb) = 0;
+};
+
+
+/**
+ * Actual fetch builder where there is not instruction cache.
+ */
+class NoCacheFetchBuilder: public FetchBuilder {
+public:
+	using FetchBuilder::FetchBuilder;
+
+	void process(WorkSpace *ws, BasicBlock *bb) override {
+		for(auto i: *bb) {
+			ot::time t = costOf(i->address());
+			if(t < 0) {
+				log << "WARNING: no bank contains instruction at " << i->address() << ": assuming worst case latency.\n";
+				t = memory()->worstReadAccess();
+			}
+			Event *event = new AlwaysMissEvent(i, t);
+			if(logFor(LOG_BB))
+				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+			EVENT(bb).add(event);
+
+		}
+	}
+};
+
+
+/**
+ * Actual fetch builder when an instruction cache is available.
+ */
+class CacheFetchBuilder: public FetchBuilder {
+public:
+	using FetchBuilder::FetchBuilder;
+
+	void process(WorkSpace *ws, BasicBlock *bb) override {
+		const AllocArray<LBlock* >& blocks = **BB_LBLOCKS(bb);
+		BasicBlock::InstIter inst = bb->insts();
+		for(int i = 0; i < blocks.count(); i++) {
+
+			// find the instruction
+			while(inst->topAddress() <= blocks[i]->address()) {
+				inst++;
+				ASSERT(inst);
+			}
+
+			// find the bank
+			ot::time cost = costOf(blocks[i]->address());
+			if(!cost) {
+				log << "WARNING: no bank contains instruction at " << inst->address() << ". Assuming worst latency.";
+				cost = memory()->worstReadAccess();
+			}
+
+			// create the event
+			Event *event = new MissEvent(*inst, cost, blocks[i]);
+			if(logFor(LOG_BB))
+				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+			EVENT(bb).add(event);
+		}
+	}
+};
+
+
+/**
+ * Abstract data access event builder.
+ */
+class DataAccessBuilder: public MemBuilder {
+public:
+	using MemBuilder::MemBuilder;
+	virtual ~DataAccessBuilder() { }
+
+	virtual void process(WorkSpace *ws, BasicBlock *bb) = 0;
+};
+
+/**
+ * Actual data cache builder when there is not data cache.
+ */
+class NoCacheDataAccessBuilder: public DataAccessBuilder {
+public:
+	using DataAccessBuilder::DataAccessBuilder;
+
+	void process(WorkSpace *ws, BasicBlock *bb) override {
+		for(auto i: *bb) {
+			if(i->isMem()) {
+
+				// count the number of access
+				int n = 1;
+				if(i->isMulti())
+					n = i->multiCount();
+
+				// compute access time
+				ot::time t;
+				if(i->isStore())
+					t = n * memory()->worstWriteTime();
+				else
+					t = n * memory()->worstReadTime();
+
+				// create event
+				Event *event = new DataAlwaysMissEvent(i, t);
+				if(logFor(LOG_BB))
+					log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+				EVENT(bb).add(event);
+			}
+		}
+	}
+};
+
+
+/**
+ * Actual data cache builder when a data cache is available.
+ */
+class CacheDataAccessBuilder: public DataAccessBuilder {
+public:
+	CacheDataAccessBuilder(Monitor& mon, const hard::Memory *mem, bool _wb)
+		: DataAccessBuilder(mon, mem), wb(_wb) { }
+
+	void process(WorkSpace *ws, BasicBlock *bb) override {
+		Pair<int, dcache::BlockAccess *> blocks = dcache::DATA_BLOCKS(bb);
+		for(int i = 0; i < blocks.fst; i++) {
+			dcache::BlockAccess& acc = blocks.snd[i];
+			dcache::BlockAccess::action_t action = acc.action();
+			bool write =  action == dcache::BlockAccess::STORE;
+
+			// compute cost
+			ot::time cost = -1;
+			switch(acc.kind()) {
+			case dcache::BlockAccess::ANY:
+				break;
+			case dcache::BlockAccess::BLOCK:
+				cost = costOf(acc.block().address(), write);
+				if(cost == -1)
+					goto error;
+				break;
+			case dcache::BlockAccess::RANGE:
+				cost = costOf(Address(acc.first()), write);
+				if(cost == -1)
+					goto error;
+				break;
+			error:
+				log << "WARNING: memory instruction at " << acc.instruction()->address() << " access " << acc << " that is out of banks!";
+				break;
+			}
+			if(cost == -1)
+				cost = action == write ? memory()->worstWriteAccess() : memory()->worstReadAccess();
+
+			// make the event
+			Event *event = new DataMissEvent(acc.instruction(),  cost, acc, bb);
+			if(logFor(LOG_BB))
+				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
+			EVENT(bb).add(event);
+
+			// for write-back, take into account the purge
+			if(wb && dcache::CATEGORY(acc) != cache::ALWAYS_HIT) {
+				Event *pevt = new DataPurgeEvent(acc.instruction(), acc, bb);
+				if(logFor(LOG_BB))
+					log << "\t\t\t\tadded " << pevt->inst()->address() << "\t" << pevt->name() << io::endl;
+				EVENT(bb).add(pevt);
+			}
+		}
+	};
+
+private:
+	bool wb;
+};
+
+
+
+/**
  * @class StandardEventBuilder
  * Build standard events.
  *
@@ -273,14 +504,13 @@ private:
 StandardEventBuilder::StandardEventBuilder(p::declare& r)
 :	BBProcessor(r),
 	mem(nullptr),
-	cconf(nullptr),
+	caches(nullptr),
 	bht(nullptr),
-	has_il1(false),
-	has_dl1(false),
 	has_branch(false),
-	bank(nullptr),
+	//bank(nullptr),
 	_explicit(false),
-	wb(false)
+	fetch(nullptr),
+	data(nullptr)
 { }
 
 
@@ -290,27 +520,53 @@ void StandardEventBuilder::configure(const PropList& props) {
 }
 
 
+///
+void StandardEventBuilder::cleanup(WorkSpace *ws) {
+	delete fetch;
+	fetch = nullptr;
+}
+
+
 /**
  */
 void StandardEventBuilder::setup(WorkSpace *ws) {
 
 	// look for memory
 	mem = hard::MEMORY_FEATURE.get(ws);
-	if(mem)
-		bank = mem->banks()[0];
-	else
-		bank = 0;
+	if(mem == nullptr)
+		throw ProcessorException(*this, "cannot manage memory access events without memory description!");
 
-	// look if instruction cacheL1 is available
-	has_il1 = ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE);
-	if(has_il1 && logFor(LOG_CFG))
-		log << "\tevents for instruction cache L1\n";
-	has_dl1 = ws->isProvided(dcache::CONSTRAINTS_FEATURE);
-	if(has_dl1) {
-		const hard::CacheConfiguration *caches = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
-		wb = caches->dataCache()->writePolicy() == hard::Cache::WRITE_BACK;
+	// get cache configuration
+	if(ws->provides(hard::CACHE_CONFIGURATION_FEATURE))
+		caches = hard::CACHE_CONFIGURATION_FEATURE.get(ws);
+
+	// look if instruction cache L1 is available
+	if(caches == nullptr || caches->instCache() == nullptr) {
+		fetch = new NoCacheFetchBuilder(*this, mem);
+		if(logFor(LOG_FUN))
+			log << "\tevents for straight instruction fetch\n";
+	}
+	else {
+		if(!ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE))
+			throw ProcessorException(*this, "L1 instruction cache but no cache analysis!");
+		fetch = new CacheFetchBuilder(*this, mem);
+		if(logFor(LOG_CFG))
+			log << "\tevents for instruction cache L1\n";
+	}
+
+	// look for data cache L1
+	if(caches == nullptr || caches->dataCache() == nullptr) {
+		data = new NoCacheDataAccessBuilder(*this, mem);
+		if(logFor(LOG_FUN))
+			log << "\tevents for straight data access\n";
+	}
+	else {
+		if(!ws->isProvided(dcache::CONSTRAINTS_FEATURE))
+			throw ProcessorException(*this, "L1 data cache but no cache analysis!");
+		bool wb = caches->dataCache()->writePolicy() == hard::Cache::WRITE_BACK;
 		if(wb && !ws->isProvided(dcache::PURGE_FEATURE))
 			throw ProcessorException(*this, "write-back L1 data cache but no purge analysis provided (dcache::PURGE_FEATURE)!");
+		data = new CacheDataAccessBuilder(*this, mem, wb);
 		if(logFor(LOG_CFG))
 			log << "\tevents for data cache L1\n";
 	}
@@ -325,102 +581,19 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 
 
 /**
- * Compute cost of a memory access.
- * @param addr	Accessed address.
- * @param write	Write operation if true, false else.
- */
-ot::time StandardEventBuilder::costOf(Address addr, bool write) {
-	if(!bank || !bank->contains(addr)) {
-		const hard::Bank *new_bank = mem->get(addr);
-		if(!new_bank)
-			return -1;
-		bank = new_bank;
-	}
-	return write ? bank->writeLatency() : bank->latency();
-}
-
-
-/**
  */
 void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 	if(b->isEnd())
 		return;
 
-	// process instruction stage L1
-	if(has_il1 && b->isBasic()) {
-		BasicBlock *bb = b->toBasic();
-		const AllocArray<LBlock* >& blocks = **BB_LBLOCKS(bb);
-		BasicBlock::InstIter inst = bb->insts();
-		for(int i = 0; i < blocks.count(); i++) {
+	if(b->isBasic()) {
+		auto bb = b->toBasic();
 
-			// find the instruction
-			while(inst->topAddress() <= blocks[i]->address()) {
-				inst++;
-				ASSERT(inst);
-			}
+		// process instruction stage L1
+		fetch->process(ws, bb);
 
-			// find the bank
-			ot::time cost = costOf(blocks[i]->address());
-			if(!cost) {
-				warn(_ << "no bank contains instruction at " << inst->address() << ". Assuming worst latency.");
-				cost = mem->worstReadAccess();
-			}
-
-			// create the event
-			Event *event = new MissEvent(*inst, cost, blocks[i]);
-			if(logFor(LOG_BB))
-				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
-			EVENT(bb).add(event);
-		}
-	}
-
-	// process data stage L1
-	if(has_dl1 && b->isBasic()) {
-		BasicBlock *bb = b->toBasic();
-
-		Pair<int, dcache::BlockAccess *> blocks = dcache::DATA_BLOCKS(bb);
-		for(int i = 0; i < blocks.fst; i++) {
-			dcache::BlockAccess& acc = blocks.snd[i];
-			dcache::BlockAccess::action_t action = acc.action();
-			bool write =  action == dcache::BlockAccess::STORE;
-
-			// compute cost
-			ot::time cost = -1;
-			switch(acc.kind()) {
-			case dcache::BlockAccess::ANY:
-				break;
-			case dcache::BlockAccess::BLOCK:
-				cost = costOf(acc.block().address(), write);
-				if(cost == -1)
-					goto error;
-				break;
-			case dcache::BlockAccess::RANGE:
-				cost = costOf(Address(acc.first()), write);
-				if(cost == -1)
-					goto error;
-				break;
-			error:
-				warn(_ << "memory instruction at " << acc.instruction()->address() << " access " << acc << " that is out of banks!");
-				break;
-			}
-			if(cost == -1)
-				cost = action == write ? mem->worstWriteAccess() : mem->worstReadAccess();
-
-			// make the event
-			Event *event = new DataMissEvent(acc.instruction(),  cost, acc, bb);
-			if(logFor(LOG_BB))
-				log << "\t\t\t\tadded " << event->inst()->address() << "\t" << event->name() << io::endl;
-			EVENT(bb).add(event);
-
-			// for write-back, take into account the purge
-			if(wb && dcache::CATEGORY(acc) != cache::ALWAYS_HIT) {
-				Event *pevt = new DataPurgeEvent(acc.instruction(), acc, bb);
-				if(logFor(LOG_BB))
-					log << "\t\t\t\tadded " << pevt->inst()->address() << "\t" << pevt->name() << io::endl;
-				EVENT(bb).add(pevt);
-			}
-		}
-
+		// process data stage L1
+		data->process(ws, bb);
 	}
 
 	// process branch prediction
@@ -535,6 +708,7 @@ p::declare StandardEventBuilder::reg = p::init("otawa::etime::StandardEventBuild
 	.maker<StandardEventBuilder>()
 	.provide(STANDARD_EVENTS_FEATURE)
 	.provide(EVENTS_FEATURE)
-	.require(ipet::ILP_SYSTEM_FEATURE);
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.require(hard::MEMORY_FEATURE);
 
 } } // otawa::etime
