@@ -397,8 +397,9 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 					ParExePipeline *pfu = stage->addFunctionalUnit(fu->isPipelined(), fu->getLatency(), fu->getWidth(), fu->getName(), fu);
 					if(fu->isMem())
 						setMemStage(pfu->lastStage());
-					if(fu->isBranch())
+					if(fu->isBranch()) {
 						setBranchStage(pfu->lastStage());
+					}
 				}
 
 				// create the dispatches
@@ -434,8 +435,9 @@ ParExeProc::ParExeProc(const hard::Processor *proc)
 	// not set branch and mem stages?
 	if(memStage() == nullptr)
 		setMemStage(execStage());
-	if(branchStage() == nullptr)
+	if(branchStage() == nullptr) {
 		setBranchStage(fetchStage());
+	}
 } // end of ParExeProc()
 
 /**

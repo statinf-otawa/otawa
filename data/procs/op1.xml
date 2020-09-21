@@ -26,6 +26,7 @@
 					<name>MEM</name>
 					<latency>5</latency>
 					<pipelined>true</pipelined>
+					<mem>true</mem>
 				</fu>
 				<fu id="ALU">
 					<name>ALU</name>

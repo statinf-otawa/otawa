@@ -268,11 +268,9 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		const hard::Processor *proc = hard::PROCESSOR_FEATURE.get(_ws);
 		if(proc == &hard::Processor::null)
 			throw ProcessorException(*this, "no processor to work with");
-//		else {
 		_microprocessor = new ParExeProc(proc);
 		BuildVectorOfHwResources();															// ===== TO BE ENABLED
 		configureMem(_ws);
-//		}
 
 		// Perform the actual process
 		BBProcessor::processWorkSpace(ws);
@@ -349,22 +347,23 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			QueueResource * new_resource = new QueueResource(buffer.toString(), *queue, i, resource_index++, upper_bound, _microprocessor->pipeline()->numStages());
 			_hw_resources.add(new_resource);
 		}
+
     }
 
-    // build resources for registers
-//    const otawa::hard::Platform::banks_t & reg_banks  =  ws->platform()->banks() ;
-//	elm::cout << reg_banks.count() << " banks to consider \n";
-//	for (int b=0 ; b<reg_banks.count() ; b++) {
-//		otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks.get(b);
-//		elm::cout << reg_banks.count() << " bank" << b << " has " << bank->count() << " registers\n";
-//		for (int r=0 ; r<bank->count() ; r++)
-//		{
-//			StringBuffer buffer;
-//			buffer << bank->name() << r;
-//			RegResource * new_resource = new RegResource(buffer.toString(), bank, r, resource_index++);
-//			_resources.add(new_resource);
-//		}
-//	}
+		// build resources for registers
+		//    const otawa::hard::Platform::banks_t & reg_banks  =  ws->platform()->banks() ;
+		//	elm::cout << reg_banks.count() << " banks to consider \n";
+		//	for (int b=0 ; b<reg_banks.count() ; b++) {
+		//		otawa::hard::RegBank * bank = (otawa::hard::RegBank *) reg_banks.get(b);
+		//		elm::cout << reg_banks.count() << " bank" << b << " has " << bank->count() << " registers\n";
+		//		for (int r=0 ; r<bank->count() ; r++)
+		//		{
+		//			StringBuffer buffer;
+		//			buffer << bank->name() << r;
+		//			RegResource * new_resource = new RegResource(buffer.toString(), bank, r, resource_index++);
+		//			_resources.add(new_resource);
+		//		}
+		//	}
 }
 
 	// -- FillSequence ------------------------------------------------------------------------------------------

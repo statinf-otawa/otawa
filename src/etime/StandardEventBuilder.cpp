@@ -705,6 +705,7 @@ p::declare StandardEventBuilder::reg = p::init("otawa::etime::StandardEventBuild
 	.maker<StandardEventBuilder>()
 	.provide(STANDARD_EVENTS_FEATURE)
 	.provide(EVENTS_FEATURE)
-	.require(ipet::ILP_SYSTEM_FEATURE);
+	.require(ipet::ILP_SYSTEM_FEATURE)
+	.require(hard::MEMORY_FEATURE);
 
 } } // otawa::etime
