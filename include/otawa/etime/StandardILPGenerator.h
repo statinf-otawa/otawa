@@ -64,11 +64,10 @@ protected:
 	void contributeTime(ot::time t_hts) override;
 	void contributePositive(EventCase event, bool prec) override;
 	void contributeNegative(EventCase event, bool prec) override;
-
-private:
 	void prepare(Edge *e, const Vector<EventCase>& events, int dyn_cnt);
 	void finish(const Vector<EventCase>& events);
-	void process(Edge *e);
+private:
+	virtual void process(Edge *e);
 	void process(Edge *e, ParExeSequence *s, Vector<EventCase>& events, int dyn_cnt);
 	EventCollector *get(Event *event);
 
