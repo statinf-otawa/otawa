@@ -46,7 +46,8 @@ namespace otawa {
     resource_type_t _type;
     int _index;
   public:
-    inline Resource(elm::String name, resource_type_t type, int index) : _name(name), _type(type), _index(index) {}
+    inline Resource(elm::String name, resource_type_t type, int index)
+    	: _name(name), _type(type), _index(index) { }
     virtual inline ~Resource() {}
     inline elm::String name() {return _name;}
     inline resource_type_t type() {return _type;}

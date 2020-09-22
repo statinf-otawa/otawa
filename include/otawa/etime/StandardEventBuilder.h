@@ -37,28 +37,30 @@ namespace hard {
 
 namespace etime {
 
+class DataAccessBuilder;
+class FetchBuilder;
+
 class StandardEventBuilder: public BBProcessor {
 public:
 	static p::declare reg;
 	StandardEventBuilder(p::declare& r = reg);
 
 protected:
-	virtual void configure(const PropList& props);
-	virtual void setup(WorkSpace *ws);
-	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *bb);
+	void configure(const PropList& props) override;
+	void setup(WorkSpace *ws) override;
+	void processBB(WorkSpace *ws, CFG *cfg, Block *bb) override;
+	void cleanup(WorkSpace *ws) override;
 
 private:
 	void handleVariableBranchPred(BasicBlock *bb, Block *wbb);
-	ot::time costOf(Address addr, bool write = false);
 
 	const hard::Memory *mem;
-	const hard::CacheConfiguration *cconf;
+	const hard::CacheConfiguration *caches;
 	const hard::BHT *bht;
-	bool has_il1, has_dl1;
 	bool has_branch;
-	const hard::Bank *bank;
 	bool _explicit;
-	bool wb;
+	FetchBuilder *fetch;
+	DataAccessBuilder *data;
 };
 
 } }	// otawa::etime
