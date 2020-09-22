@@ -240,13 +240,13 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 if(!_explicit)
                         miss = system->newVar();
                 else
-                        buf << "xm_data_" << "c" << bb->cfg()->index() << "_b" << bb->index() << "_i" << b.instruction()->address();
+                        buf << "x_miss_data_" << "c" << bb->cfg()->index() << "_b" << bb->index() << "_i" << b.instruction()->address();
 
                 // Add the constraint depending on the block access category
                 switch(dcache::CATEGORY(b)) {
                 	case cache::ALWAYS_HIT: { // Add constraint: xmiss = 0
                 			if (_explicit) {
-                				buf << "_HIT";
+                				//buf << "_HIT";
                 				String name = buf.toString();
                 				miss = system->newVar(name);
                 			}
@@ -257,9 +257,9 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 					case cache::FIRST_HIT:
 					case cache::NOT_CLASSIFIED: { // Add constraint: xmiss <= x
 							if (_explicit) {
-								buf << "_NC";
-								if (b.kind() == BlockAccess::ANY)
-									buf << "_ANY";
+								//buf << "_NC";
+								//if (b.kind() == BlockAccess::ANY)
+									//buf << "_ANY";
 								String name = buf.toString();
 								miss = system->newVar(name);
 							}
@@ -270,7 +270,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 					break;
                 	case cache::ALWAYS_MISS: { // Add constraint: xmiss = x
         					if (_explicit) {
-        						buf << "_MISS";
+        						//buf << "_MISS";
         						String name = buf.toString();
         						miss = system->newVar(name);
         					}
@@ -281,7 +281,7 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
                 		break;
 					case cache::FIRST_MISS: {
 							if (_explicit) {
-								buf << "_FMISS";
+								//buf << "_FMISS";
 								String name = buf.toString();
 								miss = system->newVar(name);
 							}
