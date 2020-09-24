@@ -267,8 +267,8 @@ void EventCollector::make(ilp::System *sys) {
 	for(int c = 0; c < SIZE; ++c) {
 		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
 			ilp::Constraint *cons = sys->newConstraint(
-				_ << "!!!" << evt->name() ,
-				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
+				evt->name() ,
+				(imprec & (1 << c)) ? ilp::Constraint::GE : ilp::Constraint::EQ);
 			evt->estimate(cons, isOn(case_t(c)));
 			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++) {
 				ASSERT(*v != nullptr);
@@ -746,8 +746,15 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// simple trivial case
 	if(events.isEmpty()) {
+
+		// predump implementation
+		if(_do_output_graphs && predump)
+			outputGraph(graph, 666, 666, 666, _ << source << " -> " << target);
+
+		// analyze
 		ot::time cost = graph->analyze();
 		genForOneCost(cost, edge, events);
+
 		// dump it if needed
 		if(_do_output_graphs) {
 			if (source)

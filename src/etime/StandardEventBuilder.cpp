@@ -46,7 +46,7 @@ public:
 	cstring name(void) const override { return "fetch stage"; }
 	string detail(void) const override { return _ << "instruction fetch @ " << inst()->address(); }
 	int weight(void) const override { return 0; }
-	bool isEstimating(bool on) override { return on; }
+	bool isEstimating(bool on) override { return false; }
 	void estimate(ilp::Constraint *cons, bool on) override { }
 
 private:
