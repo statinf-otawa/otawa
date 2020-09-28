@@ -500,7 +500,6 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 	}
 	}
 
-	system()->dumpSystem(log);
 }
 
 ///
