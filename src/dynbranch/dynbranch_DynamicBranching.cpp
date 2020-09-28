@@ -649,7 +649,7 @@ void DynamicBranchingAnalysis::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 			watch.start();
 			for (int i=0; i < NB_EXEC; i++) {addTargetToBB(bb);}
 			watch.stop();
-			otawa::ot::time t = watch.delay();
+			otawa::ot::time t = watch.delay().micros();
 			cout << " ---------- Time stat for " << bb << "------------" << endl;
 			cout << " Number of instructions in this BB : " << bb->count() << endl;
 			cout << " Number executions : " << NB_EXEC << endl;

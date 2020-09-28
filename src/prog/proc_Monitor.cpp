@@ -94,14 +94,14 @@ void Monitor::setWorkspace(WorkSpace *workspace) {
  * This property identifier is used for setting the output stream used by
  * the processor to write results.
  */
-p::id<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &io::out);
+p::id<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &cout.stream());
 
 
 /**
  * This property identifier is used for setting the log stream used by
  * the processor to write messages (information, warning, error).
  */
-p::id<elm::io::OutStream *> LOG("otawa::LOG", &io::err);
+p::id<elm::io::OutStream *> LOG("otawa::LOG", &cerr.stream());
 
 
 /**
@@ -143,7 +143,7 @@ void Monitor::configure(const PropList& props, string name) {
 	// test named logging
 	bool log_auth = true;
 	if(name != "")
-		for(auto n: LOG_FOR.all(props))
+		for(auto n: LOG_FOR.all(props)) {
 			if(n == name) {
 				log_auth = true;
 				if(!verbose || level == LOG_NONE)
@@ -152,6 +152,7 @@ void Monitor::configure(const PropList& props, string name) {
 			}
 			else
 				log_auth = false;
+		}
 
 	// if logging authorized
 	if(log_auth) {

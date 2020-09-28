@@ -300,19 +300,29 @@ void GraphBBTime<G>::configure(const PropList& props) {
 		}
 		else { // EXECUTE stage
 			if (stage->orderPolicy() == ParExeStage::IN_ORDER) {
-				for (int i=0 ; i<stage->numFus() ; i++) {
-					ParExePipeline * fu = stage->fu(i);
-					ParExeStage *fu_stage = fu->firstStage();
-					for (int j=0 ; j<fu_stage->width() ; j++) {
-						StringBuffer buffer;
-						buffer << fu_stage->name() << "[" << j << "]";
-						StageResource * new_resource = new StageResource(buffer.toString(), fu_stage, j, resource_index++);
-						_hw_resources.add(new_resource);
+				if(stage->numFus() != 0)
+					for (int i=0 ; i<stage->numFus() ; i++) {
+						ParExePipeline * fu = stage->fu(i);
+						ParExeStage *fu_stage = fu->firstStage();
+						for (int j=0 ; j<fu_stage->width() ; j++) {
+							StringBuffer buffer;
+							buffer << fu_stage->name() << "[" << j << "]";
+							StageResource * new_resource = new StageResource(buffer.toString(), fu_stage, j, resource_index++);
+							_hw_resources.add(new_resource);
+						}
 					}
-				}
+				else
+					for(int i = 0; i < stage->width(); i++) {
+						auto r = new StageResource(
+							_ << stage->name() << "[" << i << "]",
+							*stage, i, resource_index++);
+						_hw_resources.add(r);
+					}
 			}
-			/*else
-				is_ooo_proc = true;*/
+			else {
+				//is_ooo_proc = true;
+				ASSERTP(false, "unsupported OOO processor");
+			}
 		}
     }
 
@@ -327,7 +337,6 @@ void GraphBBTime<G>::configure(const PropList& props) {
 			for (Vector<Resource *>::Iter resource(_hw_resources) ; resource() ; resource++) {
 				if (resource->type() == Resource::STAGE) {
 					StageResource *s = ((StageResource *)(*resource));
-
 					if(s->stage() == queue->emptyingStage()) {
 						if(i < queue->size() - s->stage()->width() /*- 1*/) {
 							if(s->slot() == s->stage()->width()-1)

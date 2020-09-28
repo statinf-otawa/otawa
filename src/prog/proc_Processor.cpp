@@ -463,11 +463,11 @@ void Processor::run(WorkSpace *ws) {
 	if(isTimed()) {
 		swatch.stop();
 		if(recordsStats())
-			RUNTIME(*stats) = swatch.delay();
+			RUNTIME(*stats) = swatch.delay().micros();
 		if(logFor(LOG_CFG))
-			log << " (" << ((double)swatch.delay() / 1000) << "ms)";
+			log << " (" << (swatch.delay().micros() / 1000.) << "ms)";
 		else if(logFor(LOG_PROC))
-			log << "INFO: time = " << ((double)swatch.delay() / 1000) << "ms";
+			log << "INFO: time = " << (swatch.delay().micros() / 1000) << "ms";
 	}
 	if(logFor(LOG_CFG))
 		log << io::endl << io::endl;

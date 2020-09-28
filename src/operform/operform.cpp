@@ -20,6 +20,7 @@
  */
 
 #include <elm/util/Cleaner.h>
+#include <elm/sys/StopWatch.h>
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/Output.h>
@@ -41,6 +42,7 @@ public:
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
 		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output")),
 		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output")),
+		timed(option::Switch::Make(*this).cmd("-T").cmd("--timed").description("display the run time of each require: or process:")),
 		view(option::ValueOption<string>::Make(*this).cmd("-V").cmd("--view").description("display the given view").argDescription("view"))
 	{
 	}
@@ -66,8 +68,14 @@ protected:
 				AbstractFeature *f = ProcessorPlugin::getFeature(n);
 				if(!f)
 					throw otawa::Exception(_ << "cannot find feature " << n);
-				else
+				else {
+					sys::StopWatch sw;
+					sw.start();
 					workspace()->require(*f, props);
+					sw.stop();
+					if(timed)
+						cout << "time: " << sw.delay() <<  io::endl;
+				}
 			}
 			else if(a.startsWith("process:")) {
 				setTask(props, "main");
@@ -75,8 +83,14 @@ protected:
 				Processor *p = ProcessorPlugin::getProcessor(n);
 				if(!p)
 					throw otawa::Exception(_ << "cannot find feature " << n);
-				else
+				else {
+					sys::StopWatch sw;
+					sw.start();
 					workspace()->run(p, props);
+					sw.stop();
+					if(timed)
+						cout << "time: " << sw.delay() <<  io::endl;
+				}
 			}
 			else if(!setTask(props, a)){
 				cerr << "WARNING: don't know what to do with: " << a << ". Ignoring it.\n";
@@ -135,7 +149,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot, phony;
+	option::Switch dot, phony, timed;
 	option::ValueOption<string> view;
 	CleanList clean;
 };
