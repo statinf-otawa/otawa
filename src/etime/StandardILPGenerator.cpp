@@ -493,10 +493,14 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 
 
 	ilp::Constraint* cons = system()->newConstraint("sum(x) = x_edge", ilp::Constraint::EQ);
+	if (!_partitionVars.isEmpty()){
 	cons->addRight(1, _x_e);
 	for (auto v: _partitionVars){
 		cons->addLeft(1, v);
 	}
+	}
+
+	system()->dumpSystem(log);
 }
 
 ///
