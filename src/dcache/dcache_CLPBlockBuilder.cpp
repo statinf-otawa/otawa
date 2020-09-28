@@ -203,10 +203,11 @@ void CLPBlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *b) {
 							}
 							else {
 								Vector<const Block *> bs;
-								cerr << "DEBUG: l = " << io::hex(l) << ", h = " << io::hex(h) << io::endl;
-								for(Address a = cache->round(l); a <= cache->round(h); a = a + cache->blockSize()) {
+								for(auto a = cache->round(l); true; a = a + cache->blockSize()) {
 									auto& block = colls[cache->set(a)].obtain(a);
 									bs.add(&block);
+									if(a == cache->round(h))
+										break;
 								}
 								accs.add(BlockAccess(inst, p.snd, bs, cache->setCount()));
 							}
