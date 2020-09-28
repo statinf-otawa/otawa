@@ -134,7 +134,7 @@ void GlobalAnalysis::processWorkSpace(WorkSpace *ws) {
 		watch.start() ;
 		for (int i=0 ; i < TIME_NB_EXEC_GLOBAL ; i++) {hai->solve(cfg) ; }
 		watch.stop() ;
-		otawa::ot::time t = watch.delay() ;
+		otawa::ot::time t = watch.delay().micros() ;
 		cout << " ---------- Time stat for Global Analysis -----------" << endl  ;
 		cout << " Number executions : " << TIME_NB_EXEC_GLOBAL << endl ;
 		cout << " Total time (microsec): " << t << endl ;

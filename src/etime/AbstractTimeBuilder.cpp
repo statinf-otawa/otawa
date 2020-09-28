@@ -311,6 +311,13 @@ void AbstractTimeBuilder::buildResources(void) {
 					}
 				}
 			}
+			else
+				for(int i = 0; i < stage->width(); i++) {
+					auto r = new StageResource(
+						_ << stage->name() << "[" << i << "]",
+						*stage, i, resource_index++);
+					_resources.add(r);
+				}
 			/*else
 				is_ooo_proc = true;*/
 		}

@@ -562,7 +562,7 @@ void Script::work(WorkSpace *ws) {
 						ws->run(proc, list, true);
 						if(timed) {
 							sw.stop();
-							cerr << "INFO: time(" << *name << ") = "<< (float(sw.delay()) / 1000) << "ms\n";
+							cerr << "INFO: time(" << *name << ") = "<< (sw.delay().micros() / 1000) << "ms\n";
 						}
 						break;
 					}
