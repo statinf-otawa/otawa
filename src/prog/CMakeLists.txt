@@ -225,6 +225,7 @@ set(libotawa_SOURCES
 
 
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(".")
 
 BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)
