@@ -94,7 +94,8 @@ typedef enum {
 			return *this;
 		}
 
-		inline bool isTop(void) const { return _kind == ALL; }
+		inline bool isTop() const { return _kind == ALL; }
+		inline bool isBot() const { return _kind == NONE; }
 
 		inline bool operator==(const Value& val) const {
 			return (
@@ -102,16 +103,10 @@ typedef enum {
 						 _base == val._base &&
 						 _delta == val._delta &&
 						 _mtimes == val._mtimes)
-						 /* WARNING: keep in order to verify it does not break something else
-						  ||
-						( (_delta == 1 || _delta == -1) &&
-						  (val._delta == 1 || val._delta == -1) &&
-						 _mtimes == UMAXn && val._mtimes == UMAXn)*/
 					);
 		}
-		inline bool operator!=(const Value& val) const {
-			return ! operator==(val);
-		}
+		inline bool operator!=(const Value& val) const { return ! operator==(val); }
+		bool subsetOf(const Value& val) const;
 
 		Value operator+(const Value& val) const;
 		Value operator-(const Value& val) const;
@@ -123,6 +118,7 @@ typedef enum {
 		inline intn_t lower(void) const { return _base; }
 		inline intn_t upper(void) const { return _base + _delta * _mtimes; }
 		inline intn_t delta(void) const { return _delta; }
+		inline intn_t base() const { return _base; }
 		inline uintn_t mtimes(void) const { return _mtimes; }
 		inline bool isInf(void) const { return (_mtimes == UMAXn); }
 		inline bool direction(void) const { return (delta() > 0); }
@@ -202,7 +198,7 @@ typedef enum {
 		 * Perform a widening to the infinite (to be filtred later)
 		 * @param val the value of the next iteration state
 		*/
-		Value& widening(const Value& val);
+		void widening(const Value& val);
 		/**
 		 * Perform a widening, knowing flow facts for the loop
 		 * @param val the value of the next iteration state
