@@ -58,6 +58,23 @@ public:
 	virtual ~Application(void);
 
 	int run(int argc, char **argv);
+    int runWithCatch(int argc, char **argv) {
+        try {
+            return run(argc,argv);
+        }
+        catch (option::OptionException & e)
+        {
+            displayHelp();
+            error(e.message());
+            result = 1;
+        }
+        catch (elm::Exception & e)
+        {
+            error(e.message());
+            result = 1;
+        }
+        return result;
+    };
 
 protected:
 	virtual void prepare(PropList& props);
@@ -108,4 +125,9 @@ private:
 		return app.run(argc, argv); \
 	}
 
+#define OTAWA_RUN_WITH_CATCH(name) \
+    int main (int argc, char **argv) { \
+        name app; \
+        return app.runWithCatch(argc,argv); \
+    }
 #endif /* OTAWA_APP_APPLICATION_H_ */

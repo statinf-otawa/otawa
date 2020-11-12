@@ -339,7 +339,6 @@ Application::~Application(void) {
  * @return		A return code adapted to the current OS.
  */
 int Application::run(int argc, char **argv) {
-	try {
 
 		// process arguments
 		parse(argc, argv);
@@ -411,16 +410,7 @@ int Application::run(int argc, char **argv) {
 		Monitor::configure(props);
 		work(props);
 		complete(props);
-	}
-	catch(option::OptionException& e) {
-		displayHelp();
-		error(e.message());
-		result = 1;
-	}
-	catch(elm::Exception& e) {
-		error(e.message());
-		result = 1;
-	}
+
 
 	// cleanup
 	if(ws)
