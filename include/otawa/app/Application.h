@@ -76,6 +76,8 @@ protected:
 	void warn(string msg);
 	void info(string msg);
 	void stats();
+	void startTask(const string& entry);
+	void completeTask();
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s);
@@ -83,13 +85,15 @@ protected:
 	void process(string arg) override;
 
 private:
-	option::SwitchOption help, verbose;
+	option::SwitchOption help, verbose, dump;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;
 	option::Value<string> work_dir;
+	option::Value<string> dump_to;
 	option::SwitchOption record_stats;
 	option::ListOption<string> log_for;
+	option::ListOption<string> dump_for;
 	LogOption log_level;
 	elm::sys::Path path;
 	Vector<string> _args;

@@ -148,7 +148,7 @@ class TextShape(Shape):
             font = Pango.FontDescription()
 
             # https://developer.gnome.org/pango/stable/PangoMarkupFormat.html
-            markup = GObject.markup_escape_text(self.t)
+            markup = GLib.markup_escape_text(self.t)
             if self.pen.bold:
                 markup = '<b>' + markup + '</b>'
             if self.pen.italic:
@@ -1529,7 +1529,7 @@ class DotWidget(Gtk.DrawingArea):
 
     #TODO GTK3: Second argument has to be of type Gdk.EventButton instead of object.
     __gsignals__ = {
-        'clicked' : (GObject.SIGNAL_RUN_LAST, None, (str, object))
+        'clicked' : (GObject.SignalFlags.RUN_LAST, None, (str, object))
     }
 
     filter = 'dot'
@@ -1620,6 +1620,13 @@ class DotWidget(Gtk.DrawingArea):
         assert isinstance(xdotcode, bytes)
         parser = XDotParser(xdotcode)
         self.graph = parser.parse()
+        try:
+            n = parser.graph_attrs["label"].decode("utf-8")
+            if n.endswith(" function"):
+                n = n[:len(n) - 9]
+            self.graph_title = n
+        except KeyError:
+            self.graph_title = self.openfilename
         self.zoom_image(self.zoom_ratio, center=True)
 
     def reload(self):
@@ -1971,14 +1978,17 @@ class DotWindow(Gtk.Window):
             self.dotwidget.connect("clicked", self.handle_url, None)
 
         # Create a UIManager instance
+        # https://www.gramps-project.org/wiki/index.php/GEPS_044:_Replace_Deprecated_Gtk.UIManager
         uimanager = self.uimanager = Gtk.UIManager()
 
         # Add the accelerator group to the toplevel window
+        # DEPRECATED: Gtk.UIManager.get_accel_group is deprecated
         accelgroup = uimanager.get_accel_group()
         window.add_accel_group(accelgroup)
 
         # Create an ActionGroup
-        actiongroup = Gtk.ActionGroup('Actions')
+        actiongroup = Gtk.ActionGroup(name = 'Actions')
+        #actiongroup = GLib.SimpleActionGroup()
         self.actiongroup = actiongroup
 
         # Create actions
@@ -1992,8 +2002,8 @@ class DotWindow(Gtk.Window):
             ('Zoom100', Gtk.STOCK_ZOOM_100, None, None, None, self.on_zoom_100),
         ))
 
-        find_action = FindMenuToolAction("Find", None,
-                                          "Find a node by name", None)
+        # DEPRECATED: Gtk.ActionGroup.add_action is deprecated
+        find_action = FindMenuToolAction(name = "Find", tooltip = "Find a node by name")
         actiongroup.add_action(find_action)
 
         # Add the actiongroup to the uimanager
@@ -2020,7 +2030,7 @@ class DotWindow(Gtk.Window):
         # Add Find text search
         find_toolitem = uimanager.get_widget('/ToolBar/Find')
         self.textentry = Gtk.Entry(max_length=20)
-        self.textentry.set_icon_from_stock(0, Gtk.STOCK_FIND)
+        self.textentry.set_icon_from_icon_name(0, "edit-find")
         find_toolitem.add(self.textentry)
 
         self.textentry.set_activates_default(True)
@@ -2099,11 +2109,14 @@ class DotWindow(Gtk.Window):
         if self.filter:
             dotwidget.set_filter(self.filter)
         if dotwidget.set_dotcode(dotcode, filename):
-            name = os.path.basename(filename)
+            try:
+                name = dotwidget.graph_title
+            except:
+                name = os.path.basename(filename)
             title = Gtk.HBox()
-            title.pack_start(Gtk.Label(name), True, True, 0)
+            title.pack_start(Gtk.Label(label = name), True, True, 0)
             image = Gtk.Image()
-            image.set_from_stock(Gtk.STOCK_CLOSE, Gtk.IconSize.MENU)	#Gtk.ICON_SIZE_MENU)
+            image.set_from_icon_name("window-close", Gtk.IconSize.MENU)	#Gtk.ICON_SIZE_MENU)
             close = Gtk.Button()
             close.set_image(image)
             close.set_relief(Gtk.ReliefStyle.NONE)

@@ -24,6 +24,7 @@
 #include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>
+//#define OTAWA_IDFA_DEBUG
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/prog/WorkSpace.h>
@@ -159,6 +160,20 @@ public:
 		dset->remove(*tset);
 	}
 	void free(BitSet *set) { delete set; }
+
+	void dump(Output& out, BitSet *set) const {
+		bool fst = true;
+		out << "{ ";
+		for(auto v: *cfg)
+			if(set->contains(v->index())) {
+				if(fst)
+					fst = false;
+				else
+					out << ", ";
+				out << v;
+			}
+		out << " }";
+	}
 };
 
 
@@ -243,6 +258,25 @@ void Dominance::processCFG(WorkSpace *ws, CFG *cfg) {
 /**
  */
 void Dominance::cleanup(WorkSpace *ws) {
+}
+
+
+///
+void Dominance::dumpCFG(WorkSpace *ws, CFG *g, Output& out) {
+	out << "CFG " << g << io::endl;
+	for(auto v: *g) {
+		out << "\t" << v << " dominated by ";
+		bool fst = true;
+		for(auto d: *g) {
+			if(dominates(d, v)) {
+				if(!fst)
+					out << ", ";
+				fst = false;
+				out << d;
+			}
+		}
+		out << io::endl;
+	}
 }
 
 

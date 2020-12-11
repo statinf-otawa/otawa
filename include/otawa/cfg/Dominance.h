@@ -49,11 +49,11 @@ public:
 	static bool dominates(Block *bb1, Block *bb2);
 	static inline bool isDominated(Block *bb1, Block *bb2) { return dominates(bb2, bb1); }
 	static bool isLoopHeader(Block *bb);
-	//static bool isBackEdge(Edge *edge);
 
 protected:
 	void processCFG(WorkSpace *fw, CFG *cfg) override;
 	void cleanup(WorkSpace *ws) override;
+	void dumpCFG(WorkSpace *ws, CFG *g, Output& out) override;
 
 private:
 	void markLoopHeaders(CFG *cfg);

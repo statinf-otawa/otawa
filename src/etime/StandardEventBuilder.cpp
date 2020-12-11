@@ -46,9 +46,9 @@ public:
 	cstring name(void) const override { return "fetch stage"; }
 	string detail(void) const override { return _ << "instruction fetch @ " << inst()->address(); }
 	int weight(void) const override { return 0; }
-	bool isEstimating(bool on) override { return on; }
+	bool isEstimating(bool on) override { return false; }
 	void estimate(ilp::Constraint *cons, bool on) override { }
-
+	bool isFetch() const override { return true; }
 private:
 	ot::time _cost;
 };
@@ -60,6 +60,8 @@ public:
 	kind_t kind(void) const override { return MEM; }
 	cstring name(void) const override { return "memory stage"; }
 	string detail(void) const override { return _ << "data access @ " << inst()->address(); }
+	bool isFetch() const override { return false; }
+	bool isDataMemAccess() const override { return true; }
 };
 
 
@@ -68,11 +70,13 @@ public:
 	MissEvent(Inst *inst, ot::time cost, LBlock *lb)
 		: Event(inst), _lb(lb), _cost(cost) {	}
 
-	virtual kind_t kind(void) const { return FETCH; }
-	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return LOCAL; }
+	kind_t kind() const override { return FETCH; }
+	ot::time cost() const override { return _cost; }
+	type_t type() const override { return LOCAL; }
+	bool isFetch() const override { return true; }
+	MemArea fetchedBlock() const override { return MemArea(_lb->area()); }
 
-	virtual occurrence_t occurrence(void) const {
+	occurrence_t occurrence() const override {
 		switch(CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return NEVER;
 		case FIRST_HIT:			return SOMETIMES;
@@ -83,11 +87,11 @@ public:
 		}
 	}
 
-	virtual cstring name(void) const { return "L1 instruction cache"; }
+	cstring name() const override { return "L1 instruction cache"; }
 
-	virtual string detail(void) const { return _ << *CATEGORY(_lb) << " L1-I" << " @ " << _lb->address(); }
+	string detail() const override { return _ << *CATEGORY(_lb) << " L1-I" << " @ " << _lb->address(); }
 
-	virtual int weight(void) const {
+	int weight() const override {
 		switch(CATEGORY(_lb)) {
 		case ALWAYS_HIT:		return 0;
 		case FIRST_HIT:
@@ -104,11 +108,11 @@ public:
 		}
 	}
 
-	virtual bool isEstimating(bool on) {
+	bool isEstimating(bool on) override {
 		return on && CATEGORY(_lb) != NOT_CLASSIFIED;	// only when on = true!
 	}
 
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	void estimate(ilp::Constraint *cons, bool on) override {
 		if(on)
 			cons->addLeft(1, otawa::MISS_VAR(_lb));
 	}
@@ -124,20 +128,20 @@ public:
 	BranchPredictionEvent(Inst *inst, ot::time cost, occurrence_t occ, ilp::Var *var, Block *wbb)
 		: Event(inst), _var(var), _cost(cost), _occ(occ), _wbb(wbb) { }
 
-	virtual kind_t kind(void) const { return BRANCH; }
-	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return AFTER; }
-	virtual occurrence_t occurrence(void) const { return _occ; }
-	virtual cstring name(void) const { return "branch prediction"; }
-	virtual string detail(void) const { return _ << "BP " << *branch::CATEGORY(_wbb); }
-	virtual bool isEstimating(bool on) { return on; }
+	kind_t kind() const override { return BRANCH; }
+	ot::time cost() const override { return _cost; }
+	type_t type() const override { return AFTER; }
+	occurrence_t occurrence() const override { return _occ; }
+	cstring name() const override { return "branch prediction"; }
+	string detail() const override { return _ << "BP " << *branch::CATEGORY(_wbb); }
+	bool isEstimating(bool on) override { return on; }
 
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	void estimate(ilp::Constraint *cons, bool on) override {
 		if(on)
 			cons->addLeft(1, _var);
 	}
 
-	virtual int weight(void) const {
+	int weight() const override {
 		if(!_wbb)
 			return 1;
 		else
@@ -157,11 +161,12 @@ public:
 	DataMissEvent(Inst *inst, ot::time cost, dcache::BlockAccess& acc, BasicBlock *bb)
 	: Event(inst), _cost(cost), _acc(acc), _bb(bb) { }
 
-	virtual kind_t kind(void) const { return MEM; }
-	virtual ot::time cost(void) const { return _cost; }
-	virtual type_t type(void) const { return LOCAL; }
+	kind_t kind() const override { return MEM; }
+	ot::time cost() const override { return _cost; }
+	type_t type() const override { return LOCAL; }
+	bool isDataMemAccess() const override { return true; }
 
-	virtual occurrence_t occurrence(void) const {
+	occurrence_t occurrence(void) const override {
 		switch(dcache::CATEGORY(_acc)) {
 		case cache::ALWAYS_HIT:		return NEVER;
 		case cache::FIRST_HIT:		return SOMETIMES;
@@ -172,8 +177,8 @@ public:
 		}
 	}
 
-	virtual cstring name(void) const { return "L1 data cache"; }
-	virtual string detail(void) const {
+	cstring name() const override { return "L1 data cache"; }
+	string detail() const override {
 		if(_acc.kind() == dcache::BlockAccess::BLOCK)
 			return _ << *dcache::CATEGORY(_acc) << " L1-D" << " @ " << _acc.block().address();
 		else if(_acc.kind() == dcache::BlockAccess::RANGE)
@@ -182,7 +187,7 @@ public:
 			return _ << *dcache::CATEGORY(_acc) << " L1-D any";
 	}
 
-	virtual int weight(void) const {
+	int weight() const override {
 		switch(dcache::CATEGORY(_acc)) {
 		case cache::ALWAYS_HIT:		return 0;
 		case cache::FIRST_HIT:
@@ -199,11 +204,11 @@ public:
 		}
 	}
 
-	virtual bool isEstimating(bool on) {
+	bool isEstimating(bool on) override {
 		return on && dcache::CATEGORY(_acc) != NOT_CLASSIFIED;	// only when on = true!
 	}
 
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	void estimate(ilp::Constraint *cons, bool on) override {
 		if(on) {
 			ASSERT(*dcache::MISS_VAR(_acc) != nullptr);
 			if(_acc.kind() == dcache::BlockAccess::BLOCK)
@@ -225,11 +230,11 @@ public:
 	DataPurgeEvent(Inst *inst, dcache::BlockAccess& acc, BasicBlock *bb)
 	: Event(inst), _acc(acc), _bb(bb) { }
 
-	virtual kind_t kind(void) const { return MEM; }
-	virtual ot::time cost(void) const { return dcache::PURGE_TIME(_acc); }
-	virtual type_t type(void) const { return LOCAL; }
+	kind_t kind() const override { return MEM; }
+	ot::time cost() const override { return dcache::PURGE_TIME(_acc); }
+	type_t type() const override { return LOCAL; }
 
-	virtual occurrence_t occurrence(void) const {
+	occurrence_t occurrence() const override {
 		switch(dcache::PURGE(_acc)) {
 		case dcache::NO_PURGE:		return NEVER;
 		case dcache::MAY_PURGE:
@@ -239,10 +244,10 @@ public:
 		}
 	}
 
-	virtual cstring name(void) const { return "L1 data cache purge"; }
-	virtual string detail(void) const { return _ << *dcache::PURGE(_acc) << " L1-D"; }
+	cstring name() const override { return "L1 data cache purge"; }
+	string detail() const override { return _ << *dcache::PURGE(_acc) << " L1-D"; }
 
-	virtual int weight(void) const {
+	int weight() const override {
 		switch(dcache::PURGE(_acc)) {
 		case dcache::NO_PURGE:		return 0;
 		case dcache::MAY_PURGE:
@@ -259,11 +264,11 @@ public:
 		}
 	}
 
-	virtual bool isEstimating(bool on) {
+	bool isEstimating(bool on) override {
 		return on;	// only when on = true!
 	}
 
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	void estimate(ilp::Constraint *cons, bool on) override {
 		if(on) {
 			ASSERT(*dcache::MISS_VAR(_acc) != nullptr);
 			cons->addLeft(1, dcache::MISS_VAR(_acc));

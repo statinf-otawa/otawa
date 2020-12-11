@@ -23,6 +23,7 @@
 #include "ai.h"
 #include <otawa/ai/FlowAwareRanking.h>
 #include <otawa/ai/RankingAI.h>
+#include <otawa/ai/SimpleWorkList.h>
 #include <otawa/dfa/ai.h>
 #include <otawa/ai/BlockAnalysis.h>
 
@@ -509,6 +510,40 @@ p::interfaced_feature<CFGRanking> CFG_RANKING_FEATURE("otawa::ai::CFG_RANKING_FE
  * Get the input state for CFG block v.
  * @param v		Looked blocked.
  * @return		Abstract input state for v.
+ */
+
+
+/**
+ * @class SimpleWorkList
+ * This class implements a very light and simple work list based on a list
+ * queue and on a bit vector to avoid duplicates in the list queue. It is
+ * dedicated to store CFG blocks.
+ * @ingroup ai
+ */
+
+/**
+ * @fn SimpleWorkList::SimpleWorkList(const CFGCollection& coll);
+ * Build a simple work list for the given CFG collection.
+ * @param coll	CFG collection to work on.
+ */
+
+/**
+ * @fn bool SimpleWorkList::isEmpty() const;
+ * Test if the work list is empty.
+ * @return	True if the work list is empty, false else.
+ */
+
+/**
+ * @fn void SimpleWorkList::put(Block *v);
+ * Add the given block in to the work list.
+ * @param v		Added block.
+ */
+
+/**
+ * @fn Block *SimpleWorkList::get();
+ * Get the next block from the work list and remove it. It is illegal to call
+ * this function in an empty work list.
+ * @return	Next available block in the work list.
  */
 
 } } 	// otawa::ai

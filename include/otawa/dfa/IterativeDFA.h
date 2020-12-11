@@ -159,7 +159,7 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 	BitVector present(_g->count());
 	Set *comp = prob.empty(), *ex;
 	for(auto bb: *_g) {
-			OTAWA_IDFA_TRACE("DFA: push BB" << bb->index());
+			OTAWA_IDFA_TRACE("\tDFA: push BB" << bb->index());
 			todo.put(bb);
 			present.set(bb->index());
 		}
@@ -183,12 +183,12 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 
 		// OUT = IN \ KILL U GEN
 		prob.set(comp, ins[idx]);
-		OTAWA_IDFA_DUMP("IN", comp);
+		OTAWA_IDFA_DUMP("\tIN", comp);
 		prob.diff(comp, kills[idx]);
-		OTAWA_IDFA_DUMP("KILL", kills[idx]);
+		OTAWA_IDFA_DUMP("\tKILL", kills[idx]);
 		prob.add(comp, gens[idx]);
-		OTAWA_IDFA_DUMP("GEN", gens[idx]);
-		OTAWA_IDFA_DUMP("OUT", comp);
+		OTAWA_IDFA_DUMP("\tGEN", gens[idx]);
+		OTAWA_IDFA_DUMP("\tOUT", comp);
 
 		// Any modification ?
 		if(!prob.equals(comp, outs[idx])) {
@@ -201,7 +201,7 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 			// add successors
 			for(typename Iter::Forward next(bb); next(); next++)
 				if(!present.bit(next->index())) {
-					OTAWA_IDFA_TRACE("DFA: push BB" << next->index());
+					OTAWA_IDFA_TRACE("\tDFA: push BB" << next->index());
 					todo.put(static_cast<typename G::vertex_t *>(*next));
 					present.set(next->index());
 				}

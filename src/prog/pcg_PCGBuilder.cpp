@@ -204,7 +204,7 @@ p::declare ResursivityAnalysis::reg = p::init("otawa::ResursivityAnalysis", Vers
  * @li @ref PROGRAM_CALL_GRAPH
  *
  * @par Default implementation
- *	* PCGBuilder
+ *	* otawa::PCGBuilder
  *
  * @ingroup pcg
  */
@@ -234,9 +234,9 @@ p::id<PCG *> PROGRAM_CALL_GRAPH("otawa::PROGRAM_CALL_GRAPH", 0);
  * this one.
  *
  * @par Properties
- *	* RECURSE_HEAD
- *	* RECUSE_ENTRY
- *	* RECURSE_BACK
+ *	* otawa::RECURSE_HEAD
+ *	* otawa::RECUSE_ENTRY
+ *	* otawa::RECURSE_BACK
  *
  * @par Implementations
  *	* ResursivityAnalysis (default)
@@ -248,14 +248,16 @@ p::feature RECURSIVITY_ANALYSIS("otawa::RECURSIVITY_ANALYSIS", p::make<Resursivi
 
 /**
  * This properties marks CFG and PCGNode corresponding to head of recursivity
- * nests.
+ * nests. The argument is the PCG block corresponding to the main entry of a
+ * recursivity nest: a recursivity nest may have several entries.
+ * The choice of the main entry is implementation dependent.
  *
  * @par Features
- *	* RECURSIVITY_ANALYSIS
+ *	* otawa::RECURSIVITY_ANALYSIS
  *
  * @par Hooks
- *	* PCGNode
- *	* CFG
+ *	* otawa::PCGNode
+ *	* otawa::CFG
  *
  * @ingroup pcg
  */
@@ -267,11 +269,11 @@ p::id<PCGBlock *> RECURSE_HEAD("RECURSE_HEAD", nullptr);
  * entering a recursivity nest.
  *
  * @par Features
- *	* RECURSIVITY_ANALYSIS
+ *	* otawa::RECURSIVITY_ANALYSIS
  *
  * @par Hooks
- *	* PCGNode
- *	* CFG
+ *	* otawa::PCGNode
+ *	* otawa::CFG
  *
  * @ingroup pcg
  */
@@ -283,11 +285,11 @@ p::id<bool> RECURSE_ENTRY("otawa::RECURSE_ENTRY");
  * backing inside a recursivity nest.
  *
  * @par Features
- *	* RECURSIVITY_ANALYSIS
+ *	* otawa::RECURSIVITY_ANALYSIS
  *
  * @par Hooks
- *	* PCGNode
- *	* CFG
+ *	* otawa::PCGNode
+ *	* otawa::SynthBlock
  *
  * @ingroup pcg
  */

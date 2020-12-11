@@ -19,6 +19,7 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#include <elm/io/BufferedOutStream.h>
 #include <elm/sys/System.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/proc/Feature.h>
@@ -284,7 +285,8 @@ p::declare Processor::reg = p::init("otawa::Processor", Version(1, 2, 0))
 /**
  * Build a simple anonymous processor.
  */
-Processor::Processor(void): stats(0), ws(0), _progress(0) {
+Processor::Processor(void)
+: stats(nullptr), ws(nullptr), _progress(nullptr), _dump(nullptr) {
 	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 }
@@ -308,7 +310,7 @@ Processor::~Processor(void) {
  * For internal use only.
  */
 Processor::Processor(AbstractRegistration& registration)
-: stats(0), ws(0), _progress(0) {
+: stats(nullptr), ws(nullptr), _progress(nullptr), _dump(nullptr) {
 	_reg = &registration;
 }
 
@@ -317,7 +319,7 @@ Processor::Processor(AbstractRegistration& registration)
  * For internal use only.
  */
 Processor::Processor(String name, Version version, AbstractRegistration& registration)
-: stats(0), ws(0), _progress(0) {
+: stats(nullptr), ws(nullptr), _progress(nullptr), _dump(nullptr) {
 	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &registration;
@@ -334,7 +336,7 @@ Processor::Processor(String name, Version version, AbstractRegistration& registr
  * @deprecated		Configuration must be passed at the process() call.
  */
 Processor::Processor(elm::String name, elm::Version version,
-const PropList& props): stats(0) {
+const PropList& props): stats(nullptr), _dump(nullptr) {
 	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -350,7 +352,7 @@ const PropList& props): stats(0) {
  * @deprecated
  */
 Processor::Processor(String name, Version version)
-: stats(0), ws(0), _progress(0) {
+: stats(nullptr), ws(nullptr), _progress(nullptr), _dump(nullptr) {
 	_reg = new CustomRegistration(reg);
 	flags |= IS_ALLOCATED;
 	_reg->_base = &reg;
@@ -376,14 +378,14 @@ Processor::Processor(const PropList& props): stats(0) {
  */
 void Processor::init(const PropList& props) {
 
-	// Process output
+	// process output
 	out.setStream(*OUTPUT(props));
 	log.setStream(*LOG(props));
 
-	// Process statistics
+	// process statistics
 	stats = STATS(props);
 
-	// Process timing
+	// process timing
 	if(logFor(LOG_PROC) || recordsStats()) {
 		if(TIMED(props))
 			flags |= IS_TIMED;
@@ -391,7 +393,29 @@ void Processor::init(const PropList& props) {
 			flags &= ~IS_TIMED;
 	}
 
-	// Progress
+	// process dumping
+	if(DUMP(props))
+		flags |= IS_DUMPING;
+	else
+		for(auto f: DUMP_FOR.all(props))
+			if(f == name())
+				flags |= IS_DUMPING;
+	if(isDumping()) {
+		sys::Path p = DUMP_TO(props);
+		if(!p)
+			_dump = &out.stream();
+		else {
+			try {
+				auto s = p.write();
+				_dump = new io::BufferedOutStream(s, true);
+			}
+			catch(io::IOException& e) {
+				throw ProcessorException(*this, _ << "cannot dump to " << p << ": " << e.message());
+			}
+		}
+	}
+
+	// progress
 	_progress = PROGRESS(props);
 
 	// configure statistics
@@ -436,10 +460,12 @@ void Processor::run(WorkSpace *ws) {
 	setWorkspace(ws);
 
 	// pre-processing actions
-	if(logFor(LOG_CFG))
-		log << "Starting " << name() << " (" << version() << ')' << io::endl;
-	else if(logFor(LOG_PROC))
-		log << "RUNNING: " << name() << " (" << version() << ')' << io::endl;
+	if(!isQuiet()) {
+		if(logFor(LOG_CFG))
+			log << "Starting " << name() << " (" << version() << ')' << io::endl;
+		else if(logFor(LOG_PROC))
+			log << "RUNNING: " << name() << " (" << version() << ')' << io::endl;
+	}
 
 	// record time
 	elm::sys::StopWatch swatch;
@@ -458,19 +484,32 @@ void Processor::run(WorkSpace *ws) {
 	cleanup(ws);
 
 	// Post-processing actions
-	if(logFor(LOG_CFG))
+	if(!isQuiet() && logFor(LOG_CFG))
 		log << "Ending " << name();
 	if(isTimed()) {
 		swatch.stop();
 		if(recordsStats())
 			RUNTIME(*stats) = swatch.delay().micros();
-		if(logFor(LOG_CFG))
-			log << " (" << (swatch.delay().micros() / 1000.) << "ms)";
-		else if(logFor(LOG_PROC))
-			log << "INFO: time = " << (swatch.delay().micros() / 1000) << "ms";
+		if(!isQuiet()) {
+			if(logFor(LOG_CFG))
+				log << " (" << (swatch.delay().micros() / 1000.) << "ms)";
+			else if(!isQuiet() && logFor(LOG_PROC))
+				log << "INFO: time = " << (swatch.delay().micros() / 1000) << "ms";
+		}
 	}
-	if(logFor(LOG_CFG))
+	if(!isQuiet() && logFor(LOG_CFG))
 		log << io::endl << io::endl;
+
+	// dump if required
+	if(isDumping()) {
+		Output out(*_dump);
+		dump(ws, out);
+		if((flags & CLOSE_DUMP) != 0) {
+			flags &= ~CLOSE_DUMP;
+			delete _dump;
+			_dump = nullptr;
+		}
+	}
 
 	// record statistics
 	if(isCollectingStats())
@@ -563,6 +602,18 @@ void Processor::destroy(WorkSpace *ws) {
 	for(List<Cleaner *>::Iter clean = *cleaners; clean(); clean++)
 		delete *clean;
 	cleaners.clear();
+}
+
+
+/**
+ * Function called for debugging purpose when dump properties (otawa::DUMP,
+ * otawa::DUMP_FOR) are provided. The default implementation does nothing.
+ * The dumped data should be human readable.
+ * @param ws	Current workspace.
+ * @param out	Output to dump to.
+ */
+void Processor::dump(WorkSpace *ws, Output& out) {
+
 }
 
 
@@ -668,6 +719,35 @@ p::id<string>& Processor::LOG_FOR = otawa::LOG_FOR;
  * Record a progress listener for the execution of the processors.
  */
 p::id<Progress *> Processor::PROGRESS("otawa::Processor::PROGRESS", &Progress::null);
+
+
+/**
+ * Dump the results of all analyzes.
+ * @ingroup proc
+ */
+p::id<bool> DUMP("otawa::DUMP", false);
+
+
+/**
+ * Dump the result of the analysis which name is passed as argument.
+ * Several instances of this property can be given.
+ * @ingroup proc
+ */
+p::id<string> DUMP_FOR("otawa::DUMP_FOR", "");
+
+
+/**
+ * Dump the result to the given file path.
+ * @ingroup proc
+ */
+p::id<string> DUMP_TO("otawa::DUMP_TO", "");
+
+
+/**
+ * Dump the results to the given stream.
+ * @ingroup proc
+ */
+p::id<elm::io::OutStream *> DUMP_STREAM("otawa::DUMP_STREAM", nullptr);
 
 
 /**

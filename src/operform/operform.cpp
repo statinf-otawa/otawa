@@ -21,7 +21,7 @@
 
 #include <elm/util/Cleaner.h>
 #include <elm/sys/StopWatch.h>
-#include <otawa/app/Application.h>
+#include <otawa/app/CFGApplication.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/Output.h>
 #include <otawa/display/CFGOutput.h>
@@ -31,10 +31,10 @@
 using namespace elm;
 using namespace otawa;
 
-class OPerform: public Application {
+class OPerform: public CFGApplication {
 public:
 	OPerform(void):
-		Application(Make("operform", Version(1, 0, 0))
+		CFGApplication(Make("operform", Version(1, 0, 0))
 			.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.")
 			.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*")),
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),
@@ -101,10 +101,8 @@ protected:
 	}
 
 	void complete(PropList& props) {
-		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE)) {
-			cerr << "DEBUG: COLLECTED_CFG_FEATURE not provided!\n";
+		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
-		}
 
 		// if enabled, perform output
 		if(!phony) {
@@ -132,6 +130,7 @@ protected:
 				workspace()->run<display::CFGOutput>(props);
 			}
 		}
+		completeTask();
 	}
 
 private:
@@ -140,7 +139,8 @@ private:
 			return false;
 		else {
 			task = entry;
-			TASK_ENTRY(props) = entry;
+			startTask(entry);
+			prepareCFG(entry, props);
 			return true;
 		}
 	}

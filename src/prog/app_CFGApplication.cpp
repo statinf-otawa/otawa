@@ -68,6 +68,17 @@ void CFGApplication::processTask(const CFGCollection& coll, PropList& props) {
 
 ///
 void CFGApplication::work(const string& entry, PropList &props) {
+	prepareCFG(entry, props);
+	processTask(*COLLECTED_CFG_FEATURE.get(workspace()), props);
+	workspace()->invalidate(COLLECTED_CFG_FEATURE);
+}
+
+/**
+ * Apply the CFG options.
+ * @param entry		Entry function name.
+ * @param props		Current configuration.
+ */
+void CFGApplication::prepareCFG(const string& entry, PropList& props) {
 
 	// tune the CFGs
 	if(!no_cfg_tune) {
@@ -91,10 +102,6 @@ void CFGApplication::work(const string& entry, PropList &props) {
 
 	// call the task processing
 	require(COLLECTED_CFG_FEATURE);
-	processTask(*COLLECTED_CFG_FEATURE.get(workspace()), props);
-
-	// cleanup the workspace
-	workspace()->invalidate(COLLECTED_CFG_FEATURE);
 }
 
 } // otawa

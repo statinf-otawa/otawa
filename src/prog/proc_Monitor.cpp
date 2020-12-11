@@ -93,6 +93,7 @@ void Monitor::setWorkspace(WorkSpace *workspace) {
 /**
  * This property identifier is used for setting the output stream used by
  * the processor to write results.
+ * @ingroup proc
  */
 p::id<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &cout.stream());
 
@@ -100,6 +101,7 @@ p::id<elm::io::OutStream *> OUTPUT("otawa::OUTPUT", &cout.stream());
 /**
  * This property identifier is used for setting the log stream used by
  * the processor to write messages (information, warning, error).
+ * @ingroup proc
  */
 p::id<elm::io::OutStream *> LOG("otawa::LOG", &cerr.stream());
 
@@ -107,6 +109,7 @@ p::id<elm::io::OutStream *> LOG("otawa::LOG", &cerr.stream());
 /**
  * This property activates the verbose mode of the processor: information about
  * the processor work will be displayed.
+ * @ingroup proc
  */
 p::id<bool> VERBOSE("otawa::VERBOSE", false);
 
@@ -114,6 +117,7 @@ p::id<bool> VERBOSE("otawa::VERBOSE", false);
 /**
  * Property passed in the configuration property list of a processor
  * to select the log level between LOG_PROC, LOG_CFG or LOG_BB.
+ * @ingroup proc
  */
 p::id<Monitor::log_level_t> LOG_LEVEL("otawa::LOG_LEVEL", Monitor::LOG_NONE);
 
@@ -121,6 +125,7 @@ p::id<Monitor::log_level_t> LOG_LEVEL("otawa::LOG_LEVEL", Monitor::LOG_NONE);
 /**
  * Display logs only for the named processor. If no LOG_FOR is defined, all processors
  * are logged. Several LOG_FOR can be recorded in the configuration.
+ * @ingroup proc
  */
 p::id<string> LOG_FOR("otawa::LOG_FOR");
 
@@ -145,6 +150,7 @@ void Monitor::configure(const PropList& props, string name) {
 	if(name != "")
 		for(auto n: LOG_FOR.all(props)) {
 			if(n == name) {
+				flags |= IS_QUIET;
 				log_auth = true;
 				if(!verbose || level == LOG_NONE)
 					verbose = true;
@@ -182,6 +188,10 @@ void Monitor::configure(const PropList& props, string name) {
 			r->flags |= IS_VERBOSE;
 		else
 			r->flags &= ~IS_VERBOSE;
+		if(flags & IS_QUIET)
+			r->flags |= IS_QUIET;
+		else
+			r->flags &= ~IS_QUIET;
 	}
 }
 

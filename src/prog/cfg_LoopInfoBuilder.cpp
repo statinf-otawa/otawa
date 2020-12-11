@@ -87,12 +87,13 @@ private:
  */
 class LoopInfoBuilder: public CFGProcessor {
 public:
-        LoopInfoBuilder(void);
-        virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
-
+	static p::declare reg;
+	LoopInfoBuilder();
+protected:
+	void processCFG(otawa::WorkSpace*, otawa::CFG*) override;
 private:
-		void buildLoopExitList(otawa::CFG* cfg);
-		bool fst;
+	void buildLoopExitList(otawa::CFG* cfg);
+	bool fst;
 };
 
 
@@ -314,14 +315,18 @@ inline Block* LoopInfoProblem::get(int index) const {
 #endif
 
 
+p::declare LoopInfoBuilder::reg =
+	p::init("otawa::LoopInfoBuilder", Version(2, 0, 0))
+	.extend<CFGProcessor>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.provide(LOOP_INFO_FEATURE)
+	.make<LoopInfoBuilder>();
 
 
 /* Constructors/Methods for LoopInfoBuilder */
 
-LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(2, 0, 0)), fst(true) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	provide(LOOP_INFO_FEATURE);
+LoopInfoBuilder::LoopInfoBuilder(): CFGProcessor(reg), fst(true) {
 }
 
 

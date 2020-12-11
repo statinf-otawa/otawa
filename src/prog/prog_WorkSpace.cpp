@@ -511,7 +511,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& !reg.uses(feature->feature())) {
-			if(proc->logFor(Processor::LOG_DEPS))
+			if(!proc->isQuiet() && proc->logFor(Processor::LOG_DEPS))
 				proc->log << "INVALIDATED: " << feature->feature().name()
 					<< " by " << reg.name() << io::endl;
 			invalidate(feature->feature());
@@ -522,7 +522,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	for(FeatureIter feature(reg); !isCancelled() && feature(); feature++)
 		if(feature->kind() == FeatureUsage::require
 		|| feature->kind() == FeatureUsage::use) {
-			if(proc->logFor(Processor::LOG_DEPS)) {
+			if(!proc->isQuiet() && proc->logFor(Processor::LOG_DEPS)) {
 				cstring kind = "USED";
 				if(feature->kind() == FeatureUsage::require)
 					kind = "REQUIRED";
@@ -556,7 +556,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::invalidate
 		&& reg.uses(feature->feature())) {
-			if(proc->logFor(Processor::LOG_DEPS))
+			if(!proc->isQuiet() && proc->logFor(Processor::LOG_DEPS))
 				proc->log << "INVALIDATED: " << feature->feature().name() << " by " << reg.name() << io::endl;
 			invalidate(feature->feature());
 			required.remove(&feature->feature());
@@ -568,7 +568,7 @@ void WorkSpace::run(Processor *proc, const PropList& props, bool del_proc) {
 	for(FeatureIter feature(reg); feature(); feature++)
 		if(feature->kind() == FeatureUsage::provide) {
 			provides++;
-			if(proc->logFor(Processor::LOG_DEPS))
+			if(!proc->isQuiet() && proc->logFor(Processor::LOG_DEPS))
 				proc->log << "PROVIDED: " << feature->feature().name() << " by " << reg.name() << io::endl;
 		}
 	if(provides)

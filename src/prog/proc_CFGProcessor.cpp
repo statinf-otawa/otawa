@@ -219,6 +219,24 @@ void CFGProcessor::destroy(WorkSpace *ws) {
 		destroyCFG(ws, coll->get(i));
 }
 
+///
+void CFGProcessor::dump(WorkSpace *ws, Output& out) {
+	for(auto g: *_coll)
+		dumpCFG(ws, g, out);
+}
+
+/**
+ * The default implementation of CFGProcessor dump calls this function for
+ * each CFG of the program. So it can be redefined to provide a custom dump.
+ * The default implementation does nothing.
+ * @param ws	Current workspace.
+ * @param g		CFG to dump.
+ * @param out	Stream to output to.
+ */
+void CFGProcessor::dumpCFG(WorkSpace *ws, CFG *g, Output& out) {
+
+}
+
 
 /**
  * This property is used to store statistics about the count of processed

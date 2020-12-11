@@ -5,6 +5,8 @@ CMakeCache.txt
 install_manifest.txt
 
 *.so
+*.cmake
+*~
 
 config.h
 dist/otawa-install.py
@@ -38,3 +40,12 @@ doc/*/*-imports
 
 test/benchs/main-otawa/
 test/etime/main-ilp.html
+test/ai/test_ai
+test/cfg/test_cfg
+test/clp/test_clp
+test/dom/test_dom
+test/lexicon/test_lexicon
+test/props/test_props
+test/reg/test_reg
+test/steps/
+test/test_MemorySet

@@ -127,7 +127,6 @@ extern Identifier<bool> VIRTUAL_DEFAULT;
 extern Identifier<bool> NO_INLINE;
 extern Identifier<bool> INLINING_POLICY;
 extern p::feature VIRTUALIZED_CFG_FEATURE;
-extern Identifier<bool> RECURSIVE_CALL;
 
 // CFG_CHECKSUM_FEATURE
 extern p::feature CFG_CHECKSUM_FEATURE;

@@ -71,23 +71,26 @@ public:
 	typedef Pair<Inst *, const hard::PipelineUnit *> rel_t;
 
 	Event(Inst *inst);
-	virtual ~Event(void);
-	inline Inst *inst(void) const { return _inst; }
+	virtual ~Event();
+	inline Inst *inst() const { return _inst; }
 
 	// accessors
-	virtual cstring name(void) const;
-	virtual string detail(void) const;
+	virtual cstring name() const;
+	virtual string detail() const;
+	virtual bool isFetch() const;
+	virtual bool isDataMemAccess() const;
+	virtual MemArea fetchedBlock() const;
 
-	virtual kind_t kind(void) const = 0;
-	virtual ot::time cost(void) const = 0;
-	virtual occurrence_t occurrence(void) const;
+	virtual kind_t kind() const = 0;
+	virtual ot::time cost() const = 0;
+	virtual occurrence_t occurrence() const;
 
-	virtual type_t type(void) const = 0;
+	virtual type_t type() const = 0;
 	virtual Pair<Inst *, const hard::PipelineUnit *> related(void) const;
-	virtual const hard::PipelineUnit *unit(void) const;
+	virtual const hard::PipelineUnit *unit() const;
 
 	// heuristic contribution
-	virtual int weight(void) const;
+	virtual int weight() const;
 
 	// ILP contribution
 	virtual bool isEstimating(bool on);

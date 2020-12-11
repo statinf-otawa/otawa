@@ -1,8 +1,8 @@
 /*
- *	FlowAwareRanking class interface
+ *	WorkListDriver class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2014, IRIT UPS.
+ *	Copyright (c) 2017, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -19,29 +19,41 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  *	02110-1301  USA
  */
-#ifndef OTAWA_AI_FLOWAWARERANKING_H_
-#define OTAWA_AI_FLOWAWARERANKING_H_
+#ifndef OTAWA_AI_SIMPLEWORKLIST_H_
+#define OTAWA_AI_SIMPLEWORKLIST_H_
 
-#include <otawa/cfg/CFG.h>
-#include <otawa/proc/Processor.h>
-#include "features.h"
+#include <elm/data/ListQueue.h>
+#include <elm/util/BitVector.h>
+#include <otawa/cfg/features.h>
 
 namespace otawa { namespace ai {
 
-class FlowAwareRanking: public Processor, public CFGRanking {
+class SimpleWorkList {
 public:
-	static p::declare reg;
-	FlowAwareRanking(p::declare& r = reg);
+	inline SimpleWorkList(const CFGCollection *coll): in(coll->countBlocks()) { }
 
-	int rankOf(Block *v) override;
+	inline bool isEmpty() const { return q.isEmpty(); }
+	inline operator bool() const { return !isEmpty(); }
 
-protected:
-	void *interfaceFor(const AbstractFeature& f) override;
-	void processWorkSpace(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
-	void dump(WorkSpace *ws, Output& out) override;
+	inline void put(Block *v) {
+		if(!in.bit(v->id())) {
+			q.put(v);
+			in.set(v->id());
+		}
+	}
+
+	inline Block *get() {
+		ASSERT(!q.isEmpty());
+		auto v = q.get();
+		in.clear(v->id());
+		return v;
+	}
+
+private:
+	ListQueue<Block *> q;
+	BitVector in;
 };
 
 } }		// otawa::ai
 
-#endif /* OTAWA_AI_FLOWAWARERANKING_H_ */
+#endif /* OTAWA_AI_SIMPLEWORKLIST_H_ */
