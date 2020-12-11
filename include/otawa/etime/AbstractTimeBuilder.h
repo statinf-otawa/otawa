@@ -103,6 +103,7 @@ public:
 
 	virtual Factory *getFactory(void);
 	virtual void compute(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events) = 0;
+	inline void setAtbBuilder(AbstractTimeBuilder* atb){_atb = atb;};
 
 protected:
 	virtual void configure(const PropList& props);

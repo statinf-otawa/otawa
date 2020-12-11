@@ -395,6 +395,7 @@ void StandardILPGenerator::contributeBase(ot::time time) {
 	ASSERTP(!_t_lts_set, "several contributeBase() performed");
 	_t_lts_set = true;
 	_t_lts = time;
+	_ilp_var_count++;
 
 	// logging
 	if(logFor(LOG_BB))
@@ -410,7 +411,7 @@ void StandardILPGenerator::contributeBase(ot::time time) {
  */
 void StandardILPGenerator::contributeTime(ot::time t) {
 	//No need to call contributeBase first
-	//ASSERTP(_t_lts_set, "perform contributeBase() first");
+	ASSERTP(_t_lts_set, "perform contributeBase() first");
 	//
 	_ilp_var_count++;
 
@@ -428,9 +429,9 @@ void StandardILPGenerator::contributeTime(ot::time t) {
 	_x_hts = system()->newVar(hts_name);
 
 	// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
-	system()->addObjectFunction(t , _x_hts);
+	system()->addObjectFunction(t - _t_lts , _x_hts);
 	if(isRecording())
-		HTS_CONFIG(_edge).add(pair(t, _x_hts));
+		HTS_CONFIG(_edge).add(pair(t - _t_lts, _x_hts));
 
 	// 0 <= x_hts <= x_edge
 	ilp::Constraint *cons = system()->newConstraint("0 <= x", ilp::Constraint::LE);
@@ -492,10 +493,12 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 			get(e.event())->boundImprecise(e);
 
 
-	ilp::Constraint* cons = system()->newConstraint("sum(x) = x_edge", ilp::Constraint::EQ);
+	if (!_partitionVars.isEmpty()){
+	ilp::Constraint* cons = system()->newConstraint("sum(x) = x_edge", ilp::Constraint::LE);
 	cons->addRight(1, _x_e);
 	for (auto v: _partitionVars){
 		cons->addLeft(1, v);
+	}
 	}
 }
 
