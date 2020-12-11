@@ -108,7 +108,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 			if(!RANK_OF(ev).exists() && r > RANK_OF(ev)) {
 				RANK_OF(ev) = r;
 				wl.put(ev);
-				cerr << "DEBUG: add " << ev << " (" << RANK_OF(ev) << ")" << io::endl;
 				continue;
 			}
 		}
@@ -121,7 +120,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 						if(r > RANK_OF(e->sink())) {
 							RANK_OF(e->sink()) = r;
 							wl.put(e->sink());
-							cerr << "DEBUG: add " << e->sink() << " (" << RANK_OF(e->sink()) << ")" << io::endl;
 						}
 			continue;
 		}
@@ -135,7 +133,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 			// back edge propagate to exit edges
 			else if(BACK_EDGE(e)) {
-				cerr << "DEBUG: " << e << " is a back edge!" << io::endl;
 				for(auto xe: **EXIT_LIST(e->sink()))
 					backs.push(xe);
 				while(backs) {
@@ -147,7 +144,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 						if(r > RANK_OF(ce->sink())) {
 							RANK_OF(ce->sink()) = r;
 							wl.put(ce->sink());
-							cerr << "DEBUG: add loop exit " << e->sink() << " (" << RANK_OF(e->sink()) << ")" << io::endl;
 						}
 				}
 			}
@@ -156,7 +152,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 			else if(r > RANK_OF(e->sink())) {
 				RANK_OF(e->sink()) = r;
 				wl.put(e->sink());
-				cerr << "DEBUG: add " << e->sink() << " (" << RANK_OF(e->sink()) << ")" << io::endl;
 			}
 	}
 }
