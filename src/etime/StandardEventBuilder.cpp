@@ -48,7 +48,6 @@ public:
 	int weight(void) const override { return 0; }
 	bool isEstimating(bool on) override { return false; }
 	void estimate(ilp::Constraint *cons, bool on) override { }
-	bool isFetch() const override { return true; }
 private:
 	ot::time _cost;
 };
@@ -60,8 +59,6 @@ public:
 	kind_t kind(void) const override { return MEM; }
 	cstring name(void) const override { return "memory stage"; }
 	string detail(void) const override { return _ << "data access @ " << inst()->address(); }
-	bool isFetch() const override { return false; }
-	bool isDataMemAccess() const override { return true; }
 };
 
 
@@ -73,8 +70,6 @@ public:
 	kind_t kind() const override { return FETCH; }
 	ot::time cost() const override { return _cost; }
 	type_t type() const override { return LOCAL; }
-	bool isFetch() const override { return true; }
-	MemArea fetchedBlock() const override { return MemArea(_lb->area()); }
 
 	occurrence_t occurrence() const override {
 		switch(CATEGORY(_lb)) {
@@ -164,7 +159,6 @@ public:
 	kind_t kind() const override { return MEM; }
 	ot::time cost() const override { return _cost; }
 	type_t type() const override { return LOCAL; }
-	bool isDataMemAccess() const override { return true; }
 
 	occurrence_t occurrence(void) const override {
 		switch(dcache::CATEGORY(_acc)) {

@@ -77,9 +77,6 @@ public:
 	// accessors
 	virtual cstring name() const;
 	virtual string detail() const;
-	virtual bool isFetch() const;
-	virtual bool isDataMemAccess() const;
-	virtual MemArea fetchedBlock() const;
 
 	virtual kind_t kind() const = 0;
 	virtual ot::time cost() const = 0;
