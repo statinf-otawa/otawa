@@ -3483,7 +3483,9 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 				Address addr;
 				const Array< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
-					if(banks[i]->isWritable() && (addr.isNull() || banks[i]->address() > addr))
+					if(banks[i]->isWritable()
+					&& banks[i]->type() != hard::Bank::IO
+					&& (addr.isNull() || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();
 				if(addr.isNull()) {
 					warn("no writable memory: reverting to loader stack address.");
