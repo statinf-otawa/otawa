@@ -2362,7 +2362,10 @@ public:
 #		ifdef CHECK_PARTIAL_ORDER
 			, list(nullptr)
 #		endif
-{ }
+	{
+		proc->semInit(b);
+		update(_init);
+	}
 
 	/*
 	 *
@@ -3053,6 +3056,44 @@ public:
 	}
 
 	/**
+	 * Execute the current block of instruction on the given state.
+	 * @param out	State to update.
+	 * @param ipack	Possible instruction pack to use.
+	 */
+	void update(Domain& out, clp::ClpStatePack::InstPack *ipack = nullptr) {
+		Domain *state = &out;
+		while(true) {
+
+			// execute the path
+			while(pc < b.length()) {
+				update(state);
+				_nb_sem_inst++; // for statistics
+
+				// build filter
+				if (bBuildFilters && currentClpStatePack)
+					ipack->append(*state);
+			}
+
+			// if there is several paths, merge with the main state
+			if(state != &out) {
+				out.join(*state);
+				delete state;
+			}
+
+			// no more path
+			if(!listOfIFsToDo)
+				break; // when all the forking states are processed
+			// prepare the new path
+			else {
+				Pair<int, Domain *> p = listOfIFsToDo.pop();
+				pc = p.fst;
+				state = p.snd;
+			}
+
+		}
+	}
+
+	/**
 	 * This function update the state by applying a basic block.
 	 * It gives the output state, given the input state and a pointer to the
 	 * basic block.
@@ -3079,7 +3120,6 @@ public:
 		this->bb = bb;
 
 		//Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
-		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
 		// save the input state in the basic block, join with an existing state
@@ -3095,103 +3135,38 @@ public:
 		if(out.equals(Domain::EMPTY))
 			return;
 
-#	ifdef USE_INST
-		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst(); inst++) {
-#	else // use bundle
 		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle(); bundle++) {
+
+			// initialize the state
 			has_if = false;
 			has_branch = false;
-#	endif
-
-#	ifdef USE_INST
-			this->currentInst = *inst;
-#	else
-			this->currentInst = (*bundle).first();
-#	endif
+			currentInst = (*bundle).first();
 			TRACESI(cerr << '\t' << currentInst->address() << ": "; currentInst->dump(cerr); cerr << io::endl);
 			_nb_inst++; // statistics
 
 			// get semantic instructions
-#	ifdef USE_INST
-			prepare(*inst);
-#	else
 			b.clear();
 			(*bundle).semInsts(b);
 			pc = 0;
 			listOfIFsToDo.clear();
-#	endif
 
 			// use the provided states associated with the first instruction of the bundle
 			insertInfo(out, bb->toBasic(), currentInst);
 
-			Domain *state = &out;
-
 			// initialize the InstPack for the current instruction/bundle
-			ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
-			if(bBuildFilters && currentClpStatePack) { // when building a filter
+			clp::ClpStatePack::InstPack *ipack = nullptr;
+			if(bBuildFilters && currentClpStatePack)
 				ipack = currentClpStatePack->newPack(currentInst->address());
-			}
 
 			// perform interpretation of each semantic instructions of a given instruction bundle
-			while(true) {
+			update(out, ipack);
+		}
 
-				// pc is the current index of the semantic instruction to process.
-				// when pc equals to the b.length() that means we are reaching the end of the semantic instruction block
-				while(pc < b.length()) {
-					update(state);
-					_nb_sem_inst++; // for statistics
-
-					// When creating a filter, a data strucuture is created to hold the state for each semantic instruction of each addresses
-					// currentClpStatePack of ClpStatePack:
-					// |---------------------------------------------|
-					// | ipack of InstPack for instruction/bundle 1  |
-					// | .........                                   |
-					// | ipack of InstPack for instruction/bundle n  |
-					// |---------------------------------------------|
-					//
-					// For each ipack, it contains the state for each semantic instruction of the instruction/bundle
-					// |----------------------------------------------|
-					// | state of semInst1_1 for instruction/bundle 1 |
-					// | .........                                    |
-					// | state of semInstM_1 for instruction/bundle 1 |
-					// |----------------------------------------------|
-					// .........
-					// |----------------------------------------------|
-					// | state of semInst1_n for instruction/bundle n |
-					// | .........                                    |
-					// | state of semInstM_n for instruction/bundle n |
-					// |----------------------------------------------|
-					ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
-					if (bBuildFilters && currentClpStatePack){
-						ipack->append(*state);
-					}
-				}
-
-				// this normally happens when processing other processing path formed by the IF sem. inst.
-				// because two different paths for the condition, we need to merge the resulted states from both paths of the IF sem. inst.
-				// so every possibility is covered
-				if(state != &out) {
-					out.join(*state);
-					delete state;
-				}
-
-				// if there are alternative path, i.e. because of an IF sem, to handle.
-				if(!listOfIFsToDo)
-					break; // when all the forking states are processed
-				else {
-					Pair<int, Domain *> p = listOfIFsToDo.pop(); // popping the state prepared previous when an IF was encountered
-					pc = p.fst;
-					state = p.snd;
-				}
-
-			} // end of processing semantic instructions of a given instruction/bundle
-		} // end of going through all the instructions/bundles of the basic block
 		// reset tracking
 		this->currentInst = 0;
 		this->bb = 0;
-
 		TRACEP(cerr << "s' = " << out << io::endl);
-		if (bBuildFilters)
+		if(bBuildFilters)
 			return;
 
 		// save the output state in the basic block
@@ -3201,16 +3176,12 @@ public:
 		clp::STATE_OUT(bb) = out;
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
-		// if the block has an IF instruction
+		// if there is a branch, applu filters
 		// !!DEBUG!! seems to cause crash
-//#	if 0
-		if(has_branch /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
-			//TODO: delete 'old' reg_filters if needed
-			//use Symbolic Expressions to get filters for this basic block
+		if(has_branch) {
 			TRACEP(cerr << "> IF+BRANCH detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
-//#	endif
 
 #		ifdef CHECK_PARTIAL_ORDER
 			State *old_in = list->results[bb->cfg()->index()][bb->index()];

@@ -152,10 +152,10 @@ private:
 	Process& proc;
 };
 
-extern Identifier<Pair<const hard::Register *, Value> > REG_INIT;
-extern Identifier<MemCell> MEM_INIT;
-extern p::feature INITIAL_STATE_FEATURE;
-extern Identifier<State *> INITIAL_STATE;
+extern p::id<Pair<const hard::Register *, Value> > REG_INIT;
+extern p::id<MemCell> MEM_INIT;
+extern p::interfaced_feature<State> INITIAL_STATE_FEATURE;
+extern p::id<State *> INITIAL_STATE;
 
 } }		// otawa::dfa
 

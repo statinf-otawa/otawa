@@ -338,7 +338,7 @@ File *Process::loadProgram(elm::CString path) {
  * Get a default address for the stack top.
  * @return	Default address of stack top.
  */
-Address Process::defaultStack(void) const {
+Address Process::defaultStack(void) {
 	return 0x80000000;
 }
 
@@ -347,7 +347,7 @@ Address Process::defaultStack(void) const {
  * Provide semantic sequence to initialize the environment
  * before performing static analysis. As a default, do nothing.
  */
-void Process::semInit(sem::Block& block) const {
+void Process::semInit(sem::Block& block) {
 }
 
 
