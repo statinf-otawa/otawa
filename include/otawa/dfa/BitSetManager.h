@@ -26,6 +26,8 @@
 #include <elm/types.h>
 #include <elm/assert.h>
 
+namespace otawa {
+
 using namespace elm;
 
 class BitSetManager {
@@ -54,5 +56,7 @@ private:
 	inline word_t mask(int i) const { return 1 << (i & 0x1f); }
 	int n;
 };
+
+}	// otawa
 
 #endif /* BITSETMANAGER_H_ */

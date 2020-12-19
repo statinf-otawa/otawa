@@ -29,9 +29,9 @@
 #include <otawa/graph/DiGraph.h>
 #include <otawa/prog/Bundle.h>
 
-using namespace elm;
-
 namespace otawa {
+
+using namespace elm;
 
 class BasicBlock;
 class Block;

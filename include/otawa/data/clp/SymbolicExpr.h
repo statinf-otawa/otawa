@@ -32,9 +32,9 @@
 #include <otawa/data/clp/ClpValue.h>
 #include <otawa/data/clp/ClpPack.h>
 
-using namespace elm;
-
 namespace otawa {
+
+using namespace elm;
 
 namespace hard {
 	class Platform;
@@ -643,11 +643,10 @@ namespace se{
 
 } // otawa
 
-inline io::Output& operator<<(io::Output& out, otawa::se::SymbExpr *sym)
+inline elm::io::Output& operator<<(elm::io::Output& out, otawa::se::SymbExpr *sym)
 	{ out << "=> "; sym->print(out); return out; }
 // output
 inline elm::io::Output& operator<<(elm::io::Output& out, otawa::se::SymbExpr &se) {
-	cerr << "ici !\n";
 	se.print(out);
 	return out;
 }
