@@ -255,17 +255,19 @@ inline Address SynthBlock::address(void) const
 class CFGMaker: public PropList, public graph::GenDiGraphBuilder<Block, Edge>  {
 public:
 	CFGMaker(Inst *first, bool fix = false);
-	inline Block *entry(void) const { return cfg->entry(); }
-	Block *exit(void);
-	Block *unknown(void);
-	CFG *build(void);
+	inline Block *entry() const { return cfg->entry(); }
+	Block *exit();
+	Block *unknown();
+	CFG *build();
 	void add(Block *v);
 	void call(SynthBlock *v, CFG *cfg);
 	void call(SynthBlock *v, CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { graph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }
-	inline CFG::BlockIter blocks(void) const { return cfg->vertices(); }
-	int count(void);
+	inline CFG::BlockIter blocks() const { return cfg->vertices(); }
+	int count();
 	inline Block *at(int index) const { return cfg->at(index); }
+	void fix(SynthBlock *v, CFGMaker *g);
+	void fix(SynthBlock *v, CFG *g);
 private:
 	CFG *cfg;
 	bool _fix;

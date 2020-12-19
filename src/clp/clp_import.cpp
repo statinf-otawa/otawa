@@ -178,14 +178,14 @@ public:
 };
 
 static EmptyContent _empty;
-Content& empty = _empty;
+Content& EMPTY = _empty;
 
 class Element: public Content {
 public:
 	class Make {
 		friend class Element;
 	public:
-		inline Make(xom::String name, int kind = 0): _name(name), _kind(kind), _content(&empty) { }
+		inline Make(xom::String name, int kind = 0): _name(name), _kind(kind), _content(&EMPTY) { }
 		inline Make& attr(Attribute& attr) { attrs.add(&attr); return *this; }
 		inline Make& kind(int kind) { _kind = kind; return *this; }
 		inline Make& content(Content& content) { _content = &content; return *this; }
@@ -196,7 +196,7 @@ public:
 		Content *_content;
 	};
 
-	Element(xom::String name, int kind = 0): _name(name), _kind(kind), _content(empty) { }
+	Element(xom::String name, int kind = 0): _name(name), _kind(kind), _content(EMPTY) { }
 	Element(const Make& m): _name(m._name), _kind(m._kind), attrs(m.attrs), _content(*m._content) { }
 
 	virtual bool parse(Parser& parser) {

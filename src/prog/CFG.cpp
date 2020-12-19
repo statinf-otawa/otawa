@@ -966,4 +966,26 @@ void CFGMaker::call(SynthBlock *v, CFGMaker& maker) {
 	add(v);
 }
 
+
+/**
+ * Fix a synthetic block which CFG was not defined.
+ * @param v	Synthetic block to fix.
+ * @param g	CFG to fix with.
+ */
+void CFGMaker::fix(SynthBlock *v, CFGMaker *g) {
+	ASSERTP(v->_callee == nullptr, "fixed synthetic block must not have already a CFG!");
+	v->_callee = g->cfg;
+}
+
+
+/**
+ * Fix a synthetic block which CFG was not defined.
+ * @param v	Synthetic block to fix.
+ * @param g	CFG to fix with.
+ */
+void CFGMaker::fix(SynthBlock *v, CFG *g) {
+	ASSERTP(v->_callee == nullptr, "fixed synthetic block must not have already a CFG!");
+	v->_callee = g;
+}
+
 }	// otawa

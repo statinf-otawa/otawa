@@ -23,7 +23,8 @@
 #include <elm/io/BlockInStream.h>
 #include <elm/data/HashMap.h>
 #include <elm/util/UniquePtr.h>
-#include <elm/xom.h>
+#include <elm/util/Pair.h>
+#include <elm/xom/dtd.h>
 
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
@@ -33,459 +34,115 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
 
-
-namespace elm {
-
-namespace dtd {
+namespace otawa { namespace cfgio {
 
 using namespace elm;
 
-class Exception: public elm::Exception {
-public:
-	Exception(xom::Element *element, const string& message): elt(element), msg(message) { }
-	virtual string message(void)
-		{ return _ << elt->getDocument()->getBaseURI() << ':' << elt->line() << ": " << msg; }
-private:
-	xom::Element *elt;
-	const string& msg;
-};
+// CFG file DTD
+dtd::Element entry("entry", dtd::EMPTY);
+dtd::IDAttribute entry_id(entry, "id", dtd::REQUIRED);
+dtd::Element exit("exit", dtd::EMPTY);
+dtd::IDAttribute exit_id(exit, "id", dtd::REQUIRED);
 
-class Element;
-class Factory;
+dtd::Element bb("bb", dtd::ignored);
+dtd::IDAttribute bb_id(bb, "id", dtd::REQUIRED);
+dtd::Attribute<t::uint32> address(bb, "address", 0, dtd::STRICT);
+dtd::Attribute<t::uint32> size(bb, "size", 0, dtd::STRICT);
+dtd::RefAttribute<CFGMaker> call(bb, "call", dtd::STRICT | dtd::FORWARD);
 
-class Parser: public PreIterator<Parser, xom::Node *> {
+dtd::Element edge("edge", dtd::ignored);
+dtd::RefAttribute<BasicBlock *> source(edge, "source", dtd::STRICT | dtd::REQUIRED);
+dtd::RefAttribute<BasicBlock *> target(edge, "target", dtd::STRICT | dtd::REQUIRED);
+
+dtd::Element property("property", dtd::ignored);
+
+dtd::Element cfg("cfg", (*property, entry, *bb, exit, *edge));
+dtd::IDAttribute cfg_id(cfg, "id", dtd::STRICT | dtd::REQUIRED);
+dtd::Attribute<t::uint32> cfg_address(cfg, "address", dtd::STRICT | dtd::REQUIRED);
+
+dtd::Element cfg_collection("cfg-collection", (*property, cfg, *cfg));
+
+
+// CFG factory
+class CFGFactory: public dtd::Factory {
 public:
-	Parser(Factory *factory, Element& element, xom::Element *parent): fact(factory) {
-		cur.elt = &element;
-		cur.xelt = parent;
-		cur.i = 0;
+
+	CFGFactory(WorkSpace *workspace)
+		: ws(workspace), g(nullptr), v(nullptr) { }
+
+	~CFGFactory() {
+		for(auto g: gs)
+			delete g;
 	}
 
-	inline Factory *factory(void) const { return fact; }
-	inline Element& element(void) const { return *cur.elt; }
-	inline Option<xom::String> get(xom::String name) const { return cur.xelt->getAttributeValue(name); }
-	inline void raise(const string& msg) const { throw Exception(cur.xelt, msg); }
-
-	inline bool ended(void) const { return cur.i >= cur.xelt->getChildCount(); }
-	xom::Node *item(void) const {  return cur.xelt->getChild(cur.i); }
-	inline void next(void) { cur.i++; }
-
-	typedef int mark_t;
-	inline mark_t mark(void) { return cur.i; }
-	inline bool backtrack(mark_t m) { cur.i = m; return false; }
-
-	void push(Element& element) {
-		stack.push(cur);
-		cur.i = 0;
-		cur.elt = &element;
-		cur.xelt = static_cast<xom::Element *>(item());
-	}
-
-	inline void pop(void) { cur = stack.pop(); }
-
-private:
-	Factory *fact;
-	typedef struct {
-		int i;
-		Element *elt;
-		xom::Element *xelt;
-	} context_t;
-	context_t cur;
-	Vector<context_t> stack;
-};
-
-
-class Factory {
-public:
-	virtual ~Factory(void) { }
-	virtual void begin(Element& element) = 0;
-	virtual void end(Element& element) = 0;
-	virtual void failed(Element& element) = 0;
-	virtual bool hasID(Element& element, xom::String id) = 0;
-	virtual void *getID(Element& element, xom::String id) = 0;
-	virtual void setID(Element& element, xom::String id) = 0;
-};
-
-class Attribute {
-public:
-	static const t::uint32
-		REQUIRED = 0x01,	// attribute is required
-		STRICT = 0x02;		// bad parsing causes an exception
-	Attribute(xom::String name, t::uint32 flags = 0): _name(name), _flags(flags) { }
-	virtual ~Attribute(void) { }
-	inline xom::String name(void) const { return _name; }
-	inline bool isRequired(void) const { return _flags & REQUIRED; }
-	inline bool isStrict(void) const { return _flags & STRICT; }
-
-	bool parse(Parser& parser) {
-		Option<xom::String> val = parser.get(_name);
-		if(val)
-			return process(parser, val);
-		else {
-			reset();
-			return !isRequired();
+	void begin(elm::dtd::Element &element) override {
+		if(element == cfg) {
+			g = new CFGMaker(ws->findInstAt(*cfg_address));
+			gs.add(g);
 		}
-	}
-
-	virtual bool process(Parser& parser, xom::String value) = 0;
-	virtual void reset(void) { }
-private:
-	xom::String _name;
-	t::uint32 _flags;
-};
-
-
-class Content {
-public:
-
-	virtual ~Content(void) { }
-	virtual bool parse(Parser& parser) = 0;
-
-	static bool isEmpty(xom::Node *node) {
-		if(node->kind() != xom::Node::TEXT)
-			return false;
-		else {
-			xom::String t = static_cast<xom::Text *>(node)->getText();
-			for(int i = 0; i < t.length(); i++)
-				switch(t[i]) {
-				case ' ':
-				case '\t':
-				case '\v':
-				case '\n':
-					continue;
-				default:
-					return false;
-				}
-			return true;
+		else if(element == bb) {
+			if(call.isSet()) {
+				auto c = new otawa::SynthBlock();
+				if(call.done())
+					g->call(c, **call);
+				else
+					g->call(c, nullptr);
+				v = c;
+			}
+			else {
+				Vector<Inst *> is;
+				Address ea = Address(*address + *size);
+				for(auto i = ws->findInstAt(*address);
+				i != nullptr && i->address() < ea;
+				i = i->nextInst())
+					is.add(i);
+				v = new BasicBlock(is.detach());
+				g->add(v);
+			}
 		}
+		else if(element == entry)
+			v = g->entry();
+		else if(element == exit)
+			v = g->exit();
 	}
-};
 
-class EmptyContent: public Content {
-public:
-	virtual bool parse(Parser& parser) {
-		Parser::mark_t m = parser.mark();
-		for(; parser(); parser++)
-			if(!isEmpty(*parser)) {
-				parser.backtrack(m);
-				return false;
-			}
-		return true;
+	void end(elm::dtd::Element &element) override {
+		if(element == cfg)
+			g = nullptr;
+		else if(element == bb || element == entry || element == exit)
+			v = nullptr;
 	}
-};
 
-static EmptyContent _empty;
-Content& empty = _empty;
-
-class Element: public Content {
-public:
-	class Make {
-		friend class Element;
-	public:
-		inline Make(xom::String name, int kind = 0): _name(name), _kind(kind), _content(&empty) { }
-		inline Make& attr(Attribute& attr) { attrs.add(&attr); return *this; }
-		inline Make& kind(int kind) { _kind = kind; return *this; }
-		inline Make& content(Content& content) { _content = &content; return *this; }
-	private:
-		xom::String _name;
-		int _kind;
-		Vector<Attribute *> attrs;
-		Content *_content;
-	};
-
-	Element(xom::String name, int kind = 0): _name(name), _kind(kind), _content(empty) { }
-	Element(const Make& m): _name(m._name), _kind(m._kind), attrs(m.attrs), _content(*m._content) { }
-
-	virtual bool parse(Parser& parser) {
-		if(!parser)
-			return false;
-
-		// check element
-		xom::Node *node = *parser;
-		if(node->kind() != xom::Node::ELEMENT)
-			return false;
-		xom::Element *element = static_cast<xom::Element *>(node);
-		if(element->getLocalName() != name())
-			return false;
-		parser.push(*this);
-		parser.factory()->begin(*this);
-
-		// parse attributes
-		for(int j = 0; j < attrs.length(); j++)
-			if(!attrs[j]->parse(parser)) {
-				parser.factory()->failed(*this);
-				return false;
-			}
-
-		// parse content
-		bool success = _content.parse(parser);
-
-		// terminate the parsing
-		if(!success)
-			parser.factory()->failed(*this);
+	void* getRef(elm::dtd::Element &element) override {
+		if(element == cfg)
+			return g;
+		else if(element == bb || element == entry || element == exit)
+			return v;
 		else
-			parser.factory()->end(*this);
-		parser.pop();
-		if(success)
-			parser++;
-		return success;
+			return nullptr;
 	}
 
-	inline xom::String name(void) const { return _name; }
-	inline int kind(void) const { return _kind; }
-	inline Content& content(void) const { return _content; }
-
-private:
-	xom::String _name;
-	int _kind;
-	Vector<Attribute *> attrs;
-	Content& _content;
-};
-
-
-/**
- * Represent an optional content: error causes no match.
- */
-class Optional: public Content {
-public:
-	Optional(Content& content): con(content) { }
-
-	virtual bool parse(Parser& parser) {
-		if(parser())
-			con.parse(parser);
-		return true;
-	}
-
-private:
-	Content& con;
-};
-
-
-/**
- * Represent an alternative between two contents.
- */
-class Alt: public Content {
-public:
-	Alt(Content& content1, Content& content2): con1(content1), con2(content2) { }
-
-	virtual bool parse(Parser& parser) {
-		if(!parser)
-			return false;
-		if(con1.parse(parser))
-			return true;
-		else if(con2.parse(parser))
-			return true;
+	void* getPatchRef(elm::dtd::AbstractAttribute &attr) override {
+		if(attr == call)
+			return new Pair<CFGMaker *, Block *>(g, v);
 		else
-			return false;
+			return nullptr;
 	}
 
-private:
-	Content &con1, &con2;
-};
-
-class Seq: public Content {
-public:
-	Seq(Content& content1, Content& content2, bool crop = true): con1(content1), con2(content2), _crop(crop) { }
-
-	virtual bool parse(Parser& parser) {
-		if(!parser)
-			return false;
-		Parser::mark_t m = parser.mark();
-
-		// crop spaces
-		if(_crop) {
-			for(; parser() && isEmpty(*parser); parser++);
-			if(!parser)
-				return parser.backtrack(m);
+	void patch(elm::dtd::AbstractAttribute &attr, void *object, void *ref) override {
+		if(attr == call) {
+			auto p = static_cast<Pair<CFGMaker *, Block *> *>(object);
+			auto c = static_cast<SynthBlock *>(p->snd);
+			p->fst->fix(c, static_cast<CFGMaker *>(ref));
+			delete p;
 		}
-
-		// look for first content
-		if(!con1.parse(parser))
-			return parser.backtrack(m);
-
-		// crop spaces
-		if(_crop) {
-			for(; parser() && isEmpty(*parser); parser++);
-			if(!parser)
-				return parser.backtrack(m);
-		}
-
-		// look for second content
-		if(!con2.parse(parser))
-			return parser.backtrack(m);
-
-		// crop last spaces
-		if(_crop)
-			for(; parser() && isEmpty(*parser); parser++);
-
-		// step on
-		return true;
 	}
 
-private:
-	Content &con1, &con2;
-	bool _crop;
+	WorkSpace *ws;
+	CFGMaker *g;
+	Block *v;
+	Vector<CFGMaker *> gs;
 };
-
-
-class Repeat: public Content {
-public:
-	Repeat(Content& content, bool crop = true): _crop(crop), con(content) { }
-
-	virtual bool parse(Parser& parser) {
-		while(1) {
-
-			// crop spaces
-			if(_crop) {
-				for(; parser() && isEmpty(*parser); parser++);
-				if(!parser)
-					break;
-			}
-
-			// look for first content
-			if(con.parse(parser))
-				break;
-		}
-		return true;
-	}
-
-private:
-	bool _crop;
-	Content& con;
-};
-
-class TextAttr: public Attribute {
-public:
-	TextAttr(xom::String name, xom::String init = "", t::uint32 flags = 0): Attribute(name, flags), s(init), i(init) { }
-	xom::String& operator*(void) { return s; }
-	virtual bool process(Parser& parser, xom::String value) { s = value; return true; }
-	virtual void reset(void) { s = i; }
-private:
-	xom::String s, i;
-};
-
-class IntAttr: public Attribute {
-public:
-	IntAttr(xom::String name, int init = 0, t::uint32 flags = 0): Attribute(name, flags), v(init), i(init) { }
-	int& operator*(void) { return v; }
-
-	virtual bool process(Parser& parser, xom::String value) {
-		static elm::io::Input in;
-		io::BlockInStream stream(value);
-		in.setStream(stream);
-		try {
-			in >> v;
-			if(stream.read() == elm::io::InStream::ENDED)
-				return true;
-			else if(isStrict())
-				parser.raise(_ << "garbage after integer in " << name());
-		}
-		catch(elm::io::IOException& e) {
-			if(isStrict())
-				parser.raise(_ << "bad formatted integer in " << name());
-		}
-		return false;
-	}
-
-	virtual void reset(void) { v = i; }
-private:
-	int v, i;
-};
-
-
-class IDAttr: public Attribute {
-public:
-	IDAttr(xom::String name, t::uint32 flags = 0): Attribute(name, flags) { }
-	virtual bool process(Parser& parser, xom::String value) {
-		if(parser.factory()->hasID(parser.element(), value)) {
-			if(isStrict())
-				parser.raise(_ << "already used identifier \"" << value << "\"in " << name());
-			else
-				return false;
-		}
-		parser.factory()->setID(parser.element(), value);
-		return true;
-	}
-};
-
-
-template <class T>
-class RefAttr: public Attribute {
-public:
-	RefAttr(xom::String name, t::uint32 flags = 0): Attribute(name, flags), ref(0) { }
-	inline T *reference(void) const { return ref; }
-	virtual bool process(Parser& parser, xom::String value) {
-		if(!parser.factory()->hasID(parser.element(), value)) {
-			if(isStrict())
-				parser.raise(_ << "undefined reference \"" << value << "\" in " << name());
-			else
-				return false;
-		}
-		ref = static_cast<T *>(parser.factory()->getID(parser.element(), value));
-		return true;
-	}
-	virtual void reset(void) { ref = 0; }
-private:
-	T *ref;
-};
-
-typedef Element::Make make;
-
-class GC {
-public:
-	~GC(void) {
-		for(List<Content *>::Iter con; con(); con++)
-			delete *con;
-	}
-	inline Content& add(Content *c) { to_free.add(c); return *c; }
-private:
-	List<Content *> to_free;
-};
-GC _gc;
-
-inline Content& operator*(Content& c)
-	{ return _gc.add(new Repeat(c)); }
-inline Content& operator+(Content& c1, Content& c2) { return _gc.add(new Alt(c1, c2)); }
-inline Content& operator|(Content& c1, Content& c2) { return _gc.add(new Alt(c1, c2)); }
-inline Content& operator,(Content& c1, Content& c2) { return _gc.add(new Seq(c1, c2)); }
-inline Content& operator&(Content& c1, Content& c2) { return _gc.add(new Seq(c1, c2)); }
-
-const t::uint32 STRICT = Attribute::STRICT;
-const t::uint32 REQUIRED = Attribute::REQUIRED;
-
-} }		// dtd::elm
-
-namespace otawa {
-
-namespace cfgio {
-
-using namespace elm;
-
-typedef enum {
-	_NONE,
-	_COLL,
-	_CFG,
-	_ENTRY,
-	_BB,
-	_EXIT,
-	_EDGE
-} entity_t;
-
-dtd::IDAttr id("id", dtd::STRICT | dtd::REQUIRED);
-dtd::IntAttr address("address", dtd::STRICT | dtd::REQUIRED);
-dtd::IntAttr size("size", dtd::STRICT | dtd::REQUIRED);
-dtd::RefAttr<BasicBlock *> source("source", dtd::STRICT | dtd::REQUIRED);
-dtd::RefAttr<BasicBlock *> target("target", dtd::STRICT | dtd::REQUIRED);
-dtd::RefAttr<CFG *> called("called", dtd::STRICT);
-
-dtd::Element entry(dtd::make("entry", _ENTRY).attr(id));
-dtd::Element bb(dtd::make("bb", _BB).attr(id).attr(address).attr(size));
-dtd::Element exit(dtd::make("exit", _EXIT).attr(id));
-dtd::Element edge(dtd::make("edge", _EDGE).attr(source).attr(target).attr(called));
-dtd::Element cfg(dtd::make("cfg", _CFG).attr(id).content((entry, *bb, exit, *edge)));
-dtd::Element cfg_collection(dtd::make("cfg-collection", _COLL).content((cfg, *cfg)));
-
-static Identifier<Option<xom::String> > SYNTH_TARGET("");
 
 
 /**
@@ -531,8 +188,7 @@ static Identifier<Option<xom::String> > SYNTH_TARGET("");
  * Create CFGCollection from an XML file matching the DTD ${OTAWA_HOME}/share/Otawa/dtd/cfg.dtd .
  * @ingroup cfgio
  */
-Input::Input(p::declare& r): Processor(r), coll(0) {
-	cafebabeInst = new CafeBabeInst();
+Input::Input(p::declare& r): Processor(r), coll(nullptr) {
 }
 
 
@@ -553,275 +209,78 @@ void Input::configure(const PropList& props) {
 /**
  *
  */
-void Input::setup(WorkSpace *ws) {
+/*void Input::setup(WorkSpace *ws) {
 	reset();
-}
+}*/
 
 
 /**
  *
  */
 void Input::processWorkSpace(WorkSpace *ws) {
+	CFGFactory factory(ws);
+
 	// open the document
 	xom::Builder builder;
 	xom::Document *doc = builder.build(path.toString().toCString());
 	if(!doc)
-		raiseError(_ << " cannot open " << path);
+		throw ProcessorException(*this, _ << " cannot open " << path);
 
 	// get the top element
 	xom::Element *top = doc->getRootElement();
-	if(top->getLocalName() != "cfg-collection")
-		raiseError(top, "bad top level element");
-	UniquePtr<xom::Elements> cfg_elts(top->getChildElements("cfg"));
-	if(cfg_elts->size() == 0)
-		raiseError(top, "no CFG");
-
-	// prepare the CFGs and the BBs
-	for(int i = 0; i < cfg_elts->size(); i++) {
-		CFGMaker *maker = 0; // the CFG maker
-		bb_map_t* bb_map = new bb_map_t;
-		bb_map_table.add(bb_map);
-
-		// get information
-		xom::Element *celt = cfg_elts->get(i);
-		Option<xom::String> cfgID = celt->getAttributeValue("id");
-		if(!cfgID)
-			raiseError(celt, "no 'id' attribute");
-		if(cfg_map.hasKey(*cfgID))
-			raiseError(celt, _ << "id " << *cfgID << " at least used two times.");
-
-
-		// get entry
-		xom::Element *eelt = celt->getFirstChildElement("entry");
-		if(!eelt)
-			raiseError(celt, "no entry element");
-		Option<xom::String> entryID = eelt->getAttributeValue("id");
-		if(!entryID)
-			raiseError(eelt, "no entryID");
-		if(bb_map->hasKey(*entryID))
-			raiseError(eelt, _ << "entryID " << *entryID << " used at least two times.");
-
-		// get exit
-		eelt = celt->getFirstChildElement("exit");
-		if(!eelt)
-			raiseError(celt, "no exit element");
-		Option<xom::String> exitID = eelt->getAttributeValue("id");
-		if(!exitID)
-			raiseError(eelt, "no exitID");
-		if(bb_map->hasKey(*exitID))
-			raiseError(eelt, _ << "exitID " << *exitID << " used at least two times.");
-
-		// build the BBs
-		UniquePtr<xom::Elements> bb_elts(celt->getChildElements("bb"));
-		if(bb_elts->size() == 0)
-			raiseError(celt, _ << "no BB in CFG " << *cfgID);
-
-		Vector<Block*> basicBlocksInOrder;
-
-		Inst* firstInst = &otawa::Inst::null;
-		for(int j = 0; j < bb_elts->size(); j++) {
-			// get information, e.g.
-			// <bb id="_0-1" number="1" address="0x00008d0c" size="24">
-			xom::Element *bb_elt = bb_elts->get(j); // BB element
-			Option<xom::String> blockID = bb_elt->getAttributeValue("id");
-			if(!blockID)
-				raiseError(eelt, "no blockID");
-			if(bb_map->hasKey(*blockID))
-				raiseError(eelt, _ << "blockID " << *blockID << " used at least two times.");
-
-			// build the basic block
-			// first we collect the instructions
-			UniquePtr<xom::Elements> inst_elts(bb_elt->getChildElements("inst"));
-			Vector<Inst *> insts(inst_elts->size()!=0?inst_elts->size():1); // we need size of 1 to have empty BB
-			for(int k = 0; k < inst_elts->size(); k++) {
-				// <inst address="0x0020099c" file="cover.c" line="232"/>
-				xom::Element *inst_elt = inst_elts->get(k); // current instruction
-				Option<xom::String> bbAddress = inst_elt->getAttributeValue("address");
-				t::uint32 address = 0;
-				if(bbAddress)
-					*bbAddress >> address;
-				Inst* currentInst = ws->process()->findInstAt(Address(address));
-
-				if(!currentInst && address == 0xCAFEBABE) {
-					currentInst = cafebabeInst;
-				}
-				else // instruction not found
-					ASSERT(currentInst);
-
-				insts.add(currentInst);
-				if((firstInst == &otawa::Inst::null) && currentInst) {
-					firstInst = currentInst;
-				}
-			}
-
-			// now we create the block
-			Block *nbb;
-			if(insts.count()) { // if there are some instructions inside the block, then it is a normal BB
-				nbb = new BasicBlock(insts.detach());
-				basicBlocksInOrder.push(nbb);
-			}
-			else { // otherwise, we treat the block as Synth Block
-				nbb = new SynthBlock(); // a basic block without instruction
-				Option<xom::String> callID = bb_elt->getAttributeValue("call");
-				if(callID) { // if the block has callID, which is the target of the call, then we mark it
-					SYNTH_TARGET(nbb) = callID;
-				}
-			}
-
-			// since the edges uses the BB id to connect, we need to use a map of id and the BBs
-			bb_map->put(*blockID, nbb);
+	dtd::Parser parser(factory, cfg_collection);
+	try {
+		parser.parse(top);
+		coll = new CFGCollection();
+		for(auto m: factory.gs) {
+			auto g = m->build();
+			coll->add(g);
 		}
-
-		// build the CFG
-		maker = new CFGMaker(firstInst);
-		bb_map->put(*entryID, maker->entry()); // put the entry in the map
-		cfg_map.put(*cfgID, maker);
-		cfgMakers.add(maker);
-
-		// add basic block in order ...
-		// we don't add the Synth Blocks now because the id of the Synth Blocks are after the Basic Blocks
-		// to have the same fashion of id numbering of the original and reconstructed CFG, we add the BB first.
-		for(Vector<Block*>::Iter vbbi(basicBlocksInOrder); vbbi(); vbbi++)
-			maker->add(*vbbi);
-
-		bb_map->put(*exitID, maker->exit()); // put the exit in the map
-
-		// collect the Edges
-		UniquePtr<xom::Elements> edge_elts(celt->getChildElements("edge"));
-		if(edge_elts->size() == 0)
-			raiseError(celt, _ << "no Edge in CFG " << *cfgID);
-
-		edge_list_t* edge_list = new edge_list_t(edge_elts->size());
-		edge_list_table.add(edge_list);
-		for(int j = 0; j < edge_elts->size(); j++) {
-			// get information, e.g.
-			// <edge source="_0-5" target="_0-8"/>
-			xom::Element *edge_elt = edge_elts->get(j); // BB element
-			Option<xom::String> sourceID = edge_elt->getAttributeValue("source");
-			if(!sourceID)
-				raiseError(eelt, "no sourceID");
-			Option<xom::String> targetID = edge_elt->getAttributeValue("target");
-			if(!targetID)
-				raiseError(eelt, "no targetID");
-			edge_list->add(pair(*sourceID, *targetID));
-		} // end of each edge
-	} // end of each CFG
-
-	// now we have all the CFGs, we can fill the info of CFGs to the Synth Blocks
-	int cfgIndex = 0;
-	for(bb_map_table_t::Iter bbmtti(bb_map_table); bbmtti(); bbmtti++, cfgIndex++) { // for each CFG
-		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
-		for(bb_map_t::Iter bbmti(**bbmtti); bbmti(); bbmti++) { // for each entry in the bb_map
-			if(bbmti->isSynth()) { // now process the synth block. basic block were processed previously
-				if(*SYNTH_TARGET(*bbmti)) { // if there is an ID of the caller
-					cfgMaker->call(*bbmti->toSynth(),**cfg_map.get(**SYNTH_TARGET(*bbmti))); // get the map ID from the cfg_map
-					SYNTH_TARGET(*bbmti).remove(); // clear the property
-				}
-				else
-					cfgMaker->add(*bbmti);
-			}
-
-		} // for each Block
-	} // for each CFG
-
-	// build the edges
-	cfgIndex = 0;
-	for(edge_list_table_t::Iter eltti(edge_list_table); eltti(); eltti++, cfgIndex++) { // for each CFG
-		CFGMaker* cfgMaker = cfgMakers[cfgIndex];
-		bb_map_t* bb_map = bb_map_table[cfgIndex];
-		for(edge_list_t::Iter elti(**eltti); elti(); elti++) {
-			Block* sourceBlock = 0;
-			if(bb_map->hasKey((*elti).fst))
-				sourceBlock = bb_map->get((*elti).fst);
-			else {
-				// sourceBlock = cfgMaker->unknown();
-				sourceBlock = new SynthBlock();
-				cfgMaker->add(sourceBlock);
-			}
-
-			Block* targetBlock = 0;
-			if(bb_map->hasKey((*elti).snd))
-				targetBlock = bb_map->get((*elti).snd);
-			else {
-				//targetBlock = cfgMaker->unknown();
-				targetBlock = new SynthBlock();
-				cfgMaker->add(targetBlock);
-			}
-
-			// build the edge
-			if(	sourceBlock->isEntry() || targetBlock->isExit() ||
-			(sourceBlock->isBasic() && sourceBlock->toBasic()->first() == cafebabeInst) ||
-			(targetBlock->isBasic() && targetBlock->toBasic()->first() == cafebabeInst) ||
-			(sourceBlock->isBasic() && targetBlock->isBasic() && sourceBlock->toBasic()->last()->nextInst() == targetBlock->toBasic()->first())) {
-				cfgMaker->add(sourceBlock, targetBlock, new Edge(Edge::NOT_TAKEN));
-			}
-			else
-				cfgMaker->add(sourceBlock, targetBlock, new Edge(Edge::TAKEN));
-		} // for each Edge
-	} // For each CFG
-
-	// cleanup
-	for(bb_map_table_t::Iter i(bb_map_table); i(); i++)
-		delete *i;
-	for(edge_list_table_t::Iter i(edge_list_table); i(); i++)
-		delete *i;
+	}
+	catch(dtd::Exception& e) {
+		throw ProcessorException(*this, _ << "format error in " << path << ": " << e.message());
+	}
 }
 
 /**
  *
  */
 void Input::cleanup(WorkSpace *ws) {
-	CFGCollection *new_coll = new CFGCollection();
-	for(int i = 0; i < cfgMakers.count(); i++) {
-		CFG *cfg = cfgMakers[i]->build();
-		new_coll->add(cfg);
-		if(i == 0)
-			addRemover(COLLECTED_CFG_FEATURE, ENTRY_CFG(ws) = cfg);
-		delete cfgMakers[i];
-	}
-	track(COLLECTED_CFG_FEATURE, INVOLVED_CFGS(ws) = new_coll);
+	ENTRY_CFG(ws) = coll->get(0);
+	INVOLVED_CFGS(ws) = coll;
+}
+
+///
+void Input::Input::destroy(WorkSpace *ws) {
+	ENTRY_CFG(ws).remove();
+	INVOLVED_CFGS(ws).remove();
+	delete coll;
+	coll = nullptr;
+}
+
+
+///
+void *Input::interfaceFor(const otawa::AbstractFeature &feature) {
+	if(feature == otawa::COLLECTED_CFG_FEATURE)
+		return coll;
+	else
+		return nullptr;
 }
 
 
 /**
+ * Feature causing the load of a CFG stored to a file. This feature induces
+ * also the implementation of otawa::COLLECTED_CFG_FEATURE.
  *
- */
-void Input::reset(void) {
-	coll = 0;
-}
-
-
-/**
+ * Configuration properties encompass:
+ * * otawa::cfgio::FROM to select the path to load the CFG from.
  *
+ * @ingroup cfgio
  */
-void Input::clear(void) {
-	if(coll)
-		delete coll;
-	reset();
-}
-
-
-/**
- *
- */
-void Input::raiseError(xom::Element *elt, const string& msg) {
-	raiseError(_ << msg << " at " << path << ": " << elt->line());
-}
-
-
-/**
- *
- */
-void Input::raiseError(const string& msg) {
-	clear();
-	throw ProcessorException(*this, msg);
-}
-
-
-
-
 p::feature CFG_FILE_INPUT_FEATURE("otawa::cfgio::CFG_FILE_INPUT_FEATURE", new Maker<Input>());
 
+
+///
 p::declare Input::reg = p::init("otawa::cfgio::Input", Version(1, 0, 0))
 	.maker<Input>()
 	.require(otawa::DECODED_TEXT)
@@ -829,10 +288,9 @@ p::declare Input::reg = p::init("otawa::cfgio::Input", Version(1, 0, 0))
 	.provide(otawa::cfgio::CFG_FILE_INPUT_FEATURE);
 
 /**
- *
+ * Defines the path to the file to read the CFG from.
  * @ingroup cfgio
  */
 Identifier<Path> FROM("otawa::cfgio::FROM");
 
 } }	// otawa::cfgio
-
