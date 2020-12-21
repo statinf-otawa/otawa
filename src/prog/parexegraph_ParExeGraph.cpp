@@ -859,7 +859,8 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if(previous_store) {
-					ASSERT(previous_store->inst()->inst() != node->inst()->inst());
+					ASSERTP(previous_store->inst()->inst() != node->inst()->inst(),
+						"loop edge at " << node->inst()->inst()->address() << ": " << node->inst()->inst());
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 				}
 
@@ -874,7 +875,8 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 
 				// if any, dependency on previous store
 				if (previous_store) {
-					ASSERT(previous_store->inst()->inst() != node->inst()->inst());
+					ASSERTP(previous_store != node,
+						"loop edge at " << node->inst()->inst()->address() << ": " << node->inst()->inst());
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
 				}
 

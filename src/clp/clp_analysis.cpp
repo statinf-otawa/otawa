@@ -3806,11 +3806,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
-#	if USE_INST
-		p->prepare((*mi).first());
-#	else
-		p->prepare(*mi);
-#	endif
+	p->prepare(*mi);
 	p->insertInfo(*cs, b, (*mi).first());
 	i = 0;
 	//p->update(cs);
@@ -3843,11 +3839,7 @@ Manager::step_t Manager::next(void) {
 			if(!mi)
 				return false;
 			cs = &s;
-#			if USE_INST
-				p->prepare((*mi).first());
-#			else
-				p->prepare(*mi);
-#			endif
+			p->prepare(*mi);
 			p->insertInfo(*cs, b, (*mi).first());
 			i = 0;
 		}
