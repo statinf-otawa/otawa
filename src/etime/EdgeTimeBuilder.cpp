@@ -745,8 +745,15 @@ void EdgeTimeBuilder::processSequence(void) {
 
 	// simple trivial case
 	if(events.isEmpty()) {
+
+		// predump implementation
+		if(_do_output_graphs && predump)
+			outputGraph(graph, 666, 666, 666, _ << source << " -> " << target);
+
+		// analyze
 		ot::time cost = graph->analyze();
 		genForOneCost(cost, edge, events);
+
 		// dump it if needed
 		if(_do_output_graphs) {
 			if (source)

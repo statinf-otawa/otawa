@@ -52,7 +52,9 @@ class WideningFixPoint {
 
 	 
 	// Fields
-	static Identifier<Domain*> STATE;	
+public:
+	static Identifier<Domain*> STATE;
+private:
 	Problem& prob;
 	Listener  &list;
 	HalfAbsInt<WideningFixPoint> *ai;
@@ -131,7 +133,7 @@ void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in
 			assign(newHeaderState, ai->entryEdgeUnion(bb));
 		else {
 			assign(newHeaderState, fpstate->headerState);
-			HAIW_TRACE("before widening, state + 1: " << newHeaderState << io::endl);
+			HAIW_TRACE("\t\t\tbefore widening, state-1: " << newHeaderState << io::endl);
 			// TODO Uncomment and fix!
 			prob.widening(bb, newHeaderState, ai->backEdgeUnion(bb));
 #			ifdef FILTERING_AFTER_WIDENING // for future testing, whether to have widening before or after the filtering
@@ -148,7 +150,7 @@ void WideningFixPoint<Listener >::fixPoint(Block *bb, bool &fixpoint, Domain &in
 
 		assign(fpstate->headerState, newHeaderState);
 		assign(in, newHeaderState);
-		HAIW_TRACE("after widening " << in << io::endl);
+		HAIW_TRACE("\t\t\tafter widening " << in << io::endl);
 	}
 	
 template < class Listener >	
@@ -170,7 +172,6 @@ inline void WideningFixPoint<Listener>::markEdge(PropList *e, const Domain &s) {
 		prob.lub(tmp, s);
 		ASSERT(prob.equals(tmp,s)); */ 
 		prob.assign(**STATE(e), s);
-		
 	}
 	
 template < class Listener >	

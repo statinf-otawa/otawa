@@ -186,8 +186,8 @@ public:
 	virtual File *loadFile(elm::CString path) = 0;
 
 	// loader 1.2.0
-	virtual Address defaultStack(void) const;
-	virtual void semInit(sem::Block& block) const;
+	virtual Address defaultStack(void);
+	virtual void semInit(sem::Block& block);
 
 	// FileIterator
 	class FileIter: public Vector<File *>::Iter {

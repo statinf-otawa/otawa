@@ -544,7 +544,7 @@ template <class FixPoint>
 inline typename FixPoint::Domain HalfAbsInt<FixPoint>::backEdgeUnion(Block *bb) {
         typename FixPoint::Domain result(fp.bottom());
 
-        HAI_TRACE("\t\tjoining back edges");
+        HAI_TRACE("\t\tunion back edges");
         if (FIRST_ITER(bb)) {
         	/* If this is the first iteration, the back edge union is Bottom. */
         	return(result);
@@ -572,7 +572,7 @@ template <class FixPoint>
 inline typename FixPoint::Domain HalfAbsInt<FixPoint>::entryEdgeUnion(Block *bb) {
 	typename FixPoint::Domain result(fp.bottom());
 
-	HAI_TRACE("\t\tunion of input edges");
+	HAI_TRACE("\t\tunion of entry edges");
 	for(Block::EdgeIter inedge = bb->ins(); inedge(); inedge++) {
 		// REMOVED: this statement needs to be removed otherwise the state from the input edge to a SynthBlock will not be used.
 		//if (inedge->sink()->isSynth())

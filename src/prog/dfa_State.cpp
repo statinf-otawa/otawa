@@ -40,11 +40,21 @@ namespace otawa { namespace dfa {
  * analysis like stack analysis, CLP analysis, k-set analysis, etc.
  */
 
+/**
+ * @defgroup istate Initial Data Flow State
+ * This modules supports the specification of the initial state of the data flow.
+ * Its classes, properties and feature are able to provide initial values for
+ * registers and memories.
+ *
+ * For instance, this is useful to specify stack or any other OS-dependant
+ * initial value.
+ */
+
 
 /**
  * @class Value
- * Definition of a value independent of a particular data flow analysis.
- * @ingroup dfa
+ * A value as used by State.
+ * @ingroup istate
  */
 
 /**
@@ -216,13 +226,18 @@ Value::Value(t::uint32 base, t::uint32 delta, t::uint32 count) {
 
 
 /**
+ * @class MemCell
+ * Description of the initialization of a memory cell.
+ * @ingroup istate
+ */
+
+/**
  * @class State
  * Data flow state. Often used to describe the initial state as the join
  * of the user external information on data state and from the initialized data state
  * from the executable content.
- * @ingroup dfa
+ * @ingroup istate
  */
-
 
 /**
  * Build the initial state.
@@ -240,7 +255,6 @@ State::State(Process& process, const Vector<MemArea>& csts): proc(process) {
 	builder.make(mem);
 }
 
-
 /**
  * Set the value of a register.
  * @param reg	Set register.
@@ -252,7 +266,6 @@ void State::set(const hard::Register *reg, Value val) {
 	regs.put(reg, val);
 }
 
-
 /**
  * Get a register value.
  * @param reg	Register to look for.
@@ -262,14 +275,12 @@ Value State::get(const hard::Register *reg) const {
 	return regs.get(reg, Value());
 }
 
-
 /**
  * @fn bool State::isReadOnly(Address addr) const;
  * Test if the current state contains read-only initialized data.
  * @param addr	Address to test.
  * @return		True if the data is initialized, false else.
  */
-
 
 /**
  * @fn void State::get(const Address& a, t::uint8 &v) const;
@@ -279,7 +290,6 @@ Value State::get(const hard::Register *reg) const {
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
 
-
 /**
  * @fn void State::get(const Address& a, t::uint16 &v) const;
  * Get a value from the initialized memory of the process.
@@ -287,7 +297,6 @@ Value State::get(const hard::Register *reg) const {
  * @param v		Returned value.
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
-
 
 /**
  * @fn void State::get(const Address& a, t::uint32 &v) const;
@@ -297,7 +306,6 @@ Value State::get(const hard::Register *reg) const {
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
 
-
 /**
  * @fn void State::get(const Address& a, t::uint64 &v) const;
  * Get a value from the initialized memory of the process.
@@ -305,7 +313,6 @@ Value State::get(const hard::Register *reg) const {
  * @param v		Returned value.
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
-
 
 /**
  * @fn void State::get(const Address& a, float &v) const;
@@ -315,7 +322,6 @@ Value State::get(const hard::Register *reg) const {
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
 
-
 /**
  * @fn void State::get(const Address& a, double &v) const;
  * Get a value from the initialized memory of the process.
@@ -324,7 +330,6 @@ Value State::get(const hard::Register *reg) const {
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
 
-
 /**
  * @fn void State::get(const Address& a, Address &v) const;
  * Get a value from the initialized memory of the process.
@@ -332,7 +337,6 @@ Value State::get(const hard::Register *reg) const {
  * @param v		Returned value.
  * @warning		This function must only be called on an initialized address. Else unexpected result may arise.
  */
-
 
 /**
  * Record a configured memory item.
@@ -351,12 +355,20 @@ void State::record(const MemCell& cell) {
  * @p Provided Features
  *	* INITIAL_STATE_FEATURE
  *
- * @ingroup dfa
+ * @ingroup istate
  */
 class InitialStateBuilder: public Processor {
 public:
 	static p::declare reg;
-	InitialStateBuilder(p::declare& r = reg): Processor(r) { }
+
+	InitialStateBuilder(p::declare& r = reg): Processor(r), _state(nullptr) { }
+
+	void *interfaceFor(const otawa::AbstractFeature &feature) override {
+		if(&feature == &INITIAL_STATE_FEATURE)
+			return _state;
+		else
+			return nullptr;
+	}
 
 protected:
 
@@ -413,6 +425,11 @@ protected:
 		}
 	}
 
+	void destroy(WorkSpace *ws) {
+		delete _state;
+		INITIAL_STATE(ws).remove();
+	}
+
 private:
 
 	// TODO		Add it to string class.
@@ -441,6 +458,7 @@ private:
 	Vector<MemCell> mem_inits;
 	Vector<string> const_sects;
 	Vector<MemArea> const_areas;
+	State *_state;
 };
 
 p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder", Version(1, 0, 0))
@@ -458,11 +476,14 @@ p::declare InitialStateBuilder::reg = p::init("otawa::dfa::InitialStateBuilder",
  *	* MEM_INIT
  *	* REG_INIT
  *
- * @p Attributes
- *	* INITIAL_STATE
- * @ingroup dfa
+ * @p Properties
+ * @li @ref INITIAL_STATE
+ *
+ * @ingroup istate
  */
-p::feature INITIAL_STATE_FEATURE("otawa::dfa::INITIAL_STATE_FEATURE", new Maker<InitialStateBuilder>());
+p::interfaced_feature<State> INITIAL_STATE_FEATURE(
+	"otawa::dfa::INITIAL_STATE_FEATURE",
+	new Maker<InitialStateBuilder>());
 
 
 /**
@@ -470,7 +491,7 @@ p::feature INITIAL_STATE_FEATURE("otawa::dfa::INITIAL_STATE_FEATURE", new Maker<
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
- * @ingroup dfa
+ * @ingroup istate
  */
 p::id<Pair<const hard::Register *, Value> > REG_INIT("otawa::dfa::REG_INIT");
 
@@ -481,7 +502,7 @@ p::id<Pair<const hard::Register *, Value> > REG_INIT("otawa::dfa::REG_INIT");
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
- * @ingroup dfa
+ * @ingroup istate
  */
 p::id<MemCell> MEM_INIT("otawa::dfa::MEM_INIT");
 
@@ -494,7 +515,7 @@ p::id<MemCell> MEM_INIT("otawa::dfa::MEM_INIT");
  *
  * @p Feature
  * @li @ref INITIAL_STATE_FEATURE
- * @ingroup dfa
+ * @ingroup istate
  */
 p::id<State *> INITIAL_STATE("otawa::dfa::INITIAL_STATE", 0);
 
@@ -519,3 +540,4 @@ p::id<string> CONST_SECTION("otawa::dfa::CONST_SECTION");
 p::id<otawa::MemArea> CONST_MEM("otawa::dfa::CONST_MEM", MemArea::null);
 
 } }	// otawa::dfa
+

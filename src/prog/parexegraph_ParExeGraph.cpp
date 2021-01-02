@@ -842,14 +842,13 @@ void ParExeGraph::addEdgesForProgramOrder(List<ParExeStage *> *list_of_stages){
  */
 void ParExeGraph::addEdgesForMemoryOrder(void) {
 	static string memory_order = "memory order";
-
-    ParExeStage *stage = _microprocessor->execStage();
+    auto stage = _microprocessor->execStage();
 
     // looking in turn each FU
     for (int i=0 ; i<stage->numFus() ; i++) {
 		ParExeStage *fu_stage = stage->fu(i)->firstStage();
-		ParExeNode * previous_load = NULL;
-		ParExeNode * previous_store = NULL;
+		ParExeNode * previous_load = nullptr;
+		ParExeNode * previous_store = nullptr;
 
 		// look for each node of this FU
 		for (int j=0 ; j<fu_stage->numNodes() ; j++){
@@ -859,8 +858,11 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 			if (node->inst()->inst()->isLoad()) {
 
 				// if any, dependency on previous store
-				if(previous_store)
+				if(previous_store) {
+					ASSERTP(previous_store->inst()->inst() != node->inst()->inst(),
+						"loop edge at " << node->inst()->inst()->address() << ": " << node->inst()->inst());
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
+				}
 
 				// current node becomes the new previous load
 				for (InstNodeIterator last_node(node->inst()); last_node() ; last_node++)
@@ -872,12 +874,16 @@ void ParExeGraph::addEdgesForMemoryOrder(void) {
 			if (node->inst()->inst()->isStore()) {
 
 				// if any, dependency on previous store
-				if (previous_store)
+				if (previous_store) {
+					ASSERTP(previous_store != node,
+						"loop edge at " << node->inst()->inst()->address() << ": " << node->inst()->inst());
 					new ParExeEdge(previous_store, node, ParExeEdge::SOLID, 0, memory_order);
+				}
 
 				// if any, dependency on previous load
-				if (previous_load && (previous_load != node))
+				if (previous_load && (previous_load->inst()->inst() != node->inst()->inst())) {
 					new ParExeEdge(previous_load, node, ParExeEdge::SOLID, 0, memory_order);
+				}
 
 				// current node becomes the new previous store
 				for (InstNodeIterator last_node(node->inst()); last_node() ; last_node++)

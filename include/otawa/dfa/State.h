@@ -154,7 +154,7 @@ private:
 
 extern p::id<Pair<const hard::Register *, Value> > REG_INIT;
 extern p::id<MemCell> MEM_INIT;
-extern p::feature INITIAL_STATE_FEATURE;
+extern p::interfaced_feature<State> INITIAL_STATE_FEATURE;
 extern p::id<State *> INITIAL_STATE;
 extern p::id<string> CONST_SECTION;
 extern p::id<otawa::MemArea> CONST_MEM;

@@ -19,6 +19,8 @@
 //#define CATCH_STT
 //#define HAI_DEBUG
 //#define HAI_JSON
+//#define CHECK_PARTIAL_ORDER
+
 #include <math.h>
 #include <elm/data/HashMap.h>
 #include <elm/debug.h>
@@ -293,6 +295,24 @@ Value Value::operator-(const Value& val) const{
 	Value v = *this;
 	v.sub(val);
 	return v;
+}
+
+
+/**
+ * Test if the current value is a subset of the passed.
+ * @param x		Passed value.
+ * @return		True if the current value is a subset of x, false else.
+ */
+bool Value::subsetOf(const Value& x) const {
+	if(x.isTop() || x == *this)
+		return true;
+	uintn_t xb = x.start(), xd = elm::abs(x.delta());
+	if(xd == 0)
+		return false;
+	uintn_t b = start(), d = elm::abs(delta());
+	return (b - xb) % xd == 0
+		&& d % xd == 0
+		&& (b - xb) % xd <= x.mtimes();
 }
 
 
@@ -798,181 +818,67 @@ Value& Value::join(const Value& val) {
 }
 
 /**
- * Perform a widening to the infinite (to be filtred later)
- * @param val the value of the next iteration state
+ * Perform a widening to the infinite (to be filtered later)
+ * @param x the value of the next iteration state
 */
-Value& Value::widening(const Value& val) {
-#ifdef DISPLAY_MEMORY
-#endif
-	/* widen(NONE, NONE) = NONE */
-	if (_kind == NONE && val._kind == NONE)
-		return *this;
-
-	/* widen(ALL, *) = ALL */
-	else if (_kind == ALL || val._kind == ALL)
-		return *this = all;
-
-		//set(ALL, 0, 1, UMAXn);
-
-	/* this == val = val */
-	else if (*this == val)
-		return *this;
-
-	// widen((k, 0, 0), (k', 0, 0)) = (k, k' - k, inf)
-	else if (isConst() && val.isConst()) {
-		_delta = val._base - _base;
-		_mtimes = clp::UMAXn;
-		return *this;
-	}
-
-	// widen((k, 0, 0), (k', d', n')) =
-	if(isConst()) {
-		// if d' > 0 /\ k < k' then (k, d', n' + (k' - k) / d')
-		// if d' < 0 /\ k' < k then (k, d', n' + (k' - k) / d')
-		if((val._delta > 0 and _base <= val._base)
-		or (val._delta < 0 and _base >= val._base)) {
-
-			intn_t _delta_new = gcd(val._delta, val._base - _base);
-			uintn_t _mtimes_new = val._mtimes * (val._delta / _delta_new);
-			uintn_t _extra_mile = ((val._base - _base) / _delta_new);
-
-			if(_mtimes_new < _mtimes)
-				return *this = Value(VAL, _base, _delta_new, UMAXn);
-
-			if((_mtimes_new + _extra_mile) < _mtimes_new)
-				return *this = Value(VAL, _base, _delta_new, UMAXn);
-
-			_mtimes_new = _extra_mile + _mtimes_new;
-			return *this = Value(VAL, _base, _delta_new, _mtimes_new);
-		}
-		// else T
-		else
-			return *this = all;
-	}
-
-	////widen((k, d, n), (k', 0, 0)) = T
-	////if(val.isConst())
-	////	return *this = all;
-
-	// widen((k, d, n), (k', 0, 0))
-	// if d > 0 /\ k < k' then (k, _delta_new, _mtimes_new)
-	// if d < 0 /\ k > k' then (k, _delta_new, _mtimes_new)
-	// The incoming value comparing to the base value should go for the same direction as the original CLP, so inclusion or extension can be considered.
-	// but !this->isConst()
-	if(val.isConst()) {
-		if((_delta > 0 and _base < val._base) || (_delta < 0 and _base > val._base)) {
-			intn_t _delta_new = gcd(_delta, val._base - _base);
-			uintn_t _mtimes_new = _mtimes * (_delta / _delta_new);
-			uintn_t _extra_mile = ((val._base - _base) / _delta_new);
-
-			if(_mtimes_new < _mtimes)
-				return *this = Value(VAL, _base, _delta_new, UMAXn);
-
-			if(_extra_mile >= _mtimes_new) // extend the new scope
-				return *this = Value(VAL, _base, _delta_new, _extra_mile);
-
-			return *this = Value(VAL, _base, _delta_new, _mtimes_new);
-		}
-		else
-			return *this = all;
-	}
-
-
-
-	// if n = n' = ∞
-	if(isInf() and val.isInf()) {
-		// if d = d' /\ |k - k'| % d = 0 then (k, d, n)
-		if((_delta == val._delta) && (elm::abs(val._base - _base) % _delta == 0))
-			return *this;
-	}
-
-
-	if((_delta > 0 && val._delta > 0) && (val._base >= _base)) { // e.g (0x60000004, 8, inf) wid (0x6000000C, 4, inf) = (0x60000004, 4, inf)
-		intn_t _delta_new = gcd(gcd(_delta, val._delta), val._base - _base);
-		return *this = Value(VAL, _base, _delta_new, UMAXn);
-	}
-	else if((_delta < 0 && val._delta < 0) &&(val._base <= _base)) {
-		intn_t _delta_new = gcd(gcd(_delta, val._delta), val._base - _base);
-		return *this = Value(VAL, _base, _delta_new, UMAXn);
-	}
-
-
-	if(isInf() and val.isInf()) {
-		*this = all;
-		return *this;
-	}
-
-
-	// when d != d' /\ d != -d', widen((k, d, -), (k', d', -)) = T
-	//else if (_delta != val._delta && _delta != - val._delta)
-	//	*this = all;
-
-	// when start(k', d', n') <= start(k, d, n)  /\ stop(k', d', n') <= stop(k, d, n),
-	// widen((k', d', n'), (k, d, n)) = (stop(k, d, n), -D, -inf / D) with D = |d| if stop(k', d', n') = stop(k, d, n), 1 else
-	else if (val.start() <= start() && val.stop() <= stop()){
-		// go to negatives
-		uintn_t absd = elm::abs(_delta);
-		uintn_t startd = start() - val.start(), stopd = stop() - val.stop();
-		if( absd != elm::abs(val.delta())	// if the absolute value of the deltas are different
-		|| (stopd != 0 && stopd != absd)	// if the difference between stop values do not fall on delta... should be (stopd % absd) != 0
-		|| startd != absd)	// if the difference between start values do not fall on dela ... should be (startd % absd) != 0
-			absd = 1;
-		set(_kind, stop(), -absd, UMAXn / absd);
-	}
-
-	// when start(k', d', n') >= start(k, d, n)  /\ stop(k', d', n') >= stop(k, d, n),
-	// widen((k', d', n'), (k, d, n)) = (start(k', d', n'), D, -inf / D) with D = |d| if start(k', d', n') = start(k, d, n), 1 else
-	else if (val.start() >= start() && val.stop() >= stop()) {
-		// go the positive
-		uintn_t absd = elm::abs(_delta);
-		uintn_t startd = val.start() - start(), stopd = val.stop() - stop();
-		if(absd != elm::abs(val.delta()) || (startd != 0 && startd != absd) || stopd != absd)
-			absd = 1;
-		set(_kind, start(), absd, UMAXn / absd);
-	}
-
-	// else widen((k, d, n), (k', d', n')) = T
-	else
-		*this = all;
-
-	// regulate the results, if delta or mtimes is 0, then treat the result as a constant
-	if(_kind == VAL && (_delta == 0 || _mtimes == 0))
-		set(_kind, _base, 0, 0);
-
-	return *this;
-	check();
+Value& Value::widening(const Value& x) {
+	return ffwidening(x, -1);
 }
 
 /**
  * Perform a widening, knowing flow facts for the loop
- * @param val the value of the next iteration state
- * @param loopBound the maximum number of iteration of the loop
+ * @param x the value of the next iteration state
+ * @param N the maximum number of iteration of the loop
 */
-void Value::ffwidening(const Value& val, int loopBound){
-	if (_kind == NONE && val._kind == NONE) /* widen(NONE, NONE) = NONE */
-		return;
-	else if (_kind == ALL || val._kind == ALL) /* widen(ALL, *) = ALL */
-		set(ALL, 0, 1, UMAXn);
-	else if (*this == val)					/* this == val -> do nothing */
-		return;
-	else if (isConst() && val.isConst()) {
-		if (_base < val._base)
-			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1, k2 - k1, N) */
-			set(VAL, _base, val._base - _base, loopBound);
-		else {
-			/* widen((k1, 0, 0), (k2, 0, 0)) = (k1-N(k1-k2),k1-k2,N) */
-			int step = _base - val._base;
-			set(VAL, _base - loopBound * step, step, loopBound);
-		}
+Value& Value::ffwidening(const Value& x, int N){
+
+	// 	(0)	⊥ ▽ x = x ▽ ⊥ = x
+	if(kind() == NONE)
+		*this = x;
+	else if(x.kind() == NONE)
+		return *this;
+
+	// (1)	⊤ ▽ x = x ▽ ⊤ = x
+	else if(kind() == ALL || x.kind() == ALL)
+		*this = all;
+
+	// (2) x ▽ x = x
+	else if (*this == x)
+		return *this;
+
+	// (2') (b, 0, 0) ▽ (b + δ, 0, 0) = (b, δ, N+1)
+	else if(N >= 0 && isConst() && x.isConst())
+		*this = Value(VAL, x.base() - base(), N + 1);
+
+	// (2") (b, δ, N+1) ▽ (b + δ, δ, N+1) = (b, δ, N+1)
+	else if(N >= 0 && mtimes() == x.mtimes() && mtimes() == uintn_t(N + 1)
+	&& x.base() - base() == delta() && delta() == x.delta())
+		return *this;
+
+	// (3) (b, δ, n) ▽ (b', δ', n') =	(b, δ", ∞)
+	// with δ" = gcd(δ, δ', b' - b) ∧ δ ≥ 0 ∧ δ' ≥ 0 ∧ b' - b ≥ 0
+	else if(delta() >= 0 && x.delta() >= 0 && (x.base() - base()) >= 0) {
+		auto delta_s = ugcd(ugcd(delta(), x.delta()), x.base() - base());
+		*this = Value(VAL, base(), delta_s, UMAXn);
 	}
-	else if ((_delta == val._delta) &&		/* avoid division by 0 */
-			 ((val._base - _base) % _delta == 0) &&
-			 (_mtimes >= val._mtimes))
-		return;				/* val == this + k => this */
+
+	// (4) (b, δ, n) ▽ (b', δ', n') = (b, δ", ∞)
+	// with δ" = -gcd(-δ, -δ', b - b') ∧ δ ≤ 0 ∧ δ' ≤ 0 ∧ b' - b ≤ 0
+	else if(delta() <= 0 && x.delta() <= 0 && (x.base() - base()) <= 0) {
+		auto delta_s = -ugcd(-ugcd(delta(), -x.delta()), base() - x.base());
+		*this = Value(VAL, base(), delta_s, UMAXn);
+	}
+
+	// (5) (b, δ, n) ▽ (b', δ', n') = ⊤
 	else
-		/* other cases: T */
-		set(ALL, 0, 1, UMAXn);
+		*this = top;
+
+	// normalize the representation
+	if(kind() == VAL && (delta() == 0 || mtimes() == 0))
+		set(VAL, base(), 0, 0);
+	return *this;
 }
+
 
 /**
  * Intersection with the current value.
@@ -2018,10 +1924,6 @@ bool State::equals(const State& state) const {
 	for (int i=0; i < registers.length(); i++)
 		if (registers[i] != state.registers[i])
 			return false;
-	// Tmp registers
-	/*for (int i=0; i < tmpreg.length(); i++)
-		if (tmpreg[i] != state.tmpreg[i])
-			return false;*/
 
 	// Memory
 	if(first.val.kind() != state.first.val.kind())
@@ -2039,6 +1941,54 @@ bool State::equals(const State& state) const {
 	}
 	return cur == cur2;
 }
+
+
+/**
+ * Test if the current state is a subset of the passed one.
+ * @param s		State to test with.
+ * @return		True if current state is a subset of the given one, false else.
+ */
+bool State::subsetOf(const State& s) const {
+	if(first.val.kind() == NONE)
+		return true;
+	else if(s.first.val.kind() == NONE)
+		return false;
+
+	// registers
+	if (registers.length() != s.registers.length())
+		return false;
+	for (int i=0; i < registers.length(); i++)
+		if(!registers[i].subsetOf(s.registers[i])) {
+			cerr << "DEBUG: on " << otawa::clp::PF->findReg(i)->name() << io::endl;
+			return false;
+		}
+
+	// memory
+	if(first.val.kind() != s.first.val.kind())
+		return false;
+
+	Node *cur = first.next, *cur2 = s.first.next;
+	while(cur && cur2) {
+		if(cur->addr != cur2->addr) {
+			if(cur->addr < cur2->addr)
+				cur = cur->next;
+			else {
+				cerr << "DEBUG: at " << io::hex(cur->addr) << io::endl;
+				return false;
+			}
+		}
+		else if(!cur->val.subsetOf(cur2->val)) {
+			cerr << "DEBUG: at " << io::hex(cur->addr) << io::endl;
+			return false;
+		}
+		else {
+			cur = cur->next;
+			cur2 = cur2->next;
+		}
+	}
+	return cur2 == nullptr;
+}
+
 
 /**
  * Merge a state with the current one.
@@ -2118,6 +2068,11 @@ void State::join(const State& state) {
  *        operation will be used if the loopBound is known (>=0) or not.
 */
 void State::widening(const State& state, int loopBound) {
+#	ifdef CHECK_PARTIAL_ORDER
+		State saved_state;
+		saved_state.copy(*this);
+#	endif
+
 	TRACED(cerr << "widening(" << loopBound << "\n\t");
 	TRACED(print(cerr); cerr << ",\n\t";  state.print(cerr); cerr << "\n\t) = ");
 
@@ -2134,9 +2089,8 @@ void State::widening(const State& state, int loopBound) {
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
 		if (loopBound >= 0)
 			registers[i].ffwidening(state.registers[i], loopBound);
-		else {
+		else
 			registers[i].widening(state.registers[i]);
-		}
 
 	if (registers.length() < state.registers.length())
 		for(int i=registers.length(); i < state.registers.length(); i++) {
@@ -2183,6 +2137,21 @@ void State::widening(const State& state, int loopBound) {
 		cur = next;
 	}
 	TRACED(print(cerr); cerr << io::endl;);
+
+#	ifdef CHECK_PARTIAL_ORDER
+		if(!saved_state.subsetOf(*this)) {
+			cerr << "\nS1 = "; saved_state.print(cerr); cerr << io::endl;
+			cerr << "\nS2 = "; print(cerr); cerr << io::endl;
+			cerr << "after widening, S1 should be <= to S2\n";
+			elm::crash();
+		}
+		if(!state.subsetOf(*this)) {
+			cerr << "\nS1 = "; state.print(cerr); cerr << io::endl;
+			cerr << "\nS2 = "; print(cerr); cerr << io::endl;
+			cerr << "after widening, S1 should be <= to S2\n";
+			elm::crash();
+		}
+#	endif
 }
 
 
@@ -2363,6 +2332,10 @@ public:
 	typedef ClpProblem Problem;
 	Problem& getProb(void) { return *this; }
 
+#	ifdef CHECK_PARTIAL_ORDER
+	dfa::hai::WideningListener<ClpProblem> *list;
+#	endif
+
 	ClpProblem(Process *proc)
 	:	pc(0),
 		has_if(false),
@@ -2387,7 +2360,13 @@ public:
 	 	_nb_top_filters(0),
 	 	_nb_top_load(0),
 		_nb_clp_bb_count(0)
-{ }
+#		ifdef CHECK_PARTIAL_ORDER
+			, list(nullptr)
+#		endif
+	{
+		proc->semInit(b);
+		update(_init);
+	}
 
 	/*
 	 *
@@ -2468,7 +2447,20 @@ public:
 	 * between two CFG paths.
 	*/
 	inline void lub(Domain &a, const Domain &b) const {
+#		ifdef CHECK_PARTIAL_ORDER
+			State s;
+			s.copy(a);
+#		endif
 		a.join(b);
+#		ifdef CHECK_PARTIAL_ORDER
+			if(!s.subsetOf(a)) {
+				cerr << "\nS1 = "; s.print(cerr); cerr << io::endl;
+				cerr << "\nS2 = "; a.print(cerr); cerr << io::endl;
+				cerr << "\nS1 not subset of S1 as it should be!" << io::endl;
+				elm::crash();
+			}
+			ASSERT(b.subsetOf(a));
+#		endif
 	}
 
 	void checkWideningAlarm(Domain& d, Domain& a, Domain& b) const {
@@ -3066,6 +3058,44 @@ public:
 	}
 
 	/**
+	 * Execute the current block of instruction on the given state.
+	 * @param out	State to update.
+	 * @param ipack	Possible instruction pack to use.
+	 */
+	void update(Domain& out, clp::ClpStatePack::InstPack *ipack = nullptr) {
+		Domain *state = &out;
+		while(true) {
+
+			// execute the path
+			while(pc < b.length()) {
+				update(state);
+				_nb_sem_inst++; // for statistics
+
+				// build filter
+				if (bBuildFilters && currentClpStatePack)
+					ipack->append(*state);
+			}
+
+			// if there is several paths, merge with the main state
+			if(state != &out) {
+				out.join(*state);
+				delete state;
+			}
+
+			// no more path
+			if(!listOfIFsToDo)
+				break; // when all the forking states are processed
+			// prepare the new path
+			else {
+				Pair<int, Domain *> p = listOfIFsToDo.pop();
+				pc = p.fst;
+				state = p.snd;
+			}
+
+		}
+	}
+
+	/**
 	 * This function update the state by applying a basic block.
 	 * It gives the output state, given the input state and a pointer to the
 	 * basic block.
@@ -3092,7 +3122,6 @@ public:
 		this->bb = bb;
 
 		//Domain *state; // the working state in this function, it points to the output state so that the output changes accordingly
-		clp::ClpStatePack::InstPack *ipack = 0;
 		TRACEP(cerr << "\n*** update(" << bb << ") ***\n");
 		TRACEP(cerr << "s = " << in << io::endl);
 		// save the input state in the basic block, join with an existing state
@@ -3108,103 +3137,38 @@ public:
 		if(out.equals(Domain::EMPTY))
 			return;
 
-#	ifdef USE_INST
-		for(BasicBlock::InstIter inst = bb->toBasic()->insts(); inst(); inst++) {
-#	else // use bundle
 		for(BasicBlock::BundleIter bundle(bb->toBasic()); bundle(); bundle++) {
+
+			// initialize the state
 			has_if = false;
 			has_branch = false;
-#	endif
-
-#	ifdef USE_INST
-			this->currentInst = *inst;
-#	else
-			this->currentInst = (*bundle).first();
-#	endif
+			currentInst = (*bundle).first();
 			TRACESI(cerr << '\t' << currentInst->address() << ": "; currentInst->dump(cerr); cerr << io::endl);
 			_nb_inst++; // statistics
 
 			// get semantic instructions
-#	ifdef USE_INST
-			prepare(*inst);
-#	else
 			b.clear();
 			(*bundle).semInsts(b);
 			pc = 0;
 			listOfIFsToDo.clear();
-#	endif
 
 			// use the provided states associated with the first instruction of the bundle
 			insertInfo(out, bb->toBasic(), currentInst);
 
-			Domain *state = &out;
-
 			// initialize the InstPack for the current instruction/bundle
-			ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
-			if(bBuildFilters && currentClpStatePack) { // when building a filter
+			clp::ClpStatePack::InstPack *ipack = nullptr;
+			if(bBuildFilters && currentClpStatePack)
 				ipack = currentClpStatePack->newPack(currentInst->address());
-			}
 
 			// perform interpretation of each semantic instructions of a given instruction bundle
-			while(true) {
+			update(out, ipack);
+		}
 
-				// pc is the current index of the semantic instruction to process.
-				// when pc equals to the b.length() that means we are reaching the end of the semantic instruction block
-				while(pc < b.length()) {
-					update(state);
-					_nb_sem_inst++; // for statistics
-
-					// When creating a filter, a data strucuture is created to hold the state for each semantic instruction of each addresses
-					// currentClpStatePack of ClpStatePack:
-					// |---------------------------------------------|
-					// | ipack of InstPack for instruction/bundle 1  |
-					// | .........                                   |
-					// | ipack of InstPack for instruction/bundle n  |
-					// |---------------------------------------------|
-					//
-					// For each ipack, it contains the state for each semantic instruction of the instruction/bundle
-					// |----------------------------------------------|
-					// | state of semInst1_1 for instruction/bundle 1 |
-					// | .........                                    |
-					// | state of semInstM_1 for instruction/bundle 1 |
-					// |----------------------------------------------|
-					// .........
-					// |----------------------------------------------|
-					// | state of semInst1_n for instruction/bundle n |
-					// | .........                                    |
-					// | state of semInstM_n for instruction/bundle n |
-					// |----------------------------------------------|
-					ASSERT(!( (!bBuildFilters & (currentClpStatePack !=0)) | (bBuildFilters & (currentClpStatePack ==0)) )); // show that currentClpStatePack and bBuildFilters always true together
-					if (bBuildFilters && currentClpStatePack){
-						ipack->append(*state);
-					}
-				}
-
-				// this normally happens when processing other processing path formed by the IF sem. inst.
-				// because two different paths for the condition, we need to merge the resulted states from both paths of the IF sem. inst.
-				// so every possibility is covered
-				if(state != &out) {
-					out.join(*state);
-					delete state;
-				}
-
-				// if there are alternative path, i.e. because of an IF sem, to handle.
-				if(!listOfIFsToDo)
-					break; // when all the forking states are processed
-				else {
-					Pair<int, Domain *> p = listOfIFsToDo.pop(); // popping the state prepared previous when an IF was encountered
-					pc = p.fst;
-					state = p.snd;
-				}
-
-			} // end of processing semantic instructions of a given instruction/bundle
-		} // end of going through all the instructions/bundles of the basic block
 		// reset tracking
 		this->currentInst = 0;
 		this->bb = 0;
-
 		TRACEP(cerr << "s' = " << out << io::endl);
-		if (bBuildFilters)
+		if(bBuildFilters)
 			return;
 
 		// save the output state in the basic block
@@ -3214,17 +3178,35 @@ public:
 		clp::STATE_OUT(bb) = out;
 		TRACEU(cerr << ">>>\tout = " << out << io::endl);
 
-		// if the block has an IF instruction
+		// if there is a branch, applu filters
 		// !!DEBUG!! seems to cause crash
-//#	if 0
-		if(has_branch /*&& ! se::REG_FILTERS.exists(bb)*/){ // re-evaluate filters, because values can change!
-			//TODO: delete 'old' reg_filters if needed
-			//use Symbolic Expressions to get filters for this basic block
+		if(has_branch) {
 			TRACEP(cerr << "> IF+BRANCH detected, getting filters..." << io::endl);
 			se::FilterBuilder builder(bb->toBasic(), *this);
 		}
-//#	endif
-	}
+
+#		ifdef CHECK_PARTIAL_ORDER
+			State *old_in = list->results[bb->cfg()->index()][bb->index()];
+			State *old = list->results_out[bb->cfg()->index()][bb->index()];
+			if(old != nullptr) {
+				if(!old->subsetOf(out)) {
+
+					for(auto e: bb->inEdges()) {
+						cerr << "\nALONG " << e << ": ";
+						list->results_out[e->source()->cfg()->index()][e->source()->index()]->print(cerr);
+						cerr << endl;
+					}
+
+					cerr << "\nIN: "; old_in->print(cerr); cerr << endl;
+					cerr << "\nIN: "; in.print(cerr); cerr << endl;
+					cerr << "\nBEFORE: "; old->print(cerr); cerr << endl;
+					cerr << "\nAFTER: "; out.print(cerr); cerr << endl;
+					cerr << "\nBEFORE should be a subset of AFTER (" << bb << ")\n";
+					elm::crash();
+				}
+			}
+#		endif
+		}
 
 	/**
 	 * Get the content of a register
@@ -3474,7 +3456,9 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 				Address addr;
 				const Array< const hard::Bank * > &banks = mem->banks();
 				for(int i = 0; i < banks.count(); i++)
-					if(banks[i]->isWritable() && (addr.isNull() || banks[i]->address() > addr))
+					if(banks[i]->isWritable()
+					&& banks[i]->type() != hard::Bank::IO
+					&& (addr.isNull() || banks[i]->address() > addr))
 						addr = banks[i]->topAddress();
 				if(addr.isNull()) {
 					warn("no writable memory: reverting to loader stack address.");
@@ -3492,7 +3476,12 @@ void Analysis::processWorkSpace(WorkSpace *ws) {
 	}
 
 	// perform analysius
-	ClpListener list(ws, prob);
+#	ifdef CHECK_PARTIAL_ORDER
+		ClpListener list(ws, prob, true);
+		prob.list = &list;
+#	else
+		ClpListener list(ws, prob);
+#	endif
 	ClpFP fp(list);
 	ClpAI cai(fp, *ws);
 	cai.solve(cfg);
@@ -3819,11 +3808,7 @@ Manager::step_t Manager::start(BasicBlock *bb) {
 	mi = BasicBlock::BundleIter(bb);
 	s = STATE_IN(bb);
 	cs = &s;
-#	if USE_INST
-		p->prepare((*mi).first());
-#	else
-		p->prepare(*mi);
-#	endif
+	p->prepare(*mi);
 	p->insertInfo(*cs, b, (*mi).first());
 	i = 0;
 	//p->update(cs);
@@ -3856,11 +3841,7 @@ Manager::step_t Manager::next(void) {
 			if(!mi)
 				return false;
 			cs = &s;
-#			if USE_INST
-				p->prepare((*mi).first());
-#			else
-				p->prepare(*mi);
-#			endif
+			p->prepare(*mi);
 			p->insertInfo(*cs, b, (*mi).first());
 			i = 0;
 		}

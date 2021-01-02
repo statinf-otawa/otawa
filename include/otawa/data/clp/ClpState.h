@@ -83,6 +83,7 @@ namespace clp {
 		void print(io::Output& out, const hard::Platform *pf = 0) const;
 		const Value& get(const Value& addr) const;
 		void augment(const State& state);
+		bool subsetOf(const State& s) const;
 		
 		static const State EMPTY, FULL;
 
