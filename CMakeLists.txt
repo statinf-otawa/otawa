@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.6)
 project("otawa")
 set(PACKAGE "otawa")
 
-add_compile_options(-Werror -Wall)
+#add_compile_options(-Werror -Wall)
 
 # C++ flags
 if(CMAKE_BUILD_TYPE MATCHES Release)

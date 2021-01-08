@@ -57,25 +57,6 @@ public:
 	);
 	virtual ~Application(void);
 
-	int run(int argc, char **argv);
-    int runWithCatch(int argc, char **argv) {
-        try {
-            return run(argc,argv);
-        }
-        catch (option::OptionException & e)
-        {
-            displayHelp();
-            error(e.message());
-            result = 1;
-        }
-        catch (elm::Exception & e)
-        {
-            error(e.message());
-            result = 1;
-        }
-        return result;
-    };
-
 protected:
 	virtual void prepare(PropList& props);
 	virtual void work(PropList& props);
@@ -86,7 +67,7 @@ protected:
 	void require(const AbstractFeature&  feature);
 	void exit(int code = 0);
 	void run(Processor *p);
-	template <class T> T *run()
+	template <class T> T *perform()
 		{ T *p = new T(); run(p); return p; }
 	void fail(int code, string msg);
 	void error(string msg);
@@ -100,6 +81,7 @@ protected:
 	Address parseAddress(const string& s);
 
 	void process(string arg) override;
+	void run() override;
 
 private:
 	option::SwitchOption help, verbose, dump;
@@ -116,22 +98,12 @@ private:
 	Vector<string> _args;
 	PropList props;
 	PropList *props2;
-	int result;
 	WorkSpace *ws;
 };
 
 }	// otawa
 
 // application macro
-#define OTAWA_RUN(name) \
-	int main(int argc, char **argv) { \
-		name app; \
-		return app.run(argc, argv); \
-	}
+#define OTAWA_RUN(name) ELM_RUN(name)
 
-#define OTAWA_RUN_WITH_CATCH(name) \
-    int main (int argc, char **argv) { \
-        name app; \
-        return app.runWithCatch(argc,argv); \
-    }
 #endif /* OTAWA_APP_APPLICATION_H_ */

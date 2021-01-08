@@ -299,7 +299,6 @@ Application::Application(const Make& make):
 	dump_for(option::ListOption<string>::Make(this).cmd("--dump-for").help("dump results of the named analyzes").arg("ANALYSIS NAME")),
 	log_level(*this),
 	props2(0),
-	result(0),
 	ws(0)
 { }
 
@@ -334,26 +333,16 @@ Application::~Application(void) {
 
 /**
  * Run the application:
- * @li scan the options from argc and argv,
  * @li open the workspace,
  * @li call the work() method.
- * @param argc	Argument count as passed to main().
- * @param argv	Argument list as passed to main().
- * @return		A return code adapted to the current OS.
  */
-int Application::run(int argc, char **argv) {
+void Application::run() {
 
 		// process arguments
-		parse(argc, argv);
-		if(help) {
-			displayHelp();
-			return 1;
-		}
 		if(!path)
 			throw option::OptionException("no PROGRAM given");
 		if(!_args)
 			_args.add("main");
-
 
 		// process logging
 		if(verbose)
@@ -401,7 +390,7 @@ int Application::run(int argc, char **argv) {
 			id->fromString(props, val);
 		}
 		if(failed)
-			return 2;
+			return;
 
 		// prepare the load params
 		for(int i = 0; i < params.count(); i++)
@@ -429,7 +418,6 @@ int Application::run(int argc, char **argv) {
 	// cleanup
 	if(ws)
 		delete ws;
-	return result;
 }
 
 
