@@ -585,7 +585,7 @@ void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 
 	// remove prefix case
 	if(logFor(LOG_BLOCK))
-		log << "\t\t\ttoo many dynamic events (" << countDynEvents(all_events) << "). Discarding prefix: overestimation increase\n";
+		log << "\t\t\ttoo many dynamic events (" << countDynEvents(all_events) << "). Discarding prefix: overestimation increases.\n";
 	all_events.clear();
 	sortEvents(all_events, target, IN_BLOCK, edge);
 	if(countDynEvents(all_events) <= event_th) {
@@ -901,8 +901,9 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
 			set.add(pair(*event, IN_EDGE));
 
 	// generate the ordered list of events
-	for(set_t::Iter e(set); e(); e++)
-		events.push(*e);
+	/*for(set_t::Iter e(set); e(); e++)
+		events.push(*e);*/
+	events.addAll(set);
 }
 
 
@@ -1111,8 +1112,17 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 	}
 
 	case BRANCH:
-		bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
-		bedge->setLatency(event->cost());
+		{
+			auto b = getBranchNode();
+			if(b != nullptr) {
+				bedge =  new ParExeEdge(getBranchNode(), inst->fetchNode(), ParExeEdge::SOLID, 0, pred_msg);
+				bedge->setLatency(event->cost());
+			}
+			else {
+				addLatency(inst->fetchNode(), event->cost());
+				bedge = nullptr;
+			}
+		}
 		break;
 
 	case CUSTOM:
@@ -1260,9 +1270,12 @@ void EdgeTimeBuilder::rollback(Event *event, ParExeInst *inst) {
 	}
 
 	case BRANCH:
-		ASSERT(bedge);
-		graph->remove(bedge);
-		bedge = 0;
+		if(bedge != nullptr) {
+			graph->remove(bedge);
+			bedge = 0;
+		}
+		else
+			removeLatency(inst->fetchNode(), event->cost());
 		break;
 
 	case CUSTOM:
