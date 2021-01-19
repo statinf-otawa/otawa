@@ -65,7 +65,7 @@ private:
 		address_t a;
 		value_t v;
 		node_t *n;
-		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
+		inline void *operator new(size_t size, T& alloc) { return alloc.allocate(size); }
 	} node_t;
 
 	typedef struct state_t {
@@ -83,7 +83,7 @@ private:
 		value_t **regs;
 		//node_t *mem;
 		node_t* mems[MEM_SIZE];
-		inline void *operator new(size_t size, T& alloc) { return alloc.template allocate(size); }
+		inline void *operator new(size_t size, T& alloc) { return alloc.allocate(size); }
 	} stat_t;
 
 	static const int
@@ -857,13 +857,13 @@ public:
 
 		// then we have to mark the registers
 		if(regsAlloc) {
-			already = allocator.template mark(regsAlloc, sizeof(value_t *)*nrblock);
+			already = allocator.mark(regsAlloc, sizeof(value_t *)*nrblock);
 			if(already) {
 			}
 			else {
 				for(auto i = 0; i < nrblock; i++) { // for each row of registers
 					if(regRowAlloc[i]) {
-						already = allocator.template mark(regRowAlloc[i], sizeof(value_t)*rblock_size);
+						already = allocator.mark(regRowAlloc[i], sizeof(value_t)*rblock_size);
 						if(already) {
 						}
 						else {
@@ -881,7 +881,7 @@ public:
 
 		if(memAlloc) {
 			for(node_t *n = memAlloc; n; n = n->n) {
-				already = allocator.template mark(n, sizeof(node_t));
+				already = allocator.mark(n, sizeof(node_t));
 				if(already) {
 				}
 				else {
@@ -891,13 +891,12 @@ public:
 		}
 
 		if(nodeAlloc) {
-			already = allocator.template mark(nodeAlloc, sizeof(node_t));
+			already = allocator.mark(nodeAlloc, sizeof(node_t));
 			if(already) {
 			}
 		}
 
 		if(tempValueAlloc) {
-			//allocator.template mark(tempValueAlloc, sizeof(value_t));
 			tempValueAlloc->collect(&allocator);
 		}
 
@@ -907,7 +906,7 @@ public:
 
 		for(int i = 0; i < MEM_SIZE; i++) {
 			for(node_t *n = memEachRowAlloc[i]; n; n = n->n) {
-				already = allocator.template mark(n, sizeof(node_t));
+				already = allocator.mark(n, sizeof(node_t));
 				if(already) {
 				}
 				else {
@@ -924,18 +923,18 @@ public:
 		bool already = false;
 		// first mark the state
 
-		already = allocator.template mark(_s, sizeof(state_t));
+		already = allocator.mark(_s, sizeof(state_t));
 		if(already) {
 			return (currCount); // no need to collect the rest since they are already collected
 		}
 
 		// then we have to mark the registers
-		already = allocator.template mark(_s->regs, sizeof(value_t *)*nrblock);
+		already = allocator.mark(_s->regs, sizeof(value_t *)*nrblock);
 		if(already) {
 		}
 		else {
 			for(auto i = 0; i < nrblock; i++) {
-				already = allocator.template mark(_s->regs[i], sizeof(value_t)*rblock_size);
+				already = allocator.mark(_s->regs[i], sizeof(value_t)*rblock_size);
 				if(already) {
 				}
 				else {
@@ -951,7 +950,7 @@ public:
 
 		for(int i = 0; i < MEM_SIZE; i++) {
 			for(node_t *n = _s->mems[i]; n; n = n->n) {
-				already = allocator.template mark(n, sizeof(node_t));
+				already = allocator.mark(n, sizeof(node_t));
 				if(already) {
 					break;
 					// return (currCount+1);

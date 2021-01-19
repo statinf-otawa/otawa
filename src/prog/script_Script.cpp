@@ -556,6 +556,7 @@ void Script::work(WorkSpace *ws) {
 						PropList list = props;
 						makeConfig(step, list);
 						Processor *proc = ProcessorPlugin::getProcessor(*name);
+						// TODO support null case
 						if(timed)
 							sw.start();
 						ws->run(proc, list, true);

@@ -901,8 +901,6 @@ void EdgeTimeBuilder::sortEvents(event_list_t& events, BasicBlock *bb, place_t p
 			set.add(pair(*event, IN_EDGE));
 
 	// generate the ordered list of events
-	/*for(set_t::Iter e(set); e(); e++)
-		events.push(*e);*/
 	events.addAll(set);
 }
 
