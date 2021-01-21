@@ -101,24 +101,27 @@ Factory::~Factory(void) {
  * TODO
  */
 
-/* internal */
-class StandardFactory: public Factory {
-public:
+/**
+ * @class StandardFactory;
+ * Provides default implementation of XG factory.
+ * @ingroup etime
+ */
 
-	ParExeGraph *make(ParExeProc *proc,  Vector<Resource *> *resources, ParExeSequence *seq) override {
-		PropList props;
-		return new ParExeGraph(nullptr, proc, resources, seq);
-	}
+///
+ParExeGraph *StandardFactory::make(ParExeProc *proc,  Vector<Resource *> *resources, ParExeSequence *seq) {
+	PropList props;
+	return new ParExeGraph(nullptr, proc, resources, seq);
+}
 
-	ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) override {
-		return new ParExeNode(g, stage, i);
-	}
+///
+ParExeNode *StandardFactory::makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) {
+	return new ParExeNode(g, stage, i);
+}
 
-	ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type, int latency, string name) override {
-		return new ParExeEdge(src, snk, type, latency, name);
-	}
-
-};
+///
+ParExeEdge *StandardFactory::makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type, int latency, string name) {
+	return new ParExeEdge(src, snk, type, latency, name);
+}
 
 
 /**

@@ -194,6 +194,14 @@ private:
 	bool _only_start;
 };
 
+
+class StandardFactory: public Factory {
+public:
+	ParExeGraph *make(ParExeProc *proc,  Vector<Resource *> *resources, ParExeSequence *seq) override;
+	ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) override;
+	ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type, int latency, string name) override;
+};
+
 } }	// otawa::etime
 
 #endif /* OTAWA_ETIME_ABSTRACTTIMEBUILDER_H_ */
