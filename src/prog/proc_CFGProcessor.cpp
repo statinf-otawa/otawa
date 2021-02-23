@@ -221,19 +221,20 @@ void CFGProcessor::destroy(WorkSpace *ws) {
 
 ///
 void CFGProcessor::dump(WorkSpace *ws, Output& out) {
-	for(auto g: *_coll)
-		dumpCFG(ws, g, out);
+	for(auto g: *_coll) {
+		out << "CFG " << g << io::endl;
+		dumpCFG(g, out);
+	}
 }
 
 /**
  * The default implementation of CFGProcessor dump calls this function for
  * each CFG of the program. So it can be redefined to provide a custom dump.
  * The default implementation does nothing.
- * @param ws	Current workspace.
  * @param g		CFG to dump.
  * @param out	Stream to output to.
  */
-void CFGProcessor::dumpCFG(WorkSpace *ws, CFG *g, Output& out) {
+void CFGProcessor::dumpCFG(CFG *g, Output& out) {
 
 }
 

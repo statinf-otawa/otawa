@@ -54,7 +54,7 @@ protected:
 	virtual void processCFG(WorkSpace *ws, CFG *cfg) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
 	virtual void destroyCFG(WorkSpace *ws, CFG *cfg);
-	virtual void dumpCFG(WorkSpace *ws, CFG *cfg, Output& out);
+	virtual void dumpCFG(CFG *cfg, Output& out);
 
 	// useful
 	void doCleanUp(void);

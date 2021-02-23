@@ -262,7 +262,7 @@ void Dominance::cleanup(WorkSpace *ws) {
 
 
 ///
-void Dominance::dumpCFG(WorkSpace *ws, CFG *g, Output& out) {
+void Dominance::dumpCFG(CFG *g, Output& out) {
 	out << "CFG " << g << io::endl;
 	for(auto v: *g) {
 		out << "\t" << v << " dominated by ";

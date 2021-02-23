@@ -74,7 +74,7 @@ protected:
 					workspace()->require(*f, props);
 					sw.stop();
 					if(timed)
-						cout << "time: " << sw.delay() <<  io::endl;
+						cout << f->name() << ": " << sw.delay().millis() <<  io::endl;
 				}
 			}
 			else if(a.startsWith("process:")) {
@@ -82,14 +82,14 @@ protected:
 				string n = a.substring(8);
 				Processor *p = ProcessorPlugin::getProcessor(n);
 				if(!p)
-					throw otawa::Exception(_ << "cannot find feature " << n);
+					throw otawa::Exception(_ << "cannot find processor " << n);
 				else {
 					sys::StopWatch sw;
 					sw.start();
 					workspace()->run(p, props);
 					sw.stop();
 					if(timed)
-						cout << "time: " << sw.delay() <<  io::endl;
+						cout << p->name() << ": " << sw.delay() <<  io::endl;
 				}
 			}
 			else if(!setTask(props, a)){

@@ -113,6 +113,26 @@ void BBProcessor::destroyBB(WorkSpace *ws, CFG *cfg, Block *b) {
 
 
 /**
+ * Function called when a dump of the result of the analysis is required.
+ * The default implementation does nothing but this function can be overriden
+ * to display information about the analysis on the current block.
+ * @param v		CFG block to dump.
+ * @param out	Stream to dump to.
+ */
+void BBProcessor::dumpBB(Block *v, io::Output& out) {
+}
+
+
+///
+void BBProcessor::dumpCFG(CFG *g, io::Output& out) {
+	for(auto v: *g) {
+		out << "\t" << v << io::endl;
+		dumpBB(v, out);
+	}
+}
+
+
+/**
  * @fn const CFG& BBProcessor::blocks() const;
  * Get a range on the blocks of the current CFG.
  * @return	Current CFG blocks range.

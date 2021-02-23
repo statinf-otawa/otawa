@@ -93,8 +93,9 @@ const CString Manager::MEMORY_NAME = "memory";
  * may be put in the configuration property list. Its arguments is a string
  * of the form ID=VALUE where ID is an identifier of the XXX-config.xml
  * of the loader and VALUE the matching value.
+ * @ingroup prog
  */
-Identifier<string> LOAD_PARAM("otawa::LOAD_PARAM", "");
+p::id<string> LOAD_PARAM("otawa::LOAD_PARAM", "");
 
 
 /**
@@ -188,7 +189,7 @@ Manager::~Manager(void) {
  * @note This function should also perform dynamic loading of shared
  * library.
  */
-Loader *Manager::findLoader(CString name) {
+Loader *Manager::findLoader(string name) {
 	return (Loader *)loader_plugger.plug(name);
 }
 
@@ -197,7 +198,7 @@ Loader *Manager::findLoader(CString name) {
  * Find the simulator matching the given name.
  * @param name	Name of the simulator to load.
  */
-sim::Simulator *Manager::findSimulator(elm::CString name) {
+sim::Simulator *Manager::findSimulator(string name) {
 	return (sim::Simulator *)sim_plugger.plug(name);
 }
 
@@ -342,8 +343,8 @@ WorkSpace *Manager::loadBin(
 
 	// Simple identified loader
 	Loader *loader = LOADER(props);
-	if(!loader) {
-		CString name = LOADER_NAME(props);
+	if(loader == nullptr) {
+		auto name = LOADER_NAME(props);
 		if(name) {
 			if(isVerbose())
 				log << "INFO: got loader name \"" << name << "\": ";
@@ -356,7 +357,7 @@ WorkSpace *Manager::loadBin(
 		log << "INFO: got loader from proplist: " << loader << io::endl;
 
 	// Try with gel
-	if(!loader) {
+	if(loader == nullptr) {
 		gel_file_t *file = gel_open(path.asSysString(), 0, GEL_OPEN_QUIET);
 		if(!file) {
 			resetVerbosity();
@@ -549,84 +550,97 @@ ilp::System *Manager::newILPSystem(string name, bool max) {
 /**
  * This property, passed to the load configuration, gives the name of the
  * entry function of the current task.
+ * @ingroup prog
  */
-Identifier<string> TASK_ENTRY("otawa::TASK_ENTRY", "main");
+p::id<string> TASK_ENTRY("otawa::TASK_ENTRY", "main");
 
 
 /**
  * This property, passed to the load configuration, select the task entry
  * by its address.
+ * @ingroup prog
  */
-Identifier<Address> TASK_ADDRESS("otawa::TASK_ADDRESS", Address::null);
+p::id<Address> TASK_ADDRESS("otawa::TASK_ADDRESS", Address::null);
 
 
 /**
  * Identifier of the property indicating the name (CString) of the platform to use.
+ * @ingroup prog
  */
-Identifier<CString> PLATFORM_NAME("otawa::PLATFORM_NAME", "");
+p::id<string> PLATFORM_NAME("otawa::PLATFORM_NAME", "");
 
 
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
+ * @ingroup prog
  */
-Identifier<CString> LOADER_NAME("otawa::LOADER_NAME", "");
+p::id<string> LOADER_NAME("otawa::LOADER_NAME", "");
 
 
 /**
  * Identifier of the property indicating a platform (Platform *) to use.
+ * @ingroup prog
  */
-Identifier<hard::Platform *> PLATFORM("otawa::PLATFORM", 0);
+p::id<hard::Platform *> PLATFORM("otawa::PLATFORM", 0);
 
 
 /**
  * Identifier of the property indicating the loader to use.
+ * @ingroup prog
  */
-Identifier<Loader *> LOADER("otawa::LOADER", 0);
+p::id<Loader *> LOADER("otawa::LOADER", 0);
 
 
 /**
  * Identifier of the property indicating the identifier (PlatformId) of the loader to use.
+ * @ingroup prog
  */
-Identifier<hard::Platform::Identification *>
+p::id<hard::Platform::Identification *>
 	PLATFORM_IDENTFIER("otawa::PLATFORM_IDENTFIER", 0);
 
 
 /**
  * Argument count as passed to the program (int).
+ * @ingroup prog
  */
-Identifier<int> ARGC("otawa::ARGC", -1);
+p::id<int> ARGC("otawa::ARGC", -1);
 
 
 /**
  * Argument values as passed to the program (char **).
+ * @ingroup prog
  */
-Identifier<char **> ARGV("otawa::ARGV", 0);
+p::id<char **> ARGV("otawa::ARGV", 0);
 
 
 /**
  * Argument values as passed to the program (char **).
+ * @ingroup prog
  */
-Identifier<char **> ENVP("otawa::ENVP", 0);
+p::id<char **> ENVP("otawa::ENVP", 0);
 
 
 /**
  * This property defines the used the used simulator when a simulator is
  * needed to perform simulation.
+ * @ingroup prog
  */
-Identifier<sim::Simulator *> SIMULATOR("otawa::SIMULATOR", 0);
+p::id<sim::Simulator *> SIMULATOR("otawa::SIMULATOR", 0);
 
 
 /**
  * Name of the simulator to use.
+ * @ingroup prog
  */
-Identifier<elm::CString> SIMULATOR_NAME("otawa::SIMULATOR_NAME", "");
+p::id<string> SIMULATOR_NAME("otawa::SIMULATOR_NAME", "");
 
 
 /**
  * This property is used to pass the cache configuration directly to the
  * platform.
+ * @ingroup prog
  */
-Identifier<hard::CacheConfiguration *>
+p::id<hard::CacheConfiguration *>
 	CACHE_CONFIG("otawa::CACHE_CONFIG", 0);
 
 
@@ -634,98 +648,112 @@ Identifier<hard::CacheConfiguration *>
  * This property is a hint to have an estimation of the pipeline depth.
  * It is better to look to the processor configuration in the patform.
  */
-Identifier<int> PIPELINE_DEPTH("otawa::PIPELINE_DEPTH", -1);
+p::id<int> PIPELINE_DEPTH("otawa::PIPELINE_DEPTH", -1);
 
 
 /**
  * This property shows that the system does not need to by simulated when
  * the binary image is built.
+ * @ingroup prog
  */
-Identifier<bool> NO_SYSTEM("otawa::NO_SYSTEM", false);
+p::id<bool> NO_SYSTEM("otawa::NO_SYSTEM", false);
 
 
 /**
  * This property shows that no stack need to be allocated.
+ * @ingroup prog
  */
-Identifier<bool> NO_STACK("otawa::NO_STACK", false);
+p::id<bool> NO_STACK("otawa::NO_STACK", false);
 
 
 /**
  * Path to the XML configuration file used in this computation.
+ * @ingroup prog
  */
-Identifier<elm::sys::Path>
+p::id<elm::sys::Path>
 	CONFIG_PATH("otawa::CONFIG_PATH", "");
 
 
 /**
  * XML element containing the configuration of the current computation.
+ * @ingroup prog
  */
-Identifier<elm::xom::Element *>
+p::id<elm::xom::Element *>
 	CONFIG_ELEMENT("otawa::CONFIG_ELEMENT", 0);
 
 
 /**
  * Path to the XML configuration file of the processor.
+ * @ingroup prog
  */
-Identifier<elm::sys::Path>
+p::id<elm::sys::Path>
 	PROCESSOR_PATH("otawa::PROCESSOR_PATH", "");
 
 
 /**
  * XML element containing the configuration of the processor.
+ * @ingroup prog
  */
-Identifier<elm::xom::Element *>
+p::id<elm::xom::Element *>
 	PROCESSOR_ELEMENT("otawa::PROCESSOR_ELEMENT", 0);
 
 
 /**
  * Gives the processor to use in the current computation.
+ * @ingroup prog
  */
-Identifier<hard::Processor *> PROCESSOR("otawa::PROCESSOR", 0);
+p::id<hard::Processor *> PROCESSOR("otawa::PROCESSOR", 0);
 
 
 /**
  * Gives the path of file containing the cache configuration.
+ * @ingroup prog
  */
-Identifier<elm::sys::Path> CACHE_CONFIG_PATH("otawa::CACHE_CONFIG_PATH", "");
+p::id<elm::sys::Path> CACHE_CONFIG_PATH("otawa::CACHE_CONFIG_PATH", "");
 
 
 /**
  * Gives an XML element containing the cache configuration.
+ * @ingroup prog
  */
-Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::CACHE_CONFIG_ELEMENT", 0);
+p::id<elm::xom::Element *> CACHE_CONFIG_ELEMENT("otawa::CACHE_CONFIG_ELEMENT", 0);
 
 
 /**
  * this property may be used to pass information about the non-returning
  * behaviour of some functions. The parameter is the name of the function.
  * It is often used with the _exit function.
+ * @ingroup prog
  */
-Identifier<string> NO_RETURN_FUNCTION("otawa::NO_RETURN_FUNCTION", "");
+p::id<string> NO_RETURN_FUNCTION("otawa::NO_RETURN_FUNCTION", "");
 
 
 /**
  * Passed to Manager::load() to give the path of the file describing the memory.
+ * @ingroup prog
  */
-Identifier<elm::sys::Path> MEMORY_PATH("otawa::MEMORY_PATH", "");
+p::id<elm::sys::Path> MEMORY_PATH("otawa::MEMORY_PATH", "");
 
 
 /**
  * Passed to manager::load() to give the XML element describing the memory configuration.
  * This property is often used with an XML file containing different configurations.
+ * @ingroup prog
  */
-Identifier<elm::xom::Element *> MEMORY_ELEMENT("otawa::MEMORY_ELEMENT", 0);
+p::id<elm::xom::Element *> MEMORY_ELEMENT("otawa::MEMORY_ELEMENT", 0);
 
 
 /**
  * Passed to manager::load() to set the memory configuration.
  * The user is responsible of the release of the memory occipied by the memory object.
+ * @ingroup prog
  */
-Identifier<hard::Memory *> MEMORY_OBJECT("otawa::MEMORY_OBJECT", 0);
+p::id<hard::Memory *> MEMORY_OBJECT("otawa::MEMORY_OBJECT", 0);
 
 
 /**
  * Default manager. Avoid to declare one in the main.
+ * @ingroup prog
  */
 Manager Manager::_def;
 

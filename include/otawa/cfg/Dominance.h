@@ -53,7 +53,7 @@ public:
 protected:
 	void processCFG(WorkSpace *fw, CFG *cfg) override;
 	void cleanup(WorkSpace *ws) override;
-	void dumpCFG(WorkSpace *ws, CFG *g, Output& out) override;
+	void dumpCFG(CFG *g, Output& out) override;
 
 private:
 	void markLoopHeaders(CFG *cfg);

@@ -75,12 +75,12 @@ public:
 
 	Manager(void);
 	~Manager(void);
-	Loader *findLoader(elm::CString name);
+	Loader *findLoader(string name);
 	WorkSpace *load(const elm::sys::Path& path, const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "", bool max = true);
 
 	// deprecated
-	sim::Simulator *findSimulator(elm::CString name);
+	sim::Simulator *findSimulator(string name);
 	WorkSpace *load(const PropList& props = PropList::EMPTY);
 	WorkSpace *load(xom::Element *elem, const PropList& props = PropList::EMPTY);
 	elm::sys::Path retrieveConfig(const elm::sys::Path& path);
@@ -103,38 +103,38 @@ private:
 };
 
 // Configuration Properties
-extern Identifier<string> TASK_ENTRY;
-extern Identifier<Address> TASK_ADDRESS;
-extern Identifier<hard::Platform *> PLATFORM;
-extern Identifier<Loader *> LOADER;
-extern Identifier<elm::CString> PLATFORM_NAME;
-extern Identifier<elm::CString>  LOADER_NAME;
-extern Identifier<int> ARGC;
-extern Identifier<char **> ARGV;
-extern Identifier<char **> ENVP;
-extern Identifier<sim::Simulator *> SIMULATOR;
-extern Identifier<elm::CString> SIMULATOR_NAME;
-extern Identifier<int> PIPELINE_DEPTH;
-extern Identifier<bool> NO_SYSTEM;
-extern Identifier<bool> NO_STACK;
-extern Identifier<string> NO_RETURN_FUNCTION;
+extern p::id<string> TASK_ENTRY;
+extern p::id<Address> TASK_ADDRESS;
+extern p::id<hard::Platform *> PLATFORM;
+extern p::id<Loader *> LOADER;
+extern p::id<string> PLATFORM_NAME;
+extern p::id<string>  LOADER_NAME;
+extern p::id<int> ARGC;
+extern p::id<char **> ARGV;
+extern p::id<char **> ENVP;
+extern p::id<sim::Simulator *> SIMULATOR;
+extern p::id<elm::string> SIMULATOR_NAME;
+extern p::id<int> PIPELINE_DEPTH;
+extern p::id<bool> NO_SYSTEM;
+extern p::id<bool> NO_STACK;
+extern p::id<string> NO_RETURN_FUNCTION;
 
-extern Identifier<elm::sys::Path> CONFIG_PATH;
-extern Identifier<elm::xom::Element *> CONFIG_ELEMENT;
+extern p::id<elm::sys::Path> CONFIG_PATH;
+extern p::id<elm::xom::Element *> CONFIG_ELEMENT;
 
-extern Identifier<elm::sys::Path> CACHE_CONFIG_PATH;
-extern Identifier<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
-extern Identifier<hard::CacheConfiguration *> CACHE_CONFIG;
+extern p::id<elm::sys::Path> CACHE_CONFIG_PATH;
+extern p::id<elm::xom::Element *> CACHE_CONFIG_ELEMENT;
+extern p::id<hard::CacheConfiguration *> CACHE_CONFIG;
 
-extern Identifier<elm::sys::Path> MEMORY_PATH;
-extern Identifier<elm::xom::Element *> MEMORY_ELEMENT;
-extern Identifier<hard::Memory *> MEMORY_OBJECT;
+extern p::id<elm::sys::Path> MEMORY_PATH;
+extern p::id<elm::xom::Element *> MEMORY_ELEMENT;
+extern p::id<hard::Memory *> MEMORY_OBJECT;
 
-extern Identifier<elm::sys::Path> PROCESSOR_PATH;
-extern Identifier<elm::xom::Element *> PROCESSOR_ELEMENT;
-extern Identifier<hard::Processor *> PROCESSOR;
+extern p::id<elm::sys::Path> PROCESSOR_PATH;
+extern p::id<elm::xom::Element *> PROCESSOR_ELEMENT;
+extern p::id<hard::Processor *> PROCESSOR;
 
-extern Identifier<string> LOAD_PARAM;
+extern p::id<string> LOAD_PARAM;
 
 extern Manager& MANAGER;
 
