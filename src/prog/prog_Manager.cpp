@@ -343,11 +343,11 @@ WorkSpace *Manager::loadBin(
 	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(!loader) {
-		CString name = LOADER_NAME(props);
+		auto name = LOADER_NAME(props);
 		if(name) {
 			if(isVerbose())
 				log << "INFO: got loader name \"" << name << "\": ";
-			loader = findLoader(name);
+			loader = findLoader(name.toCString());
 			if(isVerbose())
 				log << (loader ? "found" : "not found") << io::endl;
 		}
@@ -569,7 +569,7 @@ Identifier<CString> PLATFORM_NAME("otawa::PLATFORM_NAME", "");
 /**
  * Identifier of the property indicating a name (CString) of the loader to use..
  */
-Identifier<CString> LOADER_NAME("otawa::LOADER_NAME", "");
+Identifier<string> LOADER_NAME("otawa::LOADER_NAME", "");
 
 
 /**

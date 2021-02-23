@@ -108,7 +108,7 @@ extern Identifier<Address> TASK_ADDRESS;
 extern Identifier<hard::Platform *> PLATFORM;
 extern Identifier<Loader *> LOADER;
 extern Identifier<elm::CString> PLATFORM_NAME;
-extern Identifier<elm::CString>  LOADER_NAME;
+extern Identifier<string>  LOADER_NAME;
 extern Identifier<int> ARGC;
 extern Identifier<char **> ARGV;
 extern Identifier<char **> ENVP;
