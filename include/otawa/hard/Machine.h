@@ -1,8 +1,8 @@
 /*
- *	hard modules features
+ *	Machine class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2019, IRIT UPS.
+ *	Copyright (c) 2005, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,19 +18,24 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_HARD_FEATURES_H_
-#define OTAWA_HARD_FEATURES_H_
+#ifndef OTAWA_HARD_MACHINE_H
+#define OTAWA_HARD_MACHINE_H
 
-#include <otawa/proc/Feature.h>
-#include "Machine.h"
+namespace otawa { namespace hard { 
 
-namespace otawa { namespace hard {
+class CacheConfiguration;
+class Memory;
+class Platform;
+class Processor;
 
-extern p::interfaced_feature<const Memory> MEMORY_FEATURE;
-extern p::interfaced_feature<const CacheConfiguration> CACHE_CONFIGURATION_FEATURE;
-extern p::interfaced_feature<const Processor> PROCESSOR_FEATURE;
-extern p::interfaced_feature<const Machine> MACHINE_FEATURE;
+class Machine {
+public:
+	const Platform *platform;
+	const Processor *processor;
+	const CacheConfiguration *caches;
+	const Memory *memory;
+};
+	 
+}} // otawa::hard
 
-} }	// otawa::hard
-
-#endif /* OTAWA_HARD_FEATURES_H_ */
+#endif // OTAWA_HARD_MACHINE_H

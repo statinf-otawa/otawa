@@ -779,8 +779,13 @@ protected:
 		}
 
 		// no processor
-		else
-			throw ProcessorException(*this, "no processor description available !\n");
+		else {
+			if(logFor(LOG_FUN))
+				log << "\tno processor found!\n";
+			proc = nullptr;
+			to_free = false;
+		}
+		//throw ProcessorException(*this, "no processor description available !\n");
 	}
 
 private:

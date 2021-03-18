@@ -26,6 +26,7 @@
 
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Platform.h>
+#include <otawa/prog/Process.h>
 #include <otawa/hard/Processor.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/prog/Manager.h>
@@ -467,5 +468,59 @@ const Register *Platform::getSP(void) const {
 const Register *Platform::getPC(void) const {
 	return 0;
 }
+
+
+/**
+ * @class Machine
+ * Class regrouping all information about the hardware.
+ * @ingroup hard
+ */
+
+///
+class MachineGetter: public otawa::Processor, public Machine {
+public:
+	static p::declare reg;
+	MachineGetter(): otawa::Processor(reg) {
+		platform = nullptr;
+		processor = nullptr;
+		caches = nullptr;
+		memory = nullptr;
+	}
+
+	void *interfaceFor(const otawa::AbstractFeature & feature) override {
+		if(feature == MACHINE_FEATURE)
+			return static_cast<Machine *>(this);
+		else
+			return nullptr;
+	}
+	
+protected:
+	
+	void processWorkSpace(otawa::WorkSpace * ws) override {
+		platform = ws->process()->platform();
+		processor = PROCESSOR_FEATURE.get(ws);
+		caches = CACHE_CONFIGURATION_FEATURE.get(ws);
+		memory = MEMORY_FEATURE.get(ws);
+	}
+};
+
+///
+p::declare MachineGetter::reg = p::init("otawa::hard::MachineGetter", Version(1, 0, 0))
+	.make<MachineGetter>()
+	.provide(MACHINE_FEATURE)
+	.require(PROCESSOR_FEATURE)
+	.require(CACHE_CONFIGURATION_FEATURE)
+	.require(MEMORY_FEATURE);
+
+	
+/**
+ * This feature ensures that information about the current machine has been
+ * collected. It is a super feature for:
+ * * @ref PROCESSOR_FEATURE,
+ * * @ref CACHE_CONFIGURATION_FEATURE
+ * * @ref MEMORY_FEATURE
+ * @ingroup hard
+ */
+p::interfaced_feature<const Machine> MACHINE_FEATURE("otawa::hard::MACHINE_FEATURE", p::make<MachineGetter>());
 
 } } // otawa::hard
