@@ -39,29 +39,28 @@ namespace otawa { namespace cfgio {
 using namespace elm;
 
 // CFG file DTD
-dtd::Element entry("entry", dtd::EMPTY);
-dtd::IDAttribute entry_id(entry, "id", dtd::REQUIRED);
-dtd::Element exit("exit", dtd::EMPTY);
-dtd::IDAttribute exit_id(exit, "id", dtd::REQUIRED);
+static dtd::Element entry("entry", dtd::EMPTY);
+static dtd::IDAttribute entry_id(entry, "id", dtd::REQUIRED);
+static dtd::Element exit("exit", dtd::EMPTY);
+static dtd::IDAttribute exit_id(exit, "id", dtd::REQUIRED);
 
-dtd::Element bb("bb", dtd::ignored);
-dtd::IDAttribute bb_id(bb, "id", dtd::REQUIRED);
-dtd::Attribute<t::uint32> address(bb, "address", 0, dtd::STRICT);
-dtd::Attribute<t::uint32> size(bb, "size", 0, dtd::STRICT);
-dtd::RefAttribute<CFGMaker> call(bb, "call", dtd::STRICT | dtd::FORWARD);
+static dtd::Element bb("bb", dtd::ignored);
+static dtd::IDAttribute bb_id(bb, "id", dtd::REQUIRED);
+static dtd::Attribute<t::uint32> address(bb, "address", 0, dtd::STRICT);
+static dtd::Attribute<t::uint32> size(bb, "size", 0, dtd::STRICT);
+static dtd::RefAttribute<CFGMaker> call(bb, "call", dtd::STRICT | dtd::FORWARD);
 
-dtd::Element edge("edge", dtd::ignored);
-dtd::RefAttribute<BasicBlock *> source(edge, "source", dtd::STRICT | dtd::REQUIRED);
-dtd::RefAttribute<BasicBlock *> target(edge, "target", dtd::STRICT | dtd::REQUIRED);
+static dtd::Element edge("edge", dtd::ignored);
+static dtd::RefAttribute<BasicBlock *> source(edge, "source", dtd::STRICT | dtd::REQUIRED);
+static dtd::RefAttribute<BasicBlock *> target(edge, "target", dtd::STRICT | dtd::REQUIRED);
 
-dtd::Element property("property", dtd::ignored);
+static dtd::Element property("property", dtd::ignored);
 
-dtd::Element cfg("cfg", (*property, entry, *bb, exit, *edge));
-dtd::IDAttribute cfg_id(cfg, "id", dtd::STRICT | dtd::REQUIRED);
-dtd::Attribute<t::uint32> cfg_address(cfg, "address", dtd::STRICT | dtd::REQUIRED);
+static dtd::Element cfg("cfg", (*property, entry, *bb, exit, *edge));
+static dtd::IDAttribute cfg_id(cfg, "id", dtd::STRICT | dtd::REQUIRED);
+static dtd::Attribute<t::uint32> cfg_address(cfg, "address", dtd::STRICT | dtd::REQUIRED);
 
-dtd::Element cfg_collection("cfg-collection", (*property, cfg, *cfg));
-
+static dtd::Element cfg_collection("cfg-collection", (*property, cfg, *cfg));
 
 // CFG factory
 class CFGFactory: public dtd::Factory {
@@ -209,14 +208,6 @@ void Input::configure(const PropList& props) {
 /**
  *
  */
-/*void Input::setup(WorkSpace *ws) {
-	reset();
-}*/
-
-
-/**
- *
- */
 void Input::processWorkSpace(WorkSpace *ws) {
 	CFGFactory factory(ws);
 
@@ -228,6 +219,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 
 	// get the top element
 	xom::Element *top = doc->getRootElement();
+//#	if 0
 	dtd::Parser parser(factory, cfg_collection);
 	try {
 		parser.parse(top);
@@ -240,6 +232,7 @@ void Input::processWorkSpace(WorkSpace *ws) {
 	catch(dtd::Exception& e) {
 		throw ProcessorException(*this, _ << "format error in " << path << ": " << e.message());
 	}
+//#	endif
 }
 
 /**

@@ -37,6 +37,7 @@
 #include <otawa/prog/Process.h>
 #include <otawa/prop/DynIdentifier.h>
 
+#if 0
 namespace elm {
 
 namespace dtd {
@@ -457,6 +458,7 @@ const t::uint32 STRICT = Attribute::STRICT;
 const t::uint32 REQUIRED = Attribute::REQUIRED;
 
 } }		// dtd::elm
+#endif
 
 namespace otawa {
 
@@ -464,6 +466,7 @@ namespace clp {
 
 using namespace elm;
 
+#if 0
 typedef enum {
 	_NONE,
 	_COLL,
@@ -487,9 +490,9 @@ dtd::Element exit(dtd::make("exit", _EXIT).attr(id));
 dtd::Element edge(dtd::make("edge", _EDGE).attr(source).attr(target).attr(called));
 dtd::Element cfg(dtd::make("cfg", _CFG).attr(id).content((entry, *bb, exit, *edge)));
 dtd::Element cfg_collection(dtd::make("cfg-collection", _COLL).content((cfg, *cfg)));
+#endif
 
 static Identifier<Option<xom::String> > SYNTH_TARGET("");
-
 
 
 /**
