@@ -20,7 +20,6 @@
  */
 
 #include <otawa/events/Event.h>
-#include <otawa/events/StandardEventBuilder.h>
 #include <otawa/prog/Inst.h>
 
 namespace otawa {
