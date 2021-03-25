@@ -24,6 +24,7 @@
 #include <elm/data/List.h>
 #include <elm/data/Vector.h>
 #include <otawa/cfg/CFG.h>
+#include <otawa/events/features.h>
 #include <otawa/proc/Feature.h>
 
 namespace otawa {
@@ -43,60 +44,25 @@ class Inst;
 
 namespace etime {
 
-typedef enum kind_t {
-	NONE,
-	FETCH,	// no argument
-	MEM,	// no argument
-	BRANCH,	// no argument
-	CUSTOM,	// unit argument
-} kind_t;
+// Event transition declarations
+typedef Event::kind_t kind_t;
+constexpr kind_t NONE = Event::NONE;
+constexpr kind_t FETCH = Event::FETCH;
+constexpr kind_t MEM = Event::MEM;
+constexpr kind_t BRANCH = Event::BRANCH;
+constexpr kind_t CUSTOM = Event::CUSTOM;
 
-typedef enum occurence_t {
-	NEVER = 0,
-	SOMETIMES = 1,
-	ALWAYS = 2
-} occurrence_t;
-io::Output& operator<<(io::Output& out, occurrence_t occ);
+typedef Event::occurrence_t occurrence_t;
+constexpr occurrence_t NEVER = Event::NEVER;
+constexpr occurrence_t SOMETIMES = Event::SOMETIMES;
+constexpr occurrence_t ALWAYS = Event::ALWAYS;
 
-typedef enum type_t {
-	LOCAL = 0,
-	AFTER = 1,
-	NOT_BEFORE = 2,
-} type_t;
+typedef Event::type_t type_t;
+constexpr type_t LOCAL = Event::LOCAL;
+constexpr type_t AFTER = Event::AFTER;
+constexpr type_t NOT_BEFORE = Event::NOT_BEFORE;
 
-
-// Event class
-class Event: public PropList {
-public:
-	typedef Pair<Inst *, const hard::PipelineUnit *> rel_t;
-
-	Event(Inst *inst);
-	virtual ~Event();
-	inline Inst *inst() const { return _inst; }
-
-	// accessors
-	virtual cstring name() const;
-	virtual string detail() const;
-
-	virtual kind_t kind() const = 0;
-	virtual ot::time cost() const = 0;
-	virtual occurrence_t occurrence() const;
-
-	virtual type_t type() const = 0;
-	virtual Pair<Inst *, const hard::PipelineUnit *> related(void) const;
-	virtual const hard::PipelineUnit *unit() const;
-
-	// heuristic contribution
-	virtual int weight() const;
-
-	// ILP contribution
-	virtual bool isEstimating(bool on);
-	virtual void estimate(ilp::Constraint *cons, bool on);
-
-private:
-	Inst *_inst;
-};
-io::Output& operator<<(io::Output& out, Event *event);
+typedef otawa::Event Event;
 
 
 class Unit: public PropList {
@@ -152,8 +118,8 @@ extern p::id<Unit *> TIME_UNIT;
 // event feature
 extern p::feature STANDARD_EVENTS_FEATURE;
 extern p::feature EVENTS_FEATURE;
-extern p::id<Event *> EVENT;
-extern p::id<Event *> PREFIX_EVENT;
+extern p::alias<Event *> EVENT;
+extern p::alias<Event *> PREFIX_EVENT;
 
 // configuration feature
 extern p::id<bool> PREDUMP;

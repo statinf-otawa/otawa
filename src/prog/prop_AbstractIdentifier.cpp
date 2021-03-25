@@ -42,20 +42,18 @@ namespace otawa {
  * Build a new exception.
  * @param name	Name of identifier causing the exception.
  */
-DuplicateIdentifierException::DuplicateIdentifierException(String& name)
+DuplicateIdentifierException::DuplicateIdentifierException(String name)
 : otawa::Exception(_ << "identifier \"" << name << "\" is already declared") {
 };
 
 
-// Storage of known identifiers
+///
 static class Init {
 public:
-	Init(void): init(false) {
-		init.startup();
-	}
-
+	Init(void): init(false) { init.startup(); }
 	HashMap<String, AbstractIdentifier *> map;
 	Initializer<AbstractIdentifier> init;
+	Initializer<p::abstract_alias> aliases;
 } ids;
 
 
@@ -405,5 +403,52 @@ void AbstractIdentifier::serialize(Property *prop, elm::serial2::Serializer& ser
 Property * AbstractIdentifier::unserialize(elm::serial2::Unserializer& unserializer) {
 	return 0;
 }
+
+namespace p {
+
+/**
+ * @class abstract_alias
+ * Class Managing the declaration of identifier aliases.
+ * @ingroup prop
+ */
+
+///
+abstract_alias::abstract_alias(cstring name, AbstractIdentifier& id)
+: _name(name), _id(id) {
+	if(_name != "")
+		ids.aliases.record(this);
+}
+
+/**
+ * @fn cstring abstract_alias::name() const;
+ * Get the name of the alias.
+ * @return	Alias name.
+ */
+
+/**
+ * @fn AbstractIdentifier& abstract_alias::id() const;
+ * Get the aliased identifier.
+ * @return	Aliased identifier.
+ */
+
+///
+void abstract_alias::initialize() {
+	TRACE("initialize alias(" << _name << ", " << id.name() << ")");
+	if(ids.map.get(_name)) {
+		cerr << "FATAL ERROR: identifier \"" << _name << "\" defined multiple times.";
+		throw DuplicateIdentifierException(_ << _name);
+	}
+	ids.map.add(_name, &_id);
+}
+
+
+/**
+ * @class alias
+ * Class providing support for aliasing an existing identifier.
+ * @param T		Type of identifier values.
+ * @ingroup prop
+ */
+
+} // p
 
 } // otawa

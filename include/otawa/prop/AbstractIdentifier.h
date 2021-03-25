@@ -79,7 +79,7 @@ private:
 // DuplicateIdentifierException class
 class DuplicateIdentifierException: public otawa::Exception {
 public:
-	DuplicateIdentifierException(String& name);
+	DuplicateIdentifierException(String name);
 };
 
 
