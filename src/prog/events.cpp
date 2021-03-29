@@ -20,6 +20,7 @@
  */
 
 #include <otawa/events/Event.h>
+#include <otawa/events/StandardEventBuilder.h>
 #include <otawa/prog/Inst.h>
 
 namespace otawa {
@@ -303,5 +304,19 @@ p::id<Event *> EVENT("otawa::EVENT", 0);
  * @ingroup events
  */
 p::id<Event *> PREFIX_EVENT("otawa::PREFIX_EVENT", 0);
+
+
+/**
+ * This feature ensure that basic events has been built from classic global anayzes.
+ * 
+ * **Default implementation**: StandardEventBuilder
+ * 
+ * **Hooked properties**
+ * * EVENT
+ * * PREFIX_EVENT
+ * 
+ * @ingroup events
+ */
+p::feature STANDARD_EVENT_FEATURE("otawa::STANDARD_EVENT_FEATURE", p::make<StandardEventBuilder>());
 
 } // otawa

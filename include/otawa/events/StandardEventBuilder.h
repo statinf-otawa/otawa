@@ -1,8 +1,8 @@
 /*
- *	Machine class interface
+ *	StandardEventBuilder class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2005, IRIT UPS.
+ *	Copyright (c) 2021, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,26 +18,29 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_HARD_MACHINE_H
-#define OTAWA_HARD_MACHINE_H
+#ifndef OTAWA_EVENTS_STANDARD_EVENT_BUILDER
+#define OTAWA_EVENTS_STANDARD_EVENT_BUILDER
 
+#include <otawa/proc/BBProcessor.h>
 #include "features.h"
 
-namespace otawa { namespace hard { 
+namespace otawa {
 
-class CacheConfiguration;
-class Memory;
-class Platform;
-class Processor;
-
-class Machine {
+namespace hard { class Machine; }
+	
+class StandardEventBuilder: public BBProcessor {
 public:
-	const Platform *platform;
-	const Processor *processor;
-	const CacheConfiguration *caches;
-	const Memory *memory;
+	static p::declare reg;
+	StandardEventBuilder(p::declare& r = reg);
+protected:
+	void setup(WorkSpace *ws) override;
+	void processBB(WorkSpace *ws, CFG *g, Block *b) override;
+	void destroy(WorkSpace *ws) override;
+private:
+	const hard::Machine *mach;
+	bool has_icache;
 };
-	 
-}} // otawa::hard
 
-#endif // OTAWA_HARD_MACHINE_H
+}	// 
+
+#endif // OTAWA_EVENTS_STANDARD_EVENT_BUILDER

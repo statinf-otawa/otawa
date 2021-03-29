@@ -18,12 +18,17 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+#ifndef OTAWA_EVENT_FEATUERES_H
+#define OTAWA_EVENT_FEATUERES_H
 
 #include "Event.h"
 
 namespace otawa {
 
+extern p::feature STANDARD_EVENT_FEATURE;
 extern p::id<Event *> EVENT;
 extern p::id<Event *> PREFIX_EVENT;
 
 };
+
+#endif	// OTAWA_EVENT_FEATUERES_H

@@ -53,6 +53,7 @@ public:
 	} kind_t;
 
 	typedef enum occurrence_t {
+		NO_OCCURRENCE = -1,
 		NEVER = 0,
 		SOMETIMES = 1,
 		ALWAYS = 2
