@@ -246,7 +246,7 @@ p::declare EventBuilder::reg = p::init("otawa::icat3::EventBuilder", Version(1, 
 	.provide(EVENTS_FEATURE)
 	.require(hard::MACHINE_FEATURE)
 	.require(LOOP_INFO_FEATURE)
-	.use(CATEGORY_FEATURE);
+	.require(CATEGORY_FEATURE);
 
 
 /**
