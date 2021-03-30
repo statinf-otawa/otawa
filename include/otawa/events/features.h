@@ -21,6 +21,7 @@
 #ifndef OTAWA_EVENT_FEATUERES_H
 #define OTAWA_EVENT_FEATUERES_H
 
+#include <otawa/proc.h>
 #include "Event.h"
 
 namespace otawa {

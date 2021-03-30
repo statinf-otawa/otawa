@@ -27,7 +27,7 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
-#include "../../include/otawa/icat3/features.h"
+#include <otawa/icat3/features.h>
 
 #include "MustPersDomain.h"
 

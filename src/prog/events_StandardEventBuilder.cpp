@@ -370,5 +370,5 @@ void StandardEventBuilder::dumpBB(Block *b, io::Output& out) {
 void StandardEventBuilder::destroy(WorkSpace *ws) {	
 }
 	
-}	// 
+}	// otawa
 

@@ -173,6 +173,7 @@ io::Output& operator<<(io::Output& out, category_t cat);
 
 // event-oriented results
 extern p::feature EDGE_EVENTS_FEATURE;
+extern p::feature EVENTS_FEATURE;
 
 // category results
 extern p::feature CATEGORY_FEATURE;
