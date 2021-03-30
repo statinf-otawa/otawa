@@ -161,11 +161,13 @@ public:
 			}
 			break;
 		
+		case icat3::FIRST_HIT:
 		case icat3::NC:
 			_occ = Event::SOMETIMES;
 			nc = true;
 			break;
 		
+		case icat3::TOP_CATEGORY:
 		case icat3::UC:
 			ASSERTP(false, _ << "invalid icat3 category: %d" << icat3::CATEGORY(acc));
 			break;

@@ -24,6 +24,7 @@
 
 #include <elm/data/Array.h>
 
+#include <otawa/cache/features.h>
 #include <otawa/hard/Cache.h>
 #include <otawa/icache/features.h>
 #include <otawa/proc/Feature.h>
@@ -35,6 +36,7 @@ class Block;
 namespace icat3 {
 
 using namespace elm;
+using namespace cache;
 
 // LBlocks
 class LBlock {
@@ -161,15 +163,6 @@ extern p::feature MAY_ANALYSIS_FEATURE;
 extern p::id<Container<ACS> > MUST_IN;
 extern p::id<Container<ACSStack> > PERS_IN;
 extern p::id<Container<ACS> > MAY_IN;
-
-typedef enum category_t {
-	UC = 0,
-	AH = 1,
-	PE = 2,
-	AM = 3,
-	NC = 4
-} category_t;
-io::Output& operator<<(io::Output& out, category_t cat);
 
 // event-oriented results
 extern p::feature EDGE_EVENTS_FEATURE;

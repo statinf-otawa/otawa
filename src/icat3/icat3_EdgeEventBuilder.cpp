@@ -33,19 +33,6 @@
 
 namespace otawa { namespace icat3 {
 
-io::Output& operator<<(io::Output& out, category_t cat) {
-	static cstring labels[] = {
-		"UC",
-		"AH",
-		"PE",
-		"AM",
-		"NC"
-	};
-	ASSERT(0 < cat && cat <= NC);
-	out << labels[cat];
-	return out;
-}
-
 /**
  */
 class ICacheEvent: public etime::Event {

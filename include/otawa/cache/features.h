@@ -27,18 +27,22 @@
 #include "LBlock.h"
 #include "LBlockSet.h"
 
-namespace otawa {
-
-namespace cache {
+namespace otawa { namespace cache {
 
 // categories
 typedef enum category_t {
 	INVALID_CATEGORY = 0,
+	UC = 0,
 	ALWAYS_HIT = 1,
+	AH = 1,
 	FIRST_HIT = 2,
 	FIRST_MISS = 3,
+	PERSISTENT = 3,
+	PE = 3,
 	ALWAYS_MISS = 4,
+	AM = 4,
 	NOT_CLASSIFIED = 5,
+	NC = 5,
 	TOP_CATEGORY = 6
 } category_t;
 io::Output& operator<<(io::Output& out, category_t stats);
