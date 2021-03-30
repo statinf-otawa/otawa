@@ -238,10 +238,10 @@ public:
 			}
 
 			// loop support
-			if(LOOP_EXIT_EDGE(*e))
+			if(LOOP_EXIT(*e))
 				for(LoopIter h(e->source()); h(); h++) {
 					_domain.leaveLoop(s);
-					if(*h == LOOP_EXIT_EDGE(*e))
+					if(*h == LOOP_EXIT(*e))
 						break;
 				}
 			if(LOOP_HEADER(e->target()) && !BACK_EDGE(*e))
