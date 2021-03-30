@@ -73,16 +73,15 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 		return;
 
 	// process each access
-	Pair<int, BlockAccess *> blocks = DATA_BLOCKS(bb);
-	for(int i = 0; i < blocks.fst; i++) {
+	for(const auto& access: *DATA_BLOCKS(bb)) {
 
 		// get variable
-		ilp::Var *var = dcache::MISS_VAR(blocks.snd[i]);
+		ilp::Var *var = dcache::MISS_VAR(access);
 		ASSERT(var);
 
 		// read or write
 		bool write;
-		switch(blocks.snd[i].action()) {
+		switch(access.action()) {
 		case BlockAccess::LOAD:		write = false; break;
 		case BlockAccess::STORE:	write = true; break;
 		default:					continue;
@@ -91,17 +90,17 @@ void WCETFunctionBuilder::processBB(WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 		// compute latency
 		const hard::Bank *bank;
 		ot::time lat = 0;
-		switch(blocks.snd[i].kind()) {
+		switch(access.kind()) {
 		case BlockAccess::ANY:
 			lat = write ? worst_write : worst_read;
 			break;
 		case BlockAccess::BLOCK:
-			bank = mem->get(blocks.snd[i].block().address());
+			bank = mem->get(access.block().address());
 			ASSERT(bank);
 			lat = write ? bank->writeLatency() : bank->latency();
 			break;
 		case BlockAccess::RANGE:
-			bank = mem->get(blocks.snd[i].first());
+			bank = mem->get(access.first());
 			ASSERT(bank);
 			lat = write ? bank->writeLatency() : bank->latency();
 			break;

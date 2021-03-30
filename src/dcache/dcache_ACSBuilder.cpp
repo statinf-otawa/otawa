@@ -147,11 +147,8 @@ void MUSTProblem::update(Domain& s, const BlockAccess& access) {
  */
 void MUSTProblem::update(Domain& out, const Domain& in, otawa::Block* bb) {
 	assign(out, in);
-	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
-	for(int i = 0; i < accesses.fst; i++) {
-		BlockAccess& acc = accesses.snd[i];
-		update(out, acc);
-	}
+	for(const auto& access: *DATA_BLOCKS(bb))
+		update(out, access);
 }
 
 
@@ -818,11 +815,8 @@ void MUSTPERS::update(Domain& s, const BlockAccess& access) {
  */
 void MUSTPERS::update(Domain& out, const Domain& in, otawa::Block* bb) {
 	assign(out, in);
-	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
-	for(int i = 0; i < accesses.fst; i++) {
-		BlockAccess& acc = accesses.snd[i];
-		update(out, acc);
-	}
+	for(const auto& access: *DATA_BLOCKS(bb))
+		update(out, access);
 }
 
 

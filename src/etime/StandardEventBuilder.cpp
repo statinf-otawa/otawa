@@ -428,9 +428,9 @@ public:
 		: DataAccessBuilder(mon, mem), wb(_wb) { }
 
 	void process(WorkSpace *ws, BasicBlock *bb) override {
-		Pair<int, dcache::BlockAccess *> blocks = dcache::DATA_BLOCKS(bb);
-		for(int i = 0; i < blocks.fst; i++) {
-			dcache::BlockAccess& acc = blocks.snd[i];
+		auto& blocks = *dcache::DATA_BLOCKS(bb);
+		for(int i = 0; i < blocks.count(); i++) {
+			dcache::BlockAccess& acc = blocks[i];
 			dcache::BlockAccess::action_t action = acc.action();
 			bool write =  action == dcache::BlockAccess::STORE;
 

@@ -309,10 +309,9 @@ public:
 	inline bool equals(const Domain &a, const Domain &b) const { return man.equals(a, b); }
 	inline void init(Domain& d, const Domain& s) const { man.set(d, s); }
 	inline void update(Domain& out, const Domain& in, otawa::Block* bb) {
-		Pair<int, BlockAccess *> blocks = DATA_BLOCKS(bb);
 		man.set(out, in);
-		for(int i = 0; i < blocks.fst; i++)
-			man.update(out, blocks.snd[i]);
+		for(const auto& access: *DATA_BLOCKS(bb))
+			man.update(out, access);
 	}
 	inline void enterContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }
 	inline void leaveContext(Domain &dom, otawa::Block *header, dfa::hai::hai_context_t ctx) { }

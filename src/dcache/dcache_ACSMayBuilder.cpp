@@ -122,11 +122,8 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
  */
 void MAYProblem::update(Domain& out, const Domain& in, otawa::Block* bb) {
     assign(out, in);
-	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
-	for(int i = 0; i < accesses.fst; i++) {
-		BlockAccess& acc = accesses.snd[i];
+	for(const auto& acc: *DATA_BLOCKS(bb))
 		update(out, acc);
-	}
 }
 
 elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom) {

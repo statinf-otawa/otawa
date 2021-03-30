@@ -223,10 +223,10 @@ void CATBuilder::processLBlockSet(WorkSpace *ws, const BlockCollection& coll, co
 				domMay = *(MAY_ACS(*bb)->get(set));
 
 			// traverse all accesses
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
-			for(int j = 0; j < ab.fst; j++) {
-				BlockAccess& b = ab.snd[j];
-
+			auto& bs = *DATA_BLOCKS(*bb);
+			for(int i = 0; i < bs.count(); i++) {
+				auto& b = bs[i];
+				
 				// special case: store + write-through => default category
 				if(cache->writePolicy() == hard::Cache::WRITE_THROUGH && b.action() == dcache::BlockAccess::STORE)
 					CATEGORY(b) = wt_def_cat;
@@ -313,11 +313,9 @@ void CATBuilder::displayStats(WorkSpace *ws) {
 		for(CFG::BlockIter bb = cfgs->get(i)->blocks(); bb(); bb++) {
 			if(logFor(LOG_INST))
 				log << "\tBB " << bb->index() << " (" << bb->address() << ")\n";
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
-			for(int j = 0; j < ab.fst; j++) {
-				BlockAccess& b = ab.snd[j];
+			for(const auto& b: *DATA_BLOCKS(*bb)) {
 				if(logFor(LOG_INST))
-					log << "\t\t" << b << " -> " << *dcache::CATEGORY(b) << io::endl;
+					log << "\t\t" << b << " -> " << CATEGORY(b) << io::endl;
 				stats[0]++;
 				stats[dcache::CATEGORY(b)]++;
 			}

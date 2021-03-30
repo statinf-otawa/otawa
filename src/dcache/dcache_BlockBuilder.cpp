@@ -107,6 +107,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	AccessedAddresses *addrs = ADDRESSES(bb);
 	if(!addrs)
 		return;
+	Vector<BlockAccess> blocks;
 
 	// compute block accessed
 	for(int i = 0; i < addrs->size(); i++) {
@@ -189,13 +190,12 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	}
 
 	// create the block access
-	BlockAccess *accs = 0;
-	if(blocks) {
+	/*if(blocks) {
 		accs = new BlockAccess[blocks.count()];
 		for(int i = 0; i < blocks.count(); i++)
 			accs[i] = blocks[i];
-	}
-	DATA_BLOCKS(bb) = pair(blocks.count(), accs);
+	}*/
+	DATA_BLOCKS(bb) = blocks;
 	blocks.clear();
 }
 
@@ -234,7 +234,7 @@ p::id<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-p::id<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
+p::id<Bag<BlockAccess> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS");
 
 p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES("otawa::dcache::NC_DATA_ACCESSES", pair(0, (NonCachedAccess *)0));
 

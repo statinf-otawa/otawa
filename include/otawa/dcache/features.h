@@ -266,7 +266,7 @@ typedef Vector<acs_stack_t> acs_stack_table_t;
 // block analysis
 extern p::feature DATA_BLOCK_FEATURE;
 extern p::feature CLP_BLOCK_FEATURE;
-extern p::id<Pair<int, BlockAccess *> > DATA_BLOCKS;
+extern p::id<Bag<BlockAccess> > DATA_BLOCKS;
 extern p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES;
 extern p::id<const BlockCollection *> DATA_BLOCK_COLLECTION;
 extern p::id<Address> INITIAL_SP;
@@ -316,6 +316,9 @@ extern p::id<ot::time> PURGE_TIME;
 
 // WCET builder
 extern p::feature WCET_FUNCTION_FEATURE;
+
+// Event features
+extern p::feature EVENTS_FEATURE;
 
 } }		// otawa::dcache
 

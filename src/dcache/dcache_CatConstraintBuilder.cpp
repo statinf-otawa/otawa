@@ -54,10 +54,10 @@ public:
 	virtual const cstring valueName(int value) { return ""; }
 
 	virtual int total(BasicBlock *bb) {
-		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
+		auto dbs = *dcache::DATA_BLOCKS(bb);
 		ilp::Var *var = ipet::VAR(bb);
 		ASSERT(var);
-		return dbs.fst * int(system->valueOf(var));
+		return dbs.count() * int(system->valueOf(var));
 	}
 
 	void collect(Collector& collector, BasicBlock *b, const ContextualPath& ctx) {
@@ -87,11 +87,10 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
-		for(int i = 0; i < dbs.fst; i++) {
+		for(const auto& access: *DATA_BLOCKS(bb)) {
 			ilp::Var *bb_var = ipet::VAR(bb);
 			ASSERT(bb_var);
-			ilp::Var *var = dcache::MISS_VAR(dbs.snd[i]);
+			ilp::Var *var = dcache::MISS_VAR(access);
 			ASSERT(var);
 			sum +=  int(system->valueOf(bb_var))  - int(system->valueOf(var));
 		}
@@ -108,9 +107,8 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
-		for(int i = 0; i < dbs.fst; i++) {
-			ilp::Var *var = MISS_VAR(dbs.snd[i]);
+		for(const auto& access: *DATA_BLOCKS(bb)) {
+			ilp::Var *var = MISS_VAR(access);
 			ASSERT(var);
 			sum +=  int(system->valueOf(var));
 		}
@@ -127,12 +125,11 @@ public:
 protected:
 	virtual int count(BasicBlock *bb) {
 		int sum = 0;
-		Pair<int, BlockAccess *> dbs = dcache::DATA_BLOCKS(bb);
 		ilp::Var *xi = ipet::VAR(bb);
 		ASSERT(xi);
 		int xiv = int(system->valueOf(xi));
-		for(int i = 0; i < dbs.fst; i++)
-			if(dcache::CATEGORY(dbs.snd[i]) == NOT_CLASSIFIED)
+		for(const auto& access: *dcache::DATA_BLOCKS(bb))
+			if(dcache::CATEGORY(access) == NOT_CLASSIFIED)
 				sum += xiv;
 		return sum;
 	}
@@ -227,9 +224,10 @@ void CatConstraintBuilder::processWorkSpace(otawa::WorkSpace *ws) {
 					<< " (" << ot::address(bb->address()) << ")\n";
 
 			// traverse blocks accesses
-			Pair<int, BlockAccess *> ab = DATA_BLOCKS(*bb);
-			for(int j = 0; j < ab.fst; j++) {
-				BlockAccess& b = ab.snd[j];
+			auto& bs = *DATA_BLOCKS(*bb);
+			for(int i = 0; i < bs.count(); i++) {
+				auto& b = bs[i];
+				
 				// Non-blocking WRITEs
 				//if (b.action() == BlockAccess::STORE)
 				//	continue;

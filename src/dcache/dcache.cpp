@@ -130,6 +130,9 @@ Address BlockAccess::address() const {
 		return block().address();
 	case RANGE:
 		return blocks()[0]->address();
+	default:
+		ASSERT(false);
+		return Address::null;
 	}
 }
 
