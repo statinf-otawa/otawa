@@ -161,6 +161,7 @@ public:
 
 	inline const Vector<const Block*>& blocks(void) const { ASSERT(_kind == RANGE); return data.range->bs; }
 	const Block *blockIn(int set) const;
+	Address address() const;
 
 private:
 	Inst *inst;

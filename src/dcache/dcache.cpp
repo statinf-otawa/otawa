@@ -117,6 +117,23 @@ const Block *BlockAccess::blockIn(int set) const {
 	return nullptr;
 }
 
+
+/**
+ * Compute the base address of this memory access.
+ * @return	Base address or null for any access.
+ */
+Address BlockAccess::address() const {
+	switch(kind()) {
+	case ANY:
+		return Address::null;
+	case BLOCK:
+		return block().address();
+	case RANGE:
+		return blocks()[0]->address();
+	}
+}
+
+
 /**
  * @defgroup dcache Data Cache
  *

@@ -36,9 +36,10 @@ protected:
 	void setup(WorkSpace *ws) override;
 	void processBB(WorkSpace *ws, CFG *g, Block *b) override;
 	void destroy(WorkSpace *ws) override;
+	void dumpBB(Block *b, io::Output& out) override;
 private:
 	const hard::Machine *mach;
-	bool has_icache;
+	bool has_icache, has_dcache;
 };
 
 }	// 
