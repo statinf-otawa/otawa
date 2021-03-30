@@ -317,6 +317,6 @@ p::id<Event *> PREFIX_EVENT("otawa::PREFIX_EVENT", 0);
  * 
  * @ingroup events
  */
-p::feature STANDARD_EVENT_FEATURE("otawa::STANDARD_EVENT_FEATURE", p::make<StandardEventBuilder>());
+//p::feature STANDARD_EVENT_FEATURE("otawa::STANDARD_EVENT_FEATURE", p::make<StandardEventBuilder>());
 
 } // otawa

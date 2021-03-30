@@ -46,7 +46,6 @@ set(libotawa_SOURCES
     "cfgio_Input.cpp"
 	"cfgio_Output.cpp"
 	"events.cpp"
-	"events_StandardEventBuilder.cpp"
 	"BBRatioDisplayer.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
