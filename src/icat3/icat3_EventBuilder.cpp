@@ -33,6 +33,7 @@ namespace otawa { namespace icat3 {
 
 	
 ///
+#if 0
 class FetchEvent: public otawa::Event {
 public:
 	FetchEvent(Inst *inst, ot::time cost):
@@ -181,6 +182,72 @@ private:
 	occurrence_t _occ;
 	bool nc;
 };
+#endif
+
+
+///
+class FetchEvent: public otawa::Event {
+public:
+	FetchEvent(const icache::Access& acc, ot::time cost):
+		Event(acc.instruction()),
+		_cost(cost),
+		_acc(acc)
+		{ }
+	
+	kind_t kind(void) const override { return FETCH; }
+	cstring name(void) const override { return "fetch stage"; }	
+	ot::time cost(void) const override { return _cost; }
+	type_t type(void) const override { return LOCAL; }
+	int weight(void) const override { return 0; }
+	
+	occurrence_t occurrence(void) const override {
+		switch(icat3::CATEGORY(_acc)) {
+		case AH:
+			return NEVER;
+		case AM:
+			return ALWAYS;
+		case PE:
+		case NC:
+			return SOMETIMES;
+		default:
+			ASSERT(false);
+			return NO_OCCURRENCE;
+		}
+	}
+	
+	virtual string detail() const override {
+		StringBuffer buf;	
+		buf << "fetch @" << _acc << ": " << icat3::CATEGORY(_acc);
+		if(icat3::CATEGORY(_acc) == PE)
+			buf << " (" << icat3::CATEGORY_HEADER(_acc) << ")";
+		return buf.toString();
+	}
+	
+	bool isEstimating(bool on) override { return on; }
+	
+	void estimate(ilp::Constraint *cons, bool on) override {
+		if(on)
+			switch(icat3::CATEGORY(_acc)) {
+			case AH:
+				break;
+			case PE:
+				for(auto e: icat3::CATEGORY_HEADER(_acc)->inEdges())
+					if(!otawa::BACK_EDGE(e))
+						cons->addRight(1, ipet::VAR(e));
+				break;
+			case AM:
+			case NC:
+				cons->addRight(type_info<double>::max, nullptr);
+				break;
+			default:
+				ASSERT(false);
+			}
+	}
+
+private:
+	ot::time _cost;
+	const icache::Access& _acc;
+};
 
 
 /**
@@ -205,24 +272,9 @@ protected:
 	void processBB(WorkSpace *ws, CFG *g, Block *b) override {
 		if(!b->isBasic())
 			return;
-		auto bb = b->toBasic();
-		Vector<FetchEvent *> evts;
-			
-		// build events
-		for(const auto& a: *icache::ACCESSES(*bb->inEdges().begin())) {
-			auto evt = new FetchEvent(a.instruction(), mach->memory->readTime(a.address()));
-			evts.add(evt);
-			EVENT(bb).add(evt);
-		}
-		
-		// record categories
-		for(auto e: bb->inEdges()) {
-			int i = 0;
-			for(const auto& a: *icache::ACCESSES(e)) {
-				evts[i]->account(e, a);
-				i++;
-			}
-		}
+		auto bb = b->toBasic();			
+		for(const auto& a: *icache::ACCESSES(bb))
+			EVENT(bb).add(new FetchEvent(a, mach->memory->readTime(a.address())));
 	}
 	
 	void destroy(WorkSpace *ws) override {
@@ -248,7 +300,7 @@ p::declare EventBuilder::reg = p::init("otawa::icat3::EventBuilder", Version(1, 
 	.provide(EVENTS_FEATURE)
 	.require(hard::MACHINE_FEATURE)
 	.require(LOOP_INFO_FEATURE)
-	.require(CATEGORY_FEATURE);
+	.require(icat3::CATEGORY_FEATURE);
 
 
 /**
