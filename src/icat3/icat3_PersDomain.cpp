@@ -234,6 +234,8 @@ void PersDomain::enter(t& a) {
  * @param a		ACS stack to update.
  */
 void PersDomain::leave(t& a) {
+	if (a.isBottom())
+		return;
 	a.pop();
 }
 
