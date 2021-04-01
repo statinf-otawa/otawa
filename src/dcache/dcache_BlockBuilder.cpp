@@ -190,8 +190,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	}
 
 	// create the block access
-	DATA_BLOCKS(bb) = blocks;
-	blocks.clear();
+	(*DATA_BLOCKS(bb)).give(blocks);
 }
 
 
