@@ -2,7 +2,7 @@
  *	dcache::EventBuilder class implementation
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2010, IRIT UPS.
+ *	Copyright (c) 2021, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -32,151 +32,58 @@ namespace otawa { namespace dcache {
 
 class MemEvent: public Event {
 public:
-	MemEvent(Inst *inst, ot::time cost):
-		otawa::Event(inst),
-		h(nullptr),
-		_cost(cost),
-		_occ(NO_OCCURRENCE),
-		nc(false)
+	MemEvent(const BlockAccess& acc, ot::time cost):
+		otawa::Event(acc.instruction()),
+		_acc(acc),
+		_cost(cost)
 		{ }
 	
 	ot::time cost(void) const override { return _cost; }
 	type_t type(void) const override { return LOCAL; }
-	occurrence_t occurrence(void) const override { return _occ; }
 	int weight(void) const override { return 0; }
 	kind_t kind(void) const override { return MEM; }
 	cstring name(void) const override { return "ME"; }
-	
-	virtual string detail() const override {
-		StringBuffer buf;	
-		buf << "fetch @" << this->inst()->topAddress() << ' ' << _occ;
-		if(_occ == SOMETIMES) {
-			buf << " (";
-			
-			if(!ah.isEmpty()) {
-				bool fst = true;
-				buf << "AH from ";
-				for(auto e: ah) {
-					if(fst)
-						fst = false;
-					else
-						buf << ", ";
-					buf << e->source();
-				}
-			}
-			
-			if(!am.isEmpty()) {
-				if(!ah.isEmpty())
-					buf << ", ";
-				bool fst = true;
-				buf << "AM from ";
-				for(auto e: am) {
-					if(fst)
-						fst = false;
-					else
-						buf << ", ";
-					buf << e->source();
-				}
-			}
-			
-			if(h != nullptr) {
-				if(!am.isEmpty() || !ah.isEmpty())
-					buf << ", ";
-				buf << "PE at " << h;
-			}
 
-			buf << ")";
+	occurrence_t occurrence(void) const override {
+		switch(dcache::CATEGORY(_acc)) {
+		case AH:
+			return NEVER;
+		case AM:
+			return ALWAYS;
+		default:
+			return SOMETIMES;
 		}
+	}
+
+	string detail() const override {
+		StringBuffer buf;
+		buf << "ME(" << _cost << ") @" << inst()->address() << ": " << dcache::CATEGORY(_acc);
+		if(dcache::CATEGORY(_acc) == PE)
+			buf << " (" << dcache::CATEGORY_FEATURE(_acc) << ")";
 		return buf.toString();
 	}
 	
-	bool isEstimating(bool on) override { return (on && !nc) && (!on && !ah.isEmpty()); }
+	bool isEstimating(bool on) override { return on == true; }
 	
 	void estimate(ilp::Constraint *cons, bool on) override {
-		if(on) {
-			// ... <= +oo
-			if(nc)
-				cons->addRight(type_info<double>::max, nullptr);
-			
-			// ... <= sum of AM count edge and of non-back entering h count
-			else {
-				for(auto e: am)
+		if(!on)
+			return;
+		switch(dcache::CATEGORY(_acc)) {
+		case AH:
+			break;
+		case PE:
+			for(auto e: dcache::CATEGORY_HEADER(_acc)->inEdges())
+				if(!BACK_EDGE(e))
 					cons->addRight(1, ipet::VAR(e));
-				if(h != nullptr)
-					for(auto e: h->inEdges())
-						if(!otawa::BACK_EDGE(e))
-							cons->addRight(1, ipet::VAR(e));				
-			}
-		}
-		else
-			// ... >= sum of AH edge count
-			for(auto e: ah)
-				cons->addRight(1, ipet::VAR(e));
-	}
-
-	void account(Edge *e, const dcache::BlockAccess& acc) {
-		switch(dcache::CATEGORY(acc)) {
-		
-		case cache::ALWAYS_HIT:
-			switch(_occ) {
-			case Event::NO_OCCURRENCE:
-				_occ = NEVER;
-				break;
-			case Event::ALWAYS:
-			case Event::SOMETIMES:
-				_occ = SOMETIMES;
-				break;
-			case Event::NEVER:
-				break;
-			};
-			ah.add(e);
-			break;
-		
-		case cache::ALWAYS_MISS:
-			switch(_occ) {
-			case Event::NO_OCCURRENCE:
-				_occ = ALWAYS;
-				break;
-			case Event::NEVER:
-			case Event::SOMETIMES:
-				_occ = SOMETIMES;
-				break;
-			case Event::ALWAYS:
-				break;
-			};
-			am.add(e);
-			break;			
-		
-		case cache::FIRST_MISS:
-			_occ = Event::SOMETIMES;
-			if(h == nullptr)
-				h = *dcache::CATEGORY_HEADER(e);
-			else {
-				auto nh = dcache::CATEGORY_HEADER(e);
-				if(Loop::of(h)->includes(Loop::of(nh)))
-					h = nh;
-			}
-			break;
-		
-		case cache::NOT_CLASSIFIED:
-		case cache::FIRST_HIT:
-			_occ = Event::SOMETIMES;
-			nc = true;
-			break;
-		
-		case cache::INVALID_CATEGORY:
-		case cache::TOP_CATEGORY:
-			ASSERTP(false, _ << "invalid dcache category: %d" << dcache::CATEGORY(acc));
+		default:
+			cons->addRight(type_info<ot::time>::max, nullptr);
 			break;
 		}
 	}
 
 private:
-	List<Edge *> ah, am;
-	otawa::Block *h;
+	const BlockAccess& _acc;
 	ot::time _cost;
-	occurrence_t _occ;
-	bool nc;
 };
 
 
@@ -209,50 +116,28 @@ protected:
 		if(!b->isBasic())
 			return;
 		auto bb = b->toBasic();
-
-		Vector<MemEvent *> evts;
 		
-		// build events
-		{
-			for(const auto& a: *DATA_BLOCKS(*bb->inEdges().begin())) {
-				MemEvent *evt = nullptr;
-				if(a.action() == dcache::BlockAccess::PURGE)
-					continue;
-				
-				// build the event
-				// TODO Taker into account case where address is different according to predecessors
-				ot::time t;
-				Address addr = a.address();
-				if(addr.isNull()) {
-					// TODO should be a range
-					if(a.action() == dcache::BlockAccess::LOAD)
-						t = mach->memory->worstReadAccess();
-					else
-						t = mach->memory->worstWriteAccess();				
-				}
-				else {
-					if(a.action() == dcache::BlockAccess::LOAD)
-						t = mach->memory->readTime(addr);
-					else
-						t = mach->memory->writeTime(addr);
-				}
-				evt = new MemEvent(a.instruction(), t);
-				evts.add(evt);
-				EVENT(bb).add(evt);
-			}			
-		}
-		
-		// record categories
-		for(auto e: bb->inEdges()) {
-			int i = 0;
-			auto& as = *DATA_BLOCKS(*bb->inEdges().begin());
-			for(int j = 0; j < as.count(); j++) {
-				const auto& a = as[j];
-				if(a.action() == BlockAccess::PURGE)
-					continue;
-				evts[i]->account(e, a);
-				i++;
+		for(const auto& a: *DATA_BLOCKS(bb)) {
+			if(a.action() == dcache::BlockAccess::PURGE)
+				continue;
+			
+			// compute time
+			ot::time t;
+			Address addr = a.address();
+			if(addr.isNull()) {
+				// TODO should be a range
+				if(a.action() == dcache::BlockAccess::LOAD)
+					t = mach->memory->worstReadAccess();
+				else
+					t = mach->memory->worstWriteAccess();				
 			}
+			else {
+				if(a.action() == dcache::BlockAccess::LOAD)
+					t = mach->memory->readTime(addr);
+				else
+					t = mach->memory->writeTime(addr);
+			}
+			EVENT(bb).add(new MemEvent(a, t));
 		}
 	}
 
