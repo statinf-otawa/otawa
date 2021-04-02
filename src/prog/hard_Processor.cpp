@@ -159,7 +159,7 @@ PipelineUnit::~PipelineUnit(void) {
  * Build a simple stage.
  * @param t		Type mask.
  */
-Stage::Stage(type_t t): type(t), ordered(false)
+Stage::Stage(type_t t): type(t), ordered(true)
 	{ }
 
 
