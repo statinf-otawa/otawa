@@ -46,7 +46,7 @@ namespace otawa {
  * @enum Event::kind_t
  * Defines the type of events, mainly which hardware
  * feature causes the event.
- * @ingroup etime
+ * @ingroup events
  */
 
 /**
@@ -84,18 +84,21 @@ namespace otawa {
 /**
  * @var Event::occurence_t Event::NEVER
  * The event never happens and the even is mainly here for information.
+ * @ingroup events
  */
 
 /**
  * @var Event::occurence_t Event::SOMETIMES
  * The event sometimes happen. The method Event::estimate()
  * provides an estimation of the frequency of the event.
+ * @ingroup events
  */
 
 /**
  * @var Event::occurence_t Event::ALWAYS
  * The event always happens and the event object provides
  * mainly the Event::cost() (in cycles) of the event.
+ * @ingroup events
  */
 
 ///
@@ -105,9 +108,46 @@ io::Output& operator<<(io::Output& out, Event::occurrence_t occ) {
 		"sometimes",
 		"always"
 	};
-	out << labels[int(occ)];
+	if(occ == Event::NO_OCCURRENCE)
+		out << "<none>";
+	else
+		out << labels[int(occ)];
 	return out;
 }
+
+/**
+ * Combines two event occcurrences according to the partial order (getting the
+ * maximu of x and y).
+ * * for x in occurrence_t, NO_OCCURRENCE <= x
+ * * for x in occurence_t, x <= SOMETIMES.
+ * 
+ * @param x		First occurrence to combine.
+ * @param y		Second occurrence to combine.
+ * @return		Maximum of x and y.
+ * @ingroup events
+ */
+Event::occurrence_t operator|(Event::occurrence_t x, Event::occurrence_t y) {
+	if(x == y)
+		return x;
+	switch(x) {
+	case Event::NO_OCCURRENCE:
+		return y;
+	case Event::SOMETIMES:
+		return Event::SOMETIMES;
+	case Event::ALWAYS:
+	case Event::NEVER:
+		switch(y) {
+		case Event::NO_OCCURRENCE:
+			return x;
+		default:
+			return Event::SOMETIMES;
+		}
+	default:
+		ASSERT(0);
+		return Event::NO_OCCURRENCE;
+	}
+}
+
 
 
 /**

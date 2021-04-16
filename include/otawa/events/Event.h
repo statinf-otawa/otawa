@@ -93,7 +93,8 @@ private:
 };
 io::Output& operator<<(io::Output& out, Event *event);
 io::Output& operator<<(io::Output& out, Event::occurrence_t occ);
-	
+Event::occurrence_t operator|(Event::occurrence_t x, Event::occurrence_t y);
+
 }	// otawa
 
 #endif // OTAWA_EVENTS_EVENT_H

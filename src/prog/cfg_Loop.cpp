@@ -321,6 +321,43 @@ void Loop::forSubLoops(std::function<void(Loop *)> f) {
  */
 
 
+///
+void Loop::EntryIter::select() {
+	while(!e.ended() && BACK_EDGE(*e))
+		e.next();
+}
+
+
+/**
+ * @fn Loop::EntryRange Loop::entries() const;
+ * Get the collection of entry edges of the loop.
+ * @return	Collection of entry edges.
+ */
+
+
+///
+void Loop::BackIter::select() {
+	while(!e.ended() && !BACK_EDGE(*e))
+		e.next();
+}
+
+
+/**
+ * @fn Loop::BackRange Loop::backs() const;
+ * Get the collection of back edges of the loop.
+ * @return	Collection of back edges.
+ */
+
+
+/**
+ * Get the list of loop exit edges.
+ * @return	List of vector exit edges.
+ */
+const Vector<Edge *>& Loop::exits() const {
+	return **EXIT_LIST(_h);
+}
+
+
 /**
  * Default implementation for feature @ref EXTENDED_LOOP_FEATURE.
  *
