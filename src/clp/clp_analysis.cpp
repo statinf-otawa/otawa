@@ -51,6 +51,7 @@
 #include <otawa/proc/ProcessorPlugin.h>
 #include <elm/log/Log.h>
 #include <otawa/flowfact/FlowFactLoader.h>
+#include <otawa/ipet.h>
 
 using namespace elm;
 using namespace otawa;
@@ -150,7 +151,7 @@ Identifier<Analysis::init_t> Analysis::INITIAL(
 		pair((const hard::Register *)0, Address::null));
 
 
-Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", false);
+Identifier<bool> USE_FLOWFACT_STATE("otawa::clp::USE_FLOWFACT_STATE", true);
 Identifier<Vector<FlowFactStateInfo>*> FLOW_FACT_STATE_INFO("otawa::clp::FLOW_FACT_STATE_INFO", nullptr);;
 
 static hard::Platform *PF = 0;
@@ -820,8 +821,8 @@ Value& Value::join(const Value& val) {
  * Perform a widening to the infinite (to be filtered later)
  * @param x the value of the next iteration state
 */
-void Value::widening(const Value& x) {
-	ffwidening(x, -1);
+Value& Value::widening(const Value& x) {
+	return ffwidening(x, -1);
 }
 
 /**
@@ -829,41 +830,41 @@ void Value::widening(const Value& x) {
  * @param x the value of the next iteration state
  * @param N the maximum number of iteration of the loop
 */
-void Value::ffwidening(const Value& x, int N){
+Value& Value::ffwidening(const Value& x, int N){
 
 	// 	(0)	⊥ ▽ x = x ▽ ⊥ = x
 	if(kind() == NONE)
 		*this = x;
 	else if(x.kind() == NONE)
-		return;
+		return *this;
 
 	// (1)	⊤ ▽ x = x ▽ ⊤ = x
-	else if(kind() == ALL or x.kind() == ALL)
+	else if(kind() == ALL || x.kind() == ALL)
 		*this = all;
 
 	// (2) x ▽ x = x
 	else if (*this == x)
-		return;
+		return *this;
 
 	// (2') (b, 0, 0) ▽ (b + δ, 0, 0) = (b, δ, N+1)
-	else if(N >= 0 and isConst() and x.isConst())
+	else if(N >= 0 && isConst() && x.isConst())
 		*this = Value(VAL, x.base() - base(), N + 1);
 
 	// (2") (b, δ, N+1) ▽ (b + δ, δ, N+1) = (b, δ, N+1)
-	else if(N >= 0 and mtimes() == x.mtimes() and mtimes() == uintn_t(N + 1)
-	and x.base() - base() == delta() and delta() == x.delta())
-		return;
+	else if(N >= 0 && mtimes() == x.mtimes() && mtimes() == uintn_t(N + 1)
+	&& x.base() - base() == delta() && delta() == x.delta())
+		return *this;
 
 	// (3) (b, δ, n) ▽ (b', δ', n') =	(b, δ", ∞)
 	// with δ" = gcd(δ, δ', b' - b) ∧ δ ≥ 0 ∧ δ' ≥ 0 ∧ b' - b ≥ 0
-	else if(delta() >= 0 and x.delta() >= 0 and (x.base() - base()) >= 0) {
+	else if(delta() >= 0 && x.delta() >= 0 && (x.base() - base()) >= 0) {
 		auto delta_s = ugcd(ugcd(delta(), x.delta()), x.base() - base());
 		*this = Value(VAL, base(), delta_s, UMAXn);
 	}
 
 	// (4) (b, δ, n) ▽ (b', δ', n') = (b, δ", ∞)
 	// with δ" = -gcd(-δ, -δ', b - b') ∧ δ ≤ 0 ∧ δ' ≤ 0 ∧ b' - b ≤ 0
-	else if(delta() <= 0 and x.delta() <= 0 and (x.base() - base()) <= 0) {
+	else if(delta() <= 0 && x.delta() <= 0 && (x.base() - base()) <= 0) {
 		auto delta_s = -ugcd(-ugcd(delta(), -x.delta()), base() - x.base());
 		*this = Value(VAL, base(), delta_s, UMAXn);
 	}
@@ -873,8 +874,9 @@ void Value::ffwidening(const Value& x, int N){
 		*this = top;
 
 	// normalize the representation
-	if(kind() == VAL and (delta() == 0 or mtimes() == 0))
+	if(kind() == VAL && (delta() == 0 || mtimes() == 0))
 		set(VAL, base(), 0, 0);
+	return *this;
 }
 
 
@@ -2087,9 +2089,8 @@ void State::widening(const State& state, int loopBound) {
 	for(int i=0; i<registers.length() && i<state.registers.length() ; i++)
 		if (loopBound >= 0)
 			registers[i].ffwidening(state.registers[i], loopBound);
-		else {
+		else
 			registers[i].widening(state.registers[i]);
-		}
 
 	if (registers.length() < state.registers.length())
 		for(int i=registers.length(); i < state.registers.length(); i++) {
@@ -2514,6 +2515,7 @@ public:
 		TRACEA(Domain di = a);
 		TRACEP(cerr << "*** widening ****\n");
 		TRACEP(cerr << "s1 = " << a << "\ns2 = " << b << ") = ");
+		//cerr << "DEBUG: widening " << bb << ": " << MAX_ITERATION(bb) << io::endl;
 		a.widening(b, MAX_ITERATION(bb));
 		TRACEA(checkWideningAlarm(a, di, b));
 		TRACEP(cerr << a << io::endl);
@@ -3358,12 +3360,12 @@ private:
 
 p::declare Analysis::reg = p::init("otawa::clp::CLPAnalysis", Version(0, 1, 0))
 	.maker<Analysis>()
-	//.require(VIRTUALIZED_CFG_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
 	.require(FLOW_FACTS_FEATURE)
 	.require(dfa::INITIAL_STATE_FEATURE)
 	.require(hard::MEMORY_FEATURE)
+	.require(ipet::FLOW_FACTS_FEATURE)
 	.provide(clp::CLP_ANALYSIS_FEATURE);
 
 Analysis::Analysis(p::declare& r)
@@ -3788,7 +3790,7 @@ namespace clp {
  * Create a manager for the current workspace.
  * @param ws	Workspace to work with.
  */
-Manager::Manager(WorkSpace *ws) {
+Manager::Manager(WorkSpace *ws): cs(nullptr), b(nullptr), i(0) {
 	p = new ClpProblem(ws->process());
 	p->setInitialState(dfa::INITIAL_STATE(ws));
 }

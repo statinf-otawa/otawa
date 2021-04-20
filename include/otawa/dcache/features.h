@@ -138,45 +138,44 @@ public:
 		RANGE = 2
 	} kind_t;
 
-	inline BlockAccess(void): inst(0), _kind(ANY), _action(NONE), id(0) { }
-	inline BlockAccess(Inst *instruction, action_t action): inst(instruction), _kind(ANY), _action(action) { ASSERT(instruction); count++; id = count;}
-	inline BlockAccess(Inst *instruction, action_t action, const Block& block): inst(instruction), _kind(BLOCK), _action(action)
-		{ ASSERT(instruction); data.blk = &block; count++; id = count;}
-	inline BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last): inst(instruction), _kind(RANGE), _action(action)
-		{ ASSERT(instruction); data.range.first = first; data.range.last = last; count++; id = count; }
-	inline BlockAccess(const BlockAccess& acc): inst(acc.inst), _kind(acc._kind), _action(acc._action), blocks(acc.blocks), id(acc.id)
-		{ data = acc.data; }
-	inline BlockAccess& operator=(const BlockAccess& acc)
-		{ inst = acc.inst; _kind = acc._kind; _action = acc._action; data = acc.data; blocks = acc.blocks; id = acc.id; return *this; }
+	BlockAccess(void);
+	BlockAccess(Inst *instruction, action_t action);
+	BlockAccess(Inst *instruction, action_t action, const Block& block);
+	BlockAccess(Inst *instruction, action_t action, const Vector<const Block *>& blocks, int setc);
+	BlockAccess(const BlockAccess& b);
+	~BlockAccess();
+	BlockAccess& operator=(const BlockAccess& a);
 
 	inline Inst *instruction(void) const { return inst; }
 	inline kind_t kind(void) const { return kind_t(_kind); }
 	inline bool isAny(void) const { return _kind == ANY; }
 	inline action_t action(void) const { return action_t(_action); }
 	inline const Block& block(void) const { ASSERT(_kind == BLOCK); return *data.blk; }
-	inline int first(void) const { ASSERT(_kind == RANGE); return data.range.first; }
-	inline int last(void) const { ASSERT(_kind == RANGE); return data.range.last; }
-	inline bool inRange(int block) const { if(first() < last()) return first() <= block && block <= last(); else return block <= first() || last() <= block; }
+	inline int first(void) const { ASSERT(_kind == RANGE); return data.range->fst; }
+	inline int last(void) const { ASSERT(_kind == RANGE); return data.range->lst; }
+	inline bool inRange(int block) const { if(first() <= last()) return first() <= block && block <= last(); else return block <= last() || first() <= block; }
 	bool inSet(int set, const hard::Cache *cache) const;
 	bool in(const Block& block) const;
 
 	void print(io::Output& out) const;
 
-	inline void addBlock(const Block* block) { blocks.addLast(block); }
-	const Vector<const Block*>& getBlocks(void) const { return blocks; }
-
-	static unsigned int count;
-	inline unsigned int getID(void) const { return id; }
+	inline const Vector<const Block*>& blocks(void) const { ASSERT(_kind == RANGE); return data.range->bs; }
+	const Block *blockIn(int set) const;
+	Address address() const;
 
 private:
 	Inst *inst;
 	t::uint8 _kind, _action;
+
+	typedef struct {
+		hard::Cache::block_t fst, lst;
+		Vector<const Block*> bs;
+		int setc;
+	} range_t;
 	union {
 		const Block *blk;
-		struct { hard::Cache::block_t first, last; } range;
+		range_t *range;
 	} data;
-	Vector<const Block*> blocks;
-	unsigned int id;
 };
 inline io::Output& operator<<(io::Output& out, const BlockAccess& acc) { acc.print(out); return out; }
 inline io::Output& operator<<(io::Output& out, const Pair<int, BlockAccess *>& v) { return out; }
@@ -267,7 +266,7 @@ typedef Vector<acs_stack_t> acs_stack_table_t;
 // block analysis
 extern p::feature DATA_BLOCK_FEATURE;
 extern p::feature CLP_BLOCK_FEATURE;
-extern p::id<Pair<int, BlockAccess *> > DATA_BLOCKS;
+extern p::id<Bag<BlockAccess> > DATA_BLOCKS;
 extern p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES;
 extern p::id<const BlockCollection *> DATA_BLOCK_COLLECTION;
 extern p::id<Address> INITIAL_SP;
@@ -317,6 +316,9 @@ extern p::id<ot::time> PURGE_TIME;
 
 // WCET builder
 extern p::feature WCET_FUNCTION_FEATURE;
+
+// Event features
+extern p::feature EVENTS_FEATURE;
 
 } }		// otawa::dcache
 

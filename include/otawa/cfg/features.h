@@ -127,7 +127,6 @@ extern Identifier<bool> VIRTUAL_DEFAULT;
 extern Identifier<bool> NO_INLINE;
 extern Identifier<bool> INLINING_POLICY;
 extern p::feature VIRTUALIZED_CFG_FEATURE;
-extern Identifier<bool> RECURSIVE_CALL;
 
 // CFG_CHECKSUM_FEATURE
 extern p::feature CFG_CHECKSUM_FEATURE;
@@ -147,9 +146,11 @@ extern Identifier<bool> LOOP_HEADER;
 extern Identifier<bool> BACK_EDGE;
 
 // LOOP_INFO_FEATURE
-extern Identifier<Block*> ENCLOSING_LOOP_HEADER;
-extern Identifier<Block*> LOOP_EXIT_EDGE;
-extern Identifier<elm::Vector<Edge*> *> EXIT_LIST;
+extern p::id<Block*> ENCLOSING_LOOP_HEADER;
+extern p::id<Block *> LOOP_ENTRY;
+extern p::id<Block *> LOOP_EXIT;
+extern p::id<Block*>& LOOP_EXIT_EDGE;
+extern p::id<elm::Vector<Edge*> *> EXIT_LIST;
 extern p::feature LOOP_INFO_FEATURE;
 class LoopIter: public PreIterator<LoopIter, Block *> {
 public:

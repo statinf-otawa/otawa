@@ -33,7 +33,19 @@ using namespace elm;
 // Pre-declaration
 class Processor;
 class AbstractFeature;
+class AbstractRegistration;
 namespace proc { class declare; }
+
+// Requirement class
+class Requirement: public Initializer<AbstractRegistration> {
+public:
+	inline Requirement() { }
+	inline Requirement(const Requirement& r): rs(r.rs) { }
+	inline Requirement& require(const AbstractFeature& f) { rs.add(&f); return *this; }
+	inline const List<const AbstractFeature *>& features() const { return rs; }
+private:
+	List<const AbstractFeature *> rs;
+};
 
 // FeatureUsage class
 class FeatureUsage {
@@ -89,6 +101,7 @@ protected:
 	virtual ~AbstractRegistration(void) { }
 	void setFeatures(const List<FeatureUsage>& features);
 	void setConfigs(const List<AbstractIdentifier *>& configs);
+	void setRequirements(const List<Requirement *> reqs);
 	void record(void);
 
 private:
@@ -101,6 +114,8 @@ private:
 	AbstractRegistration *_base;
 	List<AbstractIdentifier *> configs;
 	List<FeatureUsage> _feats;
+	List<Requirement *> _reqs;
+	int cnt;
 };
 
 
@@ -144,6 +159,8 @@ public:
 		: _name(name), _version(version), _base(&base), _maker(0) { }
 	inline init& require(const AbstractFeature& feature)
 		{ features.add(FeatureUsage(FeatureUsage::require, feature)); return *this; }
+	inline init& require(Requirement& r)
+		{ _reqs.add(&r); return *this; }
 	inline init& provide(const AbstractFeature& feature)
 		{ features.add(FeatureUsage(FeatureUsage::provide, feature)); return *this; }
 	inline init& invalidate(const AbstractFeature& feature)
@@ -162,6 +179,7 @@ private:
 	AbstractRegistration *_base;
 	List<AbstractIdentifier *> configs;
 	List<FeatureUsage> features;
+	List<Requirement *> _reqs;
 	AbstractMaker *_maker;
 };
 
@@ -176,8 +194,10 @@ private:
 	AbstractMaker *_maker;
 };
 
+inline Requirement require(const AbstractFeature& f)
+	{ Requirement r; r.require(f); return r; }
 
-}	// proc
+}	// p
 
 } // otawa
 

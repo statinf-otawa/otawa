@@ -85,6 +85,59 @@ public:
 	inline static void forSubLoops(WorkSpace *ws, std::function<void(Loop *)> f)
 		{ for(auto g: *CFGCollection::get(ws)) forSubLoops(g, f); }
 
+	// iteration on entry edges
+	class EntryIter: public PreIterator<EntryIter, Edge *> {
+	public:
+		inline EntryIter(const Loop& l): e(l._h->inEdges().begin()) { select(); }
+		inline EntryIter(const Loop& l, int): e(l._h->inEdges().end()) {}
+		inline bool ended() const { return e.ended(); }
+		inline Edge *item() const { return *e; }
+		inline void next() { e.next(); select(); }
+		inline bool equals(const EntryIter& i) const { return e.equals(i.e); }
+	private:
+		void select();
+		Block::EdgeIter e;
+	};
+	
+	class EntryRange {
+	public:
+		inline EntryRange(const Loop& loop): l(loop) { }
+		inline EntryIter begin() const { return EntryIter(l); }
+		inline EntryIter end() const { return EntryIter(l, 0); }
+	private:
+		const Loop& l;
+	};
+	inline EntryRange entries() const { return EntryRange(*this); }
+
+	
+	// iteration on back edges
+	class BackIter: public PreIterator<BackIter, Edge *> {
+	public:
+		inline BackIter(const Loop& l): e(l._h->inEdges().begin()) { select(); }
+		inline BackIter(const Loop& l, int): e(l._h->inEdges().end()) {}
+		inline bool ended() const { return e.ended(); }
+		inline Edge *item() const { return *e; }
+		inline void next() { e.next(); select(); }
+		inline bool equals(const BackIter& i) const { return e.equals(i.e); }
+	private:
+		void select();
+		Block::EdgeIter e;
+	};
+	
+	class BackRange {
+	public:
+		inline BackRange(const Loop& loop): l(loop) { }
+		inline BackIter begin() const { return BackIter(l); }
+		inline BackIter end() const { return BackIter(l, 0); }
+	private:
+		const Loop& l;
+	};
+	inline BackRange backs() const { return BackRange(*this); }
+
+	
+	// exit edges
+	const Vector<Edge *>& exits() const;
+
 	static p::id<Loop *> ID;
 private:
 	Block *_h;

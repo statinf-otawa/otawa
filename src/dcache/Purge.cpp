@@ -142,10 +142,10 @@ private:
 		state.start(bb);
 		if(logFor(LOG_BLOCK))
 			log << "\t\t" << bb << io::endl;
-		Pair<int, BlockAccess *> accs = DATA_BLOCKS(bb);
-		for(int acc = 0; acc < accs.fst; acc++) {
-			processAccess(accs.snd[acc], set, state);
-			state.update(accs.snd[acc]);
+		auto& accesses = *DATA_BLOCKS(bb);
+		for(int i = 0; i < accesses.count(); i++) {
+			processAccess(accesses[i], set, state);
+			state.update(accesses[i]);
 		}
 	}
 
@@ -205,6 +205,7 @@ private:
 			break;
 		case INVALID_CATEGORY:
 		case FIRST_HIT:
+		case TOP_CATEGORY:
 			ASSERTP(false, "unsupported category");
 			break;
 		}

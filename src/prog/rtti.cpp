@@ -74,7 +74,7 @@ rtti::Type& WorkSpace::__type = workspace_class;
 
 
 // Manager class
-static WorkSpace *(Manager::*manager_load)(const elm::sys::Path&, const PropList&) = &Manager::load;
+//static WorkSpace *(Manager::*manager_load)(const elm::sys::Path&, const PropList&) = &Manager::load;
 static rtti::Class<Manager> __class(rtti::make("otawa::Manager")
 	.op("def", Manager::def)
 	/*.op("load", manager_load)*/);

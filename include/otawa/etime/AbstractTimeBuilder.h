@@ -103,6 +103,7 @@ public:
 
 	virtual Factory *getFactory(void);
 	virtual void compute(const PropList *entity, ParExeGraph *g, const Vector<EventCase>& events) = 0;
+	inline void setAtbBuilder(AbstractTimeBuilder* atb){_atb = atb;};
 
 protected:
 	virtual void configure(const PropList& props);
@@ -191,6 +192,14 @@ private:
 	sys::Path _dir;
 	ilp::System *_sys;
 	bool _only_start;
+};
+
+
+class StandardFactory: public Factory {
+public:
+	ParExeGraph *make(ParExeProc *proc,  Vector<Resource *> *resources, ParExeSequence *seq) override;
+	ParExeNode *makeNode(ParExeGraph *g, ParExeInst *i, ParExeStage *stage) override;
+	ParExeEdge *makeEdge(ParExeNode *src, ParExeNode *snk, ParExeEdge::edge_type_t_t type, int latency, string name) override;
 };
 
 } }	// otawa::etime

@@ -110,12 +110,14 @@ public:
 
 protected:
 	static const t::uint32
-		IS_TIMED		= 0x01 << CUSTOM_SHIFT,
-		IS_ALLOCATED	= 0x04 << CUSTOM_SHIFT,
-		IS_PREPARED		= 0x08 << CUSTOM_SHIFT,
-		IS_COLLECTING	= 0x10 << CUSTOM_SHIFT,
-		IS_TIED			= 0x20 << CUSTOM_SHIFT,
-		IS_DONE			= 0x40 << CUSTOM_SHIFT;
+		IS_TIMED		= 0x001 << CUSTOM_SHIFT,
+		IS_ALLOCATED	= 0x004 << CUSTOM_SHIFT,
+		IS_PREPARED		= 0x008 << CUSTOM_SHIFT,
+		IS_COLLECTING	= 0x010 << CUSTOM_SHIFT,
+		IS_TIED			= 0x020 << CUSTOM_SHIFT,
+		IS_DONE			= 0x040 << CUSTOM_SHIFT,
+		IS_DUMPING		= 0x080 << CUSTOM_SHIFT,
+		CLOSE_DUMP		= 0x100 << CUSTOM_SHIFT;
 	PropList *stats;
 
 	// accessors
@@ -126,6 +128,7 @@ protected:
 	inline bool isPrepared(void) const { return flags & IS_PREPARED; }
 	inline bool isCollectingStats(void) const { return flags & IS_COLLECTING; }
 	inline bool isDone() const { return flags & IS_DONE; }
+	inline bool isDumping() const { return flags & IS_DUMPING; }
 
 	// configuration
 	void require(const AbstractFeature& feature);
@@ -154,6 +157,7 @@ protected:
 	virtual void collectStats(WorkSpace *ws);
 	virtual void commit(WorkSpace *ws);
 	virtual void destroy(WorkSpace *ws);
+	virtual void dump(WorkSpace *ws, Output& out);
 
 	// deprecated
 	void recordStat(const AbstractFeature& feature, StatCollector *collector);
@@ -185,7 +189,14 @@ private:
 	WorkSpace *ws;
 	List<Cleaner *> cleaners;
 	Progress *_progress;
+	io::OutStream *_dump;
 };
+
+
+extern p::id<bool> DUMP;
+extern p::id<string> DUMP_FOR;
+extern p::id<string> DUMP_TO;
+extern p::id<elm::io::OutStream *> DUMP_STREAM;
 
 
 // NullProcessor class

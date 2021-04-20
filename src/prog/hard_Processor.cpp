@@ -159,7 +159,7 @@ PipelineUnit::~PipelineUnit(void) {
  * Build a simple stage.
  * @param t		Type mask.
  */
-Stage::Stage(type_t t): type(t), ordered(false)
+Stage::Stage(type_t t): type(t), ordered(true)
 	{ }
 
 
@@ -244,17 +244,28 @@ Stage::~Stage(void)
  * @return		Found functional unit or null.
  */
 const PipelineUnit *Stage::select(Inst *inst) const {
+	return select(inst->kind());
+}
+
+
+/**
+ * @fn bool Stage::hasFUs() const;
+ * Test if the stage contains functional units.
+ * @return	True if it contains functional, false else.
+ */
+
+const PipelineUnit *Stage::select(Inst::kind_t kind) const {
 	if(fus.isEmpty())
 		return this;
 	ASSERT(dispatch.count() > 0);
-	Inst::kind_t kind = inst->kind();
 	for(int i = 0; i < dispatch.count(); i++) {
 		Inst::kind_t mask = dispatch[i]->getType();
 		if((mask & kind) == mask)
 			return dispatch[i]->getFU();
 	}
-	return 0;
+	return nullptr;	
 }
+
 
 
 /**
@@ -779,8 +790,13 @@ protected:
 		}
 
 		// no processor
-		else
-			throw ProcessorException(*this, "no processor description available !\n");
+		else {
+			if(logFor(LOG_FUN))
+				log << "\tno processor found!\n";
+			proc = nullptr;
+			to_free = false;
+		}
+		//throw ProcessorException(*this, "no processor description available !\n");
 	}
 
 private:

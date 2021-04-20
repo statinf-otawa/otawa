@@ -323,7 +323,11 @@ protected:
 				sys += t_miss * x;
 			}
 			break;
+
+		default:
+			ASSERT(false);
 		}
+
 	}
 
 	virtual void processBB(WorkSpace *ws, CFG *cfg, Block *b) {

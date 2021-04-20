@@ -107,6 +107,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	AccessedAddresses *addrs = ADDRESSES(bb);
 	if(!addrs)
 		return;
+	Vector<BlockAccess> blocks;
 
 	// compute block accessed
 	for(int i = 0; i < addrs->size(); i++) {
@@ -189,14 +190,7 @@ void BlockBuilder::processBB (WorkSpace *ws, CFG *cfg, otawa::Block *bb) {
 	}
 
 	// create the block access
-	BlockAccess *accs = 0;
-	if(blocks) {
-		accs = new BlockAccess[blocks.count()];
-		for(int i = 0; i < blocks.count(); i++)
-			accs[i] = blocks[i];
-	}
-	DATA_BLOCKS(bb) = pair(blocks.count(), accs);
-	blocks.clear();
+	(*DATA_BLOCKS(bb)).give(blocks);
 }
 
 
@@ -234,7 +228,7 @@ p::id<const BlockCollection *> DATA_BLOCK_COLLECTION("otawa::dcache::DATA_BLOCK_
  * @li @ref BasicBlock
  * @ingroup dcache
  */
-p::id<Pair<int, BlockAccess *> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS", pair(0, (BlockAccess *)0));
+p::id<Bag<BlockAccess> > DATA_BLOCKS("otawa::dcache::DATA_BLOCKS");
 
 p::id<Pair<int, NonCachedAccess *> > NC_DATA_ACCESSES("otawa::dcache::NC_DATA_ACCESSES", pair(0, (NonCachedAccess *)0));
 
@@ -361,24 +355,33 @@ const Block& BlockCollection::obtain(const Address& addr) {
  */
 
 /**
- * @fn BlockAccess::BlockAccess(void);
  * Build a null block access.
  */
+BlockAccess::BlockAccess(void): inst(0), _kind(ANY), _action(NONE) {
+}
 
 /**
- * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action);
  * Build a block access of type ANY.
  * @param instruction	Instruction performing the access.
  * @param action		Type of action.
  */
+BlockAccess::BlockAccess(Inst *instruction, action_t action)
+: inst(instruction), _kind(ANY), _action(action) {
+	ASSERT(instruction != nullptr);
+}
+
 
 /**
- * @fn BlockAccess::BlockAccess(Inst *instruction, const Block& block);
  * Build a block access to a single block.
  * @param instruction	Instruction performing the access.
  * @param action		Type of action.
  * @param block			Accessed block.
  */
+BlockAccess::BlockAccess(Inst *instruction, action_t action, const Block& block)
+: inst(instruction), _kind(BLOCK), _action(action) {
+	ASSERT(instruction != nullptr);
+	data.blk = &block;
+}
 
 /**
  * @fn BlockAccess::BlockAccess(Inst *instruction, action_t action, Address::offset_t first, Address::offset_t last);
@@ -390,6 +393,54 @@ const Block& BlockCollection::obtain(const Address& addr) {
  * @param first			First accessed block (must a cache block boundary address).
  * @param last			Last access block (must a cache block boundary address).
  */
+BlockAccess::BlockAccess(Inst *instruction, action_t action, const Vector<const Block *>& blocks, int set_count)
+: inst(instruction), _kind(RANGE), _action(action) {
+	ASSERT(instruction != nullptr);
+	data.range = new range_t;
+	data.range->fst = blocks.first()->set();
+	data.range->lst = blocks.last()->set();
+	data.range->bs = blocks;
+	data.range->setc = set_count;
+}
+
+
+/**
+ * Clone a block access.
+ * @param b		Cloned block access.
+ */
+BlockAccess::BlockAccess(const BlockAccess& b)
+: _kind(ANY) {
+	*this = b;
+}
+
+
+/**
+ */
+BlockAccess::~BlockAccess() {
+	if(_kind == RANGE)
+		delete data.range;
+}
+
+
+/**
+ */
+BlockAccess& BlockAccess::operator=(const BlockAccess& a) {
+	if(_kind == RANGE) {
+		if(a._kind == RANGE)
+			*data.range = *a.data.range;
+		else
+			delete data.range;
+	}
+	else if(a._kind == RANGE)
+		data.range = new range_t(*a.data.range);
+	else
+		data.blk = a.data.blk;
+	_kind = a._kind;
+	inst = a.inst;
+	_action = a._action;
+	return *this;
+}
+
 
 /**
  * @fn BlockAccess::BlockAccess(const BlockAccess& acc);
@@ -457,7 +508,7 @@ void BlockAccess::print(io::Output& out) const {
 	switch(_kind) {
 	case ANY: 	out << "ANY"; break;
 	case BLOCK: out << *data.blk; break;
-	case RANGE: out << '[' << data.range.first << ", " << data.range.last << ']' << "(multiple cache-blocks)"; break;
+	case RANGE: out << '[' << first() << ", " << last() << ']' << "(multiple cache-blocks)"; break;
 	default:	ASSERTP(false, "invalid block access kind: " << _kind); break;
 	}
 }

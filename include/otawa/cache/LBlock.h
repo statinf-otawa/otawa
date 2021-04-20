@@ -47,6 +47,7 @@ public:
 	inline BasicBlock *bb(void) const { return _bb; }
 	inline ot::size size(void) const { return _size; }
 	inline LBlockSet *lblockset(void) const { return lbs; }
+	inline MemArea area() const { return MemArea(_addr, _size); }
 	int countInsts(void);
 	inline int cacheBlock(void) const { return cid - 1; }
 	inline Inst *instruction(void) const { return _inst; }

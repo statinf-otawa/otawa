@@ -20,7 +20,8 @@
  */
 
 #include <elm/util/Cleaner.h>
-#include <otawa/app/Application.h>
+#include <elm/sys/StopWatch.h>
+#include <otawa/app/CFGApplication.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/Output.h>
 #include <otawa/display/CFGOutput.h>
@@ -30,10 +31,10 @@
 using namespace elm;
 using namespace otawa;
 
-class OPerform: public Application {
+class OPerform: public CFGApplication {
 public:
 	OPerform(void):
-		Application(Make("operform", Version(1, 0, 0))
+		CFGApplication(Make("operform", Version(1, 0, 0))
 			.description("perform a set of analysis (feature or code processor) and dump the resulting CFG collection.")
 			.free_argument("EXECUTABLE ENTRY? (require:FEATURE|process:PROCESSOR)*")),
 		ids(option::ListOption<cstring>::Make(*this).cmd("-p").cmd("--prop").description("select which property to output").argDescription("ID")),
@@ -41,6 +42,7 @@ public:
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
 		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output")),
 		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output")),
+		timed(option::Switch::Make(*this).cmd("-T").cmd("--timed").description("display the run time of each require: or process:")),
 		view(option::ValueOption<string>::Make(*this).cmd("-V").cmd("--view").description("display the given view").argDescription("view"))
 	{
 	}
@@ -66,30 +68,41 @@ protected:
 				AbstractFeature *f = ProcessorPlugin::getFeature(n);
 				if(!f)
 					throw otawa::Exception(_ << "cannot find feature " << n);
-				else
+				else {
+					sys::StopWatch sw;
+					sw.start();
 					workspace()->require(*f, props);
+					sw.stop();
+					if(timed)
+						cout << f->name() << ": " << sw.delay().millis() <<  io::endl;
+				}
 			}
 			else if(a.startsWith("process:")) {
 				setTask(props, "main");
 				string n = a.substring(8);
 				Processor *p = ProcessorPlugin::getProcessor(n);
 				if(!p)
-					throw otawa::Exception(_ << "cannot find feature " << n);
-				else
+					throw otawa::Exception(_ << "cannot find processor " << n);
+				else {
+					sys::StopWatch sw;
+					sw.start();
 					workspace()->run(p, props);
+					sw.stop();
+					if(timed)
+						cout << p->name() << ": " << sw.delay() <<  io::endl;
+				}
 			}
-			else if(!setTask(props, a))
+			else if(!setTask(props, a)){
 				cerr << "WARNING: don't know what to do with: " << a << ". Ignoring it.\n";
-
+				cerr << "Maybe you have forgot to specify \'require\' or \'process\' for one of the feature/processor?\n";
+			}
 		}
 
 	}
 
 	void complete(PropList& props) {
-		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE)) {
-			cerr << "DEBUG: COLLECTED_CFG_FEATURE not provided!\n";
+		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
-		}
 
 		// if enabled, perform output
 		if(!phony) {
@@ -117,6 +130,7 @@ protected:
 				workspace()->run<display::CFGOutput>(props);
 			}
 		}
+		completeTask();
 	}
 
 private:
@@ -125,7 +139,8 @@ private:
 			return false;
 		else {
 			task = entry;
-			TASK_ENTRY(props) = entry;
+			startTask(entry);
+			prepareCFG(entry, props);
 			return true;
 		}
 	}
@@ -134,7 +149,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot, phony;
+	option::Switch dot, phony, timed;
 	option::ValueOption<string> view;
 	CleanList clean;
 };

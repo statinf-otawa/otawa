@@ -103,7 +103,7 @@ public:
 	DiGraphBuilder(void);
 	DiGraphBuilder(DiGraph *g);
 	void add(Vertex *vertex);
-	void add(Vertex *source, Vertex *sink, Edge *edge);
+	void add(Vertex *source, Vertex *sink, Edge *edge, bool off = false);
 	DiGraph *build(void);
 private:
 	DiGraph *_g;
@@ -241,7 +241,7 @@ public:
 	inline GenDiGraphBuilder(void) { }
 	inline GenDiGraphBuilder(GenDiGraph<V, E> *g): DiGraphBuilder(g) { }
 	inline void add(V *v) { DiGraphBuilder::add(v); }
-	inline void add(V *v, V *w, E *e) { DiGraphBuilder::add(v, w, e); }
+	inline void add(V *v, V *w, E *e, bool off = false) { DiGraphBuilder::add(v, w, e, off); }
 	inline GenDiGraph<V, E> *build(void) { return static_cast<GenDiGraph<V, E> *>(DiGraphBuilder::build()); }
 };
 

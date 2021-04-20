@@ -22,6 +22,7 @@
 #include <elm/data/quicksort.h>
 #include <otawa/ipet.h>
 #include <otawa/etime/StandardILPGenerator.h>
+#define STATS_ILP_VARS_COUNT(t) t
 
 namespace otawa { namespace etime {
 
@@ -348,7 +349,8 @@ StandardILPGenerator::StandardILPGenerator(Monitor& mon):
 	_x_e(nullptr),
 	_x_hts(nullptr),
 	_t_lts_set(false),
-	_eth(0)
+	_eth(0),
+	_ilp_var_count(0)
 { }
 
 
@@ -377,6 +379,7 @@ void StandardILPGenerator::process(WorkSpace *ws) {
 					process(e);
 				}
 	}
+	STATS_ILP_VARS_COUNT(log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << "\n");
 
 	// generate the bounding constraints of the events
 	for(auto coll: colls) {
@@ -392,6 +395,7 @@ void StandardILPGenerator::contributeBase(ot::time time) {
 	ASSERTP(!_t_lts_set, "several contributeBase() performed");
 	_t_lts_set = true;
 	_t_lts = time;
+	_ilp_var_count++;
 
 	// logging
 	if(logFor(LOG_BB))
@@ -405,10 +409,13 @@ void StandardILPGenerator::contributeBase(ot::time time) {
 
 /**
  */
-void StandardILPGenerator::contributeTime(ot::time t_hts) {
+void StandardILPGenerator::contributeTime(ot::time t) {
+	//No need to call contributeBase first
 	ASSERTP(_t_lts_set, "perform contributeBase() first");
+	//
+	_ilp_var_count++;
 
-	// new HTS variable
+	// new variable
 	string hts_name;
 	if(isExplicit()) {
 		StringBuffer buf;
@@ -418,19 +425,21 @@ void StandardILPGenerator::contributeTime(ot::time t_hts) {
 			<< _edge->sink()->cfg()->label() << "_hts";
 		hts_name = buf.toString();
 	}
+	//_x_hTS is used as 'current' i.e. last variable created by contributeTime
 	_x_hts = system()->newVar(hts_name);
 
 	// wcet += time_lts x_edge + (time_hts - time_lts) x_hts
-	system()->addObjectFunction(t_hts - _t_lts, _x_hts);
+	system()->addObjectFunction(t - _t_lts , _x_hts);
 	if(isRecording())
-		HTS_CONFIG(_edge).add(pair(t_hts - _t_lts, _x_hts));
+		HTS_CONFIG(_edge).add(pair(t - _t_lts, _x_hts));
 
 	// 0 <= x_hts <= x_edge
-	ilp::Constraint *cons = system()->newConstraint("0 <= x_hts", ilp::Constraint::LE);
+	ilp::Constraint *cons = system()->newConstraint("0 <= x", ilp::Constraint::LE);
 	cons->addRight(1, _x_hts);
-	cons = system()->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
-	cons->addLeft(1, _x_hts);
-	cons->addRight(1, _x_e);
+	_partitionVars.push(_x_hts);
+	//cons = system()->newConstraint("x_hts <= x_edge", ilp::Constraint::LE);
+	//cons->addLeft(1, _x_hts);
+	//cons->addRight(1, _x_e);
 }
 
 /**
@@ -457,6 +466,8 @@ void StandardILPGenerator::prepare(Edge *e, const Vector<EventCase>& events, int
 	_t_lts_set = false;
 	_x_e = ipet::VAR(e);
 	_x_hts = nullptr;
+	_partitionVars.clear();
+	
 	if(dyn_cnt > 0)
 		_done.resize(dyn_cnt);
 	_done.clear();
@@ -480,6 +491,15 @@ void StandardILPGenerator::finish(const Vector<EventCase>& events) {
 		if(e->occurrence() == SOMETIMES
 		&& !_done.bit(e.index()))
 			get(e.event())->boundImprecise(e);
+
+
+	if (!_partitionVars.isEmpty()){
+	ilp::Constraint* cons = system()->newConstraint("sum(x) = x_edge", ilp::Constraint::LE);
+	cons->addRight(1, _x_e);
+	for (auto v: _partitionVars){
+		cons->addLeft(1, v);
+	}
+	}
 }
 
 ///

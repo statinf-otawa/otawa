@@ -48,69 +48,69 @@ MAYProblem::~MAYProblem(void) {
  * @param access	Cache access.
  */
 void MAYProblem::update(Domain& s, const BlockAccess& access) {
-#ifdef OLD_IMPLEMENTATION
-	switch(access.kind()) {
-	case BlockAccess::RANGE:
-	case BlockAccess::ANY:
+	switch(access.action ()) {
+
+	case BlockAccess::LOAD:
+		switch(access.kind()) {
+		case BlockAccess::ANY:
+			s.refreshAll();
+			break;
+		case BlockAccess::BLOCK: {
+			if(access.block().set() == set)
+				s.inject(access.block().index());
+			}
+			break;
+		case BlockAccess::RANGE: {
+				auto b = access.blockIn(set);
+				if(b != nullptr)
+					s.set(b->index(), 0);
+			}
+			break;
+		}
 		break;
-	case BlockAccess::BLOCK:
-		if(access.block().set() == set)
-			s.inject(access.block().index());
+
+	case BlockAccess::STORE:
+		if(cache->writePolicy() == hard::Cache::WRITE_THROUGH)
+			switch(access.kind()) {
+			case BlockAccess::ANY:
+				s.refreshAllWriteThrough(-1);
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					s.injectWriteThrough(access.block().index());
+				break;
+			case BlockAccess::RANGE: {
+					auto b = access.blockIn(set);
+					if(b != nullptr)
+						s.set(b->index(), 0);
+				}
+				break;
+			}
+		else if(cache->writePolicy() == hard::Cache::WRITE_BACK)
+			switch(access.kind()){
+			case BlockAccess::ANY:
+				s.refreshAll();
+				break;
+			case BlockAccess::BLOCK:
+				if(access.block().set() == set)
+					s.inject(access.block().index());
+				break;
+			case BlockAccess::RANGE: {
+					auto b = access.blockIn(set);
+					if(b != nullptr)
+						s.set(b->index(), 0);
+				}
+				break;
+			}
+		else {
+			ASSERTP(false, "unsupported replacement policy");
+		}
+		break;
+
+	default:
+		ASSERTP(false, "unsupported access action");
 		break;
 	}
-#else
-	if(access.action () == BlockAccess::LOAD) {
-		if(access.kind() == BlockAccess::ANY) {
-			s.refreshAll();
-		} // end ANY
-		else if(access.kind() == BlockAccess::RANGE) {
-			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-				if(vbi->set() == set) {
-					Domain t = s;
-					t.inject(vbi->index());
-					s.join(t); // find the min
-				}
-		} // end RANGE
-		else if(access.kind() == BlockAccess::BLOCK) {
-			if(access.block().set() == set)
-				s.inject(access.block().index());
-		} // end BLOCK
-	} // end LOAD
-	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_THROUGH) {
-		if(access.kind() == BlockAccess::ANY) {
-			s.refreshAllWriteThrough(-1);
-		} // end ANY
-		else if(access.kind() == BlockAccess::RANGE) {
-			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-				if(vbi->set() == set) {
-					Domain t = s;
-					t.injectWriteThrough(vbi->index());
-					s.join(t); // find the min
-				}
-		} // end RANGE
-		else if(access.kind() == BlockAccess::BLOCK) {
-			if(access.block().set() == set)
-				s.injectWriteThrough(access.block().index());
-		} // end BLOCK
-	} // end WRITE_THROUGH
-	else if(access.action () == BlockAccess::STORE && cache->writePolicy() == hard::Cache::WRITE_BACK) {
-		if(access.kind() == BlockAccess::ANY) {
-			s.refreshAll();
-		} // end ANY
-		else if(access.kind() == BlockAccess::RANGE) {
-			for(Vector<const Block*>::Iter vbi(access.getBlocks()); vbi(); vbi++)
-				if(vbi->set() == set) {
-					Domain t = s;
-					t.inject(vbi->index());
-					s.join(t); // find the min
-				}
-		} // end RANGE
-		else if(access.kind() == BlockAccess::BLOCK) {
-			if(access.block().set() == set)
-				s.inject(access.block().index());
-		} // end BLOCK
-	} // end WRITE_BACK
-#endif
 }
 
 
@@ -122,11 +122,8 @@ void MAYProblem::update(Domain& s, const BlockAccess& access) {
  */
 void MAYProblem::update(Domain& out, const Domain& in, otawa::Block* bb) {
     assign(out, in);
-	const Pair<int, BlockAccess *>& accesses = DATA_BLOCKS(bb);
-	for(int i = 0; i < accesses.fst; i++) {
-		BlockAccess& acc = accesses.snd[i];
+	for(const auto& acc: *DATA_BLOCKS(bb))
 		update(out, acc);
-	}
 }
 
 elm::io::Output& operator<<(elm::io::Output& output, const MAYProblem::Domain& dom) {

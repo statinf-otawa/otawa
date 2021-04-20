@@ -364,7 +364,7 @@ sim::Simulator *Process::simulator(void) {
 		return sim;
 
 	// Look for a name
-	CString name = SIMULATOR_NAME(this);
+	string name = SIMULATOR_NAME(this);
 	if(!name)
 		return 0;
 	sim = manager()->findSimulator(name);

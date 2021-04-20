@@ -22,21 +22,15 @@
 #define OTAWA_HARD_FEATURES_H_
 
 #include <otawa/proc/Feature.h>
+#include "Machine.h"
 
 namespace otawa { namespace hard {
 
-// pred-eclarations
-class CacheConfiguration;
-class Memory;
-class Processor;
-
-// features
 extern p::interfaced_feature<const Memory> MEMORY_FEATURE;
 extern p::interfaced_feature<const CacheConfiguration> CACHE_CONFIGURATION_FEATURE;
 extern p::interfaced_feature<const Processor> PROCESSOR_FEATURE;
+extern p::interfaced_feature<const Machine> MACHINE_FEATURE;
 
-}	// hard
-
-}	// otawa
+} }	// otawa::hard
 
 #endif /* OTAWA_HARD_FEATURES_H_ */

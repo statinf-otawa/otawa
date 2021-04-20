@@ -27,6 +27,20 @@ using namespace otawa;
 
 namespace otawa { namespace dcache {
 
+/**
+ * @class BlockAccess
+ * This class represents a data cache access that is composed by;
+ *	* the instruction that performs it,
+ *	* the performed action (BlockAccess::LOAD or BlockAccess::STORE),
+ *	* the accessed memory.
+ *
+ * The accessed memory may BlockAccess::ANY if any part of the memory can be
+ * accessed (often because of lack of precision of the analysis).
+ * BlockAccess::BLOCK if a single block is accessed. BlockAccess::RANGE if
+ * a range of memory is accessed which size (in block count) is less than the
+ * way size.
+ * @ingroup dcache
+ */
 
 /**
  * Test if the given set concerns the range access.
@@ -74,7 +88,53 @@ bool BlockAccess::in(const Block& block) const {
 	}
 }
 
-unsigned int BlockAccess::count = 0;
+/**
+ * @fn const Vector<const Block*>& getBlocks(void) const;
+ * Get the list of accessed blocks.
+ * @warning This function is only valid for a RANGE access.
+ * @return	Accessed blocks.
+ */
+
+/**
+ * Get the block corresponding to the given set.
+ * @warning This function is only valid for a RANGE access.
+ * @return	Corresponding block or null pointer.
+ */
+const Block *BlockAccess::blockIn(int set) const {
+	switch(_kind) {
+	case BLOCK:
+		if(data.blk->set() == set)
+			return data.blk;
+		break;
+	case RANGE:
+		if(!inRange(set))
+			return nullptr;
+		else if(first() <= last() || set >= first())
+			return blocks()[set - first()];
+		else
+			return blocks()[set + (data.range->setc - first())];
+	}
+	return nullptr;
+}
+
+
+/**
+ * Compute the base address of this memory access.
+ * @return	Base address or null for any access.
+ */
+Address BlockAccess::address() const {
+	switch(kind()) {
+	case ANY:
+		return Address::null;
+	case BLOCK:
+		return block().address();
+	case RANGE:
+		return blocks()[0]->address();
+	default:
+		ASSERT(false);
+		return Address::null;
+	}
+}
 
 
 /**

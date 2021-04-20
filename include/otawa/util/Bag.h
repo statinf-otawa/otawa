@@ -68,7 +68,7 @@ public:
 	inline T& operator[](int i) { return get(i); }
 
 	// Iter class
-	class Iter: public PreIterator<Iter, T> {
+	class Iter: public InplacePreIterator<Iter, T> {
 	public:
 		inline Iter(): b(nullptr), i(0) { }
 		inline Iter(const Bag<T>& bag): b(&bag), i(0) { }

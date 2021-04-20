@@ -145,12 +145,15 @@ p::id<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
  * and which following access have an unknown behavior (rarely used).
  *
  * @var FIRST_MISS
+ * @deprecated Same as PERSISTENT.
+ *
+ * @var PERSISTENT
  * This category name is misleading: in fact, it qualifies a block which
  * first access result is unknown and following accesses are hits.
  *
  * @var ALWAYS_MISS
  * Category set to a cache block which access always results in a miss.
- *
+ * 
  * @var NOT_CLASSIFIED
  * Category set to a cache block which accesses cannot be assigned to
  * another category.
@@ -161,11 +164,11 @@ p::id<Block*> CATEGORY_HEADER("otawa::CATEGORY_HEADER", 0);
 io::Output& operator<<(io::Output& out, category_t cat) {
 	static cstring names[] = {
 		"invalid",
-		"always-hit",
+		"AH",
 		"first-hit",
-		"first-miss",
-		"always-miss",
-		"not-classified"
+		"PE",
+		"AM",
+		"NC"
 	};
 	ASSERT(cat >= 0 || cat < sizeof(names) / sizeof(cstring));
 	return out << names[cat];

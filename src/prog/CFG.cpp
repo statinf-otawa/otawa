@@ -433,7 +433,9 @@ io::Output& operator<<(io::Output& out, Block *block) {
  * Build a synthetic block.
  * @param type		Type of block (it will be at least marked as synthetic).
  */
-SynthBlock::SynthBlock(t::uint32 type): Block(type | IS_SYNTH), _callee(0) {
+SynthBlock::SynthBlock(t::uint32 type):
+	Block(type | IS_SYNTH), _callee(0)
+{
 }
 
 
@@ -794,6 +796,14 @@ void CFG::clean(const AbstractIdentifier& id) {
 
 
 /**
+ * @fn bool CFG::isTop() const;
+ * Test if the current CFG is the top CFG, that is, the CFG representing
+ * the start of the analysis (usually of a task).
+ * @return	True if the CFG is the top one, false else.
+ */
+
+
+/**
  * @fn int CFG::index(void) const;
  * Get index of the CFG in the current task.
  * @return	CFG index.
@@ -937,6 +947,8 @@ void CFGMaker::call(SynthBlock *v, CFG *callee) {
 	add(v);
 }
 
+
+///
 void CFGMaker::add(Block *v) {
 	graph::GenDiGraphBuilder<Block, Edge>::add(v);
 	v->_cfg = cfg;
@@ -948,11 +960,32 @@ void CFGMaker::add(Block *v) {
  * @param v		Added synthetic block.
  * @param maker	Maker of the CFG.
  */
-void CFGMaker::call(SynthBlock *v, const CFGMaker& maker) {
+void CFGMaker::call(SynthBlock *v, CFGMaker& maker) {
 	v->_callee = maker.cfg;
 	maker.cfg->_callers.add(v);
 	add(v);
 }
 
-}	// otawa
 
+/**
+ * Fix a synthetic block which CFG was not defined.
+ * @param v	Synthetic block to fix.
+ * @param g	CFG to fix with.
+ */
+void CFGMaker::fix(SynthBlock *v, CFGMaker *g) {
+	ASSERTP(v->_callee == nullptr, "fixed synthetic block must not have already a CFG!");
+	v->_callee = g->cfg;
+}
+
+
+/**
+ * Fix a synthetic block which CFG was not defined.
+ * @param v	Synthetic block to fix.
+ * @param g	CFG to fix with.
+ */
+void CFGMaker::fix(SynthBlock *v, CFG *g) {
+	ASSERTP(v->_callee == nullptr, "fixed synthetic block must not have already a CFG!");
+	v->_callee = g;
+}
+
+}	// otawa

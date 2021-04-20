@@ -182,7 +182,9 @@ public:
 	inline const Array<FunctionalUnit *>& getFUs(void) const { return fus; }
 	inline const Array<Dispatch *>& getDispatch(void) const { return dispatch; }
 	inline bool isOrdered(void) const { return ordered; }
+	inline bool hasFUs() const { return fus.length() != 0; }
 	const PipelineUnit *select(Inst *inst) const;
+	const PipelineUnit *select(Inst::kind_t kind) const;
 
 	// deprecated
 	template <class T> inline T select(Inst *inst, const T table[]) const; 

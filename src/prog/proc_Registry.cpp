@@ -76,7 +76,7 @@ Registry::Registry(void): Initializer<AbstractRegistration>(false) {
 /**
  * Build the registration.
  */
-AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg) {
+AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg), cnt(0) {
 }
 
 
@@ -84,7 +84,7 @@ AbstractRegistration::AbstractRegistration(void): _base(&Processor::reg) {
  * Build of a custom registration.
  * @param base		Base registration.
  */
-AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
+AbstractRegistration::AbstractRegistration(AbstractRegistration *base): cnt(0) {
 	ASSERT(base);
 	_base = base;
 	_name = base->_name;
@@ -99,7 +99,7 @@ AbstractRegistration::AbstractRegistration(AbstractRegistration *base) {
  * @param base		Base processor.
  */
 AbstractRegistration::AbstractRegistration(string name, Version version, AbstractRegistration *base)
-: _name(name), _version(version), _base(base) {
+: _name(name), _version(version), _base(base), cnt(0) {
 	ASSERT(base);
 }
 
@@ -127,9 +127,20 @@ void AbstractRegistration::setConfigs(const List<AbstractIdentifier *>& coll) {
 
 
 /**
+ * Set the requirements.
+ * @param reqs	Requirements to set.
+ */
+void AbstractRegistration::setRequirements(const List<Requirement *> reqs) {
+	_reqs = reqs;
+}
+
+
+/**
  */
 void AbstractRegistration::record(void) {
 	Registry::_.record(this);
+	for(auto r: _reqs)
+		r->record(this);
 }
 
 
@@ -214,7 +225,14 @@ bool AbstractRegistration::invalidates(const AbstractFeature& feature) {
  * Internal.
  */
 void AbstractRegistration::initialize(void) {
-	Registry::_.procs.put(name(), this);
+	if(cnt == _reqs.count()) {
+		for(auto r: _reqs)
+			for(auto f: r->features())
+				_feats.add(FeatureUsage(FeatureUsage::require, *f));
+		Registry::_.procs.put(name(), this);
+	}
+	else
+		cnt++;
 }
 
 
@@ -305,6 +323,7 @@ declare::declare(const otawa::p::init& maker)
 {
 	setFeatures(maker.features);
 	setConfigs(maker.configs);
+	setRequirements(maker._reqs);
 	_maker = maker._maker;
 	record();
 }

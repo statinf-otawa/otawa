@@ -78,6 +78,8 @@ private:
 	bool _t_lts_set;
 	BitVector _done;
 	int _eth;
+	int _ilp_var_count;
+	Vector<ilp::Var*> _partitionVars;
 };
 
 } }	// otawa::etime

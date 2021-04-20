@@ -21,9 +21,10 @@
  */
 
 #include <elm/compare.h>
-#include <elm/data/ListQueue.h>
 #include <otawa/cfg/features.h>
 #include <otawa/ai/FlowAwareRanking.h>
+#include <otawa/ai/SimpleWorkList.h>
+#include <otawa/pcg/features.h>
 
 namespace otawa { namespace ai {
 
@@ -49,10 +50,11 @@ namespace otawa { namespace ai {
 
 /**
  */
-p::declare FlowAwareRanking::reg = p::init("otawa::ai::FlowAwareRanking", Version(1, 0, 0))
+p::declare FlowAwareRanking::reg = p::init("otawa::ai::FlowAwareRanking", Version(1, 1, 0))
 	.make<FlowAwareRanking>()
 	.require(COLLECTED_CFG_FEATURE)
 	.require(LOOP_INFO_FEATURE)
+	.require(RECURSIVITY_ANALYSIS)
 	.provide(RANKING_FEATURE)
 	.provide(CFG_RANKING_FEATURE);
 
@@ -83,62 +85,89 @@ int FlowAwareRanking::rankOf(Block *v) {
 void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 	// initialize work list
+	Vector<Edge *> backs;
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
-	ListQueue<Pair<Block *, int> > wl;
-	wl.put(pair(coll->entry()->entry(), 0));
+	SimpleWorkList wl(coll);
+	wl.put(coll->entry()->entry());
+	RANK_OF(coll->entry()->entry()) = 0;
 
 	// proceed until the work list is exhausted
 	while(wl) {
 
 		// record new ranking
-		Block *v = wl.head().fst;
-		int r = wl.head().snd;
-		wl.get();
-		RANK_OF(v) = r;
-		//cerr << "DEBUG: propagating after " << v << " with rank " << r << io::endl;
+		auto v = wl.get();
+		int r = RANK_OF(v);
+		if(logFor(LOG_INST))
+			log << "\trank(" << r << ") for " << v << " (" << v->cfg() << ")\n";
 		r++;
 
-		// propagate at subprogram call
-		if(v->isSynth() && v->toSynth()->callee() != nullptr && !RANK_OF(v->toSynth()->callee()->entry()).exists()) {
-			if(r > RANK_OF(v->toSynth()->callee()->entry()))
-				wl.put(pair(v->toSynth()->callee()->entry(), r));
+		// propagate to subprogram call
+		if(v->isSynth() && v->toSynth()->callee() != nullptr) {
+			auto ev = v->toSynth()->callee()->entry();
+			if(!RANK_OF(ev).exists() && r > RANK_OF(ev)) {
+				RANK_OF(ev) = r;
+				wl.put(ev);
+				continue;
+			}
 		}
 
 		// propagate at subprogram return
-		else if(v->isExit())
+		else if(v->isExit()) {
 			for(auto c: v->cfg()->callers())
-				for(auto e = c->outs(); e(); e++)
-					if(r > RANK_OF(e->sink()))
-						wl.put(pair(e->sink(), r));
+				if(!RECURSE_BACK(c))
+					for(auto e = c->outs(); e(); e++)
+						if(r > RANK_OF(e->sink())) {
+							RANK_OF(e->sink()) = r;
+							wl.put(e->sink());
+						}
+			continue;
+		}
 
 		// propagate to successors
-		for(auto e = v->outs(); e(); e++)
+		for(auto e: v->outEdges())
 
 			// do not propagate along exit edge
-			if(LOOP_EXIT_EDGE(*e))
+			if(LOOP_EXIT_EDGE(e))
 				continue;
 
 			// back edge propagate to exit edges
-			else if(BACK_EDGE(*e)) {
-				for(auto f = ***EXIT_LIST(e->sink()); f(); f++)
-					if(r > RANK_OF(f->sink()))
-						wl.put(pair(f->sink(), r));
+			else if(BACK_EDGE(e)) {
+				for(auto xe: **EXIT_LIST(e->sink()))
+					backs.push(xe);
+				while(backs) {
+					auto ce = backs.pop();
+					if(BACK_EDGE(ce))
+						for(auto xe: **EXIT_LIST(ce->sink()))
+							backs.push(xe);
+					else
+						if(r > RANK_OF(ce->sink())) {
+							RANK_OF(ce->sink()) = r;
+							wl.put(ce->sink());
+						}
+				}
 			}
 
 			// simple case
-			else if(r > RANK_OF(e->sink()))
-				wl.put(pair(e->sink(), r));
-	}
-
-	if(logFor(LOG_BLOCK)) {
-		for(auto g: *coll) {
-			log << "\tCFG " << g << io::endl;
-			for(auto v = g->blocks(); v(); v++)
-				log << "\t\t" << *v << ": " << *RANK_OF(*v) << io::endl;
-		}
+			else if(r > RANK_OF(e->sink())) {
+				RANK_OF(e->sink()) = r;
+				wl.put(e->sink());
+			}
 	}
 }
+
+
+///
+void FlowAwareRanking::dump(WorkSpace *ws, Output& out) {
+	const CFGCollection *coll = INVOLVED_CFGS(ws);
+	ASSERT(coll);
+	for(auto g: *coll) {
+		out << "CFG " << g << io::endl;
+		for(auto v = g->blocks(); v(); v++)
+			out << "\t" << *v << ": " << *RANK_OF(*v) << io::endl;
+	}
+}
+
 
 /*
  */

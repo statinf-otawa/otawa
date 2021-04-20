@@ -39,6 +39,7 @@ protected:
 	void *interfaceFor(const AbstractFeature& f) override;
 	void processWorkSpace(WorkSpace *ws) override;
 	void destroy(WorkSpace *ws) override;
+	void dump(WorkSpace *ws, Output& out) override;
 };
 
 } }		// otawa::ai

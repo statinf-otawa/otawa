@@ -23,6 +23,7 @@
 #include <elm/test.h>
 #include <otawa/cfg.h>
 #include <otawa/app/Application.h>
+#include <otawa/cfg/Loop.h>
 
 using namespace elm;
 using namespace otawa;
@@ -71,6 +72,14 @@ public:
 				}
 			}
 		}
+	}
+	
+	void compilation_test(Block *v) {
+		auto l = Loop::of(v);
+		for(auto e: l->entries())
+			cout << e << io::endl;
+		for(auto e: l->backs())
+			cout << e << io::endl;
 	}
 
 };

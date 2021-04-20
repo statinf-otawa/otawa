@@ -87,12 +87,13 @@ private:
  */
 class LoopInfoBuilder: public CFGProcessor {
 public:
-        LoopInfoBuilder(void);
-        virtual void processCFG(otawa::WorkSpace*, otawa::CFG*);
-
+	static p::declare reg;
+	LoopInfoBuilder();
+protected:
+	void processCFG(otawa::WorkSpace*, otawa::CFG*) override;
 private:
-		void buildLoopExitList(otawa::CFG* cfg);
-		bool fst;
+	void buildLoopExitList(otawa::CFG* cfg);
+	bool fst;
 };
 
 
@@ -117,21 +118,32 @@ private:
  * the framework.
  *
  * @par Properties
- * @li @ref ENCLOSING_LOOP_HEADER (@ref BasicBlock)
- * @li @ref LOOP_EXIT_EDGE (@ref Edge)
- * @li @ref EXIT_LIST (@ref BasicBlock)
+ * @li @ref ENCLOSING_LOOP_HEADER (@ref Block)
+ * @li @ref LOOP_ENTRY (@ref Block)
+ * @li @ref LOOP_EXIT (@ref Edge)
+ * @li @ref EXIT_LIST (@ref Block)
  */
 p::feature LOOP_INFO_FEATURE("otawa::LOOP_INFO_FEATURE", new Maker<LoopInfoBuilder>());
 
 /**
  * Defined for any BasicBlock that is part of a loop.
- * Contains the header of the loop immediately containing the basicblock
- * If the basicblock is a loop header, then, the property contains the header of the parent loop.
+ * Contains the header of the loop immediately containing the block
+ * If the block is a loop header, then, the property contains the header of the parent loop.
  *
  * @par Hooks
  * @li @ref BasicBlock
  */
-Identifier<Block*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0);
+p::id<Block*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0);
+
+/**
+ * Is defined for an Edge if this Edge is the entry-edge of any loop.
+ * If this is the case, then, the property contains the header of the loop exited by the edge.
+ *
+ * @par Hooks
+ * @li @ref Edge
+ * @ingroup cfg
+ */
+p::id<Block*> LOOP_ENTRY("otawa::LOOP_ENTRY", nullptr);
 
 /**
  * Is defined for an Edge if this Edge is the exit-edge of any loop.
@@ -140,8 +152,17 @@ Identifier<Block*> ENCLOSING_LOOP_HEADER("otawa::ENCLOSING_LOOP_HEADER", 0);
  *
  * @par Hooks
  * @li @ref Edge
+ * @ingroup cfg
  */
-Identifier<Block*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
+p::id<Block*> LOOP_EXIT("otawa::LOOP_EXIT", nullptr);
+
+
+/**
+ * @deprecated	Use LOOP_EXIT instead.
+ * @ingroup cfg
+ */
+p::id<Block*>& LOOP_EXIT_EDGE = LOOP_EXIT;
+
 
 /**
  * Defined for any BasicBlock that is a loop header.
@@ -150,8 +171,9 @@ Identifier<Block*> LOOP_EXIT_EDGE("otawa::LOOP_EXIT_EDGE", 0);
  *
  * @par Hooks
  * @li @ref BasicBlock
+ * @ingroup cfg
  */
-Identifier<elm::Vector<Edge *> *> EXIT_LIST("otawa::EXIT_LIST", 0);
+p::id<elm::Vector<Edge *> *> EXIT_LIST("otawa::EXIT_LIST", 0);
 
 
 // LoopInfoProblem class
@@ -293,14 +315,18 @@ inline Block* LoopInfoProblem::get(int index) const {
 #endif
 
 
+p::declare LoopInfoBuilder::reg =
+	p::init("otawa::LoopInfoBuilder", Version(2, 0, 0))
+	.extend<CFGProcessor>()
+	.require(DOMINANCE_FEATURE)
+	.require(LOOP_HEADERS_FEATURE)
+	.provide(LOOP_INFO_FEATURE)
+	.make<LoopInfoBuilder>();
 
 
 /* Constructors/Methods for LoopInfoBuilder */
 
-LoopInfoBuilder::LoopInfoBuilder(void): CFGProcessor("otawa::LoopInfoBuilder", Version(2, 0, 0)), fst(true) {
-	require(DOMINANCE_FEATURE);
-	require(LOOP_HEADERS_FEATURE);
-	provide(LOOP_INFO_FEATURE);
+LoopInfoBuilder::LoopInfoBuilder(): CFGProcessor(reg), fst(true) {
 }
 
 
@@ -349,6 +375,13 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 
 	// compute loop exit edges
 	for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
+
+		// compute loop entry
+		if(LOOP_HEADER(*bb))
+			for(auto e: bb->inEdges())
+				if(!BACK_EDGE(e))
+					LOOP_ENTRY(e) = *bb;
+
 		// process block in loops
 		if (ENCLOSING_LOOP_HEADER(*bb) || LOOP_HEADER(*bb))
 			for(Block::EdgeIter outedge = bb->outs(); outedge(); outedge++) {

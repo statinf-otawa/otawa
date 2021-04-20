@@ -280,7 +280,4 @@ private:
 
 };
 
-int main(int argc, char **argv) {
-	OWCET owcet;
-	return owcet.run(argc, argv);
-}
+OTAWA_RUN(OWCET);

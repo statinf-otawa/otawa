@@ -346,7 +346,4 @@ private:
 	const hard::Processor *proc;
 };
 
-int main(int argc, char **argv) {
-	ODisasm app;
-	return app.run(argc, argv);
-}
+OTAWA_RUN(ODisasm);

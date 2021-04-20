@@ -47,12 +47,14 @@ protected:
 	void configure(const PropList& props) override;
 	void processWorkSpace(WorkSpace *ws) override;
 	void destroy(WorkSpace *ws) override;
+	void dump(WorkSpace *ws, Output& out) override;
 
 	// to customize
 	virtual void processAll(WorkSpace *ws);
 	virtual void processCFG(WorkSpace *ws, CFG *cfg) = 0;
 	virtual void cleanupCFG(WorkSpace *ws, CFG *cfg);
 	virtual void destroyCFG(WorkSpace *ws, CFG *cfg);
+	virtual void dumpCFG(CFG *cfg, Output& out);
 
 	// useful
 	void doCleanUp(void);

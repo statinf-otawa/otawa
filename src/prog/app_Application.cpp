@@ -288,15 +288,17 @@ Application::Application(const Make& make):
 	Manager(make),
 	help(option::SwitchOption::Make(*this).cmd("-h").cmd("--help").description("display this help")),
 	verbose(option::SwitchOption::Make(*this).cmd("-v").cmd("--verbose").description("verbose display of the process (same as --log bb)")),
+	dump(option::SwitchOption::Make(*this).cmd("--dump").description("dump results of all analyzes")),
 	sets(option::ListOption<string>::Make(*this).cmd("--add-prop").description("set a configuration property").argDescription("ID=VALUE")),
 	params(option::ListOption<string>::Make(*this).cmd("--load-param").description("add a load parameter").argDescription("ID=VALUE")),
 	ff(option::ListOption<string>::Make(*this).cmd("--flowfacts").cmd("-f").description("select the flowfacts to load").argDescription("PATH")),
 	work_dir(option::Value<string>::Make(*this).cmd("--work-dir").description("change the working directory").arg("PATH")),
+	dump_to(option::Value<string>::Make(*this).cmd("--dump-to").description("dump the results of analyzes to PATH").arg("PATH")),
 	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
 	log_for(option::ListOption<string>::Make(this).cmd("--log-for").help("only apply logging to the given processor")),
+	dump_for(option::ListOption<string>::Make(this).cmd("--dump-for").help("dump results of the named analyzes").arg("ANALYSIS NAME")),
 	log_level(*this),
 	props2(0),
-	result(0),
 	ws(0)
 { }
 
@@ -331,32 +333,32 @@ Application::~Application(void) {
 
 /**
  * Run the application:
- * @li scan the options from argc and argv,
  * @li open the workspace,
  * @li call the work() method.
- * @param argc	Argument count as passed to main().
- * @param argv	Argument list as passed to main().
- * @return		A return code adapted to the current OS.
  */
-int Application::run(int argc, char **argv) {
-	try {
+void Application::run() {
 
 		// process arguments
-		parse(argc, argv);
-		if(help) {
-			displayHelp();
-			return 1;
-		}
 		if(!path)
 			throw option::OptionException("no PROGRAM given");
 		if(!_args)
 			_args.add("main");
+
+		// process logging
 		if(verbose)
 			Processor::VERBOSE(props) = true;
 		if(*log_level)
 			Processor::LOG_LEVEL(props) = log_level;
 		for(auto name: log_for)
 			Processor::LOG_FOR(props).add(name);
+
+		// process dumping
+		if(dump)
+			DUMP(props) = true;
+		if(dump_to)
+			DUMP_TO(props) = dump_to;
+		for(auto name: dump_for)
+			DUMP_FOR(props).add(name);
 
 		// process the sets
 		bool failed = false;
@@ -388,7 +390,7 @@ int Application::run(int argc, char **argv) {
 			id->fromString(props, val);
 		}
 		if(failed)
-			return 2;
+			return;
 
 		// prepare the load params
 		for(int i = 0; i < params.count(); i++)
@@ -411,21 +413,11 @@ int Application::run(int argc, char **argv) {
 		Monitor::configure(props);
 		work(props);
 		complete(props);
-	}
-	catch(option::OptionException& e) {
-		displayHelp();
-		error(e.message());
-		result = 1;
-	}
-	catch(elm::Exception& e) {
-		error(e.message());
-		result = 1;
-	}
+
 
 	// cleanup
 	if(ws)
 		delete ws;
-	return result;
 }
 
 
@@ -456,30 +448,43 @@ void Application::complete(PropList& props) {
  * @throw	elm::Exception	For any found error.
  */
 void Application::work(PropList &props) {
-
-	// process each free argument as a function entry
 	for(int i = 0; i < _args.count(); i++) {
-
-		// determine entry address
-		Address addr = parseAddress(_args[i]);
-		TASK_ADDRESS(props) = addr;
-		if(record_stats)
-			Processor::COLLECT_STATS(props) = true;
-
-		// prepare properties
-		props2 = new PropList(props);
-		ASSERT(props2);
-
-		// work on the current task
+		startTask(_args[i]);
 		work(_args[i], *props2);
-		if(record_stats)
-			stats();
-
-		// cleanup properties
-		delete props2;
-		props2 = 0;
-
+		completeTask();
 	}
+}
+
+
+/**
+ * Start the processing of the task corresponding to the entry.
+ * @param entry	Entry to process.
+ */
+void Application::startTask(const string& entry) {
+
+	// determine entry address
+	Address addr = parseAddress(entry);
+	TASK_ADDRESS(props) = addr;
+	if(record_stats)
+		Processor::COLLECT_STATS(props) = true;
+
+	// prepare properties
+	props2 = new PropList(props);
+}
+
+
+/**
+ * Complete the processing of the current task.
+ */
+void Application::completeTask() {
+
+	// manage stats
+	if(record_stats)
+		stats();
+
+	// cleanup properties
+	delete props2;
+	props2 = nullptr;
 }
 
 

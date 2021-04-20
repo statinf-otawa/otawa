@@ -320,7 +320,10 @@ void DumpCFG::dump(PropList& props) {
  * @param argv		Argument list.
  * @return		0 for success, >0 for error.
  */
-int main(int argc, char **argv) {
+/*int main(int argc, char **argv) {
 	DumpCFG dump;
 	return dump.run(argc, argv);
-}
+}*/
+//ELM_RUN(DumpCFG);
+OTAWA_RUN(DumpCFG);
+

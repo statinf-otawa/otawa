@@ -123,6 +123,8 @@ public:
 	inline block_t block(Address addr) const { return ot::mask(addr.offset()) >> blockBits(); }
 	inline Address round(Address addr) const
 		{ if(addr.isNull()) return addr; else return Address(addr.page(), addr.offset() & ~(blockSize() - 1)); }
+	inline int countBlocks(Address l, Address h) const
+		{ return block(h) - block(l) + 1; }
 	
 	// Modifiers
 	void setAccessTime(int access_time);

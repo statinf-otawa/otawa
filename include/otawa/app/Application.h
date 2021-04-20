@@ -57,8 +57,6 @@ public:
 	);
 	virtual ~Application(void);
 
-	int run(int argc, char **argv);
-
 protected:
 	virtual void prepare(PropList& props);
 	virtual void work(PropList& props);
@@ -69,43 +67,43 @@ protected:
 	void require(const AbstractFeature&  feature);
 	void exit(int code = 0);
 	void run(Processor *p);
-	template <class T> T *run()
+	template <class T> T *perform()
 		{ T *p = new T(); run(p); return p; }
 	void fail(int code, string msg);
 	void error(string msg);
 	void warn(string msg);
 	void info(string msg);
 	void stats();
+	void startTask(const string& entry);
+	void completeTask();
 
 	const Vector<string>& arguments(void) const { return _args; }
 	Address parseAddress(const string& s);
 
 	void process(string arg) override;
+	void run() override;
 
 private:
-	option::SwitchOption help, verbose;
+	option::SwitchOption help, verbose, dump;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;
 	option::Value<string> work_dir;
+	option::Value<string> dump_to;
 	option::SwitchOption record_stats;
 	option::ListOption<string> log_for;
+	option::ListOption<string> dump_for;
 	LogOption log_level;
 	elm::sys::Path path;
 	Vector<string> _args;
 	PropList props;
 	PropList *props2;
-	int result;
 	WorkSpace *ws;
 };
 
 }	// otawa
 
 // application macro
-#define OTAWA_RUN(name) \
-	int main(int argc, char **argv) { \
-		name app; \
-		return app.run(argc, argv); \
-	}
+#define OTAWA_RUN(name) ELM_RUN(name)
 
 #endif /* OTAWA_APP_APPLICATION_H_ */

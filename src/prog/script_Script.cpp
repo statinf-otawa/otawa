@@ -437,10 +437,11 @@ void Script::work(WorkSpace *ws) {
 				}
 	}
 
-	/*DEBUG(OutStream *out = elm::system::System::createFile("out.xml");
-	xom::Serializer serial(*out);
-	serial.write(xsl);
-	delete out);*/
+	//DEBUG(
+		OutStream *out = elm::sys::System::createFile("out.xml");
+		xom::Serializer serial(*out);
+		serial.write(xsl);
+		delete out;//);
 
 	// perform the transformation
 	xom::XSLTransform xslt(xsl);
@@ -562,7 +563,7 @@ void Script::work(WorkSpace *ws) {
 						ws->run(proc, list, true);
 						if(timed) {
 							sw.stop();
-							cerr << "INFO: time(" << *name << ") = "<< (float(sw.delay()) / 1000) << "ms\n";
+							cerr << "INFO: time(" << *name << ") = "<< (sw.delay().micros() / 1000) << "ms\n";
 						}
 						break;
 					}

@@ -254,12 +254,13 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
  * @param m		Maker.
  * @param b		Basic block containing code.
  * @param src	Source block.
+ * @param flags	Flags for the sequential edge (default to Edge::NOT_TAKEN).
  */
-void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *b, Block *src) {
+void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *b, Block *src, t::uint32 flags) {
 	Inst *ni = b->last()->nextInst();
 	if(ni) {
 		ASSERT(ni->hasProp(BB));
-		m.add(src, BB(ni), new Edge(Edge::NOT_TAKEN));
+		m.add(src, BB(ni), new Edge(flags));
 	}
 }
 
@@ -327,8 +328,8 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						if(!ts) {
 							Block *b = new SynthBlock();
 							m.add(b);
-							m.add(bb, b, new Edge(Edge::TAKEN));
-							seq(m, bb, b);
+							m.add(bb, b, new Edge(Edge::TAKEN | Edge::CALL));
+							seq(m, bb, b, Edge::NOT_TAKEN | Edge::RETURN);
 						}
 
 						// build call vertices
@@ -339,7 +340,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 								if(NO_RETURN(*c)) {
 									if(!no_return) {
 										no_return = true;
-										m.add(bb, m.exit(), new Edge(Edge::TAKEN));
+										m.add(bb, m.exit(), new Edge(Edge::TAKEN | Edge::CALL));
 										one = true;
 									}
 								}
@@ -347,12 +348,12 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 									SynthBlock *cb = new SynthBlock();
 									CFGMaker& cm = maker(*c);
 									m.call(cb, cm);
-									m.add(bb, cb, new Edge(Edge::TAKEN));
-									seq(m, bb, cb);
+									m.add(bb, cb, new Edge(Edge::TAKEN | Edge::CALL));
+									seq(m, bb, cb, Edge::NOT_TAKEN | Edge::RETURN);
 									one = true;
 								}
 							if(!one && !i->isConditional())
-								seq(m, bb, bb);
+								seq(m, bb, bb, Edge::NOT_TAKEN | Edge::RETURN | Edge::CALL);
 						}
 					} // end else: a call
 

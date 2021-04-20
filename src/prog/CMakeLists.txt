@@ -45,6 +45,7 @@ set(libotawa_SOURCES
 	"cfg_Weighter.cpp"
     "cfgio_Input.cpp"
 	"cfgio_Output.cpp"
+	"events.cpp"
 	"BBRatioDisplayer.cpp"
 	"app_Application.cpp"
 	"app_AddressOption.cpp"
@@ -124,6 +125,7 @@ set(libotawa_SOURCES
 
 #    abstract interpretation module
 	"ai.cpp"
+	"ai_CFGAnalyzer.cpp"
 	"ai_FlowAwareRanking.cpp"
 	"ai_PseudoTopoOrder.cpp"
 
@@ -225,6 +227,7 @@ set(libotawa_SOURCES
 
 
 
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 include_directories(".")
 
 BISON_TARGET(ipet_parser ipet_parser.yy ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.cpp HEADER ${CMAKE_CURRENT_BINARY_DIR}/ipet_parser.h)

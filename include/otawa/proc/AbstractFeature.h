@@ -39,7 +39,8 @@ public:
 	AbstractFeature(cstring name = "");
 	virtual ~AbstractFeature(void);
 	virtual void process(WorkSpace *ws, const PropList& props = PropList::EMPTY) const = 0;
-
+	inline bool operator==(const AbstractFeature& f) const { return this == &f; }
+	inline bool operator!=(const AbstractFeature& f) const { return !operator==(f); }
 };
 
 

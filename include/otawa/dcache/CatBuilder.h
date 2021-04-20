@@ -34,13 +34,16 @@ class CATBuilder: public Processor {
 public:
 	static p::declare reg;
 	CATBuilder(p::declare& r = reg);
-	virtual void processWorkSpace(WorkSpace *ws);
-	virtual void configure(const PropList &props);
-	virtual void cleanup(WorkSpace *ws);
+	void configure(const PropList &props) override;
+
+protected:
+	void processWorkSpace(WorkSpace *ws) override;
 
 private:
 	void processLBlockSet(WorkSpace *ws, const BlockCollection& coll, const hard::Cache *cache);
-	void processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay);
+	void processLBlock(otawa::Block *bb, BlockAccess& b, MUSTPERS::Domain& dom, MAYProblem::Domain& domMay, const Block *block);
+	void join(otawa::Block *v, BlockAccess& b, cache::category_t c, otawa::Block *h);
+	void displayStats(WorkSpace *ws);
 
 	data_fmlevel_t firstmiss_level;
 	cache::category_t wt_def_cat;

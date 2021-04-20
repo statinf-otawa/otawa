@@ -83,6 +83,9 @@ protected:
 	virtual void cleanupBB(WorkSpace *ws, CFG *cfg, Block *bb);
 	void destroyCFG(WorkSpace *ws, CFG *cfg) override;
 	virtual void destroyBB(WorkSpace *ws, CFG *cfg, Block *b);
+	virtual void dumpBB(Block *v, io::Output& out);
+
+	void dumpCFG(CFG *g, io::Output& out) override;
 
 	inline const CFG& blocks() const { return *cfg(); }
 

@@ -115,7 +115,7 @@ class State {
 public:
 
 	typedef t::uint32 address_t;
-	State(Process& process);
+	State(Process& process, const Vector<MemArea>& csts = Vector<MemArea>::null);
 	inline Process& process(void) const { return proc; }
 
 	// accessing registers
@@ -156,6 +156,8 @@ extern p::id<Pair<const hard::Register *, Value> > REG_INIT;
 extern p::id<MemCell> MEM_INIT;
 extern p::interfaced_feature<State> INITIAL_STATE_FEATURE;
 extern p::id<State *> INITIAL_STATE;
+extern p::id<string> CONST_SECTION;
+extern p::id<otawa::MemArea> CONST_MEM;
 
 } }		// otawa::dfa
 

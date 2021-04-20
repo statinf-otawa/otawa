@@ -57,7 +57,8 @@ public:
 	// output and logging
 	elm::io::Output out;
 	elm::io::Output log;
-	inline bool isVerbose(void) const { return flags & IS_VERBOSE; }
+	inline bool isVerbose() const { return flags & IS_VERBOSE; }
+	inline bool isQuiet() const { return flags & IS_QUIET; }
 	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
 	inline log_level_t logLevel(void) const { return log_level; }
 	void configure(const PropList& props, string name = "");
@@ -66,6 +67,7 @@ protected:
 	void setWorkspace(WorkSpace *workspace);
 	static const t::uint32
 		IS_VERBOSE		= 0x01,
+		IS_QUIET		= 0x02,
 		CUSTOM_SHIFT	= 16;
 	t::uint32 flags;
 

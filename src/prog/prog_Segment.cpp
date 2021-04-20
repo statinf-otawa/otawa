@@ -237,7 +237,7 @@ void Segment::insert(ProgItem *item) {
 		if(item->topAddress() > cur->address()) {
 			throw DecodingException(_
 				<< "instruction at " << item->address() << ':' << item->size()
-				<< " in middle of instruction at " << cur->address() << ':' << cur->size()
+				<< " inside another instruction at " << cur->address() << ':' << cur->size()
 				<< " before " << cur->previous()->address() << ':' << cur->previous()->size());
 		}
 

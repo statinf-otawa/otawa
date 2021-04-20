@@ -43,6 +43,7 @@ io::Output& operator<<(io::Output& out, EdgeTimeBuilder::place_t p) {
 /**
  * @class EdgeTimeGraph
  * Execution graph class to customize the debug output with events.
+ * @ingroup etime
  */
 
 /**
@@ -265,10 +266,9 @@ void EventCollector::contribute(case_t c, ilp::Var *var) {
  */
 void EventCollector::make(ilp::System *sys) {
 	for(int c = 0; c < SIZE; ++c) {
-		if(vars[c] && evt->isEstimating(isOn(case_t(c)))) {
-			ilp::Constraint *cons = sys->newConstraint(
-				evt->name() ,
-				(imprec & (1 << c)) ? ilp::Constraint::GE : ilp::Constraint::EQ);
+		if(!vars[c].isEmpty() && evt->isEstimating(isOn(case_t(c)))) {
+			ilp::Constraint *cons = sys->newConstraint(evt->name() ,
+				/*(imprec & (1 << c)) ?*/ ilp::Constraint::GE /*: ilp::Constraint::EQ*/);
 			evt->estimate(cons, isOn(case_t(c)));
 			for(List<ilp::Var *>::Iter v(vars[c]); v(); v++) {
 				ASSERT(*v != nullptr);
@@ -1747,12 +1747,14 @@ void EdgeTimeBuilder::contributeConst(void) {
  * @p Properties
  * @li @ref LTS_TIME
  * @li @ref HTS_OFFSET
+ * @ingroup etime
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
 
 /**
  * Configuration property of EDGE_TIME_FEATURE, if true, enable the production
  * of LTS_TIME and HTS_OFFSET on the edge.
+ * @ingroup etime
  */
 p::id<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
 
@@ -1762,6 +1764,7 @@ p::id<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
  *
  * @par Hooks
  * @li @ref Edge
+ * @ingroup etime
  */
 p::id<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
 
@@ -1786,6 +1789,7 @@ p::id<Pair<ot::time, ilp::Var *> > HTS_CONFIG("otawa::etime::HTS_CONFIG", pair<o
 /**
  * This property is used to configure the @ref EDGE_TIME_FEATURE and ask to dump the generated
  * execution graphs.
+ * @ingroup etime
  */
 p::id<bool> PREDUMP("otawa::etime::PREDUMP", false);
 
@@ -1794,6 +1798,7 @@ p::id<bool> PREDUMP("otawa::etime::PREDUMP", false);
  * This property is used to configure the @ref EDGE_TIME_FEATURE  and determine the maximum number of
  * events to consider to time a block. If a value of n is passed, at most 2^n times will be computed
  * and if a block gets a bigger number of events, it will be split.
+ * @ingroup etime
  */
 p::id<int> EVENT_THRESHOLD("otawa::etime::EVENT_THRESHOLD", 15);
 

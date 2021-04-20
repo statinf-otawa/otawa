@@ -1473,9 +1473,9 @@ ParExeGraph::ParExeGraph(
  	_first_node(0),
  	_last_prologue_node(0),
  	_last_node(0),
+ 	_branch_penalty(2),
  	_sequence(seq),
  	_capacity(0),
- 	_branch_penalty(2),
 	_explicit(false)
 {
 	if(_ws != nullptr) {

@@ -23,6 +23,7 @@
 
 #include <otawa/app/Application.h>
 #include <otawa/cfg/features.h>
+#include <otawa/flowfact/features.h>
 
 namespace otawa {
 
@@ -35,7 +36,8 @@ protected:
 
 	void work(const string& entry, PropList &props) override;
 
-	option::SwitchOption cfg_raw, cfg_virtualize, cfg_unroll;
+	void prepareCFG(const string& entry, PropList& props);
+	option::SwitchOption cfg_raw, cfg_virtualize, cfg_unroll, no_cfg_tune;
 };
 
 } // otawa

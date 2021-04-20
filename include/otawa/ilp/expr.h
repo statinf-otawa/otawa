@@ -100,7 +100,6 @@ public:
 		inline cons operator%(int t) { return cons::operator+(t); }
 		inline cons operator%(const Term& t) { return cons::operator+(t); }
 		inline cons operator%(const Expression& t) { return cons::operator+(t); }
-		inline operator cons(void) const { return *this; }
 	};
 
 	inline model(System *s): _s(s) { }

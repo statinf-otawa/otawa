@@ -27,24 +27,11 @@
 #include <otawa/ipet.h>
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
-#include "../../include/otawa/icat3/features.h"
+#include <otawa/icat3/features.h>
 
 #include "MustPersDomain.h"
 
 namespace otawa { namespace icat3 {
-
-io::Output& operator<<(io::Output& out, category_t cat) {
-	static cstring labels[] = {
-		"UC",
-		"AH",
-		"PE",
-		"AM",
-		"NC"
-	};
-	ASSERT(0 < cat && cat <= NC);
-	out << labels[cat];
-	return out;
-}
 
 /**
  */

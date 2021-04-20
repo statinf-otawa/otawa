@@ -301,6 +301,31 @@ public:
 	inline id(cstring name, const T& def): Identifier<T>(name, def) { }
 };
 
+class abstract_alias {
+	friend class elm::Initializer<abstract_alias>;
+public:
+	abstract_alias(cstring name, AbstractIdentifier& id);
+	inline cstring name() const { return _name; }
+	inline AbstractIdentifier& id() const { return _id; }
+protected:
+	void initialize();
+	cstring _name;
+	AbstractIdentifier& _id;	
+};
+
+template <class T>
+class alias: public abstract_alias {
+public:
+	inline alias(cstring name, p::id<T>& id)
+		: abstract_alias(name, id) { }
+	inline p::id<T>& id() const { return static_cast<p::id<T>&>(_id); }
+	inline operator p::id<T>&() const { return id(); }
+	inline const T& operator()(const PropList& props) const { return id().value(props); }
+	inline const T& operator()(const PropList *props) const { return id().value(props); }
+	inline Ref<T, Identifier<T> > operator()(PropList& props) const { return id().value(props); }
+	inline Ref<T, Identifier<T> > operator()(PropList *props) const { return id().value(props); }
+};
+
 } // p
 
 } // otawa

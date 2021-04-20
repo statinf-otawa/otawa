@@ -247,6 +247,16 @@ Cache::~Cache(void) {
 
 
 /**
+ * @fn int Cache:countBlocks(Address l, Address h) const;
+ * Count the number of cache blocks for the memory ranging from address l
+ * to address h (inclusive).
+ * @param l		Low address.
+ * @param h		High address.
+ * @return		Number of cache blocks between l and h (inclusive).
+ */
+
+
+/**
  * Set the access time.
  * @param access_time	Access time in processor cycles.
  */
