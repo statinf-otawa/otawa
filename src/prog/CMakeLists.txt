@@ -125,6 +125,7 @@ set(libotawa_SOURCES
 
 #    abstract interpretation module
 	"ai.cpp"
+	"ai_CFGAnalyzer.cpp"
 	"ai_FlowAwareRanking.cpp"
 	"ai_PseudoTopoOrder.cpp"
 
