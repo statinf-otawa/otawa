@@ -343,11 +343,7 @@ WorkSpace *Manager::loadBin(
 
 	// Simple identified loader
 	Loader *loader = LOADER(props);
-<<<<<<< HEAD
-	if(!loader) {
-=======
 	if(loader == nullptr) {
->>>>>>> 125fe3462d2a8398b89b21deab5574ebe46dafaa
 		auto name = LOADER_NAME(props);
 		if(name) {
 			if(isVerbose())
@@ -578,11 +574,7 @@ p::id<string> PLATFORM_NAME("otawa::PLATFORM_NAME", "");
  * Identifier of the property indicating a name (CString) of the loader to use..
  * @ingroup prog
  */
-<<<<<<< HEAD
-Identifier<string> LOADER_NAME("otawa::LOADER_NAME", "");
-=======
 p::id<string> LOADER_NAME("otawa::LOADER_NAME", "");
->>>>>>> 125fe3462d2a8398b89b21deab5574ebe46dafaa
 
 
 /**
