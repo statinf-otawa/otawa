@@ -97,6 +97,17 @@ State *Domain::join(State *s1, State *s2, Edge *e) {
 }
 
 /**
+ * Update the the state s according to the block v.
+ * The default implementation does nothing: it returns the input state s.
+ * @param v		Block to update with.
+ * @param s		Input state.
+ * @return		Output state.
+ */
+State *Domain::update(Block *v, State *s) {
+	return s;
+}
+
+/**
  * @fn bool Domain::equals(State *s1, State *s2);
  */
 
@@ -176,6 +187,24 @@ void Domain::printCode(Edge *e, io::Output& out) {
  * @class CFGAnalyzer
  * This class implements an abstract interpretation applied to the
  * representation of the program as a set of CFG.
+ * 
+ * This analyzer works on a CFG G = <V, E, a> and computes the state s[v] for
+ * each block of G:
+ * * s[a] = s_init
+ * * foreach v in V \ { a }, s[v] = U(v, J_{w->v in E} U(w->v, s[w]))
+ * 
+ * The following functions are provided by the domain:
+ * * s_init -- initial value of the state before analysis,
+ * * J(s1,s2) -- joins two abstract states s1 and s2,
+ * * U(w->v, s) -- update the given state with the execution of edge w->v in E,
+ * * U(v, s) -- update the given state with the execution of block v.
+ * 
+ * Therefore, the analyzer provides the following results:
+ * * s^before_v  = J_{w->v in E} s[w]
+ * * s^after_v = s[v]
+ * * s^before_w->v = s[w]
+ * * s^after_w->v = U(w->v, s[w])
+ * 
  * @ingroup ai
  */
 
@@ -279,6 +308,7 @@ void CFGAnalyzer::process() {
 				}
 				is = dom.join(is, es, e);
 			}
+			is = dom.update(v, is);
 		}
 
 		// record the new value

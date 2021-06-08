@@ -53,7 +53,7 @@ public:
 	inline Bag(int c, const T *a): cnt(0), arr(nullptr) { copy(c, a); }
 	inline Bag(int c, T *a): cnt(0), arr(nullptr) { copy(c, a); }
 	inline Bag(const Vector<T>& v): cnt(0), arr(nullptr) { copy(v); }
-	inline Bag(Pair<int, T *> p): arr(nullptr), cnt(0) { copy(p.fst, p.snd); }
+	inline Bag(Pair<int, T *> p): cnt(0), arr(nullptr) { copy(p.fst, p.snd); }
 	inline Bag(const Give<T>& g): cnt(g.count()), arr(g.array()) { }
 	inline ~Bag(void) { clear(); }
 

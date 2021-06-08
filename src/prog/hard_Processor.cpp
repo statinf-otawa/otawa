@@ -674,7 +674,7 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 		// entered queues
 		for(Array<Queue *>::Iter queue(queues); queue(); queue++)
 			if(queue->getInput() == *stage)
-				steps.add(Step(Step::RELEASE, *queue));
+				steps.add(Step(Step::USE, *queue));
 
 		// add written registers
 		inst->writeRegSet(regs);

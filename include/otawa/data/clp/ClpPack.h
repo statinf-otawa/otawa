@@ -43,7 +43,7 @@ class ClpProblem;
 *	    |----Context
 */
 class ClpStatePack{
-	friend class ClpProblem;
+ 	friend class ClpProblem;
 public:
 	typedef Vector<clp::State*>::Iter StateIterator;
 	

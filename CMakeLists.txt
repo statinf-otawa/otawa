@@ -25,7 +25,7 @@ else()
 endif()
 
 # installation level
-set(INSTALL_TYPE "bin,lib,inc,doc" CACHE STRING "Type of installation (a ',' separated combination of bin, lib, inc, doc).")
+set(INSTALL_TYPE "bin,lib,inc" CACHE STRING "Type of installation (a ',' separated combination of bin, lib, inc, doc).")
 set(INSTALL_BIN ON)
 set(INSTALL_LIB ON)
 set(INSTALL_INC ON)

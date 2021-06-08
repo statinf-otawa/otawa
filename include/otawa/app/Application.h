@@ -84,7 +84,7 @@ protected:
 	void run() override;
 
 private:
-	option::SwitchOption help, verbose, dump;
+	option::SwitchOption /*help,*/ verbose, dump;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;

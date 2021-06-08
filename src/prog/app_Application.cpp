@@ -285,8 +285,8 @@ void LogOption::process(String arg) {
  * @param make	Maker instance to use.
  */
 Application::Application(const Make& make):
-	Manager(make),
-	help(option::SwitchOption::Make(*this).cmd("-h").cmd("--help").description("display this help")),
+	Manager(Make(make).help().version()),
+	//help(option::SwitchOption::Make(*this).cmd("-h").cmd("--help").description("display this help")),
 	verbose(option::SwitchOption::Make(*this).cmd("-v").cmd("--verbose").description("verbose display of the process (same as --log bb)")),
 	dump(option::SwitchOption::Make(*this).cmd("--dump").description("dump results of all analyzes")),
 	sets(option::ListOption<string>::Make(*this).cmd("--add-prop").description("set a configuration property").argDescription("ID=VALUE")),
@@ -321,7 +321,9 @@ Application::Application(
 ): Application(Make(_program, _version)
 	.description(_description)
 	.author(_author)
-	.copyright(_copyright))
+	.copyright(_copyright)
+	.help()
+	.version())
 { }
 
 

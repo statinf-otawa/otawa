@@ -1,6 +1,5 @@
 /*
- *	$Id$
- *	CLP Value definition
+ *	otawa::clp::Value class interface
  *
  *	This file is part of OTAWA
  *	Copyright (c) 2011, IRIT UPS.
@@ -21,8 +20,8 @@
  *	02110-1301  USA
  */
 
-#ifndef OTAWA_DATA_CLP_VALUE_H_
-#define OTAWA_DATA_CLP_VALUE_H_
+#ifndef OTAWA_CLP_VALUE_H_
+#define OTAWA_CLP_VALUE_H_
 
 #include <elm/types.h>
 #include <elm/type_info.h>
@@ -33,7 +32,6 @@ namespace otawa { namespace clp {
 
 using namespace elm;
 
-// Here we define the number of bits the CLP will be (here modulo 2^32)
 const int NBITS = 32;
 typedef elm::t::int32 intn_t;
 typedef elm::t::uint32 uintn_t;

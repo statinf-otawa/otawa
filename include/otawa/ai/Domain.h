@@ -40,6 +40,7 @@ public:
 	virtual State *join(State *s1, State *s2) = 0;
 
 	virtual State *update(Edge *e, State *s) = 0;
+	virtual State *update(Block *v, State *s);
 	virtual State *join(State *s1, State *s2, Edge *e);
 
 	virtual bool implementsPrinting();
