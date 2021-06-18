@@ -16,12 +16,13 @@ set(MANUALS
 
 message(STATUS "MANUALS=${MANUALS}")
 
-add_custom_command(
-	OUTPUT manual.html
-	DEPENDS ${MANUALS}
-	COMMAND python
-	ARGS  ${THOT_PATH} -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter)
-add_custom_target(manual ALL DEPENDS manual.html)	
+add_custom_target(manual.html
+	ALL
+	SOURCES ${MANUALS}
+	COMMAND python ${THOT_PATH} -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter
+	COMMENT "Making manual."
+)
+
 install(DIRECTORY "." DESTINATION share/Otawa/doc/manual
 	PATTERN "*.thot" EXCLUDE
 	PATTERN "*Make*" EXCLUDE

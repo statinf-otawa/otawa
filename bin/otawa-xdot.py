@@ -2112,7 +2112,11 @@ class DotWindow(Gtk.Window):
             try:
                 name = dotwidget.graph_title
             except:
+                name = ""
+            if name == None:
                 name = os.path.basename(filename)
+                if name.endswith(".dot"):
+                    name = name[:-4]
             title = Gtk.HBox()
             title.pack_start(Gtk.Label(label = name), True, True, 0)
             image = Gtk.Image()
@@ -2140,6 +2144,8 @@ class DotWindow(Gtk.Window):
             self.dotwidget.zoom_to_fit()
         
     def update_title(self, filename=None):
+        if filename == None:
+            filename = ""
         filename = os.path.abspath(filename)
         if filename is None:
             self.set_title(self.base_title)

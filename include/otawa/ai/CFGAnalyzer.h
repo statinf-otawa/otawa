@@ -21,6 +21,7 @@
 #ifndef OTAWA_AI_CFGANALYZER_H_
 #define OTAWA_AI_CFGANALYZER_H_
 
+#include <elm/io/StructuredOutput.h>
 #include "Domain.h"
 
 namespace otawa { namespace ai {
@@ -58,13 +59,21 @@ public:
 		for(auto s: in_use) if(s != nullptr) f(s);
 	}
 
+	void setTrace(io::StructuredOutput& t);
+
 private:
+	
+	void beginTrace();
+	void endTrace();
+	void doTrace(Block *v, cstring type, State *s);
+	
 	Monitor& mon;
 	const CFGCollection *cfgs;
 	AllocArray<State *> states;
 	State *is, *es, *s0;
 	bool verbose, verbose_inst;
 	List<State *> in_use;
+	io::StructuredOutput *trace;
 };
 
 } }	// otawa::ai

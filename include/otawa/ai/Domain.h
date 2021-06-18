@@ -21,6 +21,7 @@
 #ifndef OTAWA_AI_DOMAIN_H_
 #define OTAWA_AI_DOMAIN_H_
 
+#include <elm/io/StructuredOutput.h>
 #include <otawa/cfg/features.h>
 
 namespace otawa { namespace ai {
@@ -53,6 +54,9 @@ public:
 	virtual bool implementsCodePrinting();
 	virtual void printCode(Block *b, io::Output& out);
 	virtual void printCode(Edge *e, io::Output& out);
+
+	virtual bool implementsTracing();
+	virtual void printTrace(State *s, io::StructuredOutput& out);
 };
 
 } }	// otawa::ai

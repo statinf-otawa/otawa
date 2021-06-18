@@ -345,6 +345,6 @@ int main(void) {
 		CHECK_EQUAL(val(0x60000004,8,0xFFFFFFFF).widening(val(0x6000000C,4,0xFFFFFFFF)), val(0x60000004, 4, 0xFFFFFFFF));
 		CHECK_EQUAL(val(2,0,0).widening(val(3,1,0xFFFFFFFF)), val(2, 1, 0xFFFFFFFF));
 	}
-
+	
 	CHECK_RETURN
 }

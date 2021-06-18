@@ -403,6 +403,97 @@ void Block::print(elm::io::Output& out, const hard::Platform *pf) const {
 	printer.print(out, *this);
 }
 
+/**
+ * Restructure the instruction such that it doesn't contain any IF. The code is
+ * a list of sequential semantic instruction (a) chained by FORK instructions
+ * (except the last sequence) and where all IF are also replaced by ASSUME.
+ * Notice that instruction not executed are replaced by NOP. In each sequence,
+ * there is as many instruction as in the initial sequence (not counting the
+ * fork).
+ * 
+ * For example, the code below:
+ * ```
+ *	ADD(t1, R1, R2)
+ *	CMP (SR, R0, t1)
+ *  IF(EQ, SR, 2)
+ *  SUB(R1, R1, R2)
+ *	ADD(R0, R0, t1)
+ * 	CONT
+ * ```
+ * Will be replaced by:
+ * ```
+ *	FORK(5)
+ *	CMP(SR, R0, t1)
+ *	ASSUME(EQ, SR)
+ *  SUB(R1, R1, R2)
+ *	ADD(R0, R0, t1)
+ * 	CONT
+ *	
+ *	NOP
+ *	CMP(SR, R0, t1)
+ *	ASSUME(NE, SR)
+ *	NOP
+ *	NOP
+ *	CONT
+ * ```
+ */
+void Block::fork() {
+	
+	// look for an IF
+	if(!elm::exists(*this, [](const inst& i) { return i.op == IF; }))
+		return;
+
+	// prepare array
+	int l = length();
+	setLength(l + 1);
+	for(int i = l-1; i >= 0; i--)
+		(*this)[i+1] = (*this)[i];
+	(*this)[0] = sem::nop();
+	
+	// process the current sequence
+	fork(0, l, 1);
+}
+
+/**
+ * Work function for Block::fork().
+ * @param b		Based index of the current path.
+ * @param l		Code length (without FORK).
+ * @param i		Index of the forked branch (relative to base).
+ */
+void Block::fork(int b, int l, int _i) {
+	auto i = _i;
+	for(; i <= l; i++)
+		if((*this)[b + i].op == IF) {
+			int nb = length();
+			int js = (*this)[b + i].jump();
+			
+			// fix fork and condition
+			(*this)[b + i] = sem::assume((*this)[b + i].cond(), (*this)[b + i].sr());
+			(*this)[length() -l - 1] = sem::fork(l);
+			
+			// add fork and copy the head
+			add(sem::nop());
+			for(int j = 1; j < i; j++) {
+				auto x = (*this)[b + j];
+				add(x);
+			}
+				
+			// make the assume and the nop
+			add(sem::assume(invert((*this)[b + i].cond()), (*this)[b + i].sr()));
+			for(int j = 0; j < js; j++)
+				add(sem::nop());
+			
+			// copy the tail
+			for(int j = i + js + 1; j <= l; j++) {
+				auto x = (*this)[b + j];
+				add(x);
+			}
+			
+			// run processing of new sequence
+			fork(nb, l, i + 1);
+		}
+}
+
 
 /**
  * @class Printer

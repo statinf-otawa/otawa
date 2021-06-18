@@ -51,6 +51,8 @@ public:
 		{ int s = 0; for(Iter i(*this); i(); i++) s += i->size(); return s; }
 
 	inline Address topAddress(void) const { return address() + size(); }
+	
+	inline MemArea area() const { return MemArea(address(), size()); }
 
 	inline Inst::kind_t kind(void) const
 		{ Inst::kind_t k = 0; for(Iter i(*this); i(); i++) k |= i->kind(); return k; }
@@ -83,8 +85,15 @@ public:
 	inline const BaseBundle<I>& operator*(void) const { return insts(); }
 
 	inline Inst *first(void) const { return *f; }
-	//inline operator Inst *(void) const { return *f; }
 
+	bool contains(Inst *inst) const {
+		if(address() <= inst->address() && inst->address() < topAddress())
+			for(Iter i(*this); i(); i++)
+				if(i == inst)
+					return true;
+		return false;
+	}
+	
 private:
 	I f;
 };

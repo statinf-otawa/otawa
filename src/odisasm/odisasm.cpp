@@ -273,9 +273,13 @@ private:
 		if(kind) {
 			cout << io::YELLOW << "\t\tkind = " << io::PLAIN;
 			Inst::kind_t kind = inst->kind();
-			for(int i = 0; kinds[i].kind; i++)
+			for(int i = 0; kinds[i].kind; i++) {
 				if(kinds[i].kind & kind)
 					cout << kinds[i].name << ' ';
+				kind &= ~kinds[i].kind;
+			}
+			if(kind)
+				cout << " (" << io::hex(kind).pad('0') << ")";
 			cout << io::endl;
 		}
 

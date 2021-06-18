@@ -214,6 +214,9 @@ public:
 		inline uint_t cst(void) const { return item().cst(); }
 	};
 	void print(elm::io::Output& out, const hard::Platform *pf = 0) const;
+	void fork();
+private:
+	void fork(int base, int l, int i);
 };
 inline elm::io::Output& operator<<(elm::io::Output& out, const Block& b) { b.print(out); return out; }
 

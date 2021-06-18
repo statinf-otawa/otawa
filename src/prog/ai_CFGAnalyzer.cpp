@@ -25,6 +25,34 @@
 
 namespace otawa { namespace ai {
 
+class Restructurer: public io::OutStream {
+public:
+	Restructurer(io::StructuredOutput& o): out(o) {}
+	int write(const char *buffer, int size) override {
+		for(int i = 0; i < size; i++) {
+			if(buffer[i] != '\n')
+				buf << buffer[i];
+			else
+				flush();
+		}
+		return size;
+	}
+	
+	int flush(void) override {
+		if(buf.length() != 0) {
+			auto x = buf.toCString();
+			out.write(x);
+			buf.reset();
+		}
+		return 0;
+	}
+
+private:
+	io::StructuredOutput& out;
+	StringBuffer buf;
+};
+
+	
 /**
  * @class State
  * This class is the opaque representation of a state in the abstract
@@ -184,6 +212,26 @@ void Domain::printCode(Edge *e, io::Output& out) {
 }
 
 /**
+ * Called to test if the domain suports tracing.
+ * The default implementation returns false.
+ * @return	True if it support tracing, false else.
+ */
+bool Domain::implementsTracing() {
+	return false;
+}
+
+/**
+ * Called to trace the given state on the given structured output.
+ * The default implementation trace "0".
+ * @param s		State to trace.
+ * @param out	To output to.
+ */
+void Domain::printTrace(State *s, io::StructuredOutput& out) {
+	out.write(0);
+}
+
+
+/**
  * @class CFGAnalyzer
  * This class implements an abstract interpretation applied to the
  * representation of the program as a set of CFG.
@@ -222,13 +270,26 @@ CFGAnalyzer::CFGAnalyzer(Monitor& monitor, Domain& domain, State *entry):
 	es(dom.bot()),
 	s0(entry == nullptr ? dom.entry() : entry),
 	verbose(false),
-	verbose_inst(false)
+	verbose_inst(false),
+	trace(nullptr)
 {
 }
 
 ///
 CFGAnalyzer::~CFGAnalyzer() {
 }
+
+
+/**
+ * Enable tracing of the computation on the given structured output.
+ * Notice that tracing will only enabled if the current domain supports it.
+ * @param t	Structured output to trace to.
+ */
+void CFGAnalyzer::setTrace(io::StructuredOutput& t) {
+	if(dom.implementsTracing())
+		trace = &t;
+}
+
 
 /**
  * Perform the analysis.
@@ -242,6 +303,8 @@ void CFGAnalyzer::process() {
 	// initialize
 	cfgs = otawa::COLLECTED_CFG_FEATURE.get(mon.workspace());
 	ASSERTP(cfgs, "otawa::COLLECTED_CFG_FEATURE must be required first!");
+	if(trace != nullptr)
+		beginTrace();
 	State **buf = new State *[cfgs->countBlocks()];
 	states.set(cfgs->countBlocks(), buf);
 	if(verbose) {
@@ -308,15 +371,23 @@ void CFGAnalyzer::process() {
 				}
 				is = dom.join(is, es, e);
 			}
+			if(verbose) {
+				mon.log << "\t\tbefore " << v << ": ";
+				dom.print(is, mon.log);
+				mon.log << io::endl;
+			}
+			auto isp = is;
 			is = dom.update(v, is);
+			if(trace != nullptr) {
+				doTrace(v, "in", isp);
+				doTrace(v, "out", is);
+			}
 		}
 
 		// record the new value
-		//cerr << "DEBUG: is = "; dom.print(is, cerr); cerr << io::endl;
-		//cerr << "DEBUG: cur = "; dom.print(states[v->id()], cerr); cerr << io::endl;
 		if(verbose) {
 			mon.log << "\t\tafter " << v << ": ";
-			dom.print(es, mon.log);
+			dom.print(is, mon.log);
 			mon.log << io::endl;
 		}
 		if(is == states[v->id()] || dom.equals(is, states[v->id()]))
@@ -340,7 +411,96 @@ void CFGAnalyzer::process() {
 				}
 		}
 	}
+	
+	if(trace != nullptr) {
+		endTrace();
+		trace = nullptr;
+	}
 }
+
+
+/**
+ * Perform initial actions for beginning a trace: mainly generate the CFGs
+ * involved in this analysis.
+ */
+void CFGAnalyzer::beginTrace() {
+	Restructurer res(*trace);
+	io::Output out(res);
+	trace->beginMap();
+	
+	// output CFGs
+	trace->key("program");
+	trace->beginList();
+	for(auto g: *cfgs) {
+		trace->beginMap();
+		trace->key("label"); trace->write(g->name());
+		trace->key("id"); trace->write(g->index());
+		
+		// output blocks
+		trace->key("blocks");
+		trace->beginList();
+		for(auto b: *g) {
+			trace->beginMap();
+			trace->key("id"); trace->write(b->id());
+ 			trace->key("title"); trace->write(_ << b);
+			if(b->isBasic() && dom.implementsCodePrinting()) {
+				trace->key("code");
+				trace->beginList();
+				dom.printCode(b, out);
+				trace->endList();
+			}
+			else if(b->isSynth() && b->toSynth()->callee() != nullptr) {
+				trace->key("to"); trace->write(b->toSynth()->callee()->index());
+			}
+			trace->endMap();
+		}
+		trace->endList();
+		
+		// output edges
+		trace->key("edges");
+		trace->beginList();
+		for(auto v: *g)
+			for(auto e: v->outEdges()) {
+				trace->beginMap();
+				trace->key("src"); trace->write(v->id());
+				trace->key("snk"); trace->write(e->sink()->id());
+				trace->key("taken"); trace->write(e->isTaken());
+				trace->endMap();
+			}
+		trace->endList();
+		trace->endMap();
+	}
+	trace->endList();
+	
+	// start outputting the analysis
+	trace->key("analysis");
+	trace->beginList();
+}
+
+
+/**
+ * Perform final actions to complete a trace.
+ */
+void CFGAnalyzer::endTrace() {
+	trace->endList();
+	trace->endMap();
+}
+
+
+/**
+ * Generate the given state in the trace.
+ * @param v		Current block.
+ * @param t		Type of the trace (usually one of "in" or "out").
+ * @param s		State to generate.
+ */
+void CFGAnalyzer::doTrace(Block *v, cstring t, State *s) {
+	trace->beginMap();
+	trace->key("id"); trace->write(v->id());
+	trace->key("type"); trace->write(t);
+	trace->key("state"); dom.printTrace(s, *trace);
+	trace->endMap();
+}
+
 
 /**
  * @fn State *CFGAnalyzer::before(Edge *e);

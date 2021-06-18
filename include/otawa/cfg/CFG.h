@@ -184,8 +184,8 @@ public:
 		inline BundleIter(const InstIter& i): _iter(i) { }
 		InstIter _iter;
 	};
-	inline Range<BundleIter> bundles() const { return Range<BundleIter>(BundleIter(begin()), BundleIter(end())); }
-
+	inline Iterable<BundleIter> bundles() const { return subiter(BundleIter(begin()), BundleIter(end())); }
+	
 	typedef Vector<Pair<BasicBlock *, Edge *>> basic_preds_t;
 	void basicPreds(basic_preds_t& preds);
 
