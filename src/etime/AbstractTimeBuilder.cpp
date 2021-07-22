@@ -302,7 +302,9 @@ void AbstractTimeBuilder::buildResources(void) {
 
     	// execute stage
 		else {
-			if(stage->orderPolicy() == ParExeStage::IN_ORDER) {
+			if(stage->orderPolicy() != ParExeStage::IN_ORDER)
+				throw ProcessorException(*this, "out-of-order execution unsupported");
+			if(stage->numFus() != 0)
 				for(int i = 0; i<stage->numFus(); i++) {
 					ParExePipeline * fu = stage->fu(i);
 					ParExeStage *fu_stage = fu->firstStage();
@@ -313,7 +315,6 @@ void AbstractTimeBuilder::buildResources(void) {
 						_resources.add(new_resource);
 					}
 				}
-			}
 			else
 				for(int i = 0; i < stage->width(); i++) {
 					auto r = new StageResource(
@@ -321,8 +322,6 @@ void AbstractTimeBuilder::buildResources(void) {
 						*stage, i, resource_index++);
 					_resources.add(r);
 				}
-			/*else
-				is_ooo_proc = true;*/
 		}
     }
 
