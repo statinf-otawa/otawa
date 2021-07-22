@@ -22,7 +22,6 @@
 #include <elm/data/quicksort.h>
 #include <otawa/ipet.h>
 #include <otawa/etime/StandardILPGenerator.h>
-#define STATS_ILP_VARS_COUNT(t) t
 
 namespace otawa { namespace etime {
 
@@ -379,7 +378,8 @@ void StandardILPGenerator::process(WorkSpace *ws) {
 					process(e);
 				}
 	}
-	STATS_ILP_VARS_COUNT(log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << "\n");
+	if(logFor(LOG_PROC))
+		log << "\t\t\t\t ILP VARS COUNT = "<< _ilp_var_count << io::endl;
 
 	// generate the bounding constraints of the events
 	for(auto coll: colls) {
