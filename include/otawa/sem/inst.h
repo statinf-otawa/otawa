@@ -40,7 +40,8 @@ typedef enum opcode {
 	NOP = 0,
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
-	CONT,		// stop the execution of the block
+	STOP,		// stop the execution of the block
+	CONT = STOP, 
 	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions (deprecated)
 	LOAD,		// rd <- MEM_rb(ra)
 	STORE,		// MEM_rb(ra) <- rd
@@ -69,7 +70,9 @@ typedef enum opcode {
 	SPEC,		// special instruction (d: code, cst: sub-code)
 	MULH,		// d <- (a * b) >> bitlength(d)
 	ASSUME,		// assume that cond in sr is true
-	FORK		// creates two executions paths: one at pc+1, other at pc + jump
+	FORK,		// creates two executions paths: one at pc+1, other at pc + jump
+	JOIN,		// join two values
+	MEET		// meet two values
 } opcode;
 
 
@@ -161,7 +164,8 @@ inline elm::io::Output& operator<<(elm::io::Output& out, inst i) { i.print(out);
 inline inst nop		(void) 							{ return inst(NOP); }
 inline inst branch	(uint_t to) 					{ return inst(BRANCH, to); }
 inline inst trap	(void) 							{ return inst(TRAP); }
-inline inst cont	(void) 							{ return inst(CONT); }
+inline inst stop	(void) 							{ return inst(STOP); }
+inline inst cont	(void) 							{ return inst(STOP); }
 inline inst load	(reg_t d, reg_t a, int t, int id = 1) 		{ return inst(LOAD, d, a, t | (id << 8)); }
 inline inst load	(reg_t d, reg_t a, type_t t, int id = 1)	{ return inst(LOAD, d, a, t | (id << 8)); }
 inline inst store	(reg_t d, reg_t a, int t, int id = 1) 		{ return inst(STORE, d, a, t | (id << 8)); }
@@ -192,6 +196,8 @@ inline inst spec	(reg_t d, uint_t cst) 			{ inst i(SPEC, d); i.args.cst = cst; r
 inline inst mulh	(reg_t d, reg_t a, reg_t b) 	{ return inst(MULH, d, a, b); }
 inline inst assume	(cond_t c, reg_t s)				{ ASSERT(c >= 0 && c < MAX_COND); return inst(ASSUME, c, s); }
 inline inst fork	(uint_t j)						{ return inst(FORK, 0, 0, j); }
+inline inst join	(reg_t d, reg_t a, reg_t b) 	{ return inst(JOIN, d, a, b); }
+inline inst meet	(reg_t d, reg_t a, reg_t b) 	{ return inst(MEET, d, a, b); }
 
 
 // deprecated
