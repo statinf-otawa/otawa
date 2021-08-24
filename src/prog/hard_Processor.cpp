@@ -900,6 +900,7 @@ Identifier<string> PROCESSOR_ID("otawa::hard::PROCESSOR_ID");
  * @li @ref WRITE (@ref Register) -- register to write.
  * @li @ref USE (@ref Queue) -- queue entry to allocate.
  * @li @ref RELEASE (@ref Qeueu) -- queue entry to release.
+ * @li @ref WAIT(int) -- wait a time (generally used for latency in a stage/pipeline unit)
  */
 
 /**
