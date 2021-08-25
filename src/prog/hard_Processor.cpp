@@ -698,6 +698,8 @@ Processor *Processor::clone(cstring name) const {
 Processor *Processor::instantiate(Process *process, cstring name) const {
 	Processor *proc = clone(name);
 	proc->_process = process;
+	if(proc->_pf == nullptr)
+		proc->_pf = process->platform();
 	return proc;
 }
 
@@ -978,10 +980,13 @@ Output& operator<<(Output& out, const Step& step) {
 		out << " branch";
 		break;
 	case hard::Step::ISSUE_MEM:
-		out << " issue-mem:" << (step.isLoad() ? "load" : "store") << (step.isCached() ? "" : "/uncached");
+		out << " issue-mem:"
+			<< (step.isLoad() ? "load" : "store")
+			<< (step.isCached() ? "" : "/uncached")
+			<< '/' << step.number();
 		break;
 	case hard::Step::WAIT_MEM:
-		out << " wait-mem:" << step.delay();
+		out << " wait-mem";
 		break;
 	case hard::Step::WAIT:
 		out << " wait:" << step.delay();

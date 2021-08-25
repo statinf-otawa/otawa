@@ -148,26 +148,29 @@ public:
 	inline bool overlap(const MemArea& area) const { return area.meet(this->area()); }
 	inline bool overlap(BasicBlock *bb) const { return area().meet(bb->area()); }
 
-	inline Inst *first(void) const { return _insts[0]; }
-	Inst *control(void);
-	Inst *last(void);
-	int count(void) const;
+	inline Inst *first() const { return _insts[0]; }
+	Inst *control();
+	Inst *last();
+	int count() const;
 	inline bool contains(Inst *i) const
 		{ return address() <= i->address() && i->address() < topAddress(); }
 
-	class BundleIter;
 	class InstIter: public AllocArray<Inst *>::Iter {
 		friend class BasicBlock;
 	public:
-		inline InstIter(void) { }
+		inline InstIter() { }
 		inline InstIter(const BasicBlock *bb): AllocArray<Inst *>::Iter(bb->_insts) { }
 	private:
 		inline InstIter(const AllocArray<Inst *>::Iter& i): AllocArray<Inst *>::Iter(i) { }
 	};
-	inline InstIter insts(void) const { return InstIter(this); }
-	inline InstIter begin(void) const { return _insts.begin(); }
-	inline InstIter end(void) const { return _insts.end(); }
+	inline InstIter insts() const { return InstIter(this); }
+	inline InstIter begin() const { return _insts.begin(); }
+	inline InstIter end() const { return _insts.end(); }
+	
+	typedef AllocArray<Inst *>::BackIter BackIter;
+	inline Iterable<BackIter> back() const { return _insts.back(); }
 
+	// forward bundle iterator
 	typedef BaseBundle<InstIter> Bundle;
 
 	class BundleIter: public PreIterator<BundleIter, Bundle> {
@@ -185,7 +188,25 @@ public:
 		InstIter _iter;
 	};
 	inline Iterable<BundleIter> bundles() const { return subiter(BundleIter(begin()), BundleIter(end())); }
-	
+
+	// backward bundle iterator
+	/*class BackBundleIter: public PreIterator<BackBundleIter, Bundle> {
+		friend class BasicBlock;
+	public:
+		inline BackBundleIter(void) { }
+		inline BackBundleIter(const BasicBlock *bb): _iter(bb->_insts) { }
+		inline Bundle item(void) const { return Bundle(_iter); }
+		inline bool ended(void) const { return _iter.ended(); }
+		inline void next(void)
+			{ auto c = _iter; c.next(); do { _iter = c; c.next();  } while(!ended() && !c->isBundle());  }
+		inline bool equals(const BundleIter& i) const { return _iter.equals(i._iter); }
+	private:
+		inline BackBundleIter(const BackIter& i): _iter(i) { }
+		BackIter _iter;
+	};
+	inline Iterable<BackBundleIter> backBundles() const { return subiter(BackBundleIter(back().begin()), BackBundleIter(back().end())); }*/
+
+	// BB predecessors
 	typedef Vector<Pair<BasicBlock *, Edge *>> basic_preds_t;
 	void basicPreds(basic_preds_t& preds);
 

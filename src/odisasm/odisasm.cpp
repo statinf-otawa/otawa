@@ -148,6 +148,7 @@ public:
 	bytes	(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes")		.description("display bytes composing the instruction")),
 	ksem	(option::SwitchOption::Make(this).cmd("-S").cmd("--kernel-sem")	.description("display the kernel semantic instruction (without condition for conditional instructions")),
 	cond    (option::SwitchOption::Make(this).cmd("-c").cmd("--condition")	.description("for architecture supporting conditional instructions, display the condition")),
+	exec    (option::SwitchOption::Make(this).cmd("-e").cmd("--exec")		.description("display the steps used to execute the instruction in the microarchitecture")),
 	pipeline(option::Value<string>::Make(this).cmd("-p").cmd("--pipeline")	.description("display execution pipeline of instructions for the given processor").argDescription("PROCESSOR_NAME").def("")),
 	max_size(0), proc(NULL)
 	{ }
@@ -338,13 +339,17 @@ private:
 	}
 
 	void dumpExeGraph(hard::Processor::steps_t& steps, Output out = otawa::cout, String start = "") {
-		out << start << "pipeline\n" << start;
-		for (int i = 0; i < steps.length(); i++)
+		out << start << "pipeline\n";
+		out << start << steps[0];
+		for (int i = 1; i < steps.length(); i++) {
+			if(steps[i].kind() == hard::Step::STAGE)
+				out << '\n' << start;
 			out << steps[i];
+		}
 		out << endl;
 	}
 
-	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond;
+	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond, exec;
 	option::Value<string> pipeline;
 	t::uint32 max_size;
 	const hard::Processor *proc;

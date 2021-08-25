@@ -262,30 +262,43 @@ public:
 	inline Step(void): _kind(NONE) { }
 	inline Step(const PipelineUnit *unit): _kind(STAGE) { arg.unit = unit; }
 	inline Step(kind_t kind, const hard::Register *reg): _kind(kind) { ASSERT(kind == READ || kind == WRITE); arg.reg = reg; }
-	inline Step(kind_t kind, hard::Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
-	inline Step(kind_t kind): _kind(kind) { ASSERT(kind == BRANCH); }
-	inline Step(bool store, bool cached = true): _kind(ISSUE_MEM)
-		{ arg.mem.store = store; arg.mem.cached = cached; }
-	inline Step(kind_t kind, int delay): _kind(kind) { ASSERT(_kind == WAIT || _kind == WAIT_MEM); arg.delay = delay; }
+	inline Step(kind_t kind, const Queue *queue): _kind(kind) { ASSERT(kind == USE || kind == RELEASE); arg.queue = queue; }
+	inline Step(kind_t kind): _kind(kind) { ASSERT(kind == BRANCH || kind == WAIT_MEM); }
+	inline Step(bool store, bool cached = true, int num = 0): _kind(ISSUE_MEM)
+		{ arg.mem.store = store; arg.mem.cached = cached; arg.mem.num = num; }
+	inline Step(kind_t kind, int delay): _kind(kind) { ASSERT(_kind == WAIT); arg.delay = delay; }
 
 	inline kind_t kind(void) const { return _kind; }
 	inline const PipelineUnit *stage(void) const { ASSERT(_kind == STAGE); return arg.unit; }
 	inline const Register *reg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
-	inline Queue *queue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
+	inline const Queue *queue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
 	inline bool isCached() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.cached; }
 	inline bool isLoad() const { ASSERT(_kind == ISSUE_MEM); return !arg.mem.store; }
 	inline bool isStore() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.store; }
+	inline int number() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.num; }
 	inline int delay() const { ASSERT(_kind == WAIT || _kind == WAIT_MEM); return arg.delay; }
 
+	inline static Step stage(const Stage *stage) { return Step(STAGE, stage); }
+	inline static Step fu(const FunctionalUnit *fu) { return Step(STAGE, fu); }
+	inline static Step read(Register *r) { return Step(READ, r); }
+	inline static Step write(Register *r) { return Step(WRITE, r); }
+	inline static Step use(Queue *q) { return Step(USE, q); }
+	inline static Step release(Queue *q) { return Step(RELEASE, q); }
+	inline static Step branch() { return Step(BRANCH); }
+	inline static Step issue_mem(bool store, bool cached = true, int num = 0) { return Step(store, cached, num); }
+	inline static Step wait_mem() { return Step(WAIT_MEM); }
+	inline static Step wait(int d) { return Step(WAIT, d); }
+	
 private:
 	kind_t _kind;
 	union {
 		const PipelineUnit *unit;
 		const Register *reg;
-		Queue *queue;
+		const Queue *queue;
 		struct {
 			bool store;
 			bool cached;
+			t::uint16 num;
 		} mem;
 		int delay;
 	} arg;
