@@ -484,7 +484,7 @@ Processor::Processor(const Make& m, cstring name)
 		stages = AllocArray<Stage *>(m.stages.length());
 		for(int i = 0; i < m.stages.length(); i++)
 			stages[i] = m.stages[i];
-		if(queues) {
+		if(m.queues) {
 			queues = AllocArray<Queue *>(m.queues.length());
 			for(int i = 0; i < m.queues.length(); i++)
 				queues[i] = m.queues[i];
