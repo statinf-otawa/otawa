@@ -36,13 +36,14 @@ namespace sem {
 
 // type of instruction
 // NOTE:	a, b, d, cond, sr, jump, type, addr, reg are field of "inst" class
+// NOTE:    Please you may refer to the constructors later for better comprehension.
 typedef enum opcode {
 	NOP = 0,
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
 	STOP,		// stop the execution of the block
 	CONT = STOP, 
-	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions (deprecated)
+	IF,			// (deprecated!) jump to 'j' if (sr cond ri) is true, else doesn't jump (deprecated).
 	LOAD,		// rd <- MEM_rb(ra)
 	STORE,		// MEM_rb(ra) <- rd
 	SCRATCH,	// d <- T
@@ -69,8 +70,8 @@ typedef enum opcode {
 	MODU,		// d <- unsigned(a) % unsigned(b)
 	SPEC,		// special instruction (d: code, cst: sub-code)
 	MULH,		// d <- (a * b) >> bitlength(d)
-	ASSUME,		// assume that cond in sr is true
-	FORK,		// creates two executions paths: one at pc+1, other at pc + jump
+	ASSUME,		// assume that the condition 'c' in the status register 's' is true ('c' and 's' are parameter names in the constructor)
+	FORK,		// creates two executions paths: one at pc+1, other at pc + jump + 1
 	JOIN,		// join two values
 	MEET		// meet two values
 } opcode;
