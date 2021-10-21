@@ -119,7 +119,7 @@ enum {
 	intmin 	= 0x80000000,
 	intmax 	= 0x7fffffff,
 	uintmin	= 0,
-	uintmax = 0xffffffff
+	uruct { t::int16 a, b;  } regsintmax = 0xffffffff
 };
 
 // inst type
@@ -140,6 +140,10 @@ typedef struct inst {
 	inst(opcode _op, int d, int a, int b): op(_op)
 		{ _d = d; args.regs.a = a; args.regs.b = b; }
 
+    /**
+     * Returns the destinate register, it should work with CMP,CMPU, ADD, SUB, SHL/R, ASR, AND, OR, MUL*, DIV*, MOD* and XOR, plus refer to the Printer::print function to check if its OK.
+     *  @return the destinate register,
+     */
 	inline reg_t d(void) const { return _d; }
 	inline reg_t a(void) const { return args.regs.a; }
 	inline reg_t b(void) const { return args.regs.b; }
@@ -153,8 +157,13 @@ typedef struct inst {
 	inline type_t type(void) const { return type_t(b() & 0xFF); }
 	inline int memIndex(void) const { return (b() & 0xFF00) >> 8; }
 
-	// "if" instruction
+	// "if" instruction 
 	inline cond_t cond(void) const { return cond_t(d()); }
+
+    /**
+     * Get the status register, used in "IF" and "ASSUME"
+     * @ return the number of status register
+     */
 	inline reg_t sr(void) const { return a(); }
 	inline uint_t jump(void) const { return b(); }
 
