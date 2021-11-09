@@ -274,7 +274,7 @@ protected:
 
 		// output libs
 		if(libs) {
-			cout << quote (_ << "-L" << getLibDir()) << " -lotawa -lelm -lgel";
+			cout << "-L" << quote(getLibDir()) << " -lotawa -lelm -lgel";
 
 			// output dependencies
 			for(elm::Vector<sys::Plugin *>::Iter p = plugs; p(); p++)
