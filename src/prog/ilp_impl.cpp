@@ -25,6 +25,7 @@ namespace otawa { namespace ilp {
 /**
  * @class VarImpl
  * Very trivial implementation of the @ref Var class.
+ * @ingroup ilp
  */
 
 

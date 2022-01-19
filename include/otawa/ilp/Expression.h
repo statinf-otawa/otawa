@@ -27,6 +27,7 @@ namespace otawa { namespace ilp {
 
 using namespace elm;
 
+class Constraint;
 class System;
 class Var;
 
@@ -43,7 +44,7 @@ public:
 class Expression {
 public:
 	inline Expression(void) { }
-	inline Expression(const Expression *expr): terms(expr->terms) { }
+	inline Expression(const Expression& expr): terms(expr.terms) { }
 
 	void add(coef_t coef, ilp::Var *var = 0);
 	inline void sub(coef_t coef, ilp::Var *var = 0) { terms.add(Term(var, -coef)); }
@@ -57,7 +58,13 @@ public:
 	void sub(const Expression& e);
 
 	double eval(System *sys);
+	void addRight(Constraint *c);
+	void addLeft(Constraint *c);
 
+	static const Expression null;
+	inline bool isEmpty() const { return terms.isEmpty(); }
+	inline int count() const { return terms.count(); }
+	
 	class Iter: public List<Term>::Iter {
 	public:
 		inline Iter(void) { }

@@ -18,9 +18,11 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
+
+#include <otawa/ilp/Constraint.h>
 #include <otawa/ilp/Expression.h>
-#include <otawa/ilp/Var.h>
 #include <otawa/ilp/System.h>
+#include <otawa/ilp/Var.h>
 
 namespace otawa { namespace ilp {
 
@@ -142,6 +144,33 @@ double Expression::eval(System *sys) {
 		r += sys->valueOf((*term).fst) * (*term).snd;
 	return r;
 }
+
+
+/**
+ * Add the expression to the right of constraint c.
+ * @param c		Constraint to add to.
+ */
+void Expression::addRight(Constraint *c) {
+	for(const auto& t: *this)
+		c->addRight(t.snd, t.fst);
+}
+
+
+/**
+ * Add the expression to the left of constraint c.
+ * @param c		Constraint to add to.
+ */
+void Expression::addLeft(Constraint *c) {
+	for(const auto& t: *this)
+		c->addLeft(t.snd, t.fst);
+}
+
+
+/**
+ * Empty expression. Always evaluates to 0.
+ */
+const Expression Expression::null;
+
 
 ///
 io::Output& operator<<(io::Output& out, const Expression& e) {
