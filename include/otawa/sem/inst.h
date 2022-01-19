@@ -119,7 +119,7 @@ enum {
 	intmin 	= 0x80000000,
 	intmax 	= 0x7fffffff,
 	uintmin	= 0,
-	uruct { t::int16 a, b;  } regsintmax = 0xffffffff
+	uintmax = 0xffffffff
 };
 
 // inst type
