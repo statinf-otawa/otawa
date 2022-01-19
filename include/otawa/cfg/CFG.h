@@ -150,7 +150,7 @@ public:
 
 	inline Inst *first() const { return _insts[0]; }
 	Inst *control();
-	Inst *last();
+	inline Inst *last() const { return _insts[count()-1];}
 	int count() const;
 	inline bool contains(Inst *i) const
 		{ return address() <= i->address() && i->address() < topAddress(); }

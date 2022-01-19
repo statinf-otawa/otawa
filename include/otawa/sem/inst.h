@@ -36,13 +36,14 @@ namespace sem {
 
 // type of instruction
 // NOTE:	a, b, d, cond, sr, jump, type, addr, reg are field of "inst" class
+// NOTE:    Please you may refer to the constructors later for better comprehension.
 typedef enum opcode {
 	NOP = 0,
 	BRANCH,		// perform a branch on content of register a
 	TRAP,		// perform a trap
 	STOP,		// stop the execution of the block
 	CONT = STOP, 
-	IF,			// continue if condition cond is met in register sr, else skip "jump" instructions (deprecated)
+	IF,			// (deprecated!) jump to 'j' if (sr cond ri) is true, else doesn't jump (deprecated).
 	LOAD,		// rd <- MEM_rb(ra)
 	STORE,		// MEM_rb(ra) <- rd
 	SCRATCH,	// d <- T
@@ -69,8 +70,8 @@ typedef enum opcode {
 	MODU,		// d <- unsigned(a) % unsigned(b)
 	SPEC,		// special instruction (d: code, cst: sub-code)
 	MULH,		// d <- (a * b) >> bitlength(d)
-	ASSUME,		// assume that cond in sr is true
-	FORK,		// creates two executions paths: one at pc+1, other at pc + jump
+	ASSUME,		// assume that the condition 'c' in the status register 's' is true ('c' and 's' are parameter names in the constructor)
+	FORK,		// creates two executions paths: one at pc+1, other at pc + jump + 1
 	JOIN,		// join two values
 	MEET		// meet two values
 } opcode;
@@ -118,7 +119,7 @@ enum {
 	intmin 	= 0x80000000,
 	intmax 	= 0x7fffffff,
 	uintmin	= 0,
-	uintmax = 0xffffffff
+	uruct { t::int16 a, b;  } regsintmax = 0xffffffff
 };
 
 // inst type
@@ -139,6 +140,10 @@ typedef struct inst {
 	inst(opcode _op, int d, int a, int b): op(_op)
 		{ _d = d; args.regs.a = a; args.regs.b = b; }
 
+    /**
+     * Returns the destinate register, it should work with CMP,CMPU, ADD, SUB, SHL/R, ASR, AND, OR, MUL*, DIV*, MOD* and XOR, plus refer to the Printer::print function to check if its OK.
+     *  @return the destinate register,
+     */
 	inline reg_t d(void) const { return _d; }
 	inline reg_t a(void) const { return args.regs.a; }
 	inline reg_t b(void) const { return args.regs.b; }
@@ -152,8 +157,13 @@ typedef struct inst {
 	inline type_t type(void) const { return type_t(b() & 0xFF); }
 	inline int memIndex(void) const { return (b() & 0xFF00) >> 8; }
 
-	// "if" instruction
+	// "if" instruction 
 	inline cond_t cond(void) const { return cond_t(d()); }
+
+    /**
+     * Get the status register, used in "IF" and "ASSUME"
+     * @ return the number of status register
+     */
 	inline reg_t sr(void) const { return a(); }
 	inline uint_t jump(void) const { return b(); }
 

@@ -579,17 +579,6 @@ Inst *BasicBlock::control(void) {
 
 
 /**
- * Get the last instruction of the block.
- * @return	Block last instruction.
- */
-Inst *BasicBlock::last(void) {
-	Inst *r = 0;
-	for(InstIter i(this); i(); i++)
-		r = *i;
-	return r;
-}
-
-/**
  * Count the number of instructions in the block.
  * @return	Instruction count.
  */

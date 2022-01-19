@@ -221,7 +221,7 @@ void ILPGenerator::sortEvents(Vector<EventCase>& events) {
 	// sort events
 	class EventCaseComparator {
 	public:
-		static inline int compare(const EventCase& c1, const EventCase& c2) {
+		inline int doCompare(const EventCase& c1, const EventCase& c2) const{
 			if(c1.part() != c2.part()){
 				return c1.part() - c2.part();
 			}

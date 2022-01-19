@@ -653,7 +653,7 @@ public:
 			confs.add(*conf);
 		class ConfigSetCompare {
 		public:
-			static int compare(const ConfigSet *cs1, const ConfigSet *cs2) {
+			int doCompare(const ConfigSet *cs1, const ConfigSet *cs2) const{
 				if(cs1->time() == cs2->time())
 					return 0;
 				else if(cs1->time() < cs2->time())
