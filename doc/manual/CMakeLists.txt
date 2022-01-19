@@ -18,9 +18,9 @@ add_custom_command(
 	OUTPUT manual.html
 	DEPENDS ${MANUALS}
 	COMMAND python 
-	"${THOT_PATH}" -t html manual.thot -o anual.html -DHTML_ONE_FILE_PER=chapter
+	"${THOT_PATH}" -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter
 	COMMENT "Making manual.")
-add_custom_target(all-manual ALL DEPENDS manual.html)	
+add_custom_target(all-manual ALL DEPENDS manual.html)
 
 install(DIRECTORY "." DESTINATION share/Otawa/doc/manual
 	PATTERN "*.thot" EXCLUDE

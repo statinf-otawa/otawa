@@ -536,8 +536,10 @@ State *CFGAnalyzer::after(Edge *e) {
  */
 State *CFGAnalyzer::before(Block *b) {
 	is = dom.bot();
-	for(auto e: b->inEdges())
-		is = dom.join(is, states[e->source()->id()]);
+	for(auto e: b->inEdges()) {
+		es = dom.update(e, states[e->source()->id()]);
+		is = dom.join(is, es);
+	}
 	in_use.add(is);
 	return is;
 }

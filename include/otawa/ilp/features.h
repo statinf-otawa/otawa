@@ -39,9 +39,7 @@ extern Identifier<format_t> OUTPUT_FORMAT;
 extern Identifier<sys::Path> OUTPUT_PATH;
 extern Identifier<elm::io::OutStream *> OUTPUT;
 
-}
-
-}	// otawa::ilp
+} }	// otawa::ilp
 
 namespace elm { template <> struct type_info<otawa::ilp::format_t>: enum_info<otawa::ilp::format_t> { }; } // elm
 

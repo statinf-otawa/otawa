@@ -249,6 +249,9 @@ private:
 
 // useful functions
 cond_t invert(cond_t cond);
+cond_t reflect(cond_t cond);
+cond_t unsignedCond(cond_t cond);
+cond_t signedCond(cond_t cond);
 bool isSigned(cond_t cond);
 bool isUnsigned(cond_t cond);
 int size(type_t type);

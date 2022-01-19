@@ -28,7 +28,7 @@
 #include <otawa/hard/BHT.h>
 #include <otawa/ilp.h>
 #include <otawa/ipet.h>
-#include <otawa/dcache/features.h>
+//#include <otawa/dcache/features.h>
 
 using namespace otawa::cache;
 
@@ -150,7 +150,7 @@ private:
 	Block *_wbb;
 };
 
-
+#if 0
 class DataMissEvent: public Event {
 public:
 	DataMissEvent(Inst *inst, ot::time cost, dcache::BlockAccess& acc, BasicBlock *bb)
@@ -273,6 +273,7 @@ private:
 	dcache::BlockAccess& _acc;
 	BasicBlock *_bb;
 };
+#endif
 
 
 /**
@@ -422,6 +423,7 @@ public:
 /**
  * Actual data cache builder when a data cache is available.
  */
+#if 0
 class CacheDataAccessBuilder: public DataAccessBuilder {
 public:
 	CacheDataAccessBuilder(Monitor& mon, const hard::Memory *mem, bool _wb)
@@ -475,7 +477,7 @@ public:
 private:
 	bool wb;
 };
-
+#endif
 
 
 /**
@@ -560,6 +562,7 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 			log << "\tevents for straight data access\n";
 	}
 	else {
+#		if 0
 		if(!ws->isProvided(dcache::CONSTRAINTS_FEATURE))
 			throw ProcessorException(*this, "L1 data cache but no cache analysis!");
 		bool wb = caches->dataCache()->writePolicy() == hard::Cache::WRITE_BACK;
@@ -568,6 +571,7 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 		data = new CacheDataAccessBuilder(*this, mem, wb);
 		if(logFor(LOG_CFG))
 			log << "\tevents for data cache L1\n";
+#		endif
 	}
 
 	// look if branch prediction is available

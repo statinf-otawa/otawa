@@ -633,6 +633,89 @@ cond_t invert(cond_t cond) {
 
 
 /**
+ * Reflect the condition as the operator arguments was exchanged.
+ * No effect on EQ and NE operators.
+ * @param cond	Condition to reflect.
+ * @return		Reflected condition.
+ */
+cond_t reflect(cond_t cond) {
+	static cond_t map[] = {
+		NO_COND,	// NO_COND = 0,
+		EQ,			// EQ,
+		GT,			// LT,
+		GE,			// LE,
+		LE,			// GE,
+		LT,			// GT,
+		NO_COND,
+		NO_COND,
+		ANY_COND,	// ANY_COND = 8,
+		NE,			// NE,
+		UGT,		// ULT,
+		UGE,		// ULE,
+		ULE,		// UGE,
+		ULT			// UGT,
+	};
+	ASSERT(cond < MAX_COND);
+	return map[cond];
+	
+}
+
+
+/**
+ * If not already, make a condition unsigned.
+ * @param cond	Condition to transform.
+ * @return		Unsigned version of the condition.
+ */
+cond_t unsignedCond(cond_t cond) {
+	static cond_t map[] = {
+		NO_COND,	// NO_COND = 0,
+		EQ,			// EQ,
+		UGT,		// LT,
+		UGE,		// LE,
+		ULE,		// GE,
+		ULT,		// GT,
+		NO_COND,
+		NO_COND,
+		ANY_COND,	// ANY_COND = 8,
+		NE,			// NE,
+		UGT,		// ULT,
+		UGE,		// ULE,
+		ULE,		// UGE,
+		ULT			// UGT,
+	};
+	ASSERT(cond < MAX_COND);
+	return map[cond];	
+}
+
+
+/**
+ * If not already, make a condition signed.
+ * @param cond	Condition to transform.
+ * @return		Unsigned version of the condition.
+ */
+cond_t signedCond(cond_t cond) {
+	static cond_t map[] = {
+		NO_COND,	// NO_COND = 0,
+		EQ,			// EQ,
+		GT,			// LT,
+		GE,			// LE,
+		LE,			// GE,
+		LT,			// GT,
+		NO_COND,
+		NO_COND,
+		ANY_COND,	// ANY_COND = 8,
+		NE,			// NE,
+		GT,			// ULT,
+		GE,			// ULE,
+		LE,			// UGE,
+		LT			// UGT,
+	};
+	ASSERT(cond < MAX_COND);
+	return map[cond];	
+}
+
+
+/**
  * Test if a condition concerns signed numbers or not.
  * EQ and NE are considered to apply equally on signed and unsigned
  * numbers.

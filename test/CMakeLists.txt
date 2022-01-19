@@ -10,7 +10,7 @@ add_executable(test_MemorySet "test_MemorySet.cpp")
 target_link_libraries(test_MemorySet otawa ${LIBELM})
 
 add_subdirectory(ai)
-add_subdirectory(clp)
+#add_subdirectory(clp)
 add_subdirectory(props)
 add_subdirectory(reg)
 add_subdirectory(cfg)
