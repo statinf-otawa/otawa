@@ -371,9 +371,10 @@ public:
 
 protected:
 	inline Process *process(void) const { return _process; }
+    // FIXME temporal fix for derived class to get correct component index
+	void init();
 
 private:
-	void init();
 	string arch;
 	string model;
 	string builder;
