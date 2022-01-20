@@ -48,14 +48,14 @@ public:
 
 	void add(coef_t coef, ilp::Var *var = 0);
 	inline void sub(coef_t coef, ilp::Var *var = 0) { terms.add(Term(var, -coef)); }
-	inline void add(const Term& t) { add(t.snd, t.fst); }
-	inline void sub(const Term& t) { sub(t.snd, t.fst); }
 	void add(const Expression *expr, coef_t coef = 1);
 	void sub(const Expression *expr, coef_t coef = 1);
 	void mul(coef_t coef);
 	void div(coef_t coef);
 	void add(const Expression& e);
 	void sub(const Expression& e);
+	inline void add(const Term& t) { add(t.snd, t.fst); }
+	inline void sub(const Term& t) { add(t.snd, t.fst); }
 
 	double eval(System *sys);
 	void addRight(Constraint *c);
@@ -77,6 +77,14 @@ public:
 
 	inline void reset(void) { terms.clear(); }
 
+	inline Expression& operator+=(coef_t k) { add(k); return *this; }
+	inline Expression& operator+=(ilp::Var *x) { add(1., x); return *this; }
+	inline Expression& operator+=(const Term& t) { add(t); return *this; }
+	inline Expression& operator+=(const Expression& e) { add(e); return *this; }
+	inline Expression& operator-=(coef_t k) { sub(k); return *this; }
+	inline Expression& operator-=(ilp::Var *x) { sub(1., x); return *this; }
+	inline Expression& operator-=(const Term& t) { sub(t); return *this; }
+	inline Expression& operator-=(const Expression& e) { sub(e); return *this; }
 private:
 	List<Term> terms;
 };

@@ -55,8 +55,14 @@ namespace otawa { namespace ilp {
  * @param var	Variable of the term.
  */
 void Expression::add(coef_t coef, ilp::Var *var) {
-	if(!var || !var->toAlias())
+	if(var == nullptr || !var->toAlias()) {
+		for(auto i = terms.begin(); i != terms.end(); i++)
+			if((*i).fst == var) {
+				terms.set(i, Term(var, coef + (*i).snd));
+				return;
+			}
 		terms.add(Term(var, coef));
+	}
 	else
 		add(var->toAlias()->expression(), coef);
 }
