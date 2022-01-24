@@ -38,22 +38,20 @@
 #include <otawa/cfg/CFGCollector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfgio/features.h>
-#include <otawa/data/clp/features.h>
-#include <otawa/dynbranch/features.h>
 #include <otawa/flowfact/ContextualLoopBound.h>
 #include <otawa/flowfact/features.h>
 #include <otawa/otawa.h>
-#include <otawa/oslice/features.h>
 #include <otawa/proc/DynFeature.h>
 #include <otawa/proc/DynProcessor.h>
 #include <otawa/prop/DynIdentifier.h>
-#include "display_MultipleDotDisplayer.h"
-#include "display_MKFFDotDisplayer.h"
 #include <time.h>
 #include <otawa/cfgio/Output.h>
-#include "../../include/otawa/cfg/ContextTree.h"
-#include "../../include/otawa/display/CFGDecorator.h"
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/cfg/ContextTree.h>
+#include <otawa/display/CFGDecorator.h>
+#include <otawa/flowfact/FlowFactLoader.h>
+
+#include "display_MultipleDotDisplayer.h"
+#include "display_MKFFDotDisplayer.h"
 
 
 using namespace elm;
@@ -171,51 +169,6 @@ inline string nameOf(CFG *cfg) {
 		label = "\"" + label + "\"";
 	return label;
 }
-
-
-/**
- * Compute an address for an item, relative to the container CFG if
- * possible.
- * @param CFG		Container CFG.
- * @param address	Address of the item.
- * @param xml		Use XML output.
- * @return			String representing the address of the instruction in F4.
- */
-/*inline string addressOf(CFG *cfg, Address address, bool xml = false) {
-	string label = cfg->label();
-	if(!label) {
-		if(xml)
-			return _ << "address=\"0x" << address << "\"";
-		else
-			return _ << "0x" << address;
-	}
-	t::uint32 offset = address - cfg->address();
-	StringBuffer buf;
-	if(xml) {
-		buf << "label=\"" << label << "\" offset=\"";
-	}
-	else
-		buf << '"' << label << '"';
-	if(offset > 0)
-		buf << " + 0x" << io::hex(offset);
-	else
-		buf << " - 0x" << io::hex(-offset);
-	if(xml)
-		buf << "\"";
-	return buf.toString();
-}*/
-
-
-/**
- * Compute an address for an instruction, relative to the container CFG if
- * possible.
- * @param CFG	Container CFG.
- * @param inst	Instruction to get address of.
- * @return		String representing the address of the instruction in F4.
- */
-/*inline string addressOf(CFG *cfg, Inst *inst) {
-	return addressOf(cfg, inst->address());
-}*/
 
 
 /**
@@ -1445,19 +1398,6 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 
 		// Process loop
 		if(child->kind() == ContextTree::LOOP) {
-
-			/* for(int i = 0; i < indent; i++)
-				cout << "  ";
-			BasicBlock::InstIter inst(child->bb());
-			if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))
-				cout << "// loop " << addressOf(cfg, child->bb()->address()) << io::endl;
-			else
-				cout << "loop " << addressOf(cfg, child->bb()->address()) << " ?; // "
-					 << child->bb()->address() << io::endl;*/
-
-
-
-			// indent = 0 means the top level, prepare the context
 
 			if(contextual && indent == 0) {
 				Vector<Vector<SynthBlock*> > vv;
