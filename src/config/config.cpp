@@ -128,6 +128,7 @@ public:
 		analyzes		(SwitchOption::Make(*this).cmd("--analyzes")						.description("display all available analyzes")),
 		feature_deps	(SwitchOption::Make(*this).cmd("--feature-deps")					.description("output a feature depency graph (in GraphViz format)")),
 		verbose			(SwitchOption::Make(*this).cmd("--verbose").cmd("-V")				.description("provide details on the configuration process")),
+		cmake			(SwitchOption::Make(*this).cmd("--cmake")							.description("get the path of CMake module for OTAWA")),
 		locals			(ListOption<string>::Make(*this).cmd("-L").cmd("--local")			.description("path for local dependent plugin").argDescription("PATH"))
 	{
 	}
@@ -191,6 +192,10 @@ protected:
 		}
 		if(libdir) {
 			cout << getLibDir() << io::endl;
+			return;
+		}
+		if(cmake) {
+			cout << MANAGER.prefixPath() / "share" / "Otawa" / "cmake" / "Otawa.cmake" << io::endl;
 			return;
 		}
 
@@ -491,7 +496,8 @@ private:
 		rpath,
 		analyzes,
 		feature_deps,
-		verbose;
+		verbose,
+		cmake;
 	option::ListOption<string> locals;
 
 	elm::Vector<sys::Plugin *> plugs;
