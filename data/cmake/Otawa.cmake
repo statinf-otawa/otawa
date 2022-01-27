@@ -108,7 +108,7 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 		endif()
 
 		# set the targets
-		add_custom_target(autodoc COMMAND "${DOXYGEN}")
+		add_custom_target(autodoc ALL COMMAND "${DOXYGEN}")
 		install(DIRECTORY "autodoc" DESTINATION "${AUTODOC_INSTALL_DIR}/${_PLUGIN}-autodoc")
 	endif()
 endfunction()
