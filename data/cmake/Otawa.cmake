@@ -48,11 +48,13 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 		OUTPUT_VARIABLE OTAWA_PREFIX 	OUTPUT_STRIP_TRAILING_WHITESPACE)
 	execute_process(COMMAND "${OTAWA_CONFIG}" --plugdir
 		OUTPUT_VARIABLE OTAWA_PLUGDIR	OUTPUT_STRIP_TRAILING_WHITESPACE)
-	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${PLUGIN}" --cflags
+	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${_PLUGIN}" --cflags
 		OUTPUT_VARIABLE OTAWA_CFLAGS 	OUTPUT_STRIP_TRAILING_WHITESPACE)
-	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${PLUGIN}" --libs -r
+	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${_PLUGIN}" --libs -r
 		OUTPUT_VARIABLE OTAWA_LDFLAGS 	OUTPUT_STRIP_TRAILING_WHITESPACE)
+	message(STATUS "OTAWA_LDFLAGS=${OTAWA_LDFLAGS}")
 
+	
 	# export the configuration
 	set(OTAWA_PREFIX "${OTAWA_PREFIX}" PARENT_SCOPE)
 	set(OTAWA_PLUGDIR "${OTAWA_PLUGDIR}" PARENT_SCOPE)
@@ -61,12 +63,12 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 	set(OTAWA_INC_DIR "${OTAWA_PREFIX}/include" PARENT_SCOPE)
 	set(OTAWA_BIN_DIR "${OTAWA_PREFIX}/bin" PARENT_SCOPE)
 	set(OTAWA_LIB_DIR "${OTAWA_PREFIX}/lib" PARENT_SCOPE)
-		
+
 	# plugin definition
 	add_library				("${_PLUGIN}" MODULE ${_SOURCES})
 	set_property			(TARGET "${_PLUGIN}" PROPERTY PREFIX "")
 	set_property			(TARGET "${_PLUGIN}" PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
-	target_link_libraries	("${_PLUGIN}" "${TARGET_LIB}" "${OTAWA_LDFLAGS}")
+	target_link_libraries	("${_PLUGIN}" "${OTAWA_LDFLAGS}")
 
 	# installation
 	install(TARGETS		"${_PLUGIN}"		LIBRARY DESTINATION "${OTAWA_PLUGDIR}/${_NAMESPACE}")
