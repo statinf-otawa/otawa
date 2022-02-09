@@ -129,7 +129,10 @@ feature::~feature(void) {
  */
 void feature::process(WorkSpace *ws, const PropList& props) const {
 	Processor *p = _maker->make();
-	ASSERT(p);
+	if(p == nullptr)
+		throw MessageException(_
+			<< "no processor for require feature: "
+			<< name());
 	ws->run(p, props, true);
 }
 

@@ -79,10 +79,11 @@ public:
 		IS_PHONY  	= 3 << 2,
 		IS_CALL  	= 0x2 << 0,
 		MASK1 	 	= 0x3,
-		MASK12	 	= MASK1 | (0x3 << 2);
+		MASK2		= 0x3 << 2,
+		MASK12	 	= MASK1 | MASK2;
 
-	inline bool isEnd(void)   	const { return (_type & MASK1)  == IS_VIRTUAL; }
 	inline bool isVirtual(void)	const { return (_type & MASK1)  == IS_VIRTUAL; }
+	inline bool isEnd(void)   	const { return isEntry() || isExit(); }
 	inline bool isEntry(void) 	const { return (_type & MASK12) == (IS_VIRTUAL | IS_ENTRY); }
 	inline bool isExit(void)  	const { return (_type & MASK12) == (IS_VIRTUAL | IS_EXIT); }
 	inline bool isUnknown(void) const { return (_type & MASK12) == (IS_VIRTUAL | IS_UNKN); }

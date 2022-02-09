@@ -2,9 +2,11 @@
 
 import argparse
 import datetime
+import html
 import os.path
 import re
 import shutil
+import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
@@ -161,7 +163,9 @@ class Block(Data):
     
     def collect(self, id, val, addr, size):
         return 0
-    
+        
+    def contains(self, addr):
+        return False
 
 class BasicBlock(Block):
     
@@ -174,6 +178,9 @@ class BasicBlock(Block):
     def collect(self, id, val, addr, size):
         if self.base <= addr and addr < self.base + self.size:
             self.add_val(id, val)
+
+    def contains(self, addr):
+        return self.base <= addr and addr < self.base + self.size
 
 
 class CallBlock(Block):
@@ -195,7 +202,7 @@ class Edge(Data):
 
 class CFG:
     
-    def __init__(self, id, label, ctx):
+    def __init__(self, id, label, ctx, addr):
         self.id = id
         self.label = label
         self.ctx = ctx
@@ -203,7 +210,8 @@ class CFG:
         self.entry = None
         self.exit = None
         self.data = { }
-    
+        self.addr = addr
+
     def add(self, block):
         self.verts.append(block)
 
@@ -211,7 +219,34 @@ class CFG:
         if ctx == self.ctx:
             for b in self.verts:
                 b.collect(id, val, addr, size)
-        
+
+    def get_block_at(self, addr):
+        for v in self.verts:
+            if v.contains(addr):
+                return v
+        return None
+
+    def get_context(self):
+        res = []
+        g = None
+        for comp in self.ctx[1:-1].split(","):
+            comp = comp.strip()
+            if comp.startswith("FUN("):
+                addr = int(comp[4:-1], 16)
+                g = self.task.get_cfg_at(addr)
+                if g == None:
+                    return self.ctx
+                res.append(g.label)
+            elif comp.startswith("CALL("):
+                if g == None:
+                    return self.ctx
+                addr = int(comp[5:-1], 16)
+                v = g.get_block_at(addr)
+                if v == None:
+                    return self.ctx
+                res.append("BB %s" % v.id[v.id.find("-") + 1:])
+        return " / ".join(res)
+
 
 class Task:
     
@@ -224,11 +259,18 @@ class Task:
     def add(self, cfg):
         if self.entry == None:
             self.entry = cfg
-        cfgs.append(cfg)
-    
+        self.cfgs.append(cfg)
+        cfg.task = self
+
     def collect(self, id, val, addr, size, ctx):
         for g in self.cfgs:
             g.collect(id, val, addr, size, ctx)
+
+    def get_cfg_at(self, addr):
+        for g in self.cfgs:
+            if addr == g.addr:
+                return g
+        return None
 
 
 class Decorator:
@@ -284,8 +326,9 @@ def read_cfg(path):
 						pass
             
 			# build the CFG
-			cfg = CFG(id, n.attrib["label"], ctx)
-			task.cfgs.append(cfg)
+			addr = int(n.attrib["address"][2:], 16)
+			cfg = CFG(id, n.attrib["label"], ctx, addr)
+			task.add(cfg)
 			cfg_map[id] = cfg
 			cfg.node = n
         
@@ -335,7 +378,7 @@ def read_cfg(path):
 def norm(name):
     return name.replace("-", "_")
 
-def output_CFG(path, task, decorator, with_source = False):
+def output_CFG(path, task, decorator, with_source = False, svg = False):
     
     # make directory
     dir = os.path.join(path, "%s-cfg" % decorator.major())
@@ -349,10 +392,11 @@ def output_CFG(path, task, decorator, with_source = False):
 
         # open file
         if fst:
-            name = "index.dot"
+            root = "index"
             fst = False
         else:
-            name = cfg.id + ".dot"
+            root = cfg.id
+        name = root + ".dot"
         out = open(os.path.join(dir, name), "w")
         decorator.start_cfg(cfg)
 
@@ -365,10 +409,10 @@ def output_CFG(path, task, decorator, with_source = False):
             elif b.type == BLOCK_EXIT:
                 out.write("label=\"exit\"")
             elif b.type == BLOCK_CALL:
-                out.write("URL=\"%s.dot\",label=\"call %s\",shape=\"box\"" % (b.callee.id, b.callee.label))
+                out.write("URL=\"%s.svg\",label=\"call %s\",shape=\"box\"" % (b.callee.id, b.callee.label))
             else:
                 num = b.id[b.id.find("-") + 1:]
-                out.write("margin=0,shape=\"box\",label=<<table border='0' cellpadding='8px'><tr><td>BB %s (%s:%s)</td></tr><hr/><tr><td align='left'>" % (num, b.base, b.size))
+                out.write("margin=0,shape=\"box\",label=<<table border='0' cellpadding='8px'><tr><td>BB %s (%s:%s)</td></tr><hr/><tr><td align='left'>" % (num, hex(b.base), b.size))
                 if with_source:
                     decorator.bb_source(b, out)
                     out.write("</td></tr><hr/><tr><td>")
@@ -379,7 +423,10 @@ def output_CFG(path, task, decorator, with_source = False):
         for b in cfg.verts:
             for e in b.next:
                 out.write("\t%s -> %s;\n" % (norm(e.src.id), norm(e.snk.id)))
-        out.write("label=<CFG: %s %s<br/>colorized by %s<br/>" % (cfg.label, cfg.ctx, decorator.major()))
+        ctx = cfg.get_context()
+        if ctx != "":
+            ctx = " (called by %s)" % ctx
+        out.write("label=<CFG: %s%s<br/>colorized by %s<br/>" % (cfg.label, ctx, decorator.major()))
         decorator.cfg_label(cfg, out)
         out.write("<BR/><I>Generated by otawa-stat.py (%s).</I><BR/><I>OTAWA framework - copyright (c) 2019, University of Toulouse</I>" % datetime.datetime.today())
         out.write(">;\n}")
@@ -387,6 +434,11 @@ def output_CFG(path, task, decorator, with_source = False):
         # close file
         decorator.end_cfg(cfg)
         out.close()
+
+        # generate SVG
+        if svg:
+            path = os.path.join(dir, root)
+            subprocess.run("dot -T svg %s.dot -o %s.svg" % (path, path), shell=True)
 
 
 def read_stat(dir, task, stat):
@@ -434,7 +486,8 @@ class BaseDecorator(Decorator):
 				t = self.sman.get_line(f, l)
 				if t == None:
 					t = ""
-				out.write("%s:%d: %s<br align='left'/>" % (f, l, escape_html(t)))
+				out.write("%s:%d: %s<br align='left'/>" % (f, l, html.escape(t)))
+				#out.write("%s:%d: %s<br align='left'/>" % (f, l, t))
     
 	def bb_label(self, bb, out):
 		for id in self.stats:
@@ -721,6 +774,7 @@ parser.add_argument('stats', nargs='*', type=str, help="statistics to display")
 parser.add_argument('--color-stat', '-s', action="store", help="statistics used to color the output")
 parser.add_argument('--source', '-S', action="store_true", help="output sources colored according to statistics")
 parser.add_argument('--cfg', '-G', action="store_true", help="output CFG colored according to statistics")
+parser.add_argument('--svg', action="store_true", help="output CFG as SVG")
 args = parser.parse_args()
 task = args.task
 dir = args.task + "-otawa"
@@ -768,7 +822,7 @@ else:
 	# output the CFG
 	if args.cfg:
 		for s in stats:
-			output_CFG(dir, task, decorator(s, task, stats), args.source)
+			output_CFG(dir, task, decorator(s, task, stats), args.source, args.svg)
 	
 	# output the sources
 	else:

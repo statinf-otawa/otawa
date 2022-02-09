@@ -41,8 +41,9 @@ public:
 		out(option::ValueOption<string>::Make(*this).cmd("-o").cmd("--out").description("select output file").argDescription("PATH")),
 		no_insts(option::Switch::Make(*this).cmd("-I").cmd("--no-insts").description("do not include instructions in output")),
 		dot(option::Switch::Make(*this).cmd("-D").cmd("--dot").description("select .dot output")),
-		phony(option::Switch::Make(*this).cmd("-P").cmd("--phony").description("do not perform any output")),
+		xml(option::Switch::Make(*this).cmd("-X").cmd("--xml").description("dump the CFG result in XML")),
 		timed(option::Switch::Make(*this).cmd("-T").cmd("--timed").description("display the run time of each require: or process:")),
+		cfg(option::Switch::Make(*this).cmd("-G").cmd("--cfg").description("output the CFG after the application of requirements and processings.")),
 		view(option::ValueOption<string>::Make(*this).cmd("-V").cmd("--view").description("display the given view").argDescription("view"))
 	{
 	}
@@ -104,32 +105,26 @@ protected:
 		if(!workspace()->isProvided(COLLECTED_CFG_FEATURE))
 			workspace()->require(COLLECTED_CFG_FEATURE, props);
 
-		// if enabled, perform output
-		if(!phony) {
-
-			// XML output
-			if(!dot) {
-				if(out)
-					cfgio::OUTPUT(props) = *out;
-				workspace()->run<cfgio::Output>(props);
-			}
-
-			// DOT output
-			else {
-				if(out)
-					display::CFGOutput::PATH(props) = *out;
-				if(view != "") {
-					otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
-					if(v == nullptr) {
-						cerr << "ERROR: cannot find view " << *view << io::endl;
-						return;
-					}
-					display::CFGOutput::VIEW(props) = v;
-				}
-				display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-				workspace()->run<display::CFGOutput>(props);
-			}
+		// XML output
+		if(xml) {
+			if(out)
+				cfgio::OUTPUT(props) = *out;
+			workspace()->run<cfgio::Output>(props);
 		}
+
+		// DOT output
+		if(out)
+			display::CFGOutput::PATH(props) = *out;
+		if(view != "") {
+			otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
+			if(v == nullptr) {
+				cerr << "ERROR: cannot find view " << *view << io::endl;
+				return;
+			}
+			display::CFGOutput::VIEW(props) = v;
+		}
+		display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+		workspace()->run<display::CFGOutput>(props);
 		completeTask();
 	}
 
@@ -149,7 +144,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot, phony, timed;
+	option::Switch dot, xml, timed;
 	option::ValueOption<string> view;
 	CleanList clean;
 };
