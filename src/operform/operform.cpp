@@ -124,6 +124,7 @@ protected:
 			display::CFGOutput::VIEW(props) = v;
 		}
 		display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+        display::CFGOutput::ASSEMBLY(props) = true;
 		workspace()->run<display::CFGOutput>(props);
 		completeTask();
 	}
@@ -144,7 +145,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot, xml, timed;
+	option::Switch dot, xml, timed, cfg;
 	option::ValueOption<string> view;
 	CleanList clean;
 };
