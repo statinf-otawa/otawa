@@ -97,6 +97,8 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 		// record new ranking
 		auto v = wl.get();
+        if (logFor(LOG_BB))
+            log << "\tworking on " << v << io::endl;
 		int r = RANK_OF(v);
 		if(logFor(LOG_INST))
 			log << "\trank(" << r << ") for " << v << " (" << v->cfg() << ")\n";
@@ -133,6 +135,12 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 			// back edge propagate to exit edges
 			else if(BACK_EDGE(e)) {
+                if (EXIT_LIST(e->sink())== nullptr){
+                    String err_msg = _ << "BackEdge: "
+                            << e->source()->address() << "->" << e->sink()->address()
+                            << " EXIT_LIST prop is not correctly set, check LoopInfoBuilder" << io::endl;
+                    throw ProcessorException(*this, err_msg);
+                }
 				for(auto xe: **EXIT_LIST(e->sink()))
 					backs.push(xe);
 				while(backs) {
