@@ -49,42 +49,9 @@ public:
 		return v;
 	}
 
-protected:
+private:
 	ListQueue<Block *> q;
 	BitVector in;
-};
-
-class DFSWorkList{
-public:
-    inline DFSWorkList(const CFGCollection *coll): in(coll->countBlocks()) { }
-
-    inline bool isEmpty() const { return q.isEmpty(); }
-    inline operator bool() const { return !isEmpty(); }
-
-    inline void put(Block *v) {
-        if(!in.bit(v->id())) {
-            q.push(v);
-            in.set(v->id());
-        }
-    }
-
-    inline Block *get() {
-        ASSERT(!q.isEmpty());
-        auto v = q.last();
-        q.removeLast();
-        in.clear(v->id());
-        return v;
-    }
-
-    void putReturnBlock(Block* v) {
-        if (!in.bit(v->id())) {
-            q.addFirst(v);
-            in.set(v->id());
-        }
-    }
-protected:
-    Vector<Block *> q;
-    BitVector in;
 };
 
 } }		// otawa::ai

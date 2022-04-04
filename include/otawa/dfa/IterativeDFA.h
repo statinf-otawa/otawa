@@ -170,7 +170,7 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 		int idx = bb->index();
 		ASSERT(idx >= 0);
 		present.clear(idx);
-		OTAWA_IDFA_TRACE("DFA: processing " << bb);
+		OTAWA_IDFA_TRACE("DFA: processing BB" << idx);
 
 		// IN = union OUT of predecessors
 		prob.reset(ins[idx]);
@@ -179,8 +179,6 @@ inline void IterativeDFA<Problem, Set, G, Iter>::compute(void) {
 			int pred_idx = bb_pred->index();
 			ASSERT(pred_idx >= 0);
 			prob.merge(ins[idx], outs[pred_idx]);
-            String msg = _ << "\tPRED " << bb_pred << ":";
-            OTAWA_IDFA_DUMP(msg, outs[pred_idx]);
 		}
 
 		// OUT = IN \ KILL U GEN

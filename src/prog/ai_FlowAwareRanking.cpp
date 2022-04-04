@@ -88,29 +88,26 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 	Vector<Edge *> backs;
 	const CFGCollection *coll = INVOLVED_CFGS(ws);
 	ASSERT(coll);
-	DFSWorkList wl(coll);
+	SimpleWorkList wl(coll);
 	wl.put(coll->entry()->entry());
 	RANK_OF(coll->entry()->entry()) = 0;
 
 	// proceed until the work list is exhausted
 	while(wl) {
 
-        // DEBUG
 		// record new ranking
 		auto v = wl.get();
+        if (logFor(LOG_BB))
+            log << "\tworking on " << v << io::endl;
 		int r = RANK_OF(v);
-		if(logFor(LOG_INST)) {
-            log << "\trank(" << r << ") for " << v << "[" << v->id() << "]" << " (" << v->cfg() << ": "
-                << v->cfg()->index() << ")" << io::endl;
-        }
+		if(logFor(LOG_INST))
+			log << "\trank(" << r << ") for " << v << " (" << v->cfg() << ")\n";
 		r++;
 
 		// propagate to subprogram call
 		if(v->isSynth() && v->toSynth()->callee() != nullptr) {
 			auto ev = v->toSynth()->callee()->entry();
 			if(!RANK_OF(ev).exists() && r > RANK_OF(ev)) {
-                // DEBUG
-                log <<  "\tSubCall " << ev << "[" << ev->id() << "],  RANK:" << RANK_OF(ev) << "->" << r << io::endl;
 				RANK_OF(ev) = r;
 				wl.put(ev);
 				continue;
@@ -123,10 +120,8 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 				if(!RECURSE_BACK(c))
 					for(auto e = c->outs(); e(); e++)
 						if(r > RANK_OF(e->sink())) {
-                            // DEBUG
-                            log <<  "\tSubReturn" << e->sink() << "[" << e->sink()->id() << "],  RANK:" << RANK_OF(e->sink()) << "->" << r << io::endl;
 							RANK_OF(e->sink()) = r;
-							wl.putReturnBlock(e->sink());
+							wl.put(e->sink());
 						}
 			continue;
 		}
@@ -148,12 +143,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
                 }
 				for(auto xe: **EXIT_LIST(e->sink()))
 					backs.push(xe);
-                // DEBUG
-                log << "\t\tEXIT LIST=" << io::endl;
-                for (const auto& back: backs){
-                    log << back->source()->address() << "->" << back->sink()->address();
-                }
-                log << io::endl;
 				while(backs) {
 					auto ce = backs.pop();
 					if(BACK_EDGE(ce))
@@ -161,8 +150,6 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 							backs.push(xe);
 					else
 						if(r > RANK_OF(ce->sink())) {
-                            // DEBUG
-                            log <<  "\tSUCC Propagating " << ce->sink() << "[" << ce->sink()->id() << "],  RANK:" << RANK_OF(ce->sink()) << "->" << r << io::endl;
 							RANK_OF(ce->sink()) = r;
 							wl.put(ce->sink());
 						}
@@ -171,9 +158,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 
 			// simple case
 			else if(r > RANK_OF(e->sink())) {
-                // DEBUG
-                log <<  "\tUpdating " << e->sink() << "[" << e->sink()->id() << "],  RANK:" << RANK_OF(e->sink()) << "->" << r << io::endl;
-                RANK_OF(e->sink()) = r;
+				RANK_OF(e->sink()) = r;
 				wl.put(e->sink());
 			}
 	}
