@@ -328,6 +328,9 @@ void ConditionalRestructurer::split(Block *b) {
 		return;
 	}
 
+	if(!b->isBasic())
+		return;
+
 	// split the block
 	RegSet wr;
 	BasicBlock *bb = b->toBasic();

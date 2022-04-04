@@ -24,7 +24,7 @@
 #include <otawa/cfg/Dominance.h>
 #include <otawa/cfg/features.h>
 #include <otawa/dfa/BitSet.h>
-//#define OTAWA_IDFA_DEBUG
+#define OTAWA_IDFA_DEBUG
 #include <otawa/dfa/IterativeDFA.h>
 #include <otawa/proc/BBProcessor.h>
 #include <otawa/prog/WorkSpace.h>
