@@ -127,8 +127,6 @@ protected:
 			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
 			workspace()->run<display::CFGOutput>(props);			
 		}
-		
-		// complete all
 		completeTask();
 	}
 

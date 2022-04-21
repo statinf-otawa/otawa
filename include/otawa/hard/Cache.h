@@ -123,8 +123,15 @@ public:
 	inline block_t block(Address addr) const { return ot::mask(addr.offset()) >> blockBits(); }
 	inline Address round(Address addr) const
 		{ if(addr.isNull()) return addr; else return Address(addr.page(), addr.offset() & ~(blockSize() - 1)); }
-	inline int countBlocks(Address l, Address h) const
-		{ return block(h) - block(l) + 1; }
+    /**
+     * Count the number of blocks from l to h
+     * its possible that l is at higher address and hence
+     * go though 0x0
+     */
+	inline unsigned countBlocks(Address l, Address h) const
+		{ l = block(round(l)); h = block(round(h));
+        if (h >= l) return h - l;
+        else return cacheSize()- (l - h); }
 	
 	// Modifiers
 	void setAccessTime(int access_time);

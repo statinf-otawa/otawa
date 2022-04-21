@@ -377,10 +377,12 @@ void LoopInfoBuilder::processCFG(otawa::WorkSpace* fw, otawa::CFG* cfg) {
 	for (CFG::BlockIter bb = cfg->blocks(); bb(); bb++) {
 
 		// compute loop entry
-		if(LOOP_HEADER(*bb))
-			for(auto e: bb->inEdges())
-				if(!BACK_EDGE(e))
-					LOOP_ENTRY(e) = *bb;
+		if(LOOP_HEADER(*bb)) {
+            EXIT_LIST(*bb) = new elm::Vector<Edge*>();
+            for (auto e: bb->inEdges())
+                if (!BACK_EDGE(e))
+                    LOOP_ENTRY(e) = *bb;
+        }
 
 		// process block in loops
 		if (ENCLOSING_LOOP_HEADER(*bb) || LOOP_HEADER(*bb))
