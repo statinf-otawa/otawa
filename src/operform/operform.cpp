@@ -113,18 +113,22 @@ protected:
 		}
 
 		// DOT output
-		if(out)
-			display::CFGOutput::PATH(props) = *out;
-		if(view != "") {
-			otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
-			if(v == nullptr) {
-				cerr << "ERROR: cannot find view " << *view << io::endl;
-				return;
+		if(dot) {
+			if(out)
+				display::CFGOutput::PATH(props) = *out;
+			if(view != "") {
+				otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
+				if(v == nullptr) {
+					cerr << "ERROR: cannot find view " << *view << io::endl;
+					return;
+				}
+				display::CFGOutput::VIEW(props) = v;
 			}
-			display::CFGOutput::VIEW(props) = v;
+			display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
+			workspace()->run<display::CFGOutput>(props);			
 		}
-		display::CFGOutput::KIND(props) = display::OUTPUT_DOT;
-		workspace()->run<display::CFGOutput>(props);
+		
+		// complete all
 		completeTask();
 	}
 
@@ -144,7 +148,7 @@ private:
 	option::ListOption<string> ids;
 	option::ValueOption<string> out;
 	option::Switch no_insts;
-	option::Switch dot, xml, timed;
+	option::Switch dot, xml, timed, cfg;
 	option::ValueOption<string> view;
 	CleanList clean;
 };

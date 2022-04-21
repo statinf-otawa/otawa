@@ -154,7 +154,7 @@ protected:
 						RECURSE_BACK(e) = true;
 						RECURSE_BACK(e->call()) = true;
 						if(logFor(LOG_CFG))
-							log << "\t\t" << e << " is back\n";
+							log << "\t\t" << e << " is back (" << e->call() << ")\n";
 					}
 					else {
 						RECURSE_ENTRY(e) = true;
@@ -235,7 +235,7 @@ p::id<PCG *> PROGRAM_CALL_GRAPH("otawa::PROGRAM_CALL_GRAPH", 0);
  *
  * @par Properties
  *	* otawa::RECURSE_HEAD
- *	* otawa::RECUSE_ENTRY
+ *	* otawa::RECURSE_ENTRY
  *	* otawa::RECURSE_BACK
  *
  * @par Implementations

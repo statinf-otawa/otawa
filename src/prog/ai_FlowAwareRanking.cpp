@@ -105,7 +105,7 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 		// propagate to subprogram call
 		if(v->isSynth() && v->toSynth()->callee() != nullptr) {
 			auto ev = v->toSynth()->callee()->entry();
-			if(!RANK_OF(ev).exists() && r > RANK_OF(ev)) {
+			if(!RANK_OF(ev).exists() || r > RANK_OF(ev)) {
 				RANK_OF(ev) = r;
 				wl.put(ev);
 				continue;
@@ -116,11 +116,12 @@ void FlowAwareRanking::processWorkSpace(WorkSpace *ws) {
 		else if(v->isExit()) {
 			for(auto c: v->cfg()->callers())
 				if(!RECURSE_BACK(c))
-					for(auto e = c->outs(); e(); e++)
-						if(r > RANK_OF(e->sink())) {
+					for(auto e = c->outs(); e(); e++) {
+						if(!RANK_OF(e->sink()).exists()) {
 							RANK_OF(e->sink()) = r;
 							wl.put(e->sink());
 						}
+					}
 			continue;
 		}
 
