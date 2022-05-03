@@ -3,6 +3,7 @@
 
 #define OTAWA_VERSION	"@OTAWA_VERSION@"
 #define OTAWA_DATE		"@OTAWA_DATE@"
+#define OTAWA_TAG		"@OTAWA_TAG@"
 #define DOT				"@DOT@"
 #cmakedefine XDOT_ENABLED
 #cmakedefine SYSTEM_VIEW_ENABLED

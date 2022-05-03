@@ -1,28 +1,28 @@
-To compile and install OTAWA, follow directives of INSTALL file.
+To compile and install **OTAWA**, follow directives of [README.md](file:README.md).
 
-===== INSTALL_TYPE =====
-Installation of OTAWA may also be customized passing INSTALL_TYPE to CMake invocation
-(or modifying in CMakeCache.txt). INSTALL_TYPE contains a comma-separated combination
+# INSTALL_TYPE
+Installation of **OTAWA** may also be customized passing `INSTALL_TYPE` to CMake invocation
+(or modifying in `CMakeCache.txt`). `INSTALL_TYPE` contains a comma-separated combination
 of:
-  * ''lib'' to install libraries and data files,
-  * ''bin'' to install commands,
-  * ''inc'' to install development files like includes,
-  * ''doc'' to build and install automatic documentation.
+  * `lib` to install libraries and data files,
+  * `bin` to install commands,
+  * `inc` to install development files like includes,
+  * `doc` to build and install automatic documentation.
 
 
-===== Testing =====
+# Testing
 
-To enable the compilation of testing code, run CMake with variable OTAWA_RUN set to yes:
-<code sh>
+To enable the compilation of testing code, run CMake with variable `OTAWA_TEST` set to yes:
+```bash
 cmake . -DOTAWA_TEST=yes
-</code>
+```
 
 
-===== Source Formatting =====
+# Source Formatting
 
-The source format used in OTAWA is very close to usual C++ source formatting.
+The source format used in **OTAWA** is very close to usual C++ source formatting.
 
-==== Identifiers ====
+## Identifiers
 
 The identifiers must match the following rules:
   * Class identifiers are composed of joined words starting with an upper case and continued
@@ -30,29 +30,29 @@ with lower case (eg BasicBlock)
   * Function identifiers are in lower case but, if they are composed of several words, all
 words except the first one starts with an upper case and they are join as is (eg loadWorkspace). 
   * Name space, parameters and local variable identifiers are low case and if they contains
-several words, are separated by ''_''.
+several words, are separated by `_`.
   * Member variables or attributes follows the same rules as name spaces, parameters and
-variables but are prefixed by ''_''.
-  * Accessors of a member variable ''_x'' are named ''x'' and x must match the rule
+variables but are prefixed by `_`.
+  * Accessors of a member variable `_x` are named  `x` and _x_ must match the rule
 of methods or member functions.
-  * Setters of a member variable ''_x''are named ''setX'' and X must match the rule
+  * Setters of a member variable `_x`are named `setX` and _X_ must match the rule
 of method or member functions.
   * Local variables or member variables, not aimed to be read by the class use, must
 be as short as possible (typically 1 character or most often no more than 4 characters).
   * For other identifier, try to keep them short but readable.
-  * Except for some type name suffixed by ''_t'', no other type mark is accepted on the
+  * Except for some type name suffixed by `_t`, no other type mark is accepted on the
 identifiers.
 
 
-==== Files ====
+## Files
 
-**The indentation is made using 1 tabulation that must be configured, in your preferred
-text editor, to represent 4 spaces! Lines must be no longer than 80 characters!**
+	The indentation is made using 1 tabulation that must be configured, in your preferred
+	text editor, to represent 4 spaces! Lines must be no longer than 80 characters!
 
-Any header file for a class //Class// defined in namespace //module// must be
-declared in a header file with path include/otawa/module/Class.h with the
+Any header file for a class _Class_ defined in namespace _module_ must be
+declared in a header file with path `include/otawa/module/Class.h` with the
 following format:
-<code c++>
+```C++
 /*
  *	Class interface
  *
@@ -83,11 +83,11 @@ namespace otawa { namespace module {
 } }	// otawa::module
 
 #endif	// OTAWA_MODULE_CLASS_H
-</code> 
+```
 
 Whatever the type of the class (template or not), a source file must exist
 with name Class.cpp following the format:
-<code c++>
+```C++
 /*
  *	Class implementation
  *
@@ -114,24 +114,24 @@ namespace otawa { namespace module {
 ...
 
 } }	// otawa::module
-</code>
+```
 
-==== Class Declaration ====
+## Class Declaration
 
-A class is declared as usual in C++ keeping the ''class'' declaration and
+A class is declared as usual in C++ keeping the `class` declaration and
 the extension as much possible on the same line. Then comes the different
 parts of the class:
   * list of friends if any
   * list of private types if any
-  * ''public:'' keyword
+  * `public:` keyword
   * list of public types if any
-  * constructor / destructors
+  * constructor/destructors
   * function members (static or not)
-  * ''private:'' keyword
+  * `private:` keyword
   * private variable members
   * private function members
 
-After the class, an overload of operators ''<<'' or ''>>'' can be provided.
+After the class, an overload of operators `<<` or `>>` can be provided.
 
 For evolution purpose, it is advised to declare member function as private.
 In most cases, getter and setters are easy to write and may prevent break
@@ -143,53 +143,53 @@ Except for template classes, the body if an inline function must be no longer
 than 1 line.
 
 
-==== Statement Writing ====
+## Statement Writing
 
 The goal of the following is to make the code as readable as possible and
 therefore as shorter and light as possible.
 
-**Braces, ''{'' or ''}'', must be avoided as much as possible because (a) they make
-longer the code and (b) they may obfuscate the reading.**
+	Braces, ``{`` or ``}``, must be avoided as much as possible because (a) they make
+	longer the code and (b) they may obfuscate the reading.
 
-**Only 1 statement per line is accepted.**
+	Only 1 statement per line is accepted.
 
-Simple ''if(c) s;'' instructions must be formatted as:
-<code c++>
+Simple `if`(_c_) _s_; instructions must be formatted as:
+```C++
 if(c)
 	s;
-</code>  
+```
 
-''if'' with ''else'' must be written:
-<code c++>
+`if` with `else` must be written:
+```C++
 if(c)
 	s1;
 else
 	s2;
-</code>
+```
 
 Other complex statement can be written:
-<code c++>
+```C++
 while(c)
 	s;
 
 do
 	s;
 while(c);
-</code>
+```
 
 If a sub-statement is composed, requiring the use of braces, the open brace
-starts on the ''if''/''while''/''do'' line. The content of the braces is
+starts on the `if`/`while`/`do` line. The content of the braces is
 indented and the closing brace is on the next not-indented line.
-<code c++>
+```C++
 if(c) {
 	s1;
 	s2;
 	...
 }
-</code>
+```
 
 The switch must match the following format:
-<code c++>
+```C++
 switch(c) {
 case c1:
 	...
@@ -199,19 +199,19 @@ case c2:
 	break;
 ...
 }
-</code>
+```
 
 If the statements of a case is very short, a one line case is also accepted:
-<code c++>
+```C++
 switch(c) {
 case c1: ...; break;
 case c2: ...; break;
 ...
 }
-</code>
+```
 
-''return'', ''break'' and ''continue'' are permitted as they make simpler the main flow
-of the algorithm. The ''goto'' may be permitted in ''switch'' in order to
+`return`, `break` and `continue` are permitted as they make simpler the main flow
+of the algorithm. The `goto` may be permitted in `switch` in order to
 factorize come code parts.
 
 It is a good idea to structure the code in block prefixed by a line of comments
@@ -219,72 +219,74 @@ explaining the block. Formulae in UTF-8 are allowed and even encouraged as
 they may play the role of assertions and avoid long explanations. 
 
 The functions must very shorts: typically 10-15 lines shorts. The only exception
-concerns very long ''switch'' where each case is mostly independent.  
+concerns very long `switch` where each case is mostly independent.
 
 
 
-==== Expression Writing ====
+## Expression Writing
 
 The expressions syntax must follow the usual English typography:
   * no space between unary operators and their argument,
   * 1 space between binary or ternary operator and their arguments,
-  * no space after ''('' or ''['' or before '']'' or '')'',
-  * no space before a '','' but 1 space after a '',''.
+  * no space after `(` or `[` or before `]` or `)`,
+  * no space before a `,` but 1 space after a `,`.
 
 When a function call is too long to fit a line width, a new line must be inserted
 after the call open parenthesis and the arguments are written on the next line,
-one argument per line followed by a '','' or the closing '')''.
+one argument per line followed by a `,` or the closing `)`.
 
 
-==== C++ Idiom ====
+## C++ Idiom
 
-''#define'' must be avoided as much as possible: use ''const'' variable instead.
+`#define` must be avoided as much as possible: use `const` variable instead.
 
 If available, prefer an ELM class instead of an STL class.
 
-Ternary operator, ... '?' ... ':' ..., must be avoided as they make the syntax
+Ternary operator, ... `?` ... `:` ..., must be avoided as they make the syntax
 very obscure.
 
 An overloaded virtual member function must be suffixed by ''override''.
 
-The use of ellipsis parameter ''...'' is forbidden. Operator ''<<'' overloading
-a good idea to maintain typing, safety and genericity.
+The use of ellipsis parameter `...` is forbidden. Operator `<<` overloading
+is a good idea to maintain typing, safety and genericity.
 
-Avoid ''this->'' notation (not required).
+Avoid `this->` notation as much as possible (not required).
 
-==== Source Documentation ====
 
-The source documentation is only done in source, ''.cpp'', files and is supported
+# Source Documentation
+
+The source documentation is only done in source, `.cpp`, files and is supported
 by Doxygen. Refer to  for tag details.
 
 A class named Class is documented as follows:
-<code c++>
+```C++
 /**
  * @class Class
  * ...
  */
-</code>
+```
 
 A member function is documented as before the definition of the function.
 
-A inline function named //type Class:fun(...)// is documented by:
-<code c++>
+A inline function named _type_ _Class_::_fun_(...) is documented by:
+```C++
 /**
  * @fn type Class:fun(...);
  * ...
  */
-</code>
+```
+
 
 Private variables are usually not documented.
 
 
-==== Formatted documentation ====
+## Formatted documentation
 
 Doxygen uses the Markdown wiki-notation to format text.
 A non-exhaustive list of the tags is given below:
   * \n to create a new paragraph,
-  * title \n ==== or # title # to create a section
-  * title \n ---- or ## title ## to create a new section
+  * title \n ==== or # title to create a section
+  * title \n ---- or ## title to create a new section
   * > text to create a blockquote
   * */+/- text for a bulleted list
   * 1. text for a numbered list
@@ -301,7 +303,7 @@ A non-exhaustive list of the tags is given below:
 
 
   
-===== PARALLEL OTAWA =====
+# PARALLEL OTAWA
 
 The development of multi-cores provides an utterly important sources of computation power
 but the price is the adoption of parallel way of programming. Unfortunately, this means
@@ -311,7 +313,7 @@ that may possibly waste lot of computation power or memory space. In OTAWA, we w
 a lock-free approach as much as possible whose principles will be described here.
 
 
-==== Principles ====
+## Principles
 
 The main parallelization problems concerns the property lists that are the main storage
 of information for analyzes.
@@ -343,9 +345,10 @@ disturbed by any change to the properties.
  to implement an analyzes unless an external synchronization facility is provided.
  
  
- ==== Lock-free Property Lists ====
+## Lock-free Property Lists
  
- Only the owner can modify the property list. A property list has the following structure:
+Only the owner can modify the property list. A property list has the following structure:
+```C++
  	template <class T>
  	class Property {
  		Property *next;
@@ -354,21 +357,24 @@ disturbed by any change to the properties.
  	class PropertyList {
  		Property *head;
  	};
+```
 
 As described below, property will implement read-copy-update (RCU) approach
 with the owner of the property list being the lonely updater.
  
- Adding a list must be done in an atomic way, set of a pointer and, therefore,
- must be done by inserting a property at the header (the faster way) or at the
- end. This way, a reader may or may not show the property at insertion time
- but this behavior is compliant with P7.
- 
+Adding a list must be done in an atomic way, set of a pointer and, therefore,
+must be done by inserting a property at the header (the faster way) or at the
+end. This way, a reader may or may not show the property at insertion time
+but this behavior is compliant with P7.
+
+```C++
  	void addProp(PropertList *props, Property *prop) {
  		prop->next = props->header;
- 		// property list is not modified by the owner thread is the only modifier
+ 		// property list is not modified by the owner thread that is the only modifier
  		props->head = prop;
- 		// atomic modification of the list: new list includes now new property and old propertis
+ 		// atomic modification of the list: new list includes now new property and old properties
  	}
+```
  
  Changing an existing value must be done an atomic way. That is the value in Property must be of type
  T for basic types and T* for non-basic type. Whatever the case, this will be assure atomic change
@@ -378,7 +384,8 @@ The deletion is trickier because a reader may be reading the removed property at
 The main ideas will be (a) to change the pointer of next of the previous property in an atomic way
 and (b) to preserve the removed property until all reader has left the property. This last action
 is maybe the more complex one: when could we be sure that there is no more reader on a particular
-property? [[https://www.efficios.com/pub/rcu/urcu-supp.pdf]]
+property?
+https://www.efficios.com/pub/rcu/urcu-supp.pdf.
 
   * When a synthetic method is used (get, set, remove, add), we now that the traversal will be
   short in time (less than 1 second for example and we can have a list of delayed properties
@@ -387,13 +394,15 @@ property? [[https://www.efficios.com/pub/rcu/urcu-supp.pdf]]
   * Property iterators make things more complex. In parallel analyzes, iterators should be
   replaced by collector methods that will fill a data structures with properties matching a
   specific identifier ensuring the read of the property list to be short in time.
-  	template <class T>
-  	void collect(AbstractIdentifier& id, genstruct::Vector<T>& data); 
+```C++
+  template <class T>
+  	void collect(AbstractIdentifier& id, genstruct::Vector<T>& data);
+```
 
 
-==== Lock-free Assignment of Tasks ====
+## Lock-free Assignment of Tasks
 
-As the property lists are implemented using lock-free approaches, an analyzes will typically divide
+As the property lists are implemented using lock-free approaches, an analysiss will typically divide
 its work in jobs, that is group of data to be processed. For example, a basic block based
 analysis will distribute the basic block in jobs (at least as many as available core) and lets
 the threads pick tasks until all tasks are performed. This may mean that a thread that has ended
@@ -401,31 +410,26 @@ job will pick another one to complete the computation. We will discuss here seve
 this job-aware lock-free mechanism.
 
 
+## Practical Approach
 
-
-==== Analysis-level Parallelism ====
- 
-
-==== Practical Approach ====
-
-  * think to protect data possibly modified by different core using C "volatile" modifier.
-  * be careful with code reorganization of the compiler, put memory barriers around the atomic pointer write!
+  * Think to protect data possibly modified by different core using C "volatile" modifier.
+  * Be careful with code reorganization of the compiler, put memory barriers around the atomic pointer write!
   	(http://lwn.net/Articles/262464/)
 
 
-==== Issues ====
+### Issues
 
 The RCU update of ProptyList should work most of the time (while PropertyList access duration, grace time, is
 under 1s but is clearly not a guarantee of soundness of the application. Is there is any non-blocking
-cheap way to provide such a guarantee.
+cheap way to provide such a guarantee?
 
-=== Global Approach ===
+### Global barrier
 
 For each N core, we can have a collection of bytes for each property list:
 	byte M[N]
-For a read lock of core i:
+For a read lock of core _i_:
 	M[i] <- 1
-For a read unlock of core i:
+For a read unlock of core _i_:
 	M[i] <- 0
 When all M[i] = 0, no more thread is reading the list and we can free the deleted data.
 As it is relatively costly, it may be implemented globally and from time to time, variables
@@ -436,12 +440,12 @@ This policy refine in the following way at read unlock:
 	if all M[i] = 0 then signal all thread for deletion
 
 Ensuring the global quiescent state is detected by last entering core
-and alert other cores. This will improve of the approach but we are not free
+and alert other cores. This will improve the approach but we are not free
 of starving (by never reaching global quiescent state). 
 
-=== Local Approach ===
+### Local Approach
 
-If we could identify the owner of a Property list, let be core o, each may be their
+If we could identify the owner of a Property list, let be core o, each core may have its
 own set of markers and be alerted as soon there is no more reader on their property list:
 	byte M[N][N];
 
@@ -462,14 +466,14 @@ read_unlock() core i
 	M[j][i] <- 0 for all j in [0, N[
 	if there a j s.t. M[k][j] for k in [0,N[ then alert core j
 
-It works but read_lock() and read_unlock() are much more expensive.
+It works but `read_lock()` and `read_unlock()` are much more expensive.
 A better way would to let Properties cooperate with higher level code
 processor to find point of deletion.
 
 
-==== References ====
-https://en.wikipedia.org/wiki/Non-blocking_algorithm
-https://en.wikipedia.org/wiki/Software_transactional_memory
-https://en.wikipedia.org/wiki/Read-copy-update
-http://www.cl.cam.ac.uk/research/srg/netos/projects/archive/lock-free/
-http://kukuruku.co/hub/cpp/lock-free-data-structures-introduction
+### References ====
+	* https://en.wikipedia.org/wiki/Non-blocking_algorithm
+	* https://en.wikipedia.org/wiki/Software_transactional_memory
+	* https://en.wikipedia.org/wiki/Read-copy-update
+	* http://www.cl.cam.ac.uk/research/srg/netos/projects/archive/lock-free/
+	* http://kukuruku.co/hub/cpp/lock-free-data-structures-introduction
