@@ -123,37 +123,38 @@ message(STATUS "OTAWA date: ${OTAWA_DATE}")
 
 
 
-# linking to elm and gel libraries
-# linking is hardcoded, but libraries will be searched for
-# in all directories in PATH
+# looking for elm
 set(ELM_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../elm")
 if(MINGW_LINUX)
 	set(LIBELM "${ELM_PATH}/src/libelm.dll")
-	set(LIBGEL ${otawa_SOURCE_DIR}/../gel/src/libgel.dll)
-	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../gel/src/libgel_dwarf.dll)
 elseif(WIN32)
 	find_library(LIBELM elm PATHS "${ELM_PATH}/src")
-	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
-	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
 else()
-	message(STATUS "ELM_PATH=${ELM_PATH}")
 	find_library(LIBELM elm NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../elm/src" "${CMAKE_INSTALL_PREFIX}/bin")
-	if(NOT LIBELM)
-		message(FATAL_ERROR "libelm is mandatory!")
-	else()
-		message(STATUS "libelm found at ${LIBELM}")
-		get_filename_component(dir "${LIBELM}" DIRECTORY)
-		include_directories("${dir}/../include")
-	endif()
-	find_library(LIBGEL gel NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
-	if(NOT LIBGEL)
-		message(FATAL_ERROR "libgel is mandatory!")
-	else()
-		message(STATUS "libgel found at ${LIBGEL}")
-		get_filename_component(dir "${LIBGEL}" DIRECTORY)
-		include_directories("${dir}/../include")
-	endif()
-	find_library(LIBGEL_DWARF gel_dwarf NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
+if(NOT LIBELM)
+	message(FATAL_ERROR "libelm is mandatory!")
+else()
+	message(STATUS "libelm found at ${LIBELM}")
+	get_filename_component(dir "${LIBELM}" DIRECTORY)
+	include_directories("${dir}/../include")
+endif()
+
+
+# looking for gel++
+if(MINGW_LINUX)
+	set(LIBGEL "${otawa_SOURCE_DIR}/../gel/src/libgel++.dll")
+elseif(WIN32)
+	find_library(LIBGEL gel++ PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src)
+else()
+	find_library(LIBGEL gel++ NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src"  "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
+if(NOT LIBGEL)
+	message(FATAL_ERROR "libgel++ is mandatory!")
+else()
+	message(STATUS "libgel++ found at ${LIBGEL}")
+	get_filename_component(dir "${LIBGEL}" DIRECTORY)
+	include_directories("${dir}/../include")
 endif()
 
 
