@@ -27,7 +27,7 @@ namespace otawa {
 /**
  * A table containing no sets.
  */
-const Array<hard::Register *> Inst::no_regs;
+//const Array<hard::Register *> Inst::no_regs;
 
 
 /**
@@ -52,12 +52,35 @@ const Array<hard::Register *> Inst::no_regs;
  * * @ref REGISTER_USAGE_FEATURE -- @ref Inst::readRegSet(), @ref Inst::writeRegSet().
  * * @ref SEMANTICS_INFO -- @ref Inst::semInsts().
  * * @ref DELAYED_FEATURE -- @ref Inst::delayType(), @ref Inst::delaySlots.
- * * @ref CONDITIONAL_INSTRUCTIONS_FEATURE -- @ref Inst::condition(), @ref Inst::updateCondition().
+ * * @ref CONDITIONAL_INSTRUCTIONS_FEATURE -- @ref Inst::condition(), @ref Inst::updateCondition(),
+ * * @ref VLIW_FEATURE -- @ref Inst::bundle()/
  *
  * Notice that the availability of a feature does not always mean that the corresponding
  * loader is incomplete. If @ref DELAYED_FEATURE and @ref CONDITIONAL_INSTRUCTIONS_FEATURE
- * are not provide, the instruction does not provide these facilties.
+ * are not provided, the instruction does not provide these facilties.
  *
+ * @section proc_vliw VLIW Support
+ * 
+ * Very-Long Instruction Word (VLIW) architectures encodes Instruction Level
+ * Parallelism (ILP) in the instruction themselves: in fact, the scheduling of
+ * instructions is done by the compiler. Instructions are grouped by bundles
+ * and the bundle traverses the processor pipeline as a unitary instruction.
+ * 
+ * To support the bundle, the new version of OTAWA considers the bundle as a
+ * single instruction and the program loader in charge of the VLIW architecture
+ * has to translate the effects of the instructions composing the bundle as
+ * a single instruction. Yet, the individual instruction are still reachable
+ * with the function @ref Inst::bundle(). This function may be useful for
+ * the display of the instructions but considering the instruction bundle as
+ * a single instructions prevent support of VLIW for other OTAWA analyses.
+ * 
+ * To detect if the underlying architecture of a @ref otawa::Process supports
+ * VLIW instructions, the feature @ref otawa::VLIW_FEATURE is provided.
+ * 
+ * Notice that the previous API using the flag Inst::IS_BUNDLE to mark the end of
+ * bundle is now deprecated. The overall result is a significant simplification
+ * of OTAWA API and of the implementation of analyses.
+ * 
  * @ingroup prog
  */
 
@@ -400,7 +423,7 @@ void Inst::writeRegSet(RegSet& set) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  * @deprecated	Use readRegSet() instead.
  */
-const Array<hard::Register *>& Inst::readRegs(void) {
+const Array<hard::Register *>& Inst::readRegs() {
 	// TODO (remove the null reference)
 	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
@@ -413,7 +436,7 @@ const Array<hard::Register *>& Inst::readRegs(void) {
  * asserts the @ref REGISTER_USAGE_FEATURE.
  * @deprecated	Use writeRegSet() instead.
  */
-const Array<hard::Register *>& Inst::writtenRegs(void) {
+const Array<hard::Register *>& Inst::writtenRegs() {
 	throw UnsupportedFeatureException(REGISTER_USAGE_FEATURE);
 }
 
@@ -448,6 +471,7 @@ void Inst::semInsts(sem::Block& block) {
  * @param block		Block to translate instruction in.
  * @param temp		Base number for temporaries used for write-back register saving.
  * @return			Number of used temporaries for write-back.
+ * @deprecated		Use the new @ref proc_vliw support.
  * @see	@ref proc_vliw
  */
 int Inst::semInsts(sem::Block& block, int temp) {
@@ -479,6 +503,7 @@ void Inst::semKernel(sem::Block& block) {
  * @param block	Block to fill with semantic instructions.
  * @param temp	Next temporary number to use.
  * @return		Number of used temporaries.
+ * @deprecated	Use the new @ref proc_vliw support.
  */
 int Inst::semKernel(sem::Block& block, int temp) {
 	semKernel(block);
@@ -551,6 +576,17 @@ Condition Inst::condition(void) {
  */
 int Inst::multiCount(void) {
 	return 0;
+}
+
+
+/**
+ * Can only called for a VLIW archietcture.
+ * Provides the sub-instruction composing a bundle instruction.
+ * @param insts		Vector to be filled with sub-instructions.
+ * 					Default implementation does nothing.
+ * @see @ref proc_vliw support.
+ */
+void Inst::bundle(Vector<Inst *>& insts) {
 }
 
 
@@ -692,6 +728,14 @@ int Inst::multiCount(void) {
  * @see Inst::IS_BUNDLE, Inst::isBundle.
  */
 
+
+/**
+ * This feature is put by the loader for architecture implementing VLIW
+ * instruction sets. This feature allows to call @ref Inst::bundle().
+ * 
+ * @ingroup prog
+ */
+p::feature VLIW_FEATURE("otawa::VLIW_FEATURE");
 
 
 

@@ -60,7 +60,7 @@ namespace p {
 
 	class feature: public AbstractFeature {
 	public:
-		feature(cstring name, AbstractMaker *maker);
+		feature(cstring name, AbstractMaker *maker = nullptr);
 		feature(cstring name, p::declare& reg);
 		~feature(void);
 		virtual void process(WorkSpace *ws, const PropList& props) const;

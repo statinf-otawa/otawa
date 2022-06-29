@@ -46,9 +46,9 @@ typedef Vector<t::uint16> RegSet;
 class RegIter: public PreIterator<RegIter, const hard::Register *> {
 public:
 	inline RegIter(const RegSet& s, hard::Platform *p): set(s), i(0), pf(p) { }
-	inline bool ended(void) const { return i >= set.length(); }
-	inline const hard::Register *item(void) const { return pf->findReg(set[i]); }
-	inline void next(void) { i++; }
+	inline bool ended() const { return i >= set.length(); }
+	inline const hard::Register *item() const { return pf->findReg(set[i]); }
+	inline void next() { i++; }
 private:
 	const RegSet& set;
 	int i;
@@ -98,7 +98,6 @@ public:
 
 		inline bool isAtomic()		{ return oneOf(IS_ATOMIC); }
 		inline bool isBranch()		{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
-		inline bool isBundle()		{ return oneOf(IS_BUNDLE); }
 		inline bool isBundleEnd()	{ return !oneOf(IS_BUNDLE); }
 		inline bool isCall()		{ return oneOf(IS_CALL); }
 		inline bool isCond()		{ return oneOf(IS_COND); }
@@ -119,6 +118,7 @@ public:
 
 		// deprecated
 		inline bool isConditional()	{ return oneOf(IS_COND); }
+		inline bool isBundle()		{ return oneOf(IS_BUNDLE); }
 
 		kind_t kind;
 	};
@@ -134,8 +134,8 @@ public:
 	virtual void dump(io::Output& out);
 
 	// Kind access
-	virtual kind_t kind(void) = 0;
-	inline Kind getKind(void) { return kind(); }
+	virtual kind_t kind() = 0;
+	inline Kind getKind() { return kind(); }
 
 	inline bool isAtomic()		{ return getKind().isAtomic(); }
 	inline bool isBranch()		{ return getKind().isBranch(); }
@@ -147,7 +147,6 @@ public:
 	inline bool isDiv()			{ return getKind().isDiv(); }
 	inline bool isFloat()		{ return getKind().isFloat(); }
 	inline bool isIndirect()	{ return getKind().isIndirect(); }
-	inline bool isInt()			{ return getKind().isInt(); }
 	inline bool isIntern()		{ return getKind().isIntern(); }
 	inline bool isLoad()		{ return getKind().isLoad(); }
 	inline bool isMem() 		{ return getKind().isMem(); }
@@ -162,32 +161,33 @@ public:
 	virtual Inst *target(void);
 	virtual Type *type(void);
 	virtual void semInsts(sem::Block& block);
-	virtual int semInsts(sem::Block& block, int temp);
 	virtual void semKernel(sem::Block& block);
-	virtual int semKernel(sem::Block& block, int temp);
-	virtual int semWriteBack(sem::Block& block, int temp);
-	virtual delayed_t delayType(void);
-	virtual int delaySlots(void);
+	virtual delayed_t delayType();
+	virtual int delaySlots();
 	virtual void readRegSet(RegSet& set);
 	virtual void writeRegSet(RegSet& set);
-
-	// conditional accessors
-	virtual Condition condition(void);
-
+	virtual Condition condition();
+	virtual int multiCount();
+	virtual void bundle(Vector<Inst *>& insts);
+	
 	// ProgItem overload
-	virtual Inst *toInst(void);
+	Inst *toInst() override;
 
 	// deprecated
 	virtual const Array<hard::Register *>& readRegs(void);
 	virtual const Array<hard::Register *>& writtenRegs(void);
-	virtual int multiCount(void);
-	inline bool isConditional(void)	{ return getKind().isConditional(); }
+	inline bool isConditional()	{ return getKind().isConditional(); }
+	inline bool isInt()			{ return getKind().isInt(); }
+	virtual int semInsts(sem::Block& block, int temp);
+	virtual int semKernel(sem::Block& block, int temp);
+	virtual int semWriteBack(sem::Block& block, int temp);
 
 protected:
 	static const Array<hard::Register *> no_regs;
-	virtual ~Inst(void) { };
 };
 
+// instruction features
+extern p::feature VLIW_FEATURE;
 
 // output
 io::Output& operator<<(elm::io::Output& out, Inst *inst);

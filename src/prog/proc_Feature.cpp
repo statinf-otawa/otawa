@@ -128,6 +128,8 @@ feature::~feature(void) {
 /**
  */
 void feature::process(WorkSpace *ws, const PropList& props) const {
+	if(_maker == nullptr)
+		throw MessageException(_ << "no way to make" << name());
 	Processor *p = _maker->make();
 	if(p == nullptr)
 		throw MessageException(_
