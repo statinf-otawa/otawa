@@ -88,7 +88,7 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 		endif()
 
 		# any Doxyfile.in?
-		if(EXISTS "Doxyfile.in")
+		if(EXISTS "${CMAKE_SOURCE_DIR}/Doxyfile.in")
 			if(ELM_HOME)
 				set(ELM_AUTODOC_PATH "${ELM_HOME}/share/Elm/autodoc")
 			else()
@@ -110,9 +110,25 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 		endif()
 
 		# set the targets
-		add_custom_target(autodoc ALL COMMAND "${DOXYGEN}")
-		install(DIRECTORY "autodoc" DESTINATION "${AUTODOC_INSTALL_DIR}/${_PLUGIN}-autodoc")
+		if(EXISTS "${CMAKE_SOURCE_DIR}/Doxyfile")
+			add_custom_target(autodoc ALL COMMAND "${DOXYGEN}")
+			install(DIRECTORY "autodoc" DESTINATION "${AUTODOC_INSTALL_DIR}/${_PLUGIN}-autodoc")
+		endif()
 	endif()
+endfunction()
+
+function(OTAWA_ILP _PLUGIN _NAMESPACE _SOURCES)
+	OTAWA_PLUGIN("${_PLUGIN}" "${_NAMESPACE}" "${_SOURCES}")
+	file(WRITE ilp.eld
+		"[elm-plugin]\n"
+		"path=$ORIGIN/../${_NAMESPACE}/${_PLUGIN}\n"
+	)
+	install(FILES	ilp.eld
+		DESTINATION "${OTAWA_PLUGDIR}/ilp"
+		RENAME "default.eld")
+	install(FILES	ilp.eld
+		DESTINATION "${OTAWA_PLUGDIR}/ilp"
+		RENAME "${PLUGIN}.eld")
 endfunction()
 
 function(OTAWA_INSTALL_INCLUDE _DIR)
