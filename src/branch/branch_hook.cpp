@@ -226,8 +226,8 @@ public:
 	virtual etime::occurrence_t occurrence(void) const { return m.occurrence(e); }
 	virtual cstring name(void) const { return "branch misprediction"; }
 	virtual string detail(void) const { return _ << "midsprediction of " << inst() << " along edge " << e; }
-	virtual bool isEstimating(bool on) { return on; }
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	virtual bool isEstimating(bool on) const { return on; }
+	virtual void estimate(ilp::Constraint *cons, bool on) const{
 		ASSERT(on);
 		if(!x_mp)
 			x_mp = m.add(e);

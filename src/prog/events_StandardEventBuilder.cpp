@@ -89,7 +89,7 @@ public:
 		return buf.toString();
 	}
 	
-	bool isEstimating(bool on) override { return (on && !nc) && (!on && !ah.isEmpty()); }
+	bool isEstimating(bool on) const override { return (on && !nc) && (!on && !ah.isEmpty()); }
 	
 	void estimate(ilp::Constraint *cons, bool on) override {
 		if(on) {

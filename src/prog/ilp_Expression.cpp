@@ -156,7 +156,7 @@ double Expression::eval(System *sys) {
  * Add the expression to the right of constraint c.
  * @param c		Constraint to add to.
  */
-void Expression::addRight(Constraint *c) {
+void Expression::addRight(Constraint *c) const{
 	for(const auto& t: *this)
 		c->addRight(t.snd, t.fst);
 }
@@ -166,7 +166,7 @@ void Expression::addRight(Constraint *c) {
  * Add the expression to the left of constraint c.
  * @param c		Constraint to add to.
  */
-void Expression::addLeft(Constraint *c) {
+void Expression::addLeft(Constraint *c) const {
 	for(const auto& t: *this)
 		c->addLeft(t.snd, t.fst);
 }

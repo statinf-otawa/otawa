@@ -223,9 +223,9 @@ public:
 		return buf.toString();
 	}
 	
-	bool isEstimating(bool on) override { return on; }
+	bool isEstimating(bool on) const override { return on; }
 	
-	void estimate(ilp::Constraint *cons, bool on) override {
+	void estimate(ilp::Constraint *cons, bool on) const override {
 		if(on)
 			switch(icat3::CATEGORY(_acc)) {
 			case AH:

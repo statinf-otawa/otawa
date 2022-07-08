@@ -75,11 +75,11 @@ public:
 		}
 	}
 
-	virtual bool isEstimating(bool on) {
+	virtual bool isEstimating(bool on) const {
 		return on && _cat == PE;	// only when on = true!
 	}
 
-	virtual void estimate(ilp::Constraint *cons, bool on) {
+	virtual void estimate(ilp::Constraint *cons, bool on) const {
 		ASSERT(on);
 		ASSERT(_cat == PE)
 		for(Block::EdgeIter i = _head->ins(); i(); i++)

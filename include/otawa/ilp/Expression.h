@@ -58,8 +58,8 @@ public:
 	inline void sub(const Term& t) { add(t.snd, t.fst); }
 
 	double eval(System *sys);
-	void addRight(Constraint *c);
-	void addLeft(Constraint *c);
+	void addRight(Constraint *c) const;
+	void addLeft(Constraint *c) const;
 
 	static const Expression null;
 	inline bool isEmpty() const { return terms.isEmpty(); }
