@@ -20,11 +20,12 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+//#include <config.h>
 #include "../../config.h"
 #include <elm/sys/System.h>
 #include <elm/xom.h>
 #include <elm/xom/XSLTransform.h>
-#include <gel++.h>
+#include <gel/gel.h>
 #include <otawa/ilp/ILPPlugin.h>
 #include <otawa/manager.h>
 #include <otawa/platform.h>
@@ -295,21 +296,18 @@ CString Manager::copyright = "Copyright (c) 2016, University of Toulouse";
  */
 Loader *Manager::findFileLoader(const elm::sys::Path& path) {
 	Output log(io::err);
-	
-	// get the machine
-	int mach;
-	try {
-		auto file = gel::Manager::open(path);
-		mach = file->elfMachine();
-		delete file;
-	}
-	catch(gel::Exception& e) {
+
+	gel_file_t *file = gel_open((char *)&path, 0, GEL_OPEN_QUIET);
+	if(!file) {
 		resetVerbosity();
-		throw LoadException(e.message());		
+		throw LoadException(gel_strerror());
 	}
-	
-	// look for the plug-in
-	string name = _ << "elf_" << mach;
+	gel_file_info_t infos;
+	gel_file_infos(file, &infos);
+	StringBuffer buf;
+	buf << "elf_" << infos.machine;
+	gel_close(file);
+	String name = buf.toString();
 	if(isVerbose()) {
 		log << "INFO: looking for loader \"" << path << "\"\n";
 		log << "INFO: searchpaths:\n";
@@ -343,7 +341,7 @@ WorkSpace *Manager::loadBin(
 		log_stream = &io::err;
 	Output log(*log_stream);
 
-	// simple identified loader
+	// Simple identified loader
 	Loader *loader = LOADER(props);
 	if(loader == nullptr) {
 		auto name = LOADER_NAME(props);
@@ -358,19 +356,19 @@ WorkSpace *Manager::loadBin(
 	else if(isVerbose())
 		log << "INFO: got loader from proplist: " << loader << io::endl;
 
-	// try with gel
+	// Try with gel
 	if(loader == nullptr) {
-		int mach;
-		try {
-			auto file = gel::Manager::open(path);
-			mach = file->elfMachine();
-			delete file;
-		}
-		catch(gel::Exception& e) {
+		gel_file_t *file = gel_open(path.asSysString(), 0, GEL_OPEN_QUIET);
+		if(!file) {
 			resetVerbosity();
-			throw LoadException(e.message());			
+			throw LoadException(gel_strerror());
 		}
-		string name = _ << "elf_" << mach;
+		gel_file_info_t infos;
+		gel_file_infos(file, &infos);
+		StringBuffer buf;
+		buf << "elf_" << infos.machine;
+		gel_close(file);
+		String name = buf.toString();
 		if(isVerbose()) {
 			log << "INFO: looking for loader \"" << name << "\"\n";
 			log << "INFO: prefix path = " << prefixPath() << io::endl;
