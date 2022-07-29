@@ -413,6 +413,7 @@ void Application::run() {
 
 		// do the work
 		Monitor::configure(props);
+		Monitor::setWorkspace(ws);
 		work(props);
 		complete(props);
 
