@@ -201,7 +201,7 @@ ParExeGraph *StepGraphBuilder::build(ParExeSequence *seq) {
 
 	// build the graph
 	PropList props;
-	ParExeGraph *g = factory()->make(processor(), &resources(), seq);
+	graph = factory()->make(processor(), &resources(), seq);
 
 	// populate the graph
 	reset();
@@ -270,7 +270,7 @@ ParExeGraph *StepGraphBuilder::build(ParExeSequence *seq) {
     }
 
 	// complete and return graph
-	return g;
+	return graph;
 }
 
 void StepGraphBuilder::reset() {
