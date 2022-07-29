@@ -293,8 +293,20 @@ void StepGraphBuilder::reset() {
 
 		// record stages
 		stages.setLength(_proc->processor()->unitCount());
-		for(ParExePipeline::StageIterator s(processor()->pipeline()) ; s() ; s++)
+		for(ParExePipeline::StageIterator s(_proc->pipeline()); s(); s++) {
 			stages[s->unit()->index()].configure(*s);
+			if(s->category() == ParExeStage::EXECUTE) {
+				for(int i = 0; i < s->numFus(); i++) {
+					ASSERTP(
+						   s->unit()->getLatency() == 1
+						|| !static_cast<const hard::FunctionalUnit *>(s->unit())->isPipelined(),
+						"pipelined multi-cycle FU is deprecated");
+					auto fup = s->fu(i);
+					for(ParExePipeline::StageIterator fs(fup); fs(); fs++)
+						stages[fs->unit()->index()].configure(*fs);
+				}
+			}
+		}
 		queues.setLength(_proc->processor()->queueCount());
 		for(int i = 0; i < queues.count(); i++)
 			queues[i].configure(_proc->queue(i));
