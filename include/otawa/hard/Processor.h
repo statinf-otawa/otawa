@@ -272,10 +272,10 @@ public:
 	inline const PipelineUnit *stage(void) const { ASSERT(_kind == STAGE); return arg.unit; }
 	inline const Register *reg(void) const { ASSERT(_kind == READ || _kind == WRITE); return arg.reg; }
 	inline const Queue *queue(void) const { ASSERT(_kind == USE || _kind == RELEASE); return arg.queue; }
-	inline bool isCached() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.cached; }
-	inline bool isLoad() const { ASSERT(_kind == ISSUE_MEM); return !arg.mem.store; }
-	inline bool isStore() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.store; }
-	inline int number() const { ASSERT(_kind == ISSUE_MEM); return arg.mem.num; }
+	inline bool isCached() const { ASSERT(_kind == ISSUE_MEM || _kind == WAIT_MEM); return arg.mem.cached; }
+	inline bool isLoad() const { ASSERT(_kind == ISSUE_MEM || _kind == WAIT_MEM); return !arg.mem.store; }
+	inline bool isStore() const { ASSERT(_kind == ISSUE_MEM || _kind == WAIT_MEM); return arg.mem.store; }
+	inline int number() const { ASSERT(_kind == ISSUE_MEM || _kind == WAIT_MEM); return arg.mem.num; }
 	inline int delay() const { ASSERT(_kind == WAIT || _kind == WAIT_MEM); return arg.delay; }
 
 	inline static Step stage(const Stage *stage) { return Step(STAGE, stage); }
