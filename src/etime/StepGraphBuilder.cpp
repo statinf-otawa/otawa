@@ -314,20 +314,22 @@ void StepGraphBuilder::reset() {
 	}
 
 	// clear resources
-	for(int i = 0; i < prods.count(); i++) {
-		prods[i] = nullptr;
-		rres[i] = nullptr;
-	}
-	for(int i = 0; i < stages.count(); i++)
-		stages[i].reset();
 	last_node = nullptr,
 	last_branch = nullptr,
 	first_in_line = nullptr,
 	prev = nullptr;
 	node = nullptr;
-	stage = nullptr;
 	prev_load = nullptr;
 	prev_store = nullptr;
+	stage = nullptr;
+	for(int i = 0; i < stages.count(); i++)
+		stages[i].reset();
+	for(int i = 0; i < queues.count(); i++)
+		queues[i].reset();
+	for(int i = 0; i < prods.count(); i++) {
+		prods[i] = nullptr;
+		rres[i] = nullptr;
+	}
 }
 
 ///
