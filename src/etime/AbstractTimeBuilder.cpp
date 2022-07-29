@@ -149,7 +149,6 @@ p::declare AbstractTimeBuilder::reg = p::init("otawa::etime::AbstractTimeBuilder
 	.maker<AbstractTimeBuilder>()
 	.require(ipet::ASSIGNED_VARS_FEATURE)
 	.require(ipet::ILP_SYSTEM_FEATURE)
-	.require(EVENTS_FEATURE)
 	.require(hard::PROCESSOR_FEATURE)
 	.require(COLLECTED_CFG_FEATURE)
 	.provide(ipet::OBJECT_FUNCTION_FEATURE)
