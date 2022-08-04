@@ -163,6 +163,26 @@ else()
 endif()
 
 
+# look for libgel (for loader plug-in compatibility)
+if(MINGW_LINUX)
+	set(LIBGEL ${otawa_SOURCE_DIR}/../gel/src/libgel.dll)
+	set(LIBGEL_DWARF ${otawa_SOURCE_DIR}/../gel/src/libgel_dwarf.dll)
+elseif(WIN32)
+	find_library(LIBGEL gel PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+	find_library(LIBGEL_DWARF gel_dwarf PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel/src)
+else()
+	find_library(LIBGEL gel NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
+	if(NOT LIBGEL)
+		message(FATAL_ERROR "libgel is mandatory!")
+	else()
+		message(STATUS "libgel found at ${LIBGEL}")
+		get_filename_component(dir "${LIBGEL}" DIRECTORY)
+		include_directories("${dir}/../include")
+	endif()
+	find_library(LIBGEL_DWARF gel_dwarf NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel/src"  "${CMAKE_INSTALL_PREFIX}/bin")
+endif()
+
+
 # look for graphviz
 find_program(DOT "dot" HINTS ${GRAPHVIZ_PATH}/bin)
 if(DOT)

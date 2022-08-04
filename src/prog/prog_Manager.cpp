@@ -33,6 +33,15 @@
 #include <otawa/sim/Simulator.h>
 #include <otawa/util/XSLTScript.h>
 
+// for compatibility with old-plugins
+extern "C" {
+#include <gel/gel.h>
+}
+
+void old_plug_compatibility() {
+	gel_open("", "", 0);
+}
+
 using namespace elm;
 
 namespace otawa {

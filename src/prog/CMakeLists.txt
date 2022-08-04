@@ -246,7 +246,10 @@ list(APPEND libotawa_SOURCES
 add_library(otawa SHARED ${libotawa_SOURCES})
 target_link_libraries(otawa "${LIBELM}")
 target_link_libraries(otawa "${LIBGELPP}")
-#target_link_libraries(otawa "${LIBGEL_DWARF}")
+
+# look for libgel (for loader plug-in compatibility)
+target_link_libraries(otawa "${LIBGEL}")
+target_link_libraries(otawa "${LIBGEL_DWARF}")
 
 # installation
 install(TARGETS otawa DESTINATION ${LIBDIR})
