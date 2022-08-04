@@ -47,27 +47,39 @@ BBStatCollector::BBStatCollector(WorkSpace *ws): _ws(ws), _cfg(0), _total(-1) {
 }
 
 
-/**
- */
+///
 void BBStatCollector::collect(Collector& collector) {
-	process(collector);
+	class Adapter: public BBCollector {
+	public:
+		inline Adapter(Collector& cc): c(cc) {}
+		void collect(BasicBlock *v, int x, const ContextualPath& path) override
+			{ c.collect(v->address(), v->size(), x, path); }
+	private:
+		Collector& c;
+	};
+	Adapter adapter(collector);
+	for(auto g: *COLLECTED_CFG_FEATURE.get(_ws)) {
+		_cfg = g;
+		processCFG(adapter, g);
+	}	
 }
 
 
-/**
- * Process basic block of the current CFG.
- * @param collector		Collector to use.
- */
-void BBStatCollector::process(Collector& collector) {
-	const CFGCollection *coll = INVOLVED_CFGS(_ws);
-	ASSERT(coll);
-	for(int i = 0; i < coll->count(); i++) {
-		_cfg = coll->get(i);
-		processCFG(collector, coll->get(i));
-	}
+///
+bool BBStatCollector::supportsBB() const {
+	return true;
 }
 
-void BBStatCollector::processCFG(Collector& collector, CFG *cfg) {
+///
+void BBStatCollector::collectBB(BBCollector& collector) {
+	for(auto g: *COLLECTED_CFG_FEATURE.get(_ws)) {
+		_cfg = g;
+		processCFG(collector, g);
+	}	
+}
+
+
+void BBStatCollector::processCFG(BBCollector& collector, CFG *cfg) {
 	BitVector marks(_cfg->count());
 	Vector<Pair<Block *, ContextualPath> > todo;
 
@@ -161,8 +173,8 @@ int BBStatCollector::total(void) {
  * @param bb			Current basic block.
  * @param path			Current context.
  */
-void BBStatCollector::collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
-	collector.collect(bb->address(), bb->size(), getStat(bb), path);
+void BBStatCollector::collect(BBCollector& collector, BasicBlock *bb, const ContextualPath& path) {
+	collector.collect(bb, getStat(bb), path);
 }
 
 /**

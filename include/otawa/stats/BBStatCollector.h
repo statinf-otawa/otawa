@@ -31,20 +31,21 @@ namespace otawa {
 class BBStatCollector: public StatCollector {
 public:
 	BBStatCollector(WorkSpace *ws);
-	virtual void collect(Collector& collector);
+	void collect(Collector& collector) override;
+	int total() override;
+	bool supportsBB() const override;
+	void collectBB(BBCollector& collector) override;
 
 protected:
 
 	inline WorkSpace *ws(void) const { return _ws; }
-	inline CFG *cfg(void) const { return _cfg; }
-	virtual int total(void);
-	virtual void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path);
+	inline CFG *cfg() const { return _cfg; }
+	virtual void collect(BBCollector& collector, BasicBlock *bb, const ContextualPath& path);
 	virtual int getStat(BasicBlock *bb);
 	virtual int total(BasicBlock *bb);
 
 private:
-	virtual void processCFG(Collector& collector, CFG *cfg);
-	void process(Collector& collector);
+	void processCFG(BBCollector& collector, CFG *cfg);
 	WorkSpace *_ws;
 	CFG *_cfg;
 	int _total;

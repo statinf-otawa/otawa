@@ -171,7 +171,7 @@ public:
 		if(bb->isEnd())
 			return;
 		ilp::Var *var = VAR(bb);
-		if(!var)
+		if(var == nullptr)
 			return;
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
