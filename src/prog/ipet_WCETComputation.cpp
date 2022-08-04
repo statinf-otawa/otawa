@@ -255,12 +255,19 @@ void WCETComputation::collectStats(WorkSpace *ws) {
 	record(new TotalCountStat(ws));
 	if(ws->provides("otawa::etime::EDGE_TIME_FEATURE")) {
 		record(new EdgeTotalTimeStat(ws));
-		log << "DEBUG: edge time stat!\n";
+		//log << "DEBUG: edge time stat!\n";
 	}
 	else {
 		record(new TotalTimeStat(ws));
-		log << "DEBUG: normal time stat!\n";
+		//log << "DEBUG: normal time stat!\n";
 	}
+}
+
+
+///
+void WCETComputation::dump(otawa::WorkSpace *ws, elm::io::Output & out) {
+	System *system = SYSTEM(ws);
+	system->dumpSolution(out);
 }
 
 

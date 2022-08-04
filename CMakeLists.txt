@@ -143,18 +143,23 @@ endif()
 
 # looking for gel++
 if(MINGW_LINUX)
-	set(LIBGEL "${otawa_SOURCE_DIR}/../gel/src/libgel++.dll")
+	set(LIBGELPP "${otawa_SOURCE_DIR}/../gel/src/libgel++.dll")
 elseif(WIN32)
-	find_library(LIBGEL gel++ PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src)
+	find_library(LIBGELPP gel++ PATHS ${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src)
 else()
-	find_library(LIBGEL gel++ NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS "${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src"  "${CMAKE_INSTALL_PREFIX}/bin")
+	find_library(LIBGELPP gel++ NO_CMAKE_PATH NO_CMAKE_ENVIRONMENT_PATH HINTS
+		"${CMAKE_CURRENT_SOURCE_DIR}/../gel++/src"
+ 		"${CMAKE_CURRENT_SOURCE_DIR}/../gelpp/src"
+		"${CMAKE_INSTALL_PREFIX}/bin"
+	)
 endif()
-if(NOT LIBGEL)
+if(NOT LIBGELPP)
 	message(FATAL_ERROR "libgel++ is mandatory!")
 else()
-	message(STATUS "libgel++ found at ${LIBGEL}")
-	get_filename_component(dir "${LIBGEL}" DIRECTORY)
+	message(STATUS "libgel++ found at ${LIBGELPP}")
+	get_filename_component(dir "${LIBGELPP}" DIRECTORY)
 	include_directories("${dir}/../include")
+	message(STATUS "libgel++ include at ${dir}/../include")
 endif()
 
 

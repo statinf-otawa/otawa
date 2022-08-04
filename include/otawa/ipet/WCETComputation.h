@@ -34,12 +34,13 @@ public:
 	static p::declare reg;
 	static p::id<bool> DO_DISPLAY;
 
-	virtual void configure(const PropList& props = PropList::EMPTY);
+	void configure(const PropList& props = PropList::EMPTY) override;
 
 protected:
-	virtual void processWorkSpace(WorkSpace *fw);
-	virtual void collectStats(WorkSpace *ws);
-
+	void processWorkSpace(WorkSpace *ws) override;
+	void collectStats(WorkSpace *ws) override;
+	void dump(otawa::WorkSpace *ws, elm::io::Output & out) override;
+	
 private:
 	ilp::System *system;
 	bool do_display;
