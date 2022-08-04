@@ -43,7 +43,7 @@ using namespace otawa::ilp;
 namespace otawa { namespace ipet {
 
 // Registration
-p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 1, 0))
+p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 1, 1))
 	.require(CONTROL_CONSTRAINTS_FEATURE)
 	.require(OBJECT_FUNCTION_FEATURE)
 	.require(FLOW_FACTS_CONSTRAINTS_FEATURE)
@@ -83,19 +83,16 @@ public:
 	TotalTimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) {
 	}
 
-	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
-		if(bb->isEnd())
-			return;
+	int getStat(BasicBlock *bb) override {
 		ot::time time = TIME(bb);
 		if(time < 0)
-			return;
+			return 0;
 		ilp::Var *var = VAR(bb);
-		if(!var)
-			return;
+		ASSERTP(var != nullptr, "no variable for " << bb);
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
-			return;
-		collector.collect(bb->address(), bb->size(), cnt * time, path);
+			return 0;
+		return cnt * time;
 	}
 
 };
@@ -167,16 +164,13 @@ public:
 	virtual cstring id(void) const { return "ipet/total_count"; }
 	virtual cstring name(void) const { return "Total Execution Count"; }
 
-	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
-		if(bb->isEnd())
-			return;
+	int getStat(BasicBlock *bb) override {
 		ilp::Var *var = VAR(bb);
-		if(var == nullptr)
-			return;
+		ASSERTP(var != nullptr, "no variable for " << bb);
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
-			return;
-		collector.collect(bb->address(), bb->size(), cnt, path);
+			return 0;
+		return cnt;
 	}
 
 private:
