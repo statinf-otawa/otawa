@@ -22,11 +22,13 @@
 #ifndef OTAWA_PROG_FEATURES_H_
 #define OTAWA_PROG_FEATURES_H_
 
-#include <otawa/proc/Feature.h>
+#include <otawa/proc/AbstractFeature.h>
 #include <otawa/prog/sem.h>
 
 namespace otawa {
 
+class Inst;
+	
 namespace hard { class Register; }
 
 // delayed_t type
@@ -94,21 +96,27 @@ private:
 };
 io::Output& operator<<(io::Output& out, const Condition& c);
 
-// Common properties
+// symbols and labels
 class Symbol;
-extern p::feature LABEL_FEATURE;
-extern Identifier<Symbol *> SYMBOL;
-extern Identifier<string> LABEL;
-extern Identifier<string> FUNCTION_LABEL;
+class LabelInfo {
+public:
+	~LabelInfo();
+	virtual string labelFor(Inst *inst) = 0;
+	virtual Address addressOf(string name) = 0;
+};
+extern p::interfaced_feature<LabelInfo> LABEL_FEATURE;
+extern p::id<Symbol *> SYMBOL;
+extern p::id<string> LABEL;
+extern p::id<string> FUNCTION_LABEL;
 
 // Process information
-extern Identifier<Address> ARGV_ADDRESS;
-extern Identifier<Address> ENVP_ADDRESS;
-extern Identifier<Address> AUXV_ADDRESS;
-extern Identifier<Address> SP_ADDRESS;
-extern Identifier<delayed_t> DELAYED;
+extern p::id<Address> ARGV_ADDRESS;
+extern p::id<Address> ENVP_ADDRESS;
+extern p::id<Address> AUXV_ADDRESS;
+extern p::id<Address> SP_ADDRESS;
+extern p::id<delayed_t> DELAYED;
 
-// Features
+// ABI featues
 extern p::feature CONTROL_DECODING_FEATURE;
 extern p::feature DELAYED_FEATURE;
 extern p::feature DELAYED2_FEATURE;
@@ -122,6 +130,19 @@ extern p::feature SEMANTICS_INFO;
 extern p::feature SOURCE_LINE_FEATURE;
 extern p::feature VLIW_SUPPORTED;
 extern p::feature CONDITIONAL_INSTRUCTIONS_FEATURE;
+
+// task identification
+class TaskInfo {
+public:
+	virtual ~TaskInfo();
+	virtual Path workDirectory() = 0;
+	virtual string entryName() = 0;
+	virtual Inst *entryInst() = 0;
+};
+
+extern p::id<string> TASK_ENTRY;
+extern p::id<Address> TASK_ADDRESS;
+extern p::interfaced_feature<TaskInfo> TASK_INFO_FEATURE;
 
 } // otawa
 

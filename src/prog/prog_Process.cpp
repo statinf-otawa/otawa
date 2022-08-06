@@ -936,7 +936,7 @@ p::feature CONDITIONAL_INSTRUCTIONS_FEATURE("otawa::CONDITIONAL_INSTRUCTIONS_FEA
  * @li @ref Process
  * @ingroup prog
  */
-Identifier<Address> ARGV_ADDRESS("otawa::ARGV_ADDRESS", Address::null);
+p::id<Address> ARGV_ADDRESS("otawa::ARGV_ADDRESS", Address::null);
 
 
 /**
@@ -946,7 +946,7 @@ Identifier<Address> ARGV_ADDRESS("otawa::ARGV_ADDRESS", Address::null);
  * @li @ref Process
  * @ingroup prog
  */
-Identifier<Address> ENVP_ADDRESS("otawa::ENVP_ADDRESS", Address::null);
+p::id<Address> ENVP_ADDRESS("otawa::ENVP_ADDRESS", Address::null);
 
 
 /**
@@ -956,7 +956,7 @@ Identifier<Address> ENVP_ADDRESS("otawa::ENVP_ADDRESS", Address::null);
  * @li @ref Process
  * @ingroup prog
  */
-Identifier<Address> AUXV_ADDRESS("otawa::AUXV_ADDRESS", Address::null);
+p::id<Address> AUXV_ADDRESS("otawa::AUXV_ADDRESS", Address::null);
 
 
 /**
@@ -966,7 +966,7 @@ Identifier<Address> AUXV_ADDRESS("otawa::AUXV_ADDRESS", Address::null);
  * @li @ref Process
  * @ingroup prog
  */
-Identifier<Address> SP_ADDRESS("otawa::SP_ADDRESS", Address::null);
+p::id<Address> SP_ADDRESS("otawa::SP_ADDRESS", Address::null);
 
 
 /**
@@ -1093,7 +1093,7 @@ p::feature SEMANTICS_INFO_FLOAT("otawa::SEMANTICS_INFO_FLOAT", new Maker<NoProce
  * @li @ref otawa::Inst (control instruction)
  * @ingroup prog
  */
-Identifier<delayed_t> DELAYED("otawa::DELAYED", DELAYED_None);
+p::id<delayed_t> DELAYED("otawa::DELAYED", DELAYED_None);
 
 
 /**
