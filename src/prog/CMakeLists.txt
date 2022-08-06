@@ -81,6 +81,7 @@ set(libotawa_SOURCES
 	"proc_Registry.cpp"
 	"stats.cpp"
 	"stats_BBStatCollector.cpp"
+	"stat_StatsDumper.cpp"
 
 #    property module
 	"prop_AbstractIdentifier.cpp"
@@ -192,6 +193,7 @@ set(libotawa_SOURCES
 	"prog_Process.cpp"
 	"prog_Segment.cpp"
 	"prog_Symbol.cpp"
+	"prog_TaskInfoService.cpp"
 	"prog_TextDecoder.cpp"
 	"prog_VarTextDecoder.cpp"
 	"prog_VirtualInst.cpp"

@@ -1,8 +1,8 @@
 /*
- *	hard modules features
+ *	StatsDumper class interface
  *
  *	This file is part of OTAWA
- *	Copyright (c) 2019, IRIT UPS.
+ *	Copyright (c) 2022, IRIT UPS.
  *
  *	OTAWA is free software; you can redistribute it and/or modify
  *	it under the terms of the GNU General Public License as published by
@@ -18,23 +18,28 @@
  *	along with OTAWA; if not, write to the Free Software
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
-#ifndef OTAWA_HARD_FEATURES_H_
-#define OTAWA_HARD_FEATURES_H_
+#ifndef OTAWA_STATS_STATS_DUMPER_H
+#define OTAWA_STATS_STATS_DUMPER_H
 
-#include <otawa/proc/Feature.h>
-#include "Machine.h"
+#include <otawa/proc/Processor.h>
+#include <otawa/stats/features.h>
 
-namespace otawa { namespace hard {
+namespace otawa {
 
-class CacheConfiguration;
-class Machine;
-class Memory;
+class StatsDumper: public Processor {
+public:
+	static p::declare reg;
+	StatsDumper(p::declare& r = reg);
+
+protected:
+	void configure(const PropList& props) override;
+	void processWorkSpace(WorkSpace *ws) override;
+
+private:
+	Path path;
+};
 	
-extern p::interfaced_feature<const Memory> MEMORY_FEATURE;
-extern p::interfaced_feature<const CacheConfiguration> CACHE_CONFIGURATION_FEATURE;
-extern p::interfaced_feature<const Processor> PROCESSOR_FEATURE;
-extern p::interfaced_feature<const Machine> MACHINE_FEATURE;
+}	// otawa
 
-} }	// otawa::hard
+#endif	// OTAWA_STATS_STATS_DUMPER_H
 
-#endif /* OTAWA_HARD_FEATURES_H_ */

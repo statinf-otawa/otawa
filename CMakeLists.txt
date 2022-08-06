@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 2.6)
 project("otawa")
 set(PACKAGE "otawa")
 
-#add_compile_options(-Werror -Wall)
-
 # C++ flags
 if(CMAKE_BUILD_TYPE MATCHES Release)
 	add_definitions(-DNDEBUG)
@@ -49,15 +47,15 @@ if(INSTALL_TYPE)
 	endif()
 endif()
 
+# TO REMOVE
 # gcc based compiler lack of support by cmake (opposed to VS)
 # so need to make some manual adjustment in this case
-if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
-  set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -Wl,--kill-at -Wl,--add-stdcall-alias")
-  set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--kill-at -Wl,--add-stdcall-alias")
-endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
+#if (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
+#  set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -Wl,--kill-at -Wl,--add-stdcall-alias")
+#  set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wl,--kill-at -Wl,--add-stdcall-alias")
+#endif (CMAKE_COMPILER_IS_GNUCXX AND (CMAKE_BUILD_TYPE MATCHES Release))
 
 include_directories(include)
-
 
 # install directories
 if(MINGW_LINUX OR WIN32)
@@ -75,8 +73,8 @@ set(ILPDIR       "${PLUGDIR}/ilp")
 # the version of flex included with msys is bugged,
 # so those scripts had to be heavily modded
 if(WIN32)
-include(CMakeUserUseBison.cmake RESULT_VARIABLE BISON)
-include(CMakeUserUseFlex.cmake RESULT_VARIABLE FLEX)
+	include(CMakeUserUseBison.cmake RESULT_VARIABLE BISON)
+	include(CMakeUserUseFlex.cmake RESULT_VARIABLE FLEX)
 endif(WIN32)
 
 add_definitions(-DILP_PATHS=\"${PROJECT_BINARY_DIR}/lib/otawa/ilp\")
@@ -96,17 +94,20 @@ endif()
 
 
 # looking for version
-find_program(HG_PATH hg)
-if(HG_PATH)
+file(STRINGS "VERSION" OTAWA_VERSION)
+message(STATUS "OTAWA version: ${OTAWA_VERSION}")
+
+
+# looking for the tag
+find_program(GIT_PATH git)
+if(GIT_PATH)
     execute_process(
-        COMMAND "${HG_PATH}" identify --num -r .
-        OUTPUT_VARIABLE OTAWA_VERSION
+        COMMAND "${GIT_PATH}" log --format=%H -n 1
+        OUTPUT_VARIABLE OTAWA_TAG
         ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 endif()
-if(OTAWA_TAG)
-    set(OTAWA_VERSION "${OTAWA_VERSION}-${OTAWA_TAG}")
-endif()
-message(STATUS "OTAWA version: ${OTAWA_VERSION}")
+set(OTAWA_TAG "${OTAWA_VERSION}-${OTAWA_TAG}")
+message(STATUS "OTAWA tag: ${OTAWA_TAG}")
 
 
 # compute the date
@@ -194,28 +195,6 @@ endif()
 # look for python
 find_package(PythonInterp)
 find_package(PythonLibs)
-
-# look for pygtk
-if(PYTHONINTERP_FOUND)
-	execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import pygtk" RESULT_VARIABLE res)
-	if("${res}" EQUAL "0")
-		set(PYGTK ON)
-		message(STATUS "pygtk found")
-	else()
-		set(PYGTK OFF)
-		message(STATUS "pygtk not found")
-	endif()
-endif()
-
-
-# enabled otawa-xdot?
-if(DOT AND PYGTK)
-	message(STATUS "otawa-xdot.py can be installed.")
-	set(XDOT_ENABLED ON)
-else()
-	message(STATUS "otawa-xdot.py cannot be installed.")
-	set(XDOT_ENABLED OFF)
-endif()
 
 
 # look for system view

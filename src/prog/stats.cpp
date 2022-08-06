@@ -25,6 +25,132 @@
 namespace otawa {
 
 /**
+ * @page proc_stats Statistics Collection
+ * @ingroup proc
+ * 
+ * Code processor aim to perform analyses on the programs. To reflect the
+ * work of these analyses or to sum-up the results, numeric can be produced
+ * and displayed to the human user. The goal of this sub-module is to provide
+ * a common way to expose statistics of a code processor.
+ * 
+ * @par Usage
+ * 
+ * Basically, a processor can provide zero or several statistics to expose to
+ * the human user. For each statistics, an implementation of the interface
+ * @ref StatCollector has to be provided.
+ * 
+ * This interface provides all details to generate a display for the user.
+ * It contains:
+ * * an internal identifier (for example "wcet-time"),
+ * * a human-readable label ("Execution Time"),
+ * * a human-readable unit ("cycle")
+ * * a set of keywords ("WCET, "time")
+ * * a description ("Statistic giving the execution time of code parts.")
+ * * a total, typically for percentage calculation.
+ * 
+ * The most important function is the @ref StatCollector::collect() function that
+ * is called when the statistics will be exploited. It takes as parameter an
+ * interface, @ref StatCollector::Collector that contains one function, 
+ * @ref StatCollector::Collector::collect() that has to be called for each
+ * statistics item.
+ * 
+ * So to provide a statistics, one has to provide all or partially the details
+ * described above and the @ref StatCollector::collect() function. This function
+ * has to traverse the program representation and for each statistics item has
+ * to call @ref StatCollector::Collector::collect(). In turn, the application
+ * that aims to collect statistics has to implement @ref StatCollector::Collector
+ * and to call @ref StatCollector::collect() to get the statistics.
+ * 
+ * To provide statistics, one has only to implement the function
+ * @ref Processor::collectStat() and to call the function @ref Processor::record()
+ * for each provided statistics with the instance of the class implementing
+ * the statistics collection:
+ * @code
+ *	class TotalCountStat: public StatCollector { ... };
+ *	class EdgeTotalTimeStat: public StatCollector { ... };
+ *	class TotalTimeStat: public StatCollector { ... };
+ * 
+ *	void MyProcessor::collectStats(WorkSpace *ws) {
+ *		record(new TotalCountStat);
+ *		record(new EdgeTotalTimeStat);
+ *		record(new TotalTimeStat);
+ * 	}
+ * @endcode
+ * 
+ * This function is automatically called when statistics are required. Notice
+ * that the processor is in charge of freeing the instance passed to
+ * @ref Processor::record().
+ * 
+ * Notice that, basically, the statistics are independent of the program
+ * representation but a statistics item applies to one particular part of
+ * thes program. To stay independent of the representation, the program
+ * piece is identifierd by:
+ * * its base address,
+ * * it size in bytes,
+ * * its context (@ref otawa::Context).
+ * 
+ * @par Merging
+ * 
+ * The data collected by @ref StatCollector can be exposed to the human user
+ * according to different modes that may mean that some statistics item
+ * have to be aggregate. For example, with a source display, a source line
+ * may correspond to different statistics items.
+ * 
+ * There exist different ways to perform this aggregation:
+ * * @ref StatCollector::SUM_OP - addition,
+ * * @ref StatCollector::MAX_OP - maximium,
+ * * @ref StatCollector::MIN_OP - minimum.
+ * 
+ * The @ref StatCollector interface provides several way to specify the
+ * aggregation operations for different situation:
+ * * @ref StatCollector::concatOperation - when two code part are concatenated,
+ * * @ref StatCollector::contextOperation - when the same code part is
+ * 		aggreagated with different contexts.
+ * * @ref StatCollector::lineOperation - when the statistics are aggregated
+ * 		according to source lines.
+ * 
+ * Clearly, these aggregations, most often, cannot reflect precisely the
+ * statistics because of the merge of program structure depending on the
+ * program representation but merely the statistics display is provided
+ * to human user and may accept some imprecision.
+ * 
+ * In the example of the execution time, the aggregation operations could be:
+ * * @ref StatCollector::concatOperation - addition,
+ * * @ref StatCollector::contextOperation - maximum,
+ * * @ref StatCollector::lineOperation - addition.
+ * 
+ * Concerning the execution count of a code part on the WCET path,
+ * * @ref StatCollector::concatOperation - maximum,
+ * * @ref StatCollector::contextOperation - maximum,
+ * * @ref StatCollector::lineOperation - maximum.
+ * 
+ * Sometimes, depending on the context, some statistics needs diffderent
+ * aggregation operations. In this case, it is simpler to provide several
+ * @ref StatCollector instances.
+ * 
+ * @par Statistics and BB
+ * 
+ * CFG and BB are first-class citizens in the program representation in OTAWA.
+ * Moreover they allows the duplication of BBs according different context
+ * (function call chains) or according any CFG transformation algorithm. This
+ * means the same code part may exhibit different statistics but with the same
+ * location as specified by @ref StatCollector. This results in a loss of
+ * precision.
+ * 
+ * To prevent this, version 1.1 of @ref StatCollector provides a bridge to
+ * exploit BB-based statistics using the functions:
+ * * @ref StatCollector::supports() - that returns true if the BB interface
+ * 		is supported.
+ * * @ref StatCollector::collectBB() - a BB-aware implementation of the
+ * 		function @ref StatCollector::collect().
+ * 
+ * Things are even simpler if the statistics collector extends the class
+ * @ref BBStatCollector. One has just to overide the function
+ * @ref BBStatCollector::getStat().
+ */
+
+	
+/**
  * @class StatCollector
  * A statistics collector allows to access statistics produced by an analysis.
  * Any specialized statistics provider must implements this class and store an instance
@@ -53,7 +179,7 @@ StatCollector::~StatCollector(void) {
  * Return the name as a default implementation.
  * @return	Symbolic identifier.
  */
-cstring StatCollector::id(void) const {
+cstring StatCollector::id() const {
 	return name();
 }
 
@@ -76,7 +202,7 @@ void StatCollector::keywords(Vector<cstring>& kws) {
  * Name of statistics unit (for human user, in english).
  * @return	Unit name.
  */
-cstring StatCollector::unit(void) const {
+cstring StatCollector::unit() const {
 	return "";
 }
 
@@ -88,7 +214,7 @@ cstring StatCollector::unit(void) const {
  * the total method.
  * @return	True if the statistics are enumerated values.
  */
-bool StatCollector::isEnum(void) const {
+bool StatCollector::isEnum() const {
 	return false;
 }
 
@@ -108,7 +234,7 @@ const cstring StatCollector::valueName(int value) {
  * Get the total value for the current statistics (to compute ratio for example).
  * @return		Total value.
  */
-int StatCollector::total(void) {
+int StatCollector::total() {
 	return 0;
 }
 
@@ -151,6 +277,104 @@ int StatCollector::mergeContext(int v1, int v2) {
  */
 int StatCollector::mergeAgreg(int v1, int v2) {
 	return v1 + v2;
+}
+
+/**
+ * Get the human-readable label to identify the stat.
+ * @return	Stat label.
+ */
+cstring StatCollector::label() const {
+	return name();
+}
+
+/**
+ * Called to get a humand-readable description of the statistics.
+ * The result may be simple text (line returns will be ignored) or HTML code.
+ * @return	Statistics description.
+ */
+cstring StatCollector::description() const {
+	return "";
+}
+
+/**
+ * Get the operation used when stats are merged for a source line.
+ * @return	Source line merge operation.
+ */
+StatCollector::operation_t StatCollector::lineOperation() const {
+	return SUM_OP;
+}
+
+/**
+ * Get the operation used when stats are merged because of context merge.
+ * @return	Context merge operation.
+ */
+StatCollector::operation_t StatCollector::contextOperation() const {
+	return SUM_OP;
+}
+
+/**
+ * Get the operation used when stats are merged because of concatenation.
+ * @return	Context merge operation.
+ */
+StatCollector::operation_t StatCollector::concatOperation() const {
+	return SUM_OP;
+}
+
+/**
+ * Implements the aggregation operation.
+ * @param x		First value.
+ * @param op	Operation.
+ * @param y		Second value.
+ * @return		Result of aggregation.
+ */
+int StatCollector::aggregate(int x, operation_t op, int y) {
+	switch(op) {
+	case NO_OP:		return 0;
+	case SUM_OP:	return x + y;
+	case MAX_OP:	return max(x, y);
+	case MIN_OP:	return min(x, y);
+	default:		ASSERTP(false, "bad aggregate op"); return 0;
+	}
+}
+
+
+io::Output& operator<<(io::Output& out, StatCollector::operation_t op) {
+	static cstring labs[] = {
+		"none",
+		"sum",
+		"max",
+		"min"
+	};
+	out << labs[op];
+	return out;
+};
+
+
+/**
+ * Called to get a list of defintions to provide to a stat displayer.
+ * For exampel, for a static displagin time of block, the definition of the
+ * WCET could be provided: key "WCET", value the WCET itself.
+ * @param defs	Map to put the definition in.
+ */
+void StatCollector::definitions(ListMap<cstring, string>& defs) const {
+}
+
+/**
+ * Test if the current stat collector implements the @ref collect(BBCollector&)
+ * function.
+ * @return	True if the current collector implements @ref BBStatCollector.
+ */
+bool StatCollector::supportsBB() const {
+	return false;
+}
+
+
+/**
+ * Called to collect stats using BB identification. Can only be called when
+ * @ref supportsBB() returns true.
+ * @param collector		Collector to collect stat.
+ */
+void StatCollector::collectBB(BBCollector& collector) {
 }
 
 

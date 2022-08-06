@@ -19,31 +19,21 @@
  *	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-#include <otawa/ilp.h>
-#include <otawa/ipet/IPET.h>
-#include <otawa/ipet/WCETComputation.h>
-#include <otawa/cfg/CFG.h>
-#include <otawa/proc/ProcessorException.h>
-#include <otawa/ipet/BasicConstraintsBuilder.h>
-#include <otawa/ipet/BasicObjectFunctionBuilder.h>
-#include <otawa/ipet/FlowFactConstraintBuilder.h>
-#include <otawa/ipet/FlowFactConflictConstraintBuilder.h>//MDM
-
-#include <otawa/proc/Registry.h>
-#include <otawa/ipet/ILPSystemGetter.h>
-#include <otawa/stats/BBStatCollector.h>
-#include <otawa/stats/StatInfo.h>
-#include <otawa/ilp/ILPPlugin.h>
-#include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/etime/features.h>
-#include <otawa/proc/DynFeature.h>
+#include <otawa/hard/Processor.h>
+#include <otawa/ilp.h>
+#include <otawa/ipet/features.h>
+#include <otawa/cfg/features.h>
+#include <otawa/stats/BBStatCollector.h>
+
+#include <otawa/ipet/WCETComputation.h>
 
 using namespace otawa::ilp;
 
 namespace otawa { namespace ipet {
 
 // Registration
-p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 1, 0))
+p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Version(1, 1, 1))
 	.require(CONTROL_CONSTRAINTS_FEATURE)
 	.require(OBJECT_FUNCTION_FEATURE)
 	.require(FLOW_FACTS_CONSTRAINTS_FEATURE)
@@ -68,11 +58,30 @@ public:
 		ASSERT(system);
 	}
 
-	virtual cstring id(void) const override { return "ipet/total_time"; }
-	virtual cstring name(void) const override { return "Total Execution Time"; }
-	virtual cstring unit(void) const override { return "cycle"; }
-	virtual int total(void) override { return WCET(ws()); }
-
+	cstring id() const override { return "ipet/total_time"; }
+	cstring name() const override { return "Total Execution Time"; }
+	cstring unit() const override { return "cycle"; }
+	int total() override { return WCET(ws()); }
+	cstring description() const override
+		{ return "Represents the total number of cycles the code takes during the execution of the worst case execution path."; }
+	void definitions(ListMap<cstring, string> & defs) const override {
+		auto w = WCET(ws());
+		defs.put("WCET", _ << w << " cycles");
+		if(ws()->provides(hard::PROCESSOR_FEATURE)) {
+			auto proc = hard::PROCESSOR_FEATURE.get(ws());
+			if(proc != nullptr && proc->getFrequency() != 0) {
+				auto t = double(w) / proc->getFrequency();
+				cstring u = " s";
+				static cstring units[] = { " ms", " us", " ns", "" };
+				for(int i = 0; units[i] != "" && t < 1; i++) {
+					u = units[i];
+					t = t * 1000;
+				}
+				defs.put("Time", _ << t << u);
+			}
+		}
+	}
+		
 protected:
 	ilp::System *system;
 };
@@ -83,19 +92,16 @@ public:
 	TotalTimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) {
 	}
 
-	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
-		if(bb->isEnd())
-			return;
+	int getStat(BasicBlock *bb) override {
 		ot::time time = TIME(bb);
 		if(time < 0)
-			return;
+			return 0;
 		ilp::Var *var = VAR(bb);
-		if(!var)
-			return;
+		ASSERTP(var != nullptr, "no variable for " << bb);
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
-			return;
-		collector.collect(bb->address(), bb->size(), cnt * time, path);
+			return 0;
+		return cnt * time;
 	}
 
 };
@@ -164,19 +170,19 @@ public:
 		ASSERT(system);
 	}
 
-	virtual cstring id(void) const { return "ipet/total_count"; }
-	virtual cstring name(void) const { return "Total Execution Count"; }
-
-	void collect(Collector& collector, BasicBlock *bb, const ContextualPath& path) {
-		if(bb->isEnd())
-			return;
+	cstring id() const override { return "ipet/total_count"; }
+	cstring name() const override { return "Total Execution Count"; }
+	cstring description() const override {
+		return "Represents the number of execution of the code along the worst-case execution path.";
+	}
+	
+	int getStat(BasicBlock *bb) override {
 		ilp::Var *var = VAR(bb);
-		if(!var)
-			return;
+		ASSERTP(var != nullptr, "no variable for " << bb);
 		int cnt = int(system->valueOf(var));
 		if(cnt < 0)
-			return;
-		collector.collect(bb->address(), bb->size(), cnt, path);
+			return 0;
+		return cnt;
 	}
 
 private:
@@ -208,7 +214,7 @@ private:
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(void): Processor(reg), system(0), do_display(false) {
+WCETComputation::WCETComputation(): Processor(reg), system(0), do_display(false) {
 }
 
 
@@ -227,13 +233,6 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
 	System *system = SYSTEM(ws);
 	ASSERT(system);
 	ot::time wcet = -1;
-	if(logFor(LOG_FILE)) {
-		string name = "unknown";
-		ilp::ILPPlugin *p = system->plugin();
-		if(p)
-			name = p->name();
-		log << "\tlaunching ILP solver: " << name << io::endl;
-	}
 	if(system->solve(ws, *this)) {
 		if(logFor(LOG_FILE))
 			log << "\tobjective function = " << system->value() << io::endl;
@@ -253,14 +252,10 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
  */
 void WCETComputation::collectStats(WorkSpace *ws) {
 	record(new TotalCountStat(ws));
-	if(ws->provides("otawa::etime::EDGE_TIME_FEATURE")) {
+	if(ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
 		record(new EdgeTotalTimeStat(ws));
-		//log << "DEBUG: edge time stat!\n";
-	}
-	else {
+	else
 		record(new TotalTimeStat(ws));
-		//log << "DEBUG: normal time stat!\n";
-	}
 }
 
 
@@ -281,16 +276,16 @@ void WCETComputation::dump(otawa::WorkSpace *ws, elm::io::Output & out) {
 TimeStat::TimeStat(WorkSpace *ws): BBStatCollector(ws) { }
 
 /** */
-cstring TimeStat::id(void) const { return "ipet/time"; }
+cstring TimeStat::id() const { return "ipet/time"; }
 
 /** */
 void TimeStat::keywords(Vector<cstring>& kws) { kws.add("time"); kws.add("block"); kws.add("cfg"); }
 
 /** */
-cstring TimeStat::name(void) const { return "Block Execution Time"; }
+cstring TimeStat::name() const { return "Block Execution Time"; }
 
 /** */
-cstring TimeStat::unit(void) const { return "cycle"; }
+cstring TimeStat::unit() const { return "cycle"; }
 
 /** */
 int TimeStat::getStat(BasicBlock *bb) { return TIME(bb); }

@@ -22,13 +22,64 @@
 #include <otawa/proc/Processor.h>
 #include <otawa/program.h>
 #include <otawa/prop/Identifier.h>
+#include <otawa/prog/WorkSpace.h>
 
 namespace otawa {
 
-class LabelSetter: public Processor {
+/**
+ * @lass LabelInfo
+ * Interface of @ref LABEL_FEATURE.
+ * @ingroup prog
+ */
+
+///
+LabelInfo::~LabelInfo() {}
+
+/**
+ * @fn string LabelInfo::labelFor(Inst *inst);
+ * Obtain a label for the given instruction. Use the executable label if
+ * available, else built it from the address. This label is unique for the
+ * instruction.
+ * @param inst		Instruction to find label for.
+ * @return			Label for the instruction.
+ */
+
+/**
+ * @fn Address LabelInfo::addressOf(string name);
+ * Compute the address of a label.
+ * @param name	Label name.
+ * @return		Address of the label or a null address.
+ */
+
+	
+///	
+class LabelSetter: public Processor, public LabelInfo {
 public:
 	static p::declare reg;
-	LabelSetter(p::declare& r = reg): Processor(r) {
+	LabelSetter(p::declare& r = reg): Processor(r) { }
+
+	void *interfaceFor(const AbstractFeature& feature) override {
+		if(&feature == &LABEL_FEATURE)
+			return static_cast<LabelInfo *>(this);
+		else
+			return nullptr;
+	}
+	
+	string labelFor(Inst *inst) override {
+		string l= FUNCTION_LABEL(inst);
+		if(l)
+			return l;
+		l = LABEL(inst);
+		if(l)
+			return l;
+		auto s = SYMBOL(inst);
+		if(s != nullptr)
+			return s->name();
+		return _ << "_x" << inst->address();
+	}
+
+	Address addressOf(string name) override {
+		return workspace()->process()->findLabel(name);
 	}
 
 protected:
@@ -71,7 +122,7 @@ protected:
  * @li @ref FUNCTION_LABEL
  * @li @ref SYMBOL
  */
-p::feature LABEL_FEATURE("otawa::LABEL_FEATURE", new Maker<LabelSetter>());
+p::interfaced_feature<LabelInfo> LABEL_FEATURE("otawa::LABEL_FEATURE", new Maker<LabelSetter>());
 
 
 /**
@@ -93,7 +144,7 @@ p::declare LabelSetter::reg = p::init("otawa::LabelSetter", Version(1, 0, 0))
  *
  * @ingroup prog
  */
-Identifier<Symbol *> SYMBOL("otawa::SYMBOL", 0);
+p::id<Symbol *> SYMBOL("otawa::SYMBOL", 0);
 
 /**
  * Property with this identifier is put on instructions or basic blocks which a symbol is known for.
@@ -106,7 +157,7 @@ Identifier<Symbol *> SYMBOL("otawa::SYMBOL", 0);
  *
  * @ingroup prog
  */
-Identifier<String> LABEL("otawa::LABEL", "");
+p::id<String> LABEL("otawa::LABEL", "");
 
 
 /**
@@ -121,6 +172,6 @@ Identifier<String> LABEL("otawa::LABEL", "");
  *
  * @ingroup prog
  */
-Identifier<String> FUNCTION_LABEL("otawa::FUNCTION_LABEL", "");
+p::id<String> FUNCTION_LABEL("otawa::FUNCTION_LABEL", "");
 
 } // otawa

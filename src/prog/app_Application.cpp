@@ -24,7 +24,7 @@
 #include <otawa/app/Application.h>
 #include <otawa/cfgio/Output.h>
 #include <otawa/proc/ProcessorPlugin.h>
-#include <otawa/stats/StatInfo.h>
+#include <otawa/stats/features.h>
 #include <otawa/util/SymAddress.h>
 #include <otawa/prog/Manager.h>
 
@@ -133,7 +133,7 @@ namespace otawa {
  *	* logFor() -- test the logging level.
  */
 
-class StatOutput: public StatCollector::Collector {
+/*class StatOutput: public StatCollector::Collector {
 public:
 	StatOutput(Output& out): _out(out) { }
 	virtual ~StatOutput() { }
@@ -143,7 +143,7 @@ public:
 
 private:
 	Output& _out;
-};
+};*/
 
 
 /**
@@ -495,37 +495,26 @@ void Application::completeTask() {
  * Generate statistics for the current workspace.
  */
 void Application::stats() {
+
+	// manage the directory
 	sys::Path spath = workspace()->workDir() / "stats";
-
-	// remove directory if it already exist
-	if(spath.exists()) {
-		if(!spath.isDir())
-			throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
-		else
-			try
-				{ spath.remove(); }
-			catch(sys::SystemException& e) {
-				throw otawa::Exception(_ << "cannot remove " << spath << " to output statistics: " << e.message());
-			}
+	try {
+		if(spath.exists()) {
+			if(spath.isDir())
+				spath.remove();
+			else
+				throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
+		}
+		sys::System::makeDirs(spath);
 	}
-
-	// create the directory
-	try
-		{ sys::System::makeDirs(spath); }
 	catch(sys::SystemException& e)
 		{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
-
-	// generate the statistics
-	for(StatInfo::Iter stat(workspace()); stat(); stat++) {
-		string id = string(stat->id()).replace("/", "-");
-		io::OutStream *stream = sys::System::createFile(spath / (id + ".csv"));
-		Output out(*stream);
-		StatOutput sout(out);
-		stat->collect(sout);
-		delete stream;
-	}
-
-	// output the CFG
+	
+	// dump statistics
+	STATS_PATH(props) = spath;
+	workspace()->require(STATS_DUMP_FEATURE, props);
+	
+	// dump the CFG	
 	try {
 		cfgio::OUTPUT(props) = spath / "cfg.xml";
 		cfgio::LINE_INFO(props) = true;
