@@ -187,6 +187,7 @@ p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 1, 0))
 	.require(FLOW_FACTS_FEATURE)
 	.require(LABEL_FEATURE)
 	.require(view::FEATURE)
+	.require(TASK_INFO_FEATURE)
 	.provide(COLLECTED_CFG_FEATURE)
 	.maker<CFGCollector>();
 
@@ -194,6 +195,7 @@ p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 1, 0))
 /**
  */
 void CFGCollector::setup(WorkSpace *ws) {
+	added_cfgs[0] = TASK_INFO_FEATURE.get(ws)->entryInst()->address();
 	AbstractCFGBuilder::setup(ws);
 
 	// find address of label
@@ -258,13 +260,12 @@ void CFGCollector::destroy(WorkSpace *ws) {
 }
 
 
-/**
- */
+///
 void CFGCollector::configure(const PropList& props) {
 	AbstractCFGBuilder::configure(props);
 
-	// Misc configuration
-	Address addr = TASK_ADDRESS(props);
+	// reserve place for task entry
+	/*Address addr = TASK_ADDRESS(props);
 	if(!addr.isNull())
 		added_cfgs.add(addr);
 	else {
@@ -272,20 +273,23 @@ void CFGCollector::configure(const PropList& props) {
 		if(!name)
 			name = "main";
 		added_funs.add(name);
-	}
+	}*/
+	added_cfgs.add(Address::null);
 
 	// collect added CFGs
-	for(Identifier<Address>::Getter cfg(props, ADDED_CFG); cfg(); cfg++)
-		added_cfgs.add(*cfg);
-	for(Identifier<CString>::Getter fun(props, ADDED_FUNCTION); fun(); fun++)
-		added_funs.add(*fun);
+	for(auto g: ADDED_CFG.all(props))
+		added_cfgs.add(g);
+	for(auto f: ADDED_FUNCTION.all(props))
+		added_funs.add(f);
 }
 
 
-/**
- */
+///
 void *CFGCollector::interfaceFor(const AbstractFeature& f) {
-	return coll;
+	if(&f == &COLLECTED_CFG_FEATURE)
+		return coll;
+	else
+		return nullptr;
 }
 
 

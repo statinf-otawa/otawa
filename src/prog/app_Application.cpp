@@ -495,34 +495,8 @@ void Application::completeTask() {
  * Generate statistics for the current workspace.
  */
 void Application::stats() {
-
-	// manage the directory
-	sys::Path spath = workspace()->workDir() / "stats";
-	try {
-		if(spath.exists()) {
-			if(spath.isDir())
-				spath.remove();
-			else
-				throw otawa::Exception(_ << spath << " already exists and cannot be used to output statistics!");
-		}
-		sys::System::makeDirs(spath);
-	}
-	catch(sys::SystemException& e)
-		{ throw otawa::Exception(_ << "cannot create " << spath << ": " << e.message()); }
-	
-	// dump statistics
-	STATS_PATH(props) = spath;
 	workspace()->require(STATS_DUMP_FEATURE, props);
-	
-	// dump the CFG	
-	try {
-		cfgio::OUTPUT(props) = spath / "cfg.xml";
-		cfgio::LINE_INFO(props) = true;
-		workspace()->run<cfgio::Output>(props);
-	}
-	catch(sys::SystemException& e) {
-		throw otawa::Exception(_ << "cannot write CFG in statistics: " << e.message());
-	}
+	workspace()->require(CFG_DUMP_FEATURE, props);
 }
 
 

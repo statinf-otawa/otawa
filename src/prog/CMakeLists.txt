@@ -21,6 +21,7 @@ set(libotawa_SOURCES
 #    CFG module
 	"CFG.cpp"
 	"cfg_CFGCollector.cpp"
+	"cfg_CFGDumper.cpp"
 	"pcg_PCG.cpp"
 	"pcg_PCGBuilder.cpp"
 	"cfg_AbstractCFGBuilder.cpp"

@@ -64,11 +64,11 @@ TaskInfo::~TaskInfo() {}
 class TaskInfoService: public Processor, public TaskInfo {
 public:
 	static p::declare reg;
-	TaskInfoService(p::declare& r = reg) {}
+	TaskInfoService(p::declare& r = reg): Processor(r) {}
 
 	void *interfaceFor(const AbstractFeature &feature) override {
 		if(&feature == &TASK_INFO_FEATURE)
-			return this;
+			return static_cast<TaskInfo *>(this);
 		else
 			return nullptr;
 	}
@@ -148,7 +148,7 @@ private:
 
 ///
 p::declare TaskInfoService::reg =
-	p::init("otawa::TaskInfoSerice", Version(1, 0, 0))
+	p::init("otawa::TaskInfoService", Version(1, 0, 0))
 	.require(LABEL_FEATURE)
 	.provide(TASK_INFO_FEATURE)
 	.make<TaskInfoService>();

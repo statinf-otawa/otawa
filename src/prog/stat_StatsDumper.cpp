@@ -20,6 +20,7 @@
  */
 
 #include <elm/sys/System.h>
+#include <otawa/prog/features.h>
 #include <otawa/stats/StatsDumper.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/cfgio/Output.h>
@@ -99,12 +100,20 @@ void StatsDumper::processWorkSpace(WorkSpace *ws) {
 
 	// determine the path
 	if(path.isEmpty())
-		path = ws->workDir();
+		path = TASK_INFO_FEATURE.get(ws)->workDirectory();
 
+	// clean old statistics
+	Vector<cstring> to_remove;
+	for(auto f: path.readDir())
+		if(f.endsWith("-stat.csv"))
+			to_remove += f;
+	for(auto f: to_remove)
+		(path / f).remove();
+		
 	// generate the statistics
 	for(auto stat: StatInfo::get(ws)) {
 		string id = string(stat->id()).replace("/", "-");
-		io::OutStream *stream = sys::System::createFile(path / (id + ".csv"));
+		io::OutStream *stream = sys::System::createFile(path / (id + "-stat.csv"));
 		Output out(*stream);
 		
 		// dump additional information
@@ -136,6 +145,7 @@ void StatsDumper::processWorkSpace(WorkSpace *ws) {
 ///
 p::declare StatsDumper::reg
 	= p::init("otawa::StatsDumper", Version(1, 0, 0))
+	.require(TASK_INFO_FEATURE)
 	.provide(STATS_DUMP_FEATURE)
 	.make<StatsDumper>();
 
