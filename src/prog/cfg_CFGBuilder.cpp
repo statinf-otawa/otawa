@@ -41,26 +41,33 @@ namespace otawa {
  */
 
 
-p::declare CFGBuilder::reg = p::init("otawa::CFGBuilder", Version(2, 0, 0))
-	.base(AbstractCFGBuilder::reg)
+p::declare CFGBuilder::reg = p::init("otawa::CFGBuilder", Version(2, 1, 0))
 	.provide(CFG_INFO_FEATURE)
-	.maker<CFGBuilder>();
+	.make<CFGBuilder>();
 
 
 /**
  * CFG builder constructor.
  */
-CFGBuilder::CFGBuilder(p::declare& r): AbstractCFGBuilder(r) {
+CFGBuilder::CFGBuilder(p::declare& r):
+	Processor(r),
+	builder(new AbstractCFGBuilder(*this))
+{ }
+
+
+///
+void CFGBuilder::configure(const PropList& props) {
+	Processor::configure(props);
+	builder->configure(props);
 }
 
 
 /**
  */
 void CFGBuilder::setup(WorkSpace *ws) {
-	AbstractCFGBuilder::setup(ws);
 	Inst *start = ws->process()->start();
 	if(start) {
-		maker(start);
+		builder->maker(start);
 		if(logFor(LOG_FUN))
 			log << "\tadded function for _start at " << start->address() << io::endl;
 	}
@@ -71,7 +78,7 @@ void CFGBuilder::setup(WorkSpace *ws) {
 				if(!inst)
 					warn(_ << "function symbol " << sym->name() << " at " << sym->address() << " does not match code segment!");
 				else {
-					maker(inst);
+					builder->maker(inst);
 					if(logFor(LOG_FUN))
 						log << "\tadded function " << sym->name() << " at " << sym->address() << io::endl;
 				}
@@ -79,18 +86,27 @@ void CFGBuilder::setup(WorkSpace *ws) {
 }
 
 
-/**
- */
-void CFGBuilder::cleanup(WorkSpace *ws) {
+///
+void CFGBuilder::processWorkSpace(WorkSpace *ws) {
+	builder->process(ws);
+}
 
-	// build the CFG information
-	/*CFGInfo *info = new CFGInfo(ws);
-	for(Iter maker(*this); maker; maker++)
+
+///
+void CFGBuilder::commit(WorkSpace *ws) {
+	CFGInfo *info = new CFGInfo(ws);
+	for(AbstractCFGBuilder::Iter maker(*builder); maker(); maker++)
 		info->add(maker->build());
-	track(CFG_INFO_FEATURE, CFG_INFO(ws) = info);*/
+	CFG_INFO(ws) = info;
+	delete builder;
+	builder = nullptr;
+}
 
-	// cleanup
-	AbstractCFGBuilder::cleanup(ws);
+
+///
+void CFGBuilder::destroy(otawa::WorkSpace *ws) {
+	delete *CFG_INFO(ws);
+	CFG_INFO(ws).remove();
 }
 
 } // otawa

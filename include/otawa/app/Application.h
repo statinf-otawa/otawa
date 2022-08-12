@@ -83,7 +83,6 @@ protected:
 	void process(string arg) override;
 	void run() override;
 
-private:
 	option::SwitchOption /*help,*/ verbose, dump;
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
@@ -93,6 +92,9 @@ private:
 	option::SwitchOption record_stats;
 	option::ListOption<string> log_for;
 	option::ListOption<string> dump_for;
+	option::SwitchOption view;
+
+private:
 	LogOption log_level;
 	elm::sys::Path path;
 	Vector<string> _args;

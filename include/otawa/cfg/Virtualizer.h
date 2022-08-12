@@ -26,7 +26,7 @@
 
 #include <elm/data/HashMap.h>
 #include <elm/util/Option.h>
-#include <otawa/proc/Processor.h>
+#include <otawa/cfg/CFGProvider.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prop/ContextualProperty.h>
 
@@ -37,33 +37,31 @@ using namespace elm;
 class CFGCollection;
 
 // Virtualizer class
-class Virtualizer: public Processor {
+class Virtualizer: public CFGProvider {
 
 public:
 	Virtualizer(void);
 	static p::declare reg;
 
 	void configure(const PropList& props) override;
-	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
 	void processWorkSpace(WorkSpace *ws) override;
 	void cleanup(WorkSpace *ws) override;
-	void commit(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
-
+	
 private:
 	void make(struct call_t *stack, CFG *cfg, CFGMaker& maker, elm::Option<int> local_inlining, ContextualPath &path);
 	void makeCFG(struct call_t *call, CFG *cfg, Option<int> local_inlining);
 	CFGMaker& makerOf(CFG *cfg);
 	CFGMaker& newMaker(Inst *first);
 	bool isInlined(CFG* cfg, Option<int> local_inlining, ContextualPath &path);
+
 	bool virtualize;
 	CFG *entry;
 	List<CFG *> todo;
 	HashMap<CFG *, CFGMaker *> map;
 	FragTable<CFGMaker *> makers;
-	CFGCollection *coll;
+	//CFGCollection *coll;
 };
 
 }	// otawa

@@ -29,16 +29,12 @@
 namespace otawa {
 
 // AbstractCFGBuilder Class
-class AbstractCFGBuilder: public Processor {
+class AbstractCFGBuilder: public Monitor {
 	typedef FragTable<Pair<Inst *, CFGMaker *> > makers_t;
 public:
-	AbstractCFGBuilder(p::declare& r);
-	virtual void configure(const PropList& props);
+	AbstractCFGBuilder(Monitor& mon);
+	~AbstractCFGBuilder();
 
-protected:
-	void processWorkSpace(WorkSpace *ws);
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
 	CFGMaker &maker(Inst *i);
 
 	class Iter: public PreIterator<Iter, CFGMaker *> {
@@ -50,6 +46,9 @@ protected:
 	private:
 		makers_t::Iter i;
 	};
+
+	void configure(const PropList& props);
+	void process(WorkSpace *ws);
 
 private:
 	void processCFG(Inst *i);

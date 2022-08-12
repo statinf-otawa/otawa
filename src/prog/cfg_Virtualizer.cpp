@@ -139,16 +139,16 @@ Identifier<bool> RECURSIVE_LOOP("otawa::RECURSIVE_LOOP", false);
 /**
  */
 Virtualizer::Virtualizer(void)
-	: Processor(reg), virtualize(false), entry(nullptr), coll(nullptr)
+	: CFGProvider(reg), virtualize(false), entry(nullptr)
 	{ }
 
 // Registration
-p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(2, 0, 0))
+p::declare Virtualizer::reg = p::init("otawa::Virtualizer", Version(2, 1, 0))
 	.maker<Virtualizer>()
+	.extend<CFGProvider>()
 	.use(COLLECTED_CFG_FEATURE)
 	.invalidate(COLLECTED_CFG_FEATURE)
-	.provide(VIRTUALIZED_CFG_FEATURE)
-	.provide(COLLECTED_CFG_FEATURE);
+	.provide(VIRTUALIZED_CFG_FEATURE);
 
 
 /**
@@ -163,6 +163,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 	todo.push(entry);
 	while(todo)
 		makeCFG(0, todo.pop(), none);
+
 }
 
 
@@ -171,26 +172,7 @@ void Virtualizer::processWorkSpace(otawa::WorkSpace *fw) {
 void Virtualizer::configure(const PropList &props) {
 	entry = ENTRY_CFG(props);
 	virtualize = VIRTUAL_DEFAULT(props);
-	Processor::configure(props);
-}
-
-
-/**
- */
-void *Virtualizer::interfaceFor(const AbstractFeature& f) {
-	return coll;
-}
-
-
-/**
- */
-void Virtualizer::destroy(WorkSpace *ws) {
-	if(coll) {
-		delete coll;
-		INVOLVED_CFGS(ws).remove();
-		ENTRY_CFG(ws).remove();
-		coll = nullptr;
-	}
+	CFGProvider::configure(props);
 }
 
 
@@ -381,19 +363,12 @@ CFGMaker& Virtualizer::newMaker(Inst *first) {
 /**
  */
 void Virtualizer::cleanup(WorkSpace *ws) {
-	coll = new CFGCollection();
+	auto coll = new CFGCollection();
 	for(FragTable<CFGMaker *>::Iter m(makers); m(); m++) {
 		coll->add(m->build());
 		delete *m;
 	}
-}
-
-
-/**
- */
-void Virtualizer::commit(WorkSpace *ws) {
-	INVOLVED_CFGS(ws) = coll;
-	ENTRY_CFG(ws) = (*coll)[0];
+	setCollection(coll);
 }
 
 } /* end namespace */

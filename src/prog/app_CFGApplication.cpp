@@ -21,6 +21,7 @@
 
 #include <otawa/prog/Process.h>
 #include <otawa/app/CFGApplication.h>
+#include <otawa/view/features.h>
 
 namespace otawa {
 

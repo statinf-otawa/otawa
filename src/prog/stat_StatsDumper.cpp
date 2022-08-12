@@ -103,10 +103,10 @@ void StatsDumper::processWorkSpace(WorkSpace *ws) {
 		path = TASK_INFO_FEATURE.get(ws)->workDirectory();
 
 	// clean old statistics
-	Vector<cstring> to_remove;
+	Vector<string> to_remove;
 	for(auto f: path.readDir())
 		if(f.endsWith("-stat.csv"))
-			to_remove += f;
+			to_remove.add(f);
 	for(auto f: to_remove)
 		(path / f).remove();
 		

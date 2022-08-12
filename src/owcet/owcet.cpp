@@ -150,7 +150,7 @@ protected:
 	virtual void work (const string &entry, PropList &props) {
 
 		// set statistics option
-		if(display_stats /*|| detailed_stats*/)
+		if(display_stats)
 			Processor::COLLECT_STATS(props) = true;
 
 		// any script
@@ -262,10 +262,6 @@ protected:
 		if(wcet >= 0 && wcet_stats) {
 			workspace()->run<BBRatioDisplayer>(props);
 		}
-
-		// display detail of statistics
-		/*if(detailed_stats && StatInfo::Iter(workspace())())
-			genDetails(entry, props);*/
 	}
 
 private:

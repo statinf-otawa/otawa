@@ -36,7 +36,7 @@ static Identifier<BasicBlock *> BB("", 0);
 
 /**
  * @class AbstractCFGBuilder
- * This abstract processor cannot be called by itself: it provides common facilities
+ * This class  provides common facilities
  * for processor building CFGs like @ref CFGCollector  or @ref CFGBuilder.
  *
  * @par Configuration
@@ -147,13 +147,6 @@ static void targets(Inst *i, Vector<Inst *>& t, WorkSpace *ws, Identifier<Addres
 	}
 }
 
-
-/**
- */
-void AbstractCFGBuilder::processWorkSpace(WorkSpace *ws) {
-	for(int i = 0; i < makers.count(); i++)
-		processCFG(makers[i].fst);
-}
 
 /**
  * Scan the CFG to find all BBs.
@@ -414,52 +407,54 @@ void AbstractCFGBuilder::processCFG(Inst *i) {
 
 /**
  */
-AbstractCFGBuilder::AbstractCFGBuilder(p::declare& r)
-: Processor(r) {
+AbstractCFGBuilder::AbstractCFGBuilder(Monitor& mon):
+	Monitor(mon)
+{}
+
+
+AbstractCFGBuilder::~AbstractCFGBuilder() {
+	for(int i = 0; i < makers.count(); i++) {
+		CFG_INDEX(makers[i].fst).remove();
+		delete makers[i].snd;
+	}
+	makers.clear();	
 }
 
 
 /**
+ * Compute the CFG from the recorded makers;
+ * @param ws	Current workspace.
  */
-void AbstractCFGBuilder::setup(WorkSpace *ws) {
+void AbstractCFGBuilder::process(WorkSpace *ws) {
+
+	// record BB bounds
 	for(int i = 0; i < bounds.count(); i++) {
 		Inst *inst = ws->findInstAt(bounds[i]);
 		if(!inst)
-			this->warn(_ << "no instruction at " << bounds[i]);
+			log << "no instruction at " << bounds[i];
 		else {
 			BB(inst) = 0;
 			if(logFor(LOG_BB))
 				log << "\tset BB bound at " << bounds[i] << io::endl;
 		}
 	}
-}
 
-
-/**
- */
-void AbstractCFGBuilder::cleanup(WorkSpace *ws) {
-
+	// build the CFG
+	for(int i = 0; i < makers.count(); i++)
+		processCFG(makers[i].fst);
+	
 	// cleanup added bounds
 	for(int i = 0; i < bounds.count(); i++) {
 		Inst *inst = ws->findInstAt(bounds[i]);
 		if(inst)
 			inst->removeProp(BB);
 	}
-
-	// cleanup makers
-	for(int i = 0; i < makers.count(); i++) {
-		CFG_INDEX(makers[i].fst).remove();
-		delete makers[i].snd;
-	}
-	makers.clear();
-
 }
 
 
 /**
  */
 void AbstractCFGBuilder::configure(const PropList& props) {
-	Processor::configure(props);
 	bounds = BB_BOUNDS(props);
 }
 

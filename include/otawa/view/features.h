@@ -43,115 +43,44 @@ namespace view {
 using namespace elm;
 
 class View;
-class PropertyType;
-class PropertyViewer;
-class Manager;
 
 
-class Named: public AbstractIdentifier {
+class View: public PreIterator<View, Address> {
 public:
-	Named(cstring name, string label = "");
-	inline string label(void) const { return _label; }
-private:
-	string _label;
-};
-
-class Viewer: public PreIterator<Viewer, Address> {
-	friend class View;
-public:
-	virtual ~Viewer(void);
-
-	virtual void start(Block *b) = 0;
-	virtual void start(Edge *e) = 0;
-	virtual Address item(void) const = 0;
-	virtual void next(void) = 0;
-	virtual bool ended(void) const = 0;
-
-	virtual void print(io::Output& out) = 0;
-	virtual void print(display::Text& out);
-	void print(PropertyType *type, io::Output& out) const;
-	void print(PropertyType *type, display::Text& out) const;
-	const PropertyViewer *property(PropertyType *type) const;
-
-protected:
-	Viewer(WorkSpace *ws, const Vector<PropertyType *>& props);
-	inline WorkSpace *workspace(void) const { return _ws; }
-
-private:
-	WorkSpace *_ws;
-	Vector<PropertyViewer *> _props;
-};
-
-class PropertyViewer {
-	friend class Viewer;
-public:
-	inline PropertyType *type(void) const { return _type; }
-	virtual ~PropertyViewer(void);
+	View(cstring name, cstring label = "", cstring description = "");
+	inline cstring name() const { return _name; }
+	inline cstring label() const { return _label; }
+	inline cstring description() const { return _desc; }
+	
+	virtual void start(BasicBlock *b) = 0;
+	virtual Inst *item() const = 0;
+	virtual void next() = 0;
+	virtual bool ended() const = 0;
 
 	virtual void print(io::Output& out) = 0;
 	virtual void print(display::Text& out);
 
 protected:
-	PropertyViewer(PropertyType *type);
+	virtual ~View();
 private:
-	virtual void start(Block *b) = 0;
-	virtual void start(Edge *e) = 0;
-	virtual void step(const Viewer& it) = 0;
-	PropertyType *_type;
+	cstring _name, _label, _desc;
 };
 
-class PropertyType: public Named {
-	friend class View;
-	friend class Viewer;
+
+// view base
+class ViewBase {
 public:
-	//static rtti::Class<View, Named> __type;
-	//const rtti::Type& getType(void) const override;
-
-	PropertyType(View& view, cstring name, string label = "");
-	virtual ~PropertyType(void);
-	virtual bool isAvailable(WorkSpace *ws) = 0;
-private:
-	virtual PropertyViewer *visit(void) = 0;
-	View& _view;
+	virtual ~ViewBase();
+	virtual void add(View *view) = 0;
+	virtual void remove(View *view) = 0;
+	virtual View *find(cstring name) = 0;
+	virtual const List<View *>& views() = 0;
 };
-
-class View: public Named {
-	friend class Manager;
-	friend class PropertyType;
-public:
-	//static rtti::Class<View, Named, rtti::no_inst> __type;
-	//const rtti::Type& getType(void) const override;
-
-	View(cstring name, string label = "");
-	inline const List<PropertyType *>& types(void) const { return _props; }
-
-	virtual Viewer *explore(WorkSpace *ws, const Vector<PropertyType *>& types);
-protected:
-	virtual ~View(void);
-private:
-	List<PropertyType *> _props;
-};
-
-class Manager {
-	friend class View;
-public:
-	Manager(WorkSpace *ws);
-	static Manager *get(WorkSpace *ws);
-	static void add(WorkSpace *ws, View *view);
-	static void remove(WorkSpace *ws, View *view);
-	static View *find(WorkSpace *ws, string name);
-	List<View *>::Iter views(void) const { return *_views; }
-	inline WorkSpace *workspace(void) const { return _ws; }
-private:
-	List<View *> _views;
-	WorkSpace *_ws;
-};
-
-inline List<View *>::Iter views(WorkSpace *ws) { return Manager::get(ws)->views(); }
 
 // features
-extern p::feature FEATURE;
-extern p::id<Manager *> MANAGER;
+extern p::interfaced_feature<ViewBase> BASE_FEATURE;
+extern p::id<Path> DUMP_PATH;
+extern p::feature DUMP_FEATURE;
 
 } }	// otawa::view
 

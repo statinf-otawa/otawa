@@ -29,14 +29,19 @@
 namespace otawa {
 
 // CFGBuilder class
-class CFGBuilder: public AbstractCFGBuilder {
+class CFGBuilder: public Processor {
 public:
 	static p::declare reg;
 	CFGBuilder(p::declare& r = reg);
-
+	void configure(const PropList& props) override;
+	
 protected:
-	virtual void setup(WorkSpace *ws);
-	virtual void cleanup(WorkSpace *ws);
+	void setup(WorkSpace *ws) override;
+	void processWorkSpace(WorkSpace *ws) override;
+	void commit(WorkSpace *ws) override;
+	void destroy(otawa::WorkSpace *ws) override;
+private:
+	AbstractCFGBuilder *builder;
 };
 
 } // otawa

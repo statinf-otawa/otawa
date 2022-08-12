@@ -25,6 +25,7 @@
 #include <elm/data/ListQueue.h>
 #include <elm/data/HashMap.h>
 #include <otawa/cfg/features.h>
+#include <otawa/cfg/CFGProvider.h>
 #include <otawa/proc/Processor.h>
 
 
@@ -32,17 +33,14 @@ namespace otawa {
 
 using namespace elm;
 
-class CFGTransformer: public Processor {
+class CFGTransformer: public CFGProvider {
 public:
 	static p::declare reg;
 	CFGTransformer(p::declare& r = reg);
-	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
 	void processWorkSpace(WorkSpace *ws) override;
 	void cleanup(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
-	void commit(WorkSpace *ws) override;
 
 	BasicBlock *build(Inst *inst, int n);
 	BasicBlock *build(Array<Inst *> insts);
@@ -77,7 +75,6 @@ private:
 	HashMap<CFG *, CFGMaker *> cmap;
 	HashMap<Block *, Block *> bmap;
 	bool no_unknown;
-	CFGCollection *coll;
 };
 
 }	// otawa

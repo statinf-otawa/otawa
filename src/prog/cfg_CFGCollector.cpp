@@ -28,7 +28,7 @@
 #include <otawa/prog/TextDecoder.h>
 #include <otawa/prog/WorkSpace.h>
 #include <otawa/view/features.h>
-#include "../../include/otawa/flowfact/FlowFactLoader.h"
+#include <otawa/flowfact/FlowFactLoader.h>
 
 namespace otawa {
 
@@ -177,26 +177,25 @@ int CFGCollection::countBlocks(void) const {
 
 /**
  */
-CFGCollector::CFGCollector(p::declare& r): AbstractCFGBuilder(r), coll(nullptr) {
-}
+CFGCollector::CFGCollector(p::declare& r):
+	CFGProvider(r),
+	builder(new AbstractCFGBuilder(*this))
+{ }
 
 /**
  * CFGCollector registration.
  */
-p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 1, 0))
+p::declare CFGCollector::reg = p::init("otawa::CFGCollector", Version(2, 2, 0))
 	.require(FLOW_FACTS_FEATURE)
-	.require(LABEL_FEATURE)
-	.require(view::FEATURE)
 	.require(TASK_INFO_FEATURE)
-	.provide(COLLECTED_CFG_FEATURE)
-	.maker<CFGCollector>();
+	.extend<CFGProvider>()
+	.make<CFGCollector>();
 
 
 /**
  */
 void CFGCollector::setup(WorkSpace *ws) {
 	added_cfgs[0] = TASK_INFO_FEATURE.get(ws)->entryInst()->address();
-	AbstractCFGBuilder::setup(ws);
 
 	// find address of label
 	for(int i = 0; i < added_funs.count(); i++) {
@@ -206,7 +205,7 @@ void CFGCollector::setup(WorkSpace *ws) {
 		Inst *inst = ws->findInstAt(addr);
 		if(!inst)
 			throw ProcessorException(*this, _ << "symbol \"" << added_funs[i] << "\" is not mapped in memory");
-		maker(inst);
+		builder->maker(inst);
 	}
 
 	// add instructions of CFGs to process
@@ -214,82 +213,44 @@ void CFGCollector::setup(WorkSpace *ws) {
 		Inst *inst = ws->findInstAt(added_cfgs[i]);
 		if(!inst)
 			throw ProcessorException(*this, _ << "address " << added_cfgs[i] << " is out of code segments.");
-		maker(inst);
+		builder->maker(inst);
 	}
-
 }
 
 
-/**
- */
-void CFGCollector::cleanup(WorkSpace *ws) {
+///
+void CFGCollector::processWorkSpace(WorkSpace *ws) {
+
+	// build the CFGs
+	builder->process(ws);
 
 	// build the CFG collection and clean markers
-	coll = new CFGCollection();
-	for(Iter m(*this); m(); m++) {
+	auto coll = new CFGCollection();
+	for(AbstractCFGBuilder::Iter m(*builder); m(); m++) {
 		CFG *g = m->build();
 		coll->add(g);
 	}
-
-	// install the collection
-	INVOLVED_CFGS(ws) = coll;
-	ENTRY_CFG(ws) = (*coll)[0];
-
-	// install the view
-	//view::Manager::add(ws, &ASSEMBLY_VIEW);
-
+	setCollection(coll);
+	
 	// if needed, set task name to the workspace
 	if(ws->name() == "")
 		ws->name(coll->entry()->name());
 
-	// cleanup all
-	AbstractCFGBuilder::cleanup(ws);
-}
-
-
-/**
- */
-void CFGCollector::destroy(WorkSpace *ws) {
-	//view::Manager::remove(ws, &ASSEMBLY_VIEW);
-	if(coll != nullptr) {
-		delete coll;
-		INVOLVED_CFGS(ws).remove();
-		ENTRY_CFG(ws).remove();
-		coll = nullptr;
-	}
+	// destroy builder
+	delete builder;
+	builder = nullptr;
 }
 
 
 ///
 void CFGCollector::configure(const PropList& props) {
-	AbstractCFGBuilder::configure(props);
-
-	// reserve place for task entry
-	/*Address addr = TASK_ADDRESS(props);
-	if(!addr.isNull())
-		added_cfgs.add(addr);
-	else {
-		string name = TASK_ENTRY(props);
-		if(!name)
-			name = "main";
-		added_funs.add(name);
-	}*/
+	CFGProvider::configure(props);
+	builder->configure(props);
 	added_cfgs.add(Address::null);
-
-	// collect added CFGs
 	for(auto g: ADDED_CFG.all(props))
 		added_cfgs.add(g);
 	for(auto f: ADDED_FUNCTION.all(props))
 		added_funs.add(f);
-}
-
-
-///
-void *CFGCollector::interfaceFor(const AbstractFeature& f) {
-	if(&f == &COLLECTED_CFG_FEATURE)
-		return coll;
-	else
-		return nullptr;
 }
 
 

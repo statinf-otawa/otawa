@@ -20,260 +20,25 @@
  *	02110-1301  USA
  */
 
+#include <elm/data/ListMap.h>
 #include <otawa/cfg/features.h>
 #include <otawa/display/display.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/prog/features.h>
 #include <otawa/view/features.h>
 
 namespace otawa { namespace view {
 
 /**
- * @degroup view	View Module
+ * @defgroup view	View Module
  *
  * @code
  * #include <otawa/view/features.h>
  * @endcode
  *
- * The view modules aims to provide different view of the program
- * according to the different program representations and properties
- * calculated by the applied analysis. The objective is to support
- * automatic display of analyzes results from OTAWA tools like
- * @ref operform.
- *
- * When a program domain (instructions, cache accesses, etc)
- * is interfaced with the @ref view module, it can be automatically surveyed
- * or explored by human user. This may help to debug the corresponding analysis
- * or to get a better understanding of the work of the program relatively
- * to the concerned address.
- *
- * @ref main module is made of:
- * * a set of classes to declare views and viewed properties (@ref View, @ref PropertyType),
- * * a set of classes to visit the view and properties (@ref Viewer, @ref PropertyViewer),
  * * a class, @ref Manager, to collect all available views.
  */
 
-
-/**
- * @class Named
- * This class represents an identified object with a unique name
- * and a name displayed to the user, called a label.
- * @ingroup view
- */
-
-/**
- */
-Named::Named(cstring name, string label): AbstractIdentifier(name), _label(label) {
-}
-
-/**
- * @fn string Named::label(void) const;
- * Get the label of an object.
- * @return	Label.
- */
-
-
-/**
- * @class Viewer
- * This class provides a way to explore a view of the program, that is, an aspect
- * of the work of the program. This may the instructions composing the program,
- * the accesses to the caches, the semantic instructions, etc.
- *
- * Basically, this class is a re-startable iterator: the @ref start() is called
- * to explore a basic block or an edge and then each instruction be explored
- * in turn. In parallel, the instantiated values can be also displayed.
- *
- * A good to implement this interface is to use existing iterators
- * on the corresponding program representation.
- *
- * @ingroup view
- */
-
-/**
- */
-Viewer::Viewer(WorkSpace *ws, const Vector<PropertyType *>& types): _ws(ws), _props(types.count()) {
-	for(auto t: types)
-		_props.add(t->visit());
-}
-
-/**
- */
-Viewer::~Viewer(void) {
-	for(auto t: _props)
-		delete t;
-}
-
-/**
- * @fn void Viewer::start(Block *b);
- * Start exploring a block.
- * @param b		Block to explore.
- */
-
-/**
- * @fn void Viewer::start(Edge *e);
- * Start exploring an edge.
- * @param e		Edge to explore.
- */
-
-/**
- * @fn Address Viewer::item(void) const;
- * Get the address of the current instruction.
- * @return	Current instruction address.
- */
-
-/**
- * @fn void Viewer::next(void);
- * Move to the next instruction.
- */
-
-/**
- * @fn bool Viewer::ended(void) const;
- * Test if the current traversal is ended.
- * @return	True if the traversal is ended, false else.
- */
-
-/**
- * @fn void Viewer::print(io::Output& out) const;
- * Display the current instruction.
- * @param out	Stream to output to.
- */
-
-/**
- * Print the viewed element in a formatted style.
- * Default implement call print(io::Output&) version.
- * @param out	Formatetd output to display to.
- */
-void Viewer::print(display::Text& out) {
-	print(out.out());
-}
-
-/**
- * Print the required property.
- * @param type	Type of property to display.
- * @param out	Stream to output to.
- */
-void Viewer::print(PropertyType *type, io::Output& out) const {
-	for(auto pv = *_props; pv(); pv++)
-		if(pv->type() == type) {
-			pv->print(out);
-			break;
-		}
-}
-
-/**
- * Print the required property on a formatted stream.
- * @param type	Type of property to display.
- * @param out	Formatted output to display to.
- */
-void Viewer::print(PropertyType *type, display::Text& out) const {
-	for(auto pv = *_props; pv(); pv++)
-		if(pv->type() == type) {
-			pv->print(out);
-			break;
-		}
-}
-
-/**
- * Get the property viewer corresponding to a property type.
- * @param type	Looked property type.
- * @return		Found property viewer or null.
- */
-const PropertyViewer *Viewer::property(PropertyType *type) const {
-	for(auto pv = *_props; pv(); pv++)
-		if(pv->type() == type)
-			return *pv;
-	return nullptr;
-}
-
-
-/**
- * @class PropertyViewer
- * This class is in charge of displaying some property of the program.
- * It is controlled by a @ref Viewer that makes it evolving along
- * the evolution of the viewer.
- *
- * @ingroup view
- */
-
-/**
- * @fn PropertyType *PropertyViewer::type(void) const;
- * Get the type of the property viewer.
- * @return	Property viewer.
- */
-
-/**
- */
-PropertyViewer::~PropertyViewer(void) {
-}
-
-/**
- * @fn void PropertViewer::print(io::Output& out);
- * Print the current property value.
- * @param out	Stream to output to.
- */
-void PropertyViewer::print(display::Text& out) {
-
-}
-
-/**
- */
-PropertyViewer::PropertyViewer(PropertyType *type): _type(type) {
-}
-
-
-/**
- * @fn void PropertyViewer::start(Block *b);
- * Start the property exploration for the given block.
- * @param b		Block to explore.
- */
-
-/**
- * @fn void PropertyViewer::start(Edge *e);
- * Start the property exploration for the given edge.
- * @param e		Edge to explore.
- */
-
-/**
- * @fn void PropertyViewer::step(const Viewer& viewer) const;
- * Perform one step in exploration.
- * @param Current viewer.
- */
-
-
-/**
- * @class PropertyType
- * Type of a property that can be explored with a viewer.
- * @ingroup view
- */
-
-/**
- * Build a property type.
- * @param view	View where the property applies.
- * @param name	Name of the view.
- * @param label	Label identifying the view to the human user.
- */
-PropertyType::PropertyType(View& view, cstring name, string label): Named(name, label), _view(view) {
-	view._props.add(this);
-}
-
-/**
- */
-PropertyType::~PropertyType(void) {
-	_view._props.remove(this);
-}
-
-
-/**
- * @fn bool PropertyType::isAvailable(WorkSpace *ws);
- * Test if the property is available in the given workspace.
- * @param ws	Workspace to test in.
- * @return		True if the property is available, false else.
- */
-
-/**
- * @fn PropertyViewer *PropertyType::visit(void);
- * This function is called to get a viewer on the values of this property.
- * @return	Viewer for the property.
- */
 
 /**
  * @class View
@@ -284,157 +49,277 @@ PropertyType::~PropertyType(void) {
  * of instructions in the pipeline. This class provides such a view of the program.
  * On a particular view, you can have one or several analysis providing dedicated
  * properties that recorded in the view.
+ * 
+ * @ingroup view
+ */
+
+///
+View::View(cstring name, cstring label, cstring description )
+	: _name(name), _label(label), _desc(description)
+		{  }
+
+/**
+ * cstring View::name() const;
+ * Get the name of the view.
+ * @return View name.
  */
 
 /**
- * Build a view that records itself to the view manager (notice that the @ref FEATURE
- * must be required before creating a view).
+ * @fn cstring View::label() const;
+ * Get the human-readable name of the view;
+ * @return	Human readable label;
  */
-View::View(cstring name, string label): Named(name, label) {
+
+/**
+ * @fn cstring View::description() const;
+ * Get the description of the view.
+ * @return	View description.
+ */
+
+/**
+ * @fn void View::start(BasicBlock *b);
+ * Start the traversal of the block b for the view.
+ * @param b		Block to explore.
+ */
+
+/**
+ * @fn Address View::item() const;
+ * Get the instruction supporting the current viewed item;
+ * @return	Current viewed item instruction;
+ */
+
+/**
+ * @fn void View::next();
+ * Pass to the next viewed item.
+ */
+
+/**
+ * @fn bool View::ended() const;
+ * Test if all items of the current block has been traversed.
+ * @return	True if all items are traversed, false else.
+ */
+
+/**
+ * @fn void View::print(io::Output& out);
+ * Print the current viewed item.
+ * @param out	Stream to output to (non formatted).
+ */
+
+/**
+ * Print the current viewed item in a formatted way.
+ * @param out 	Formatted output to write to;
+ */
+void View::print(display::Text& out) {
+	print(out.out());	
 }
 
-/**
- */
-View::~View(void) {
-}
-
-/**
- */
-//rtti::Class<View, Named, rtti::no_inst> View::__type("otawa::view::View");
-
-/**
- */
-/*const rtti::Type& View::getType(void) const {
-	return __type;
-}*/
+///
+View::~View() { }
 
 
 /**
- * @fn List<PropertyType *>::Iter View::types(void) const;
- * Get the list of available properties in the current view.
- * @return	Viewable properties.
+ * @class ViewBase
+ * ViewBase is an interface allowing to store all availaible views and
+ * to retrieve them;
+ * 
+ * Provied by @ref otawa::view::BASE_FEATURE.
+ * 
+ * @ingroup view
+ */
+
+///
+ViewBase::~ViewBase() {}
+
+/**
+ * @fn void add(View *view);
+ * Add a view to the base.
+ * @param view		Added view;
  */
 
 /**
- * Get a re-startable view explorator for the given set of properties.
- */
-Viewer *View::explore(WorkSpace *ws, const Vector<PropertyType *>& types) {
-	return nullptr;
-}
-
-
-/**
- * @class Manager
- * Manager of views. Provides mainly the sollection of available views.
+ * @fn void remove(View *view);
+ * Remove a view from the base.
+ * @param view 		Removed view.
  */
 
 /**
- * Get the manager for the given workspace.
- * @param ws	Work space to get manager from.
- * @return		Found manager or null pointer.
+ * @fn View *find(cstring name);
+ * Find a view by its name.
+ * @param name	Looked name.
+ * @return		Found view or a null pointer.
  */
-Manager *Manager::get(WorkSpace *ws) {
-	return *MANAGER(ws);
-}
+
+/**
+ * @fn const List<View *>& views();
+ * Get the list of views.
+ * @return	Iterator on the views.
+ */
 
 
 /**
+ * @ingroup view
  */
-Manager::Manager(WorkSpace *ws): _ws(ws) {
-}
-
-
-/**
- * Add a view to the view manager of the given workspace.
- * This only function can only be called once the otawa::view::FEATURE
- * is provided.
- *
- * @param ws	Workspace to add view to.
- * @param view	To add.
- */
-void Manager::add(WorkSpace *ws, View *view) {
-	Manager *man = get(ws);
-	ASSERTP(man != nullptr, "Can only be called once the view::FEATURE is provided!\n");
-	man->_views.add(view);
-}
-
-
-/**
- * Remove a view from the workspace.
- * Notice this method quietly ignore if the view is not in the workspace.
- * @param ws	Workspace to remove from.
- * @param view	Removed view.
- */
-void Manager::remove(WorkSpace *ws, View *view) {
-	Manager *man = get(ws);
-	ASSERTP(man != nullptr, "Can only be called once the view::FEATURE is provided!\n");
-	man->_views.remove(view);
-}
-
-
-/**
- * Find a view b its name in a workspace.
- * @param ws	Workspace to look in.
- * @param name	Looked view name.
- * @return		Found view or null pointer.
- */
-View *Manager::find(WorkSpace *ws, string name) {
-	for(auto v: get(ws)->_views)
-		if(v->name() == name)
-			return v;
-	return nullptr;
-}
-
-
-/**
- * @fn List<View *>::Iter Manager::views(void) const;
- * Get the views available in the manager.
- * @return	List of views.
- */
-
-class Maker: public Processor {
+class ViewBaseImpl: public Processor, public ViewBase {
 public:
 	static p::declare reg;
-	Maker(void): Processor(reg) { }
+	ViewBaseImpl(p::declare& r = reg): Processor(r) {}
+	
+	void *interfaceFor(const otawa::AbstractFeature& feature) override {
+		if(&feature == &BASE_FEATURE)
+			return static_cast<ViewBase *>(this);
+		else
+			return nullptr;
+	}
+	
+	void add(View *view) override {
+		_views.add(view);
+		_map.put(view->name(), view);
+	}
+	
+	void remove(View *view) override {
+		_views.remove(view);
+		_map.remove(view->name());
+	}
+	
+	View *find(cstring name) override {
+		return _map.get(name, nullptr);
+	}
+	
+	const List<View *>& views() override {
+		return _views;
+	}
+
+private:
+	List<View *> _views;
+	ListMap<cstring, View *> _map;
+	
+};
+
+///
+p::declare ViewBaseImpl::reg
+	= p::init("otawa::view::ViewBaseImpl", Version(1, 0, 0))
+	.provide(BASE_FEATURE)
+	.make<ViewBaseImpl>();
+
+
+/**
+ * This feature ensures that the base for viewers is set up.
+ * 
+ * Default implementation: @ref ViewBaseImpl.
+ * 
+ * @ingroup view
+ */
+p::interfaced_feature<ViewBase> BASE_FEATURE(
+	"otawa::view::BASE_FEATURE",
+	p::make<ViewBaseImpl>());
+
+
+/**
+ * @ingroup view
+ */
+class Dumper: public Processor {
+public:
+	static p::declare reg;
+	Dumper(p::declare& r = reg): Processor(r) {}
+
+	void configure(const PropList& props) override {
+		Processor::configure(props);
+		path = DUMP_PATH(props);
+	}
 
 protected:
 
+	void setup(WorkSpace * ws) override {
+		if(path.isEmpty())
+			path = TASK_INFO_FEATURE.get(ws)->workDirectory();
+	}
+	
 	void processWorkSpace(WorkSpace *ws) override {
-		MANAGER(ws) = new Manager(ws);
+		
+	// cleanup old views
+	auto path = TASK_INFO_FEATURE.get(ws)->workDirectory();
+	Vector<string> to_remove;
+	for(auto f: path.readDir())
+		if(f.endsWith("-view.csv"))
+			to_remove.add(f);
+	for(auto f: to_remove)
+		(path / f).remove();
+		
+		
+		// dump the views
+		for(auto view: BASE_FEATURE.get(ws)->views())
+			dumpView(*view);
 	}
-
-	void destroy(WorkSpace *ws) override {
-		delete MANAGER(ws);
-		MANAGER(ws).remove();
+	
+private:
+	
+	void dumpView(View& view) {
+		
+		// open the file
+		auto p = path / (view.name() + "-view.csv");
+		auto s = p.write();
+		io::Output out(*s);
+		
+		// dump definition
+		out << "#Name: " << view.name() << io::endl;
+		if(view.label())
+			out << "#Label: " << view.label() << io::endl;
+		if(view.description())
+			out << "#Description: " << string(view.description()).replace("\n", " ") << io::endl;
+		
+		// perform the dump
+		for(auto g: *COLLECTED_CFG_FEATURE.get(workspace())) {
+			for(auto v: *g)
+				if(v->isBasic()) {
+					auto bb = v->toBasic();
+					view.start(bb);
+					while(!view.ended()) {
+						out << g->index() << '\t'
+							<< v->index() << '\t'
+							<< view.item()->address() << '\t';
+						view.print(out);
+						out << io::endl;
+						view.next();
+					}
+				}
+		}
+		
+		// close the file
+		delete s;
 	}
-
+	
+	Path path;
 };
 
-/**
- */
-p::declare Maker::reg = p::init("otawa::view::Maker", Version(1, 0, 0))
-	.provide(FEATURE)
-	.make<Maker>();
+///
+p::declare Dumper::reg
+	= p::init("otawa::view::Dumper", Version(1, 0, 0))
+	.provide(DUMP_FEATURE)
+	.require(COLLECTED_CFG_FEATURE)
+	.require(BASE_FEATURE)
+	.make<Dumper>();
 
 
 /**
- * Feature ensuring there is a view manager.
- *
- * @par Properties
- *	* MANAGER
+ * Configuration fo @ref DUMP_FEATURE.
+ * Select the directory to dump files to.
+ * @ingroup view
  */
-p::feature FEATURE("otawa::view::FEATURE", p::make<Maker>());
+p::id<Path> DUMP_PATH("otawa::view::DUMP_PATH");
 
 /**
- * Property to set the manager of views.
- *
- * @par Feature
- *	* FEATURE
- *
- * @par Hooks
- *	* WorkSpace
+ * This features forces the dump of views to disk, by default to the task
+ * workinf directory, or to the one passed to @ref DUMP_PATH.
+ * 
+ * @par implementations
+ * * @ref Dumper (default)
+ * 
+ * @par Configuration
+ * * @ref DUMP_PATH
+ * 
+ * @ingroup view
  */
-p::id<Manager *> MANAGER("otawa::view::MANAGER", nullptr);
+p::feature DUMP_FEATURE("otawa::view::DUMP_FEATURE", p::make<Dumper>());
+
 
 } }	// otawa::view
-

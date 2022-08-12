@@ -27,6 +27,7 @@
 #include <otawa/stats/features.h>
 #include <otawa/util/SymAddress.h>
 #include <otawa/prog/Manager.h>
+#include <otawa/view/features.h>
 
 #include "../../include/otawa/flowfact/FlowFactLoader.h"
 
@@ -297,6 +298,7 @@ Application::Application(const Make& make):
 	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
 	log_for(option::ListOption<string>::Make(this).cmd("--log-for").help("only apply logging to the given processor")),
 	dump_for(option::ListOption<string>::Make(this).cmd("--dump-for").help("dump results of the named analyzes").arg("ANALYSIS NAME")),
+	view(option::SwitchOption::Make(*this).cmd("-V").cmd("--view").description("Dump views of the executable.")),
 	log_level(*this),
 	props2(0),
 	ws(0)
@@ -484,6 +486,8 @@ void Application::completeTask() {
 	// manage stats
 	if(record_stats)
 		stats();
+	else if(view && workspace()->provides(view::BASE_FEATURE))
+		workspace()->require(view::DUMP_FEATURE, props);
 
 	// cleanup properties
 	delete props2;
@@ -495,8 +499,10 @@ void Application::completeTask() {
  * Generate statistics for the current workspace.
  */
 void Application::stats() {
-	workspace()->require(STATS_DUMP_FEATURE, props);
 	workspace()->require(CFG_DUMP_FEATURE, props);
+	workspace()->require(STATS_DUMP_FEATURE, props);
+	if(workspace()->provides(view::BASE_FEATURE))
+		workspace()->require(view::DUMP_FEATURE, props);
 }
 
 

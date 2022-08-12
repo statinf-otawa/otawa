@@ -37,7 +37,12 @@ protected:
 	void work(const string& entry, PropList &props) override;
 
 	void prepareCFG(const string& entry, PropList& props);
-	option::SwitchOption cfg_raw, cfg_virtualize, cfg_unroll, no_cfg_tune;
+	
+	option::SwitchOption
+		cfg_raw,
+		cfg_virtualize,
+		cfg_unroll,
+		no_cfg_tune;
 };
 
 } // otawa

@@ -117,7 +117,8 @@ protected:
 			if(out)
 				display::CFGOutput::PATH(props) = *out;
 			if(view != "") {
-				otawa::view::View *v = otawa::view::Manager::find(workspace(), view);
+				workspace()->require(view::BASE_FEATURE, props);
+				auto v = view::BASE_FEATURE.get(workspace())->find((*view).asNullTerminated());
 				if(v == nullptr) {
 					cerr << "ERROR: cannot find view " << *view << io::endl;
 					return;

@@ -1,5 +1,4 @@
 /*
- *	$Id$
  *	CFGCollector processor interface
  *
  *	This file is part of OTAWA
@@ -25,32 +24,28 @@
 #include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
 #include <otawa/cfg/AbstractCFGBuilder.h>
+#include <otawa/cfg/CFGProvider.h>
 #include <otawa/view/features.h>
 
 namespace otawa {
 
 // CFGCollector Class
-class CFGCollector: public AbstractCFGBuilder {
+class CFGCollector: public CFGProvider {
 public:
 	static p::declare reg;
 
 	CFGCollector(p::declare& r = reg);
 	void configure(const PropList& props) override;
-	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
 	void setup(WorkSpace *ws) override;
-	void cleanup(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
+	void processWorkSpace(WorkSpace *ws) override;
 
 private:
 	Vector<string> added_funs;
 	Vector<Address> added_cfgs;
-	CFGCollection *coll;
+	AbstractCFGBuilder *builder;
 };
-
-extern view::View& ASSEMBLY_VIEW;
-extern view::PropertyType& REGISTERS_PROPERTY;
 
 } // otawa
 

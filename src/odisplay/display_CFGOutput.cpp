@@ -34,11 +34,7 @@ using namespace display;
 class ViewDecorator: public CFGDecorator {
 public:
 
-	ViewDecorator(WorkSpace *ws, view::Viewer *viewer): CFGDecorator(ws),  _viewer(viewer) {
-	}
-
-	~ViewDecorator(void) {
-		delete _viewer;
+	ViewDecorator(WorkSpace *ws, view::View *view): CFGDecorator(ws),  _view(view) {
 	}
 
 	void displayBody(CFG *graph, BasicBlock *block, Text& content) const override {
@@ -47,7 +43,7 @@ public:
 	}
 
 private:
-	view::Viewer *_viewer;
+	view::View *_view;
 };
 
 
@@ -348,10 +344,8 @@ void CFGOutput::processCFG(WorkSpace *ws, CFG *g) {
 		opath = path / string(_ << g->index());
 
 	// prepare the decorator
-	if(_view) {
-		Vector<view::PropertyType *> props;
-		dec = new ViewDecorator(ws, _view->explore(ws, props));
-	}
+	if(_view)
+		dec = new ViewDecorator(ws, _view);
 	else
 		dec = new CFGOutputDecorator(*this, ws);
 	dec->display_assembly = _ass;

@@ -41,6 +41,7 @@ set(libotawa_SOURCES
 	"cfg_LoopReductor.cpp"
 	"cfg_LoopUnroller.cpp"
 	"cfg_PostDominance.cpp"
+	"cfg_CFGProvider.cpp"
 	"cfg_SubCFGBuilder.cpp"
 	"cfg_Virtualizer.cpp"
 	"cfg_Weighter.cpp"
