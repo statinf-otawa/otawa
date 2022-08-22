@@ -282,12 +282,16 @@ void DumpCFG::dump(PropList& props) {
 	// get the CFG
 	require(COLLECTED_CFG_FEATURE);
 
-	// XML case (will become the generic case)
+	// XML case
 	if(xml) {
 		DynProcessor dis("otawa::cfgio::Output");
 		dis.process(workspace());
 	}
 
+	// view used
+	else if(view)
+		workspace()->require(CFG_DUMP_FEATURE, props);
+	
 	// Dump the CFG
 	else {
 
@@ -298,8 +302,8 @@ void DumpCFG::dump(PropList& props) {
 			Displayer::SOURCE(props) = source;
 		if(cfg_virtualize)
 			Displayer::ALL(props) = true;
-		if(view)
-			Displayer::VIEW(props) = view;
+		/*if(view)
+			Displayer::VIEW(props) = view;*/
 		if(out)
 			Displayer::OUT(props) = out;
 		displayer->display_sem = display_sem;
