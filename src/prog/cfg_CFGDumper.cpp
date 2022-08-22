@@ -58,7 +58,9 @@ protected:
 			
 			// dump the CFGs
 			for(auto g: *COLLECTED_CFG_FEATURE.get(ws)) {
-				out << "G\t" << g->label() << '\t' << *CONTEXT(g) << io::endl;
+				out << "G\t" << g->label()
+					<< '\t' << g->address()
+					<< '\t' << *CONTEXT(g) << io::endl;
 				for(auto v: g->vertices()) {
 					
 					// dump blocks

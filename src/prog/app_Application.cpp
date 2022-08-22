@@ -298,7 +298,7 @@ Application::Application(const Make& make):
 	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
 	log_for(option::ListOption<string>::Make(this).cmd("--log-for").help("only apply logging to the given processor")),
 	dump_for(option::ListOption<string>::Make(this).cmd("--dump-for").help("dump results of the named analyzes").arg("ANALYSIS NAME")),
-	view(option::SwitchOption::Make(*this).cmd("-V").cmd("--view").description("Dump views of the executable.")),
+	view(option::SwitchOption::Make(*this).cmd("-W").cmd("--view").description("Dump views of the executable.")),
 	log_level(*this),
 	props2(0),
 	ws(0)
