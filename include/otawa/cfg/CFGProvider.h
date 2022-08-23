@@ -28,6 +28,9 @@ namespace otawa {
 
 class DisassemblyView;
 class SourceView;
+class KindView;
+class RegisterView;
+class SemView;
 	
 class CFGProvider: public Processor {
 public:
@@ -43,6 +46,9 @@ private:
 	CFGCollection *coll;
 	DisassemblyView *dview;
 	SourceView *sview;
+	KindView *kview;
+	RegisterView *rview;
+	SemView *seview;
 };
 
 }	// otawa

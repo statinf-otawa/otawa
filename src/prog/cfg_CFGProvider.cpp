@@ -80,7 +80,7 @@ public:
 		{ i = b->begin(); file = ""; line = 0; lookup(); }
 	bool ended() const override { return i.ended(); }
 	void next() override { i.next(); lookup(); }
-	Inst * item() const override { return *i; }
+	Inst *item() const override { return *i; }
 	void print(io::Output& out) override { out << file << ':' << line; }
 	
 private:
@@ -103,7 +103,113 @@ private:
 	BasicBlock::InstIter i;
 };
 
+
+///
+class KindView: public view::View {
+public:
+	KindView(WorkSpace& workspace):
+		view::View("kind", "Kind", "View the kind of instructions."),
+		ws(workspace)
+		{}
+
+	void start(BasicBlock *b) override { i = b->begin(); }
+	bool ended() const override { return i.ended(); }
+	void next() override { i.next(); }
+	Inst *item() const override { return *i; }
 	
+	void print(io::Output& out) override {
+		out << " kind=" << i->getKind();
+	}
+	
+private:
+	WorkSpace& ws;
+	BasicBlock::InstIter i;
+};
+
+
+///
+class RegisterView: public view::View {
+public:
+	RegisterView(WorkSpace& workspace):
+		view::View("register", "Register Usage", "View read and written registers."),
+		ws(workspace)
+		{}
+
+	void start(BasicBlock *b) override { i = b->begin(); }
+	bool ended() const override { return i.ended(); }
+	void next() override { i.next(); }
+	Inst *item() const override { return *i; }
+	
+	void print(io::Output& out) override {
+		auto pf = ws.process()->platform();
+		bool one = false;
+		RegSet set;
+		
+		// read registers
+		i->readRegSet(set);
+		if(!set.isEmpty()) {
+			one = true;
+			out << "read " << io::list(set, ", ",
+				[pf](io::Output& out, int i) { out << pf->findReg(i)->name(); });
+		}
+		
+		// write registers
+		set.clear();
+		i->writeRegSet(set);
+		if(!set.isEmpty()) {
+			if(one)
+				out << ", ";
+			one = true;
+			out << "write " << io::list(set, ", ",
+				[pf](io::Output& out, int i) { out << pf->findReg(i)->name(); });
+		}
+		
+		// no register
+		if(!one)
+			out << " none";
+	}
+	
+private:
+	WorkSpace& ws;
+	BasicBlock::InstIter i;
+};
+
+
+///
+class SemView: public view::View {
+public:
+	SemView(WorkSpace& workspace):
+		view::View("sem", "Semantic", "View the semantic instructions composing an instruction."),
+		ws(workspace)
+		{}
+
+	void start(BasicBlock *b) override { i = b->begin(); init(); }
+	bool ended() const override { return i.ended(); }
+	void next() override { p++; if(p >= b.length()) { i.next(); init(); }; }
+	Inst *item() const override { return *i; }
+	
+	void print(io::Output& out) override {
+		sem::Printer printer(ws.process()->platform());
+		printer.print(out, b[p]);
+	}
+	
+private:
+	
+	void init() {
+		if(!i.ended()) {
+			b.clear();
+			i->semInsts(b);
+			p = 0;
+		}
+	}
+	
+	WorkSpace& ws;
+	BasicBlock::InstIter i;
+	sem::Block b;
+	int p;
+};
+
+
 /**
  * @class CFGProvider
  * Base class of all code processor producing CFGs. It provides common services
@@ -130,7 +236,10 @@ CFGProvider::CFGProvider(p::declare& r):
 	Processor(r),
 	coll(nullptr),
 	dview(nullptr),
-	sview(nullptr)
+	sview(nullptr),
+	kview(nullptr),
+	rview(nullptr),
+	seview(nullptr)
 	{}
 
 ///	
@@ -150,16 +259,40 @@ void CFGProvider::commit(WorkSpace *ws) {
 	base->add(dview);
 	sview = new SourceView(*ws);
 	base->add(sview);
+	kview = new KindView(*ws);
+	base->add(kview);
+	if(ws->provides(REGISTER_USAGE_FEATURE)) {
+		rview = new RegisterView(*ws);
+		base->add(rview);
+	}
+	if(ws->provides(SEMANTICS_INFO)) {
+		seview = new SemView(*ws);
+		base->add(seview);
+	}
 }
 
 ///
 void CFGProvider::destroy(WorkSpace *ws) {
+	auto base = view::BASE_FEATURE.get(ws);
 	if(dview != nullptr) {
-		auto base = view::BASE_FEATURE.get(ws);
 		base->remove(dview);
 		delete dview;
+	}
+	if(sview != nullptr) {
 		base->remove(sview);
 		delete sview;
+	}
+	if(kview != nullptr) {
+		base->remove(kview);
+		delete kview;
+	}
+	if(rview != nullptr) {
+		base->remove(rview);
+		delete rview;
+	}
+	if(seview != nullptr) {
+		base->remove(seview);
+		delete seview;
 	}
 	if(coll != nullptr) {
 		delete coll;

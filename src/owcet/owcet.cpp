@@ -143,7 +143,7 @@ public:
 	timed			(SwitchOption			::Make(*this).cmd("--timed")	.cmd("-t").description("display computation")),
 	display_stats	(SwitchOption			::Make(*this).cmd("-S")			.cmd("--display-stats").description("display statistics")),
 	//detailed_stats	(SwitchOption			::Make(*this).cmd("-D")			.cmd("--detailed-stats").description("output detail of statistics")),
-	wcet_stats		(SwitchOption			::Make(*this).cmd("-W")			.cmd("--wcet-stat").description("detailed statistics about WCET"))
+	wcet_stats		(SwitchOption			::Make(*this).cmd("-w")			.cmd("--wcet-stat").description("detailed statistics about WCET"))
 	{ }
 
 protected:
