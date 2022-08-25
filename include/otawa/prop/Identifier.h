@@ -328,6 +328,13 @@ public:
 
 } // p
 
+// Specialization
+template <> const Type& Identifier<bool>::type() const;
+template <> const Type& Identifier<char>::type() const;
+template <> const Type& Identifier<int>::type() const;
+template <> const Type& Identifier<long long>::type() const;
+template <> const Type& Identifier<char *>::type() const;
+
 } // otawa
 
 #endif	// OTAWA_PROP_IDENTIFIER_H
