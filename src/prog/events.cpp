@@ -248,7 +248,7 @@ cstring Event::name(void) const {
  * @param on	Test for event activated, or not activated.
  * @return		True if the event provides support for the activation.
  */
-bool Event::isEstimating(bool on) {
+bool Event::isEstimating(bool on) const {
 	return false;
 }
 
@@ -275,7 +275,7 @@ int Event::weight(void) const {
  * @param cons	Constraint to add overestimation to.
  * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
  */
-void Event::estimate(ilp::Constraint *cons, bool on) {
+void Event::estimate(ilp::Constraint *cons, bool on) const {
 }
 
 

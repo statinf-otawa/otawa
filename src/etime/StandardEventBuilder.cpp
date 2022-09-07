@@ -46,8 +46,8 @@ public:
 	cstring name(void) const override { return "fetch stage"; }
 	string detail(void) const override { return _ << "instruction fetch @ " << inst()->address(); }
 	int weight(void) const override { return 0; }
-	bool isEstimating(bool on) override { return false; }
-	void estimate(ilp::Constraint *cons, bool on) override { }
+	bool isEstimating(bool on) const override { return false; }
+	void estimate(ilp::Constraint *cons, bool on) const override { }
 private:
 	ot::time _cost;
 };
@@ -103,11 +103,11 @@ public:
 		}
 	}
 
-	bool isEstimating(bool on) override {
+	bool isEstimating(bool on) const override {
 		return on && CATEGORY(_lb) != NOT_CLASSIFIED;	// only when on = true!
 	}
 
-	void estimate(ilp::Constraint *cons, bool on) override {
+	void estimate(ilp::Constraint *cons, bool on) const override {
 		if(on)
 			cons->addLeft(1, otawa::MISS_VAR(_lb));
 	}
@@ -129,9 +129,9 @@ public:
 	occurrence_t occurrence() const override { return _occ; }
 	cstring name() const override { return "branch prediction"; }
 	string detail() const override { return _ << "BP " << *branch::CATEGORY(_wbb); }
-	bool isEstimating(bool on) override { return on; }
+	bool isEstimating(bool on) const override { return on; }
 
-	void estimate(ilp::Constraint *cons, bool on) override {
+	void estimate(ilp::Constraint *cons, bool on) const override {
 		if(on)
 			cons->addLeft(1, _var);
 	}

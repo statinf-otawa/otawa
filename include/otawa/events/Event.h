@@ -85,8 +85,8 @@ public:
 	virtual int weight() const;
 
 	// ILP contribution
-	virtual bool isEstimating(bool on);
-	virtual void estimate(ilp::Constraint *cons, bool on);
+	virtual bool isEstimating(bool on) const;
+	virtual void estimate(ilp::Constraint *cons, bool on) const;
 
 private:
 	Inst *_inst;
