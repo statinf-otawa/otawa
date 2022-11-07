@@ -75,7 +75,7 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 	install(FILES		"${_PLUGIN}.eld"	DESTINATION 		"${OTAWA_PLUGDIR}/${_NAMESPACE}")
 
 	# autodoc support
-	if(NOT WITHOUT_DOC)
+	if(WITH_DOC)
 
 		# look for Doxygen command
 		find_program(DOXYGEN "doxygen")
@@ -139,7 +139,7 @@ function(OTAWA_INSTALL_INCLUDE _DIR)
 endfunction()
 
 
-function(MAKE_GLISS_FUNCTION _VAR _KEY _NMP _IRG _DEF) 
+function(MAKE_GLISS_FUNCTION _VAR _KEY _NMP _IRG _DEF)
 	set(_H "${CMAKE_CURRENT_BINARY_DIR}/${_KEY}.h")
 	set(${_VAR} "${_H}" PARENT_SCOPE)
 	set(_ARGN_NMP )
@@ -170,4 +170,19 @@ function(MAKE_GLISS_PROCEDURE _VAR _KEY _NMP _IRG _DEF)
 		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -p -t "${_KEY}.tpl" -d "${_DEF}" -e "${_NMP}" ${_ARGN_NMP}
      	VERBATIM
 	)
+endfunction()
+
+
+function(OTAWA_ILP _PLUGIN _NAMESPACE _SOURCES)
+        OTAWA_PLUGIN("${_PLUGIN}" "${_NAMESPACE}" "${_SOURCES}")
+        file(WRITE ilp.eld
+                "[elm-plugin]\n"
+                "path=$ORIGIN/../${_NAMESPACE}/${_PLUGIN}\n"
+        )
+        install(FILES   ilp.eld
+                DESTINATION "${OTAWA_PLUGDIR}/ilp"
+                RENAME "default.eld")
+        install(FILES   ilp.eld
+                DESTINATION "${OTAWA_PLUGDIR}/ilp"
+                RENAME "${PLUGIN}.eld")
 endfunction()

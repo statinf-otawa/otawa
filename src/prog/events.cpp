@@ -275,7 +275,7 @@ int Event::weight(void) const {
  * @param cons	Constraint to add overestimation to.
  * @param on	Add overestimation when the event is triggered (true) or not triggered (false).
  */
-void Event::estimate(ilp::Constraint *cons, bool on) const{
+void Event::estimate(ilp::Constraint *cons, bool on) const {
 }
 
 
