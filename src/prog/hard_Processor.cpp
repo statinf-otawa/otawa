@@ -642,11 +642,12 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 	RegSet regs;
 	steps.clear();
 	for(Array<Stage *>::Iter stage(stages); stage(); stage++) {
-
+		bool  is_exec = stage->getType() == Stage::EXEC;
+		
 		// add first cycle and select unit
 		Step step;
 		const PipelineUnit *unit;
-		if(stage->getType() != Stage::EXEC) {
+		if(!is_exec) {
 			unit = *stage;
 			step = Step(*stage);
 		}
@@ -663,9 +664,12 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 				steps.add(Step(Step::RELEASE, *queue));
 
 		// add read registers
-		inst->readRegSet(regs);
-		for(RegIter r(regs, _process->platform()); r(); r++)
-			steps.add(Step(Step::READ, *r));
+		if(is_exec) {
+			regs.clear();
+			inst->readRegSet(regs);
+			for(RegIter r(regs, _process->platform()); r(); r++)
+				steps.add(Step(Step::READ, *r));			
+		}
 
 		// add other cycles
 		for(int i = 0; i < unit->getLatency() - 1; i++)
@@ -677,9 +681,12 @@ void Processor::execute(Inst *inst, Vector<Step>& steps) const {
 				steps.add(Step(Step::USE, *queue));
 
 		// add written registers
-		inst->writeRegSet(regs);
-		for(RegIter r(regs, _process->platform()); r(); r++)
-			steps.add(Step(Step::WRITE, *r));
+		if(is_exec) {
+			regs.clear();
+			inst->writeRegSet(regs);
+			for(RegIter r(regs, _process->platform()); r(); r++)
+				steps.add(Step(Step::WRITE, *r));			
+		}	
 	}
 }
 
