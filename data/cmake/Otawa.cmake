@@ -25,10 +25,19 @@ function(OTAWA_FIND)
 		find_program(OTAWA_CONFIG "otawa-config" DOC "path to otawa-config")
 		if(NOT OTAWA_CONFIG)
 			message(FATAL_ERROR "ERROR: otawa-config is required !")
+		else()
+			message(STATUS "otawa-config at ${OTAWA_CONFIG}")
+			set(OTAWA_CONFIG "${OTAWA_CONFIG}" PARENT_SCOPE)
 		endif()
-		set(OTAWA_CONFIG "${OTAWA_CONFIG}" PARENT_SCOPE)
+	else()
+		find_program(OTAWA_CONFIG_GIVEN otawa-config OTAWA_CONFIG)
+		if(NOT OTAWA_CONFIG_GIVEN)
+			message(FATAL_ERROR "No otawa-config found at given path: ${OTAWA_CONFIG}")
+		else()
+			message(STATUS "Using otawa-config found nearly to the giving path: ${OTAWA_CONFIG_GIVEN}")
+			set(OTAWA_CONFIG "${OTAWA_CONFIG_GIVEN}" PARENT_SCOPE)
+		endif()
 	endif()
-	message(STATUS "otawa-config at ${OTAWA_CONFIG}")
 endfunction()
 
 function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
@@ -48,9 +57,9 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 		OUTPUT_VARIABLE OTAWA_PREFIX 	OUTPUT_STRIP_TRAILING_WHITESPACE)
 	execute_process(COMMAND "${OTAWA_CONFIG}" --plugdir
 		OUTPUT_VARIABLE OTAWA_PLUGDIR	OUTPUT_STRIP_TRAILING_WHITESPACE)
-	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${_PLUGIN}" --cflags
+	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${CMAKE_CURRENT_LIST_DIR}/${_PLUGIN}" --cflags
 		OUTPUT_VARIABLE OTAWA_CFLAGS 	OUTPUT_STRIP_TRAILING_WHITESPACE)
-	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${_PLUGIN}" --libs -r
+	execute_process(COMMAND "${OTAWA_CONFIG}" --make-plug "${CMAKE_CURRENT_LIST_DIR}/${_PLUGIN}" --libs -r
 		OUTPUT_VARIABLE OTAWA_LDFLAGS 	OUTPUT_STRIP_TRAILING_WHITESPACE)
 	message(STATUS "OTAWA_LDFLAGS=${OTAWA_LDFLAGS}")
 
@@ -170,19 +179,4 @@ function(MAKE_GLISS_PROCEDURE _VAR _KEY _NMP _IRG _DEF)
 		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -p -t "${_KEY}.tpl" -d "${_DEF}" -e "${_NMP}" ${_ARGN_NMP}
      	VERBATIM
 	)
-endfunction()
-
-
-function(OTAWA_ILP _PLUGIN _NAMESPACE _SOURCES)
-        OTAWA_PLUGIN("${_PLUGIN}" "${_NAMESPACE}" "${_SOURCES}")
-        file(WRITE ilp.eld
-                "[elm-plugin]\n"
-                "path=$ORIGIN/../${_NAMESPACE}/${_PLUGIN}\n"
-        )
-        install(FILES   ilp.eld
-                DESTINATION "${OTAWA_PLUGDIR}/ilp"
-                RENAME "default.eld")
-        install(FILES   ilp.eld
-                DESTINATION "${OTAWA_PLUGDIR}/ilp"
-                RENAME "${PLUGIN}.eld")
 endfunction()
