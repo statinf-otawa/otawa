@@ -162,6 +162,44 @@ private:
 };
 
 
+
+/**
+ * Total time statistics for @ref PIPELINE_TIME_FEATURE .
+ * @ingroup ipet
+ */
+class TotalPipelineTimeStat: public AbstractTotalTimeStat {
+public:
+	TotalPipelineTimeStat(WorkSpace *ws)
+		: AbstractTotalTimeStat(ws), sys(nullptr) { }
+
+protected:
+
+	int getStat(BasicBlock *bb) override {
+		int t = 0;
+
+		// ensure ILP system
+		if(sys == nullptr) {
+			sys = ipet::SYSTEM(ws());
+			if(sys == nullptr)
+				return 0;
+		}
+
+		// compute time
+		for(auto e: bb->inEdges())
+			for(auto pt: ipet::PIPELINE_TIME.all(e)) {
+				auto x = sys->valueOf(pt.snd);
+				t += pt.fst * x;
+			}
+		
+		// return time
+		return t;
+	}
+
+private:
+	ilp::System *sys;
+};
+
+
 // total block execution count
 class TotalCountStat: public BBStatCollector {
 public:
@@ -252,7 +290,9 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
  */
 void WCETComputation::collectStats(WorkSpace *ws) {
 	record(new TotalCountStat(ws));
-	if(ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
+	if(ws->provides(ipet::PIPELINE_TIME_FEATURE))
+		record(new TotalPipelineTimeStat(ws));
+	else if(ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
 		record(new EdgeTotalTimeStat(ws));
 	else
 		record(new TotalTimeStat(ws));
