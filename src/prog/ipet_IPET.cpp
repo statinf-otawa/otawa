@@ -273,4 +273,31 @@ p::feature CACHE_SUPPORT_FEATURE("otawa::ipet::CACHE_SUPPORT_FEATURE", new Maker
  */
 p::feature BB_TIME_FEATURE("otawa::ipet::BB_TIME_FEATURE", new DelayedMaker("otawa::trivial::BlockTime"));
 
+/**
+ * This features ensure that pipeline time has been produced.
+ * This time model is more powerful than the original @ref BB_TIME_FEATURE
+ * as it allows to associate several times (with several counter) with the BBs
+ * and the edges.
+ * 
+ * **Default processor:** none.
+ * 
+ * **Properties:** @ref PIPELINE_TIME
+ * 
+ * @ingroup ipet
+ * 
+ */
+p::feature PIPELINE_TIME_FEATURE("otawa::ipet::PIPELINE_TIME_FEATURE");
+
+
+/**
+ * Property recording one time for a BB or an edge and its frequency.
+ * Its arguments ia a pair (t, x) where time t is the time and x is the ILP
+ * variable accounting for the frequency.
+ * 
+ * **Features:** @ref PIPELINE_TIME_FEATURE
+ * **Hooks:** @ref BasicBlock, @ref Edge . 
+ * @ingroup ipet
+ */
+p::id<pipeline_time_t> PIPELINE_TIME("otawa::ipet::PIPELINE_TIME");
+
 } } // otawa::ipet

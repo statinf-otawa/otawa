@@ -93,6 +93,11 @@ protected:
 	virtual int getStat(BasicBlock *bb);
 };
 
+
+extern p::feature PIPELINE_TIME_FEATURE;
+typedef Pair<ot::time, ilp::Var *> pipeline_time_t;
+extern p::id<pipeline_time_t> PIPELINE_TIME;
+
 } }	// otawa::ipet
 
 #endif	// OTAWA_IPET_FEATURES_H
