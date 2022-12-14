@@ -288,11 +288,11 @@ protected:
 			// output RPath
 			if(rpath) {
 				elm::Vector<string> rpaths;
-				Path lpath = rpathFor(getLibDir(), ipath);
+				Path lpath = rpathFor(ipath, getLibDir());
 				rpaths.add(lpath);
 				cout << " -Wl,-rpath -Wl," << lpath;
 				for(elm::Vector<sys::Plugin *>::Iter p = plugs; p(); p++) {
-					Path rpath = rpathFor(*p, ipath);
+					Path rpath = rpathFor(ipath, *p);
 					if(!rpaths.contains(rpath)) {
 						rpaths.add(rpath);
 						if(make_app)
@@ -364,18 +364,18 @@ private:
 		return false;
 	}
 
-	Path rpathFor(const Path& p, const Path& ipath) {
-		if(!ipath)
-			return p;
+	Path rpathFor(const Path& rpath, const Path& lpath) {
+		if(!lpath)
+			return rpath;
 		else
-			return Path("$ORIGIN") / p.relativeTo(ipath);
+			return Path("$ORIGIN") / lpath.relativeTo(rpath);
 	}
 
 	/**
 	 * Compute RPath for the given plugin.
 	 */
-	Path rpathFor(sys::Plugin *p, sys::Path ipath) {
-		return rpathFor(p->path().dirPart(), ipath);
+	Path rpathFor(sys::Path rpath, sys::Plugin *plug) {
+		return rpathFor(rpath, plug->path().dirPart());
 	}
 
 	/**

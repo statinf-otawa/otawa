@@ -74,7 +74,7 @@ function(OTAWA_PLUGIN _PLUGIN _NAMESPACE _SOURCES)
 	set(OTAWA_LIB_DIR "${OTAWA_PREFIX}/lib" PARENT_SCOPE)
 
 	# plugin definition
-	add_library				("${_PLUGIN}" MODULE ${_SOURCES})
+	add_library				("${_PLUGIN}" SHARED ${_SOURCES})
 	set_property			(TARGET "${_PLUGIN}" PROPERTY PREFIX "")
 	set_property			(TARGET "${_PLUGIN}" PROPERTY COMPILE_FLAGS "${OTAWA_CFLAGS}")
 	target_link_libraries	("${_PLUGIN}" "${OTAWA_LDFLAGS}")
