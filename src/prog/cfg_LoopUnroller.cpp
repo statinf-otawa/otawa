@@ -190,6 +190,7 @@ void LoopUnroller::unroll(otawa::CFG *cfg, Block *header, CFGMaker *vcfg) {
 				loopList.put(current);
 
 				// add exit edges destinations to the worklist
+				cerr << "DEBUG: " << current << io::endl;
 				for (Vector<Edge*>::Iter exitedge(**EXIT_LIST(current)); exitedge(); exitedge++)
 					if (!doneList.contains(exitedge->target())) {
 						workList.put(exitedge->target());
