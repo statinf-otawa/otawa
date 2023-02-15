@@ -8,6 +8,7 @@ very versatile and easy to extend.
 
 The goal of this manual is mainly to describe how extensions can be developed
 for OTAWA.  The following extensions are described :
+
   * *scripts*: to provide a new computation methods or adaptation to new micro-architectures (usually matching a specific microprocessor model).
   * *loaders*: to adapt a new Instruction Set Architecture (ISA),
   * *analyzers* (or code processor in OTAWA terminology): to provide new or more specific analyzes, 
@@ -21,7 +22,11 @@ although this documentation may be also obtained from [here](http://www.otawa.fr
 
 For any problem or question, you may ask the OTAWA developers from the site [http://www.otawa.fr](http://www.otawa.fr).
 
-[TOC]
+#### Contents
+
+1. [Script Development](#Script Development)
+2. [Development of Loader](#Development of Loader)
+3. [Analyzer Development](#Analyzer Development )
 
 # Script Development 
 
@@ -38,9 +43,7 @@ easy to read and write by a human user. They are mostly the simpler way
 to extend OTAWA without the need to understand
 the internal API of the framework. In addition, scripts are easy
 to write because they use well-known formats based on XML like
-[XInclude](http://www.w3.org/TR/2006/REC-xinclude-20061115/)
-or [XSLT](http://www.w3.org/TR/xslt20/) that gives a lot of power
-in the script behavior.
+[XInclude](http://www.w3.org/TR/2006/REC-xinclude-20061115/) or [XSLT](http://www.w3.org/TR/xslt20/) that gives a lot of power in the script behavior.
 
 Scripts have basically two usage. First, they are used to configure the computation
 for a particular architecture. Instead of using the main stream computation approach,
