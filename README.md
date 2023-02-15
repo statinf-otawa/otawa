@@ -32,3 +32,7 @@ $ make install
 ```
 
 Basically, **OTAWA** tries to install in your standard file system. To specify a directory, add option `--CMAKE_INSTALL_PREFIX=`_PATH_ to select a specific installation path.
+
+## Developer manual
+
+For help in order to develop an extension for OTAWA, refer to [the developer manual](./doc/dev/dev.md).
