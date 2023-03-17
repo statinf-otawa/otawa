@@ -437,11 +437,11 @@ void Script::work(WorkSpace *ws) {
 				}
 	}
 
-	//DEBUG(
+	DEBUG(
 		OutStream *out = elm::sys::System::createFile("out.xml");
 		xom::Serializer serial(*out);
 		serial.write(xsl);
-		delete out;//);
+		delete out;);
 
 	// perform the transformation
 	xom::XSLTransform xslt(xsl);
