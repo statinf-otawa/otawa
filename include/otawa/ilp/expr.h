@@ -42,8 +42,10 @@ inline Term operator*(coef_t c, var v) { return Term(v, c); }
 inline Term operator*(var v, coef_t c) { return Term(v, c); }
 inline Term operator*(int c, var v) { return Term(v, c); }
 inline Term operator*(var v, int c) { return Term(v, c); }
-inline Term operator*(int64_t c, var v) { return Term(v, c); }
-inline Term operator*(var v, int64_t c) { return Term(v, c); }
+inline Term operator*(t::int64 c, var v) { return Term(v, c); }
+inline Term operator*(var v, t::int64 c) { return Term(v, c); }
+inline Term operator*(t::uint64 c, var v) { return Term(v, c); }
+inline Term operator*(var v, t::uint64 c) { return Term(v, c); }
 
 
 // cons class
