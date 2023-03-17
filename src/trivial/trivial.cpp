@@ -154,7 +154,7 @@ protected:
 				if(lb->bb()) {
 					var x(ipet::VAR(lb->bb()));
 					ot::time miss_t = mem->readTime(lb->address());
-					sys += miss_t * x;
+					sys += x * miss_t;
 					if(logFor(LOG_INST))
 						log << "\tadded miss for " << lb->address() << " (time = " << miss_t << ")\n";
 				}
