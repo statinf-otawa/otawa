@@ -58,22 +58,22 @@ public:
 		GT  = 0b100,
 		ANY = 0b111;
 
-	Condition(void);
+	Condition();
 	Condition(sem::cond_t cond, hard::Register *reg);
 	Condition(bool unsigned_, cond_t cond, hard::Register *reg);
 
-	inline bool isEmpty(void) const { return _cond == 0; }
-	inline bool isAny(void) const { return _cond == ANY; }
-	inline bool isUnsigned(void) const { return _unsigned; }
-	inline bool isSigned(void) const { return !_unsigned; }
-	inline cond_t cond(void) const { return _cond; }
-	inline hard::Register *reg(void) const { return _reg; }
-	sem::cond_t semCond(void) const;
+	inline bool isEmpty() const { return _cond == 0; }
+	inline bool isAny() const { return _cond == ANY; }
+	inline bool isUnsigned() const { return _unsigned; }
+	inline bool isSigned() const { return !_unsigned; }
+	inline cond_t cond() const { return _cond; }
+	inline hard::Register *reg() const { return _reg; }
+	sem::cond_t semCond() const;
 	bool equals(const Condition& c) const;
 	bool subsetOf(const Condition& c) const;
 
 	Condition complementOf(const Condition& c) const;
-	Condition inverse(void) const;
+	Condition inverse() const;
 	Condition meet(const Condition& c) const;
 	Condition join(const Condition& c) const;
 

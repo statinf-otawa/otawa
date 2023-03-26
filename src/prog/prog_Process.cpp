@@ -1422,7 +1422,7 @@ bool Condition::equals(const Condition& c) const {
 	return _unsigned == c._unsigned && _reg == c._reg && _cond == c._cond;
 }
 
-Condition Condition::inverse(void) const {
+Condition Condition::inverse() const {
 	return Condition(_unsigned, ANY & ~_cond, _reg);
 }
 

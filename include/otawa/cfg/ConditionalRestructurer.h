@@ -32,7 +32,7 @@ public:
 	ConditionalRestructurer(p::declare& r = reg);
 
 protected:
-	virtual void transform(CFG *g, CFGMaker &m);
+	void transform(CFG *g, CFGMaker &m) override;
 
 private:
 	void split(Block *bb);

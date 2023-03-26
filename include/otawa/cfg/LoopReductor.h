@@ -25,22 +25,22 @@
 
 #include <elm/data/Vector.h>
 #include <otawa/cfg/features.h>
+#include <otawa/cfg/CFGProvider.h>
 #include <otawa/dfa/BitSet.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/proc/Processor.h>
 
 namespace otawa {
 
-class LoopReductor: public Processor {
+class LoopReductor: public CFGProvider {
 public:
 	static p::declare reg;
 	LoopReductor(p::declare& r = reg);
-	void *interfaceFor(const AbstractFeature& f) override;
 
 protected:
 	void processWorkSpace(WorkSpace *ws) override;
-	void commit(WorkSpace *ws) override;
-	void destroy(WorkSpace *ws) override;
+	//void commit(WorkSpace *ws) override;
+	//void destroy(WorkSpace *ws) override;
 
 private:
 	typedef Vector<dfa::BitSet *> loops_t;

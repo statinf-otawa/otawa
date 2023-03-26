@@ -163,7 +163,7 @@ p::declare ConditionalRestructurer::reg = p::init("otawa::ConditionalRestructure
 /**
  */
 ConditionalRestructurer::ConditionalRestructurer(p::declare& r)
-: CFGTransformer(r), _nop(0), _anop(0) {
+: CFGTransformer(r), _nop(nullptr), _anop(nullptr) {
 }
 
 
@@ -188,7 +188,12 @@ void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 // basic block
 class Case {
 public:
-	inline Case(void): _bra(BOTH) { }
+	inline Case(): _bra(BOTH) { }
+
+	Case(const Case& c): _bra(c._bra) {
+		_conds = c._conds;
+		_insts = c._insts;
+	}
 
 	/**
 	 * Get the branch mask.
@@ -200,7 +205,7 @@ public:
 	 * Remove conditions matching the condition which register is written.
 	 * @param wr	Written registers.
 	 */
-	void remove(const RegSet& wr) {
+	void removeCond(const RegSet& wr) {
 		int i = 0, j = 0;
 		while(i < _conds.length())
 			if(wr.contains(_conds[i].reg()->platformNumber()))
@@ -248,7 +253,7 @@ public:
 	 */
 	void add(Inst *i, const RegSet& wr, t::uint8 bra = NONE) {
 		_insts.add(i);
-		remove(wr);
+		removeCond(wr);
 		if(bra != NONE)
 			_bra = bra;
 	}
@@ -328,7 +333,7 @@ void ConditionalRestructurer::split(Block *b) {
 		return;
 	}
 
-    if(!b->isBasic())
+	if(!b->isBasic())
         return;
 
 	// split the block
@@ -337,18 +342,17 @@ void ConditionalRestructurer::split(Block *b) {
 	Vector<Case *> cases;
 	cases.add(new Case());
 	for(auto i: *bb) {
-		Condition c = i->condition();
+		Condition ic = i->condition();
 		wr.clear();
 		i->writeRegSet(wr);
 
-		// no condition or final branch alone: just add the instruction
-		if(c.isEmpty() /*|| (cases.length() == 1 && i == bb->control())*/) {
-			for(Vector<Case *>::Iter k(cases); k(); k++)
+		// no condition: add i to all cases
+		if(ic.isEmpty())
+			for(auto k: cases)
 				k->add(i, wr);
-		}
 
-		// any condition: duplicate all cases
-		else if(c.isAny()) {
+		// any condition: 1 case with i and 1 case with NOP
+		else if(ic.isAny()) {
 			int l = cases.length();
 			for(int k = 0; k < l; k++) {
 				cases.add(cases[k]->split(nop(i), wr));
@@ -356,43 +360,41 @@ void ConditionalRestructurer::split(Block *b) {
 			}
 		}
 
-		// look at each condition
+		// a solid condition: process each case
 		else {
 			int l = cases.length();
 			for(int k = 0; k < l; k++) {
-				Condition cc = cases[k]->matches(c);
+				Condition cc = cases[k]->matches(ic);
 
-				// cc = no condition => split
+				// cc not already set: 1 case with ic and 1 case with not ic
 				if(cc.isEmpty()) {
 
-					// keep it as is for final control
+					// except it is the final branch
 					if(i == bb->control() && i == bb->last())
 						cases[k]->add(i, wr);
 
 					// new condition: duplicate
 					else {
-						Condition ic = c.inverse();
-						cases.add(cases[k]->split(nop(i, ic), wr, ic, i->isControl() ? NOT_TAKEN : NONE));
-						cases[k]->add(guard(i, c), wr, c, i->isControl() ? TAKEN : NONE);
+						Condition nic = ic.inverse();
+						cases.add(cases[k]->split(nop(i, nic), wr, nic, i->isControl() ? NOT_TAKEN : NONE));
+						cases[k]->add(guard(i, ic), wr, ic, i->isControl() ? TAKEN : NONE);
 					}
 				}
 
-				// cc subset of c => add instruction
-				else if(cc <= c) {
+				// cc subset of ic => add i to current case
+				else if(cc <= ic)
 					cases[k]->add(cond(i), wr, i->isControl() ? TAKEN : NONE);
+
+				// cc meet ic != {} => current case has to be split: cc meet ic, cc\(ic meet cc)
+				else if(ic & cc) {
+					Condition mc = cc - (ic & cc);
+					cases.add(cases[k]->split(nop(i, mc), wr, mc, i->isControl() ? NOT_TAKEN : NONE));
+					cases[k]->add(guard(i, ic & cc), wr, ic & cc, i->isControl() ? TAKEN : NONE);
 				}
 
-				// cc subset of c => split
-				else if(c & cc) {
-					Condition ic = cc - (c & cc);
-					cases.add(cases[k]->split(nop(i, ic), wr, ic, i->isControl() ? NOT_TAKEN : NONE));
-					cases[k]->add(guard(i, c & cc), wr, c & cc, i->isControl() ? TAKEN : NONE);
-				}
-
-				// cc is out of c => not executed
-				else {
+				// i becomes NOP in this case
+				else
 					cases[k]->add(nop(i), wr, i->isControl() ? NOT_TAKEN : NONE);
-				}
 			}
 		}
 
@@ -459,9 +461,9 @@ Inst *ConditionalRestructurer::cond(Inst *i) {
 void ConditionalRestructurer::make(Block *b) {
 	for(Block::EdgeIter e = b->outs(); e(); e++)
 		for(auto sb: BB.all(b)) {
-			if( e->flags() == 0								// not conditional
-			|| (e->isTaken() && (sb.snd & TAKEN))			// taken and taken generated
-			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN)))	// not-taken and not-taken generated
+			if((e->isTaken() && (sb.snd & TAKEN))			// taken and taken generated
+			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN))	// not-taken and not-taken generated
+			|| (!e->isTaken() && !e->isNotTaken()))
 			{
 				if(HD(e->sink()) != nullptr)
 					build(sb.fst, HD(e->sink()), e->flags());

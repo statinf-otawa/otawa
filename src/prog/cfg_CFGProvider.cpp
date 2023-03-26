@@ -196,10 +196,13 @@ public:
 private:
 	
 	void init() {
-		if(!i.ended()) {
+		while(!i.ended()) {
 			b.clear();
 			i->semInsts(b);
 			p = 0;
+			if(b.length() > 0)
+				return;
+			i++;
 		}
 	}
 	

@@ -236,19 +236,21 @@ protected:
 	
 	void processWorkSpace(WorkSpace *ws) override {
 		
-	// cleanup old views
-	auto path = TASK_INFO_FEATURE.get(ws)->workDirectory();
-	Vector<string> to_remove;
-	for(auto f: path.readDir())
-		if(f.endsWith("-view.csv"))
-			to_remove.add(f);
-	for(auto f: to_remove)
-		(path / f).remove();
-		
-		
+		// cleanup old views
+		auto path = TASK_INFO_FEATURE.get(ws)->workDirectory();
+		Vector<string> to_remove;
+		for(auto f: path.readDir())
+			if(f.endsWith("-view.csv"))
+				to_remove.add(f);
+		for(auto f: to_remove)
+			(path / f).remove();
+
 		// dump the views
-		for(auto view: BASE_FEATURE.get(ws)->views())
+		for(auto view: BASE_FEATURE.get(ws)->views()) {
+			if(logFor(LOG_FUN))
+				log << "\tdumping " << view->name() << io::endl;
 			dumpView(*view);
+		}
 	}
 	
 private:

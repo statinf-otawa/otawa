@@ -1134,8 +1134,10 @@ void EdgeTimeBuilder::apply(Event *event, ParExeInst *inst) {
 		case AFTER: {
 				ParExeNode *n = findNode(inst, event->unit());
 				ParExeNode *m = findNode(event->related(), inst);
-				ParExeEdge *e = new ParExeEdge(m, n, ParExeEdge::SOLID, event->cost(), event->name());
-				custom.put(event, e);
+				if(m != nullptr) {
+					ParExeEdge *e = new ParExeEdge(m, n, ParExeEdge::SOLID, event->cost(), event->name());
+					custom.put(event, e);
+				}
 			}
 			break;
 		case NOT_BEFORE: {
@@ -1310,7 +1312,6 @@ ParExeInst *EdgeTimeBuilder::findInst(Inst *i, ParExeInst *f) {
 	for(ParExeSequence::InstIterator xi(seq); xi() && *xi != f; xi++)
 		if(xi->inst() == i)
 			last = *xi;
-	ASSERT(last);
 	return last;
 }
 
@@ -1340,7 +1341,10 @@ ParExeNode *EdgeTimeBuilder::findNode(ParExeInst *i, const hard::PipelineUnit *u
  */
 ParExeNode *EdgeTimeBuilder::findNode(Pair<Inst *, const hard::PipelineUnit *> loc, ParExeInst *from) {
 	ParExeInst *xi = findInst(loc.fst, from);
-	return findNode(xi, loc.snd);
+	if(xi == nullptr)
+		return nullptr;
+	else
+		return findNode(xi, loc.snd);
 }
 
 

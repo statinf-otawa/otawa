@@ -71,7 +71,6 @@ void CFGApplication::processTask(const CFGCollection& coll, PropList& props) {
 void CFGApplication::work(const string& entry, PropList &props) {
 	prepareCFG(entry, props);
 	processTask(*COLLECTED_CFG_FEATURE.get(workspace()), props);
-	workspace()->invalidate(COLLECTED_CFG_FEATURE);
 }
 
 /**
@@ -80,6 +79,10 @@ void CFGApplication::work(const string& entry, PropList &props) {
  * @param props		Current configuration.
  */
 void CFGApplication::prepareCFG(const string& entry, PropList& props) {
+
+	// clean CFG collection if need
+	if(workspace()->isProvided(COLLECTED_CFG_FEATURE))
+		workspace()->invalidate(COLLECTED_CFG_FEATURE);
 
 	// tune the CFGs
 	if(!no_cfg_tune) {
