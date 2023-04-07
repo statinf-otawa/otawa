@@ -77,7 +77,6 @@ public:
 	Condition meet(const Condition& c) const;
 	Condition join(const Condition& c) const;
 
-	inline operator bool(void) const { return !isEmpty(); }
 	inline Condition operator~(void) const { return inverse(); }
 	inline Condition operator&(const Condition& c) const { return meet(c); }
 	inline Condition operator|(const Condition& c) const { return join(c); }

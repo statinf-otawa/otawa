@@ -22,7 +22,7 @@
 #include <otawa/cfg/ConditionalRestructurer.h>
 #include <otawa/prog/VirtualInst.h>
 
-//#define DO_DEBUG
+#define DO_DEBUG
 
 namespace otawa {
 
@@ -41,12 +41,14 @@ namespace otawa {
  *   of the refinement relatively to the current condition.
  */
 
+
 /**
  * Class representing an instruction turned into a NOP but providing an "assume".
  */
 class GuardNOP: public NOP {
 public:
-	GuardNOP(WorkSpace *ws, Inst *i, const Condition& cond): NOP(ws, i), _cond(cond) { }
+	GuardNOP(WorkSpace *ws, Inst *i, const Condition& cond)
+		: NOP(ws, i), _cond(cond) { }
 
 	int semInsts(sem::Block &block, int t) override {
 		if(!_cond.isEmpty())
@@ -67,6 +69,7 @@ public:
 private:
 	Condition _cond;
 };
+
 
 /**
  * Class representing a conditional instruction expressing the condition with an
@@ -152,7 +155,7 @@ p::feature CONDITIONAL_RESTRUCTURED_FEATURE("otawa::CONDITIONAL_RESTRUCTURED_FEA
 
 /**
  */
-p::declare ConditionalRestructurer::reg = p::init("otawa::ConditionalRestructurer", Version(1, 0, 0))
+p::declare ConditionalRestructurer::reg = p::init("otawa::ConditionalRestructurer", Version(2, 0, 0))
 	.use(LOOP_HEADERS_FEATURE)
 	.require(VIRTUAL_INST_FEATURE)
 	.provide(CONDITIONAL_RESTRUCTURED_FEATURE)
@@ -185,131 +188,73 @@ void ConditionalRestructurer::transform (CFG *g, CFGMaker &m) {
 }
 
 
-// basic block
-class Case {
+class Status {
 public:
-	inline Case(): _bra(BOTH) { }
 
-	Case(const Case& c): _bra(c._bra) {
-		_conds = c._conds;
-		_insts = c._insts;
+	typedef enum {
+		DISABLED,
+		NO_MATCH,
+		MATCH
+	} match_t;
+
+	Status() {}
+
+	Status(Inst *i): _inst(i), icnt(1), _ena(true) {
+		auto c = i->condition();
+		_reg = c.reg();
+		_unsigned = c.isUnsigned();
+		_part = c.cond();
 	}
 
-	/**
-	 * Get the branch mask.
-	 * @return	Branch mask.
-	 */
-	inline t::uint8 branch(void) const { return _bra; }
-
-	/**
-	 * Remove conditions matching the condition which register is written.
-	 * @param wr	Written registers.
-	 */
-	void removeCond(const RegSet& wr) {
-		int i = 0, j = 0;
-		while(i < _conds.length())
-			if(wr.contains(_conds[i].reg()->platformNumber()))
-				i++;
-			else {
-				if(i != j)
-					_conds[j] = _conds[i];
-				i++;
-				j++;
+	match_t match(Inst *i) {
+		auto ic = i->condition();
+		if(ic.reg() != _reg)
+			return NO_MATCH;
+		if(!_ena)
+			return DISABLED;
+		icnt++;
+		if(_part != 0) {
+			if(ic.isUnsigned() != _unsigned) {
+				_part = 0;
+				icnt = 0;
 			}
-		_conds.setLength(j);
+			else if(ic.cond() != _part
+			&& (ic.cond() != (~_part & Condition::ANY)))
+				_part = Condition::ANY;
+		}
+		return MATCH;
 	}
 
-	/**
-	 * Get the index of a condition.
-	 * @param c	Looked condition.
-	 * @return	Matching index or -1.
-	 */
-	int index(const Condition& c) {
-		for(int i = 0; i < _conds.length(); i++)
-			if(c.isSigned() == _conds[i].isSigned()
-			&& c.reg() == _conds[i].reg())
-				return i;
-		return -1;
+	void write(const RegSet& rs) {
+		if(!_ena && rs.contains(_reg->platformNumber()))
+			_ena = false;
 	}
 
-	/**
-	 * Find the case condition matching the given condition.
-	 * @param c	Looked condition.
-	 * @return	Matching condition or empty condition.
-	 */
-	Condition matches(const Condition& c) {
-		int i = index(c);
-		if(i >= 0)
-			return _conds[i];
-		else
-			return Condition();
-	}
+	inline bool worths() const { return _part != 0 && icnt > 1; }
+	inline Inst *inst() const { return _inst; }
+	inline hard::Register *reg() const { return _reg; }
+	inline int count() const { return icnt; }
+	inline int part() const { return _part; }
 
-	/**
-	 * Add an instruction to the basic block.
-	 * @param i		Added instruction.
-	 * @param wr	Written registers.
-	 * @param bra	Branch mode (default to NONE).
-	 */
-	void add(Inst *i, const RegSet& wr, t::uint8 bra = NONE) {
-		_insts.add(i);
-		removeCond(wr);
-		if(bra != NONE)
-			_bra = bra;
+	void getCases(Condition cs[3]) const {
+		if(_part == Condition::ANY) {
+			cs[0] = Condition(_unsigned, Condition::EQ, _reg);
+			cs[1] = Condition(_unsigned, Condition::LT, _reg);
+			cs[2] = Condition(_unsigned, Condition::GT, _reg);
+		}
+		else {
+			cs[0] = Condition(_unsigned, _part, _reg);
+			cs[1] = Condition(_unsigned, (~_part) & Condition::ANY, _reg);
+			cs[2] = Condition();
+		}
 	}
-
-	/**
-	 * Add an instruction with its condition.
-	 * @param i		Added instruction.
-	 * @param wr	Written registers.
-	 * @param c		Instruction condition.
-	 * @param bra	Branch mode (default to NONE).
-	 */
-	void add(Inst *i, const RegSet& set, const Condition& c, t::uint8 bra = NONE) {
-		int ci = index(c);
-		if(ci >= 0)
-			_conds[ci] = c;
-		else
-			_conds.add(c);
-		add(i, set, bra);
-	}
-
-	/**
-	 * Build a new case where the given instruction is added.
-	 * @param i		Added instruction.
-	 * @param wr	Written registers.
-	 * @param bra	Branch mode (default to NONE).
-	 */
-	Case *split(Inst *i, const RegSet& wr, t::uint8 bra = NONE) {
-		Case *nc = new Case(*this);
-		nc->add(i, wr, bra);
-		return nc;
-	}
-
-	/**
-	 * Build a new case where the given instruction is added
-	 * with the given condition.
-	 * @param i		Added instruction.
-	 * @param wr	Written registers.
-	 * @param c		Instruction condition.
-	 * @param bra	Branch mode (default to NONE).
-	 */
-	Case *split(Inst *i, const RegSet& wr, const Condition& c, t::uint8 bra = NONE) {
-		Case *nc = new Case(*this);
-		nc->add(i, wr, c, bra);
-		return nc;
-	}
-
-	/**
-	 * Take the instructions composing the case.
-	 * @return	Instruction composing the case.
-	 */
-	inline Array<Inst *> insts(void) { return _insts.detach(); }
 
 private:
-	Vector<Condition> _conds;
-	Vector<Inst *> _insts;
-	t::uint8 _bra;
+	Inst *_inst;
+	hard::Register *_reg;
+	int icnt;
+	t::uint8 _part;
+	bool _ena, _unsigned;
 };
 
 
@@ -322,82 +267,156 @@ private:
  */
 void ConditionalRestructurer::split(Block *b) {
 
-	// end block
+	// throw up non BB
 	if(b->isEnd())
 		return;
-
-	// synthetic block
 	if(b->isSynth()) {
 		Block *cb = build(b->toSynth()->callee());
 		BB(b) = pair(cb, int(BOTH));
 		return;
 	}
-
 	if(!b->isBasic())
         return;
+	auto bb = b->toBasic();
 
-	// split the block
+	// build the statuses
+	Vector<Status> status;
 	RegSet wr;
-	BasicBlock *bb = b->toBasic();
-	Vector<Case *> cases;
-	cases.add(new Case());
 	for(auto i: *bb) {
-		Condition ic = i->condition();
-		wr.clear();
-		i->writeRegSet(wr);
+		auto c = i->condition();
+		if(!c.isEmpty()) {
 
-		// no condition: add i to all cases
-		if(ic.isEmpty())
-			for(auto k: cases)
-				k->add(i, wr);
+			// find corresponding status
+			int p = status.length() - 1;
+			bool matched = false;
+			while(p >= 0)
+				switch(status[p].match(i)) {
+				case Status::MATCH:
+					matched = true;
+				case Status::DISABLED:
+					p = -1;
+					break;
+				case Status::NO_MATCH:
+					break;
+				}
 
-		// any condition: 1 case with i and 1 case with NOP
-		else if(ic.isAny()) {
-			int l = cases.length();
-			for(int k = 0; k < l; k++) {
-				cases.add(cases[k]->split(nop(i), wr));
-				cases[k]->add(i, wr);
-			}
+			// or create a new one
+			if(!matched)
+				status.add(Status(i));
+
+			// update status according to writes
+			wr.clear();
+			i->writeRegSet(wr);
+			for(auto& s: status)
+				s.write(wr);
+		}
+	}
+
+	// prepare the BB
+	typedef struct case_t {
+
+		case_t(): branch(BOTH) {}
+
+		case_t *duplicate() const {
+			auto r = new case_t;
+			r->conds = conds;
+			r->insts = insts;
+			r->branch = branch;
+			return r;
 		}
 
-		// a solid condition: process each case
-		else {
-			int l = cases.length();
-			for(int k = 0; k < l; k++) {
-				Condition cc = cases[k]->matches(ic);
+		void add(Inst *i, t::uint b, bool is_control) {
+			insts.add(i);
+			if(is_control)
+				branch = b;
+		}
 
-				// cc not already set: 1 case with ic and 1 case with not ic
-				if(cc.isEmpty()) {
+		Vector<Condition::cond_t> conds;
+		Vector<Inst *> insts;
+		t::uint8 branch;
+	} case_t;
 
-					// except it is the final branch
-					if(i == bb->control() && i == bb->last())
-						cases[k]->add(i, wr);
+	Vector<case_t *> cases;
+	cases.add(new case_t);
+	int cc = 0;
 
-					// new condition: duplicate
+	for(auto inst: *bb) {
+		auto icond = inst->condition();
+
+		// new condition
+		if(cc < status.length() && status[cc].inst() == inst) {
+			if(!status[cc].worths())
+				for(auto c: cases) {
+					c->conds.add(Condition().cond());
+					c->add(inst, BOTH, inst->isControl());
+				}
+
+			else {
+				Condition conds[3];
+				status[cc].getCases(conds);
+				auto clen = cases.length();
+				for(int i = 0; i < 3; i++) {
+					if(conds[i].isEmpty())
+						continue;
+
+					// select the instruction
+					auto mcond = icond & conds[i];
+					Inst *added_inst;
+					t::uint8 branch;
+					if(!mcond.isEmpty()) {
+						added_inst = guard(inst, mcond);
+						branch = TAKEN;
+					}
 					else {
-						Condition nic = ic.inverse();
-						cases.add(cases[k]->split(nop(i, nic), wr, nic, i->isControl() ? NOT_TAKEN : NONE));
-						cases[k]->add(guard(i, ic), wr, ic, i->isControl() ? TAKEN : NONE);
+						added_inst = nop(inst, ~mcond & conds[i]);
+						branch = NOT_TAKEN;
+					}
+
+					// need to build
+					int offset = 0;
+					if(i >= 1) {
+						offset = cases.length();
+						for(int j = 0; j < clen; j++) {
+							cases.add(cases[j]->duplicate());
+							cases.top()->conds.pop();
+							cases.top()->insts.pop();
+						}
+					}
+
+					// add condition and guard
+					for(int j = 0; j < clen; j++) {
+						cases[j + offset]->conds.add(conds[i].cond());
+						cases[j + offset]->add(added_inst, branch, false);
 					}
 				}
-
-				// cc subset of ic => add i to current case
-				else if(cc <= ic)
-					cases[k]->add(cond(i), wr, i->isControl() ? TAKEN : NONE);
-
-				// cc meet ic != {} => current case has to be split: cc meet ic, cc\(ic meet cc)
-				else if(ic & cc) {
-					Condition mc = cc - (ic & cc);
-					cases.add(cases[k]->split(nop(i, mc), wr, mc, i->isControl() ? NOT_TAKEN : NONE));
-					cases[k]->add(guard(i, ic & cc), wr, ic & cc, i->isControl() ? TAKEN : NONE);
-				}
-
-				// i becomes NOP in this case
-				else
-					cases[k]->add(nop(i), wr, i->isControl() ? NOT_TAKEN : NONE);
 			}
+			cc++;
 		}
 
+		// no condition: add to all
+		else if(icond.isEmpty())
+			for(auto c: cases)
+				c->insts.add(inst);
+
+		// condition: sometimes add inst, sometimes NOP
+		else {
+			auto nop = new NOP(workspace(), inst);
+			auto ninst = cond(inst);
+			auto c = inst->condition();
+
+			// find condition
+			int i = cc - 1;
+			while(status[i].reg() != icond.reg())
+				i--;
+			ASSERT(i >= 0);
+
+			// decorate cases
+			for(auto ca: cases)
+				if(c.cond() & ca->conds[i])
+					ca->add(ninst, TAKEN, inst->isControl());
+				else
+					ca->add(nop, NOT_TAKEN, inst->isControl());
+		}
 	}
 
 	// header block with several cases
@@ -409,12 +428,13 @@ void ConditionalRestructurer::split(Block *b) {
 
 	// create the duplicates
 	for(auto c: cases) {
-		Block *nbb = build(c->insts());
-		BB(bb).add(pair(nbb, int(c->branch())));
+		Block *nbb = build(c->insts.detach());
+		BB(bb).add(pair(nbb, int(c->branch)));
 		if(h != nullptr)
 			build(h, nbb, 0);
 		delete c;
 	}
+
 }
 
 
@@ -455,14 +475,30 @@ Inst *ConditionalRestructurer::cond(Inst *i) {
 
 
 /**
+ * Test if duplicating the BB at the given instruction with the given condition
+ * is useful or not, i.e. if the condition will apply to several instructions
+ * (in sequence).
+ * @param i		Current instruction.
+ * @param cond	Instruction condition.
+ */
+bool ConditionalRestructurer::useful(BasicBlock::InstIter i, const Condition& cond) {
+	i++;
+	if(i.ended())
+		return false;
+	auto nc = (*i)->condition();
+	return !nc.isEmpty() && !nc.isAny() && nc.reg() == cond.reg();
+}
+
+
+/**
  * Build the corresponding blocks.
  * @param b		Block to rebuild.
  */
 void ConditionalRestructurer::make(Block *b) {
 	for(Block::EdgeIter e = b->outs(); e(); e++)
-		for(auto sb: BB.all(b)) {
-			if((e->isTaken() && (sb.snd & TAKEN))			// taken and taken generated
-			|| (e->isNotTaken() && (sb.snd & NOT_TAKEN))	// not-taken and not-taken generated
+		for(auto sb: BB.all(b))
+			if((e->isTaken() && ((sb.snd & TAKEN) != 0))			// taken and taken generated
+			|| (e->isNotTaken() && ((sb.snd & NOT_TAKEN) != 0))	// not-taken and not-taken generated
 			|| (!e->isTaken() && !e->isNotTaken()))
 			{
 				if(HD(e->sink()) != nullptr)
@@ -471,7 +507,6 @@ void ConditionalRestructurer::make(Block *b) {
 					for(auto tb: BB.all(e->sink()))
 						build(sb.fst, tb.fst, e->flags());
 			}
-		}
 }
 
 } // otawa

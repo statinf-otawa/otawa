@@ -40,6 +40,7 @@ private:
 	Inst *guard(Inst *i, const Condition& cond);
 	Inst *cond(Inst *i);
 	void make(Block *bb);
+	bool useful(BasicBlock::InstIter i, const Condition& cond);
 
 	Inst *_nop, *_anop;
 };
