@@ -28,7 +28,7 @@ public:
 	ProgItem *previous(void) const;
 	virtual address_t address(void) const = 0;
 	virtual t::uint32 size(void) const = 0;
-	inline address_t topAddress(void) const { return address() + size()  /2 ; }
+	inline address_t topAddress(void) const { return address() + size() /* /2 */; }
 	virtual Inst *toInst(void);
 
 	inline MemArea area(void) const { return MemArea(address(), size() /* /2 */ ); }
