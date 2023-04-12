@@ -16,6 +16,7 @@ set(MANUALS
 
 add_custom_command(
 	OUTPUT manual.html
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 	DEPENDS ${MANUALS}
 	COMMAND python 
 	"${THOT_PATH}" -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter

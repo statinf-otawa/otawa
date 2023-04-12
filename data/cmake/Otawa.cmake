@@ -159,7 +159,7 @@ function(MAKE_GLISS_FUNCTION _VAR _KEY _NMP _IRG _DEF)
 		OUTPUT "${_H}"
 		DEPENDS "${_KEY}.tpl" ${_NMP} "${_IRG}" ${ARGN}
 		COMMAND "${GLISS_ATTR}"
-		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -f -t "${_KEY}.tpl" -d "${_DEF}" -e "${_NMP}" ${_ARGN_NMP}
+		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -f -t "${CMAKE_CURRENT_SOURCE_DIR}/${_KEY}.tpl" -d "${_DEF}" -e "${CMAKE_CURRENT_SOURCE_DIR}/${_NMP}" ${_ARGN_NMP}
      	VERBATIM
      )
  endfunction()
@@ -176,7 +176,7 @@ function(MAKE_GLISS_PROCEDURE _VAR _KEY _NMP _IRG _DEF)
 		OUTPUT "${_H}"
 		DEPENDS "${_KEY}.tpl" ${_NMP} "${_IRG}" ${ARGN}
 		COMMAND "${GLISS_ATTR}"
-		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -p -t "${_KEY}.tpl" -d "${_DEF}" -e "${_NMP}" ${_ARGN_NMP}
+		ARGS "${_IRG}" -o "${_H}" -a "${_KEY}" -p -t "${CMAKE_CURRENT_SOURCE_DIR}/${_KEY}.tpl" -d "${_DEF}" -e "${CMAKE_CURRENT_SOURCE_DIR}/${_NMP}" ${_ARGN_NMP}
      	VERBATIM
 	)
 endfunction()
