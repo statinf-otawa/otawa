@@ -250,14 +250,16 @@ private:
 			cout << '\t' << io::CYAN << *label << ":\n" << io::PLAIN;
 
 		// display the address
-		cout << inst->address();
+		// cout << inst->address();
+		cout << io::hex(inst->address().offset()/2).right().width(8).pad('0');
 
 		// display bytes of instruction (if required)
 		if(bytes) {
 			cout << "  ";
-			for(t::uint32 i = 0; i < inst->size(); i++) {
+			// for(t::uint32 i = 0; i < inst->size(); i++) {
+			for(int i = inst->size() - 1; i >=0; i--) {
 				t::uint8 b;
-				workspace()->process()->get(inst->address() + i, b);
+				workspace()->process()->get(inst->address() + (t::uint32)i, b);
 				cout << io::hex(b).pad('0').width(2);
 			}
 			if(inst->size() > max_size)
