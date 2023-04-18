@@ -169,6 +169,7 @@ public:
 	virtual Condition condition();
 	virtual int multiCount();
 	virtual void bundle(Vector<Inst *>& insts);
+	virtual Option<unsigned> cycles(void);
 	
 	// ProgItem overload
 	Inst *toInst() override;

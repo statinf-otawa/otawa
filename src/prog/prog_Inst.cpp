@@ -578,6 +578,10 @@ int Inst::multiCount(void) {
 	return 0;
 }
 
+Option<unsigned> Inst::cycles(void) {
+	return elm::none;
+}
+
 
 /**
  * Can only called for a VLIW archietcture.
