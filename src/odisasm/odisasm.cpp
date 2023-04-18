@@ -143,6 +143,7 @@ public:
 		.author("H. Cassé <hugues.casse@irit.fr>")),
 	regs	(option::SwitchOption::Make(this).cmd("-r").cmd("--regs")		.description("display register information")),
 	kind	(option::SwitchOption::Make(this).cmd("-k").cmd("--kind")		.description("display kind of instructions")),
+	cycles	(option::SwitchOption::Make(this).cmd("-y").cmd("--cycles")		.description("display cycles of instructions")),
 	sem		(option::SwitchOption::Make(this).cmd("-s").cmd("--semantics")	.description("display translation of instruction in semantics language")),
 	target	(option::SwitchOption::Make(this).cmd("-t").cmd("--target")		.description("display target of control instructions")),
 	bytes	(option::SwitchOption::Make(this).cmd("-b").cmd("--bytes")		.description("display bytes composing the instruction")),
@@ -304,6 +305,13 @@ private:
 			}
 		}
 
+		// display cycles if any
+		if(cycles) {
+			if(Option<unsigned> c = inst->cycles()) {
+				cout << io::YELLOW << "\t\tcycles = " << io::PLAIN << *c << io::endl;
+			}
+		}
+
 		// display registers
 		if(regs) {
 
@@ -349,7 +357,7 @@ private:
 		out << endl;
 	}
 
-	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond, exec;
+	option::SwitchOption regs, kind, cycles, sem, target, bytes, ksem, cond, exec;
 	option::Value<string> pipeline;
 	t::uint32 max_size;
 	const hard::Processor *proc;
