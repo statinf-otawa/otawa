@@ -77,11 +77,26 @@ public:
 	}
 
 protected:
-	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
-		if(!bb->isBasic())
-			ipet::TIME(bb) = 0;
-		else
-			ipet::TIME(bb) = itime * bb->toBasic()->count();
+	// virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
+	// 	if(!bb->isBasic())
+	// 		ipet::TIME(bb) = 0;
+	// 	else
+	// 		ipet::TIME(bb) = itime * bb->toBasic()->count();
+	// }
+	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *b) override {
+		if(!b->isBasic())
+			ipet::TIME(b) = 0;
+		else {
+			BasicBlock *bb = b->toBasic();
+			unsigned bb_cycles = 0;
+			for(BasicBlock::InstIter insts = bb->begin(); insts != bb->end(); insts++) {
+				const auto& inst = insts.item();
+				Option<unsigned> c = inst->cycles();
+				ASSERTP(c, "cycles() undefined for instruction!")
+				bb_cycles += *c;
+			}
+			ipet::TIME(b) = bb_cycles;
+		}
 	}
 
 	virtual void collectStats(WorkSpace *ws) {
