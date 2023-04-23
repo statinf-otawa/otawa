@@ -591,7 +591,7 @@ int Inst::multiCount(void) {
 	return 0;
 }
 
-Option<unsigned> Inst::cycles(void) {
+Option<Pair<unsigned, int> > Inst::cycles(void) {
 	return elm::none;
 }
 

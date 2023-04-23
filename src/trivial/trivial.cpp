@@ -91,9 +91,10 @@ protected:
 			unsigned bb_cycles = 0;
 			for(BasicBlock::InstIter insts = bb->begin(); insts != bb->end(); insts++) {
 				const auto& inst = insts.item();
-				Option<unsigned> c = inst->cycles();
+				Option<Pair<unsigned, int> > p = inst->cycles();
+				unsigned c = (*p).fst;
 				ASSERTP(c, "cycles() undefined for instruction!")
-				bb_cycles += *c;
+				bb_cycles += c;
 			}
 			ipet::TIME(b) = bb_cycles;
 		}

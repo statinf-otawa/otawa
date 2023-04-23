@@ -307,9 +307,9 @@ private:
 
 		// display cycles if any
 		if(cycles) {
-			if(Option<unsigned> c = inst->cycles()) {
-				cout << io::YELLOW << "\t\tcycles = " << io::PLAIN << *c << io::endl;
-			}
+			// if(Option<unsigned> c = inst->cycles()) {
+			// 	cout << io::YELLOW << "\t\tcycles = " << io::PLAIN << *c << io::endl;
+			// }
 		}
 
 		// display registers
