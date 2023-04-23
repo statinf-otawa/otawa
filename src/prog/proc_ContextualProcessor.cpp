@@ -87,26 +87,30 @@ void ContextualProcessor::processCFG (WorkSpace *ws, CFG *cfg) {
 	// initialization
 	ContextualPath path = *CONTEXT(cfg);
 	path.push(ContextualStep(ContextualStep::FUNCTION, cfg->address()));
-	for(BasicBlock::EdgeIter edge = cfg->entry()->outs(); edge(); edge++)
-		todo.put(pair(edge->sink(), path));
+	for(auto e: cfg->entry()->outEdges()) {
+		todo.put(pair(e->sink(), path));
+		done.set(e->sink()->index());
+	}
 
 	// traverse until the end
 	while(todo) {
 
 		// process next block
 		item_t it = todo.get();
+		if(logFor(LOG_BB))
+			cerr << "\t\t" << it.fst << io::endl;
 		processBB(ws, cfg, it.fst, it.snd);
-		done.set(it.fst->index());
 
 		// put next blocks
-		for(Block::EdgeIter e = it.fst->outs(); e(); e++)
+		for( auto e: it.fst->outEdges())
 			if(!done[e->sink()->index()]) {
 				ContextualPath p = it.snd;
 				for(int i = 0; i < LEAVE(*e); i++)
 					p.pop();
-				for(Identifier<ContextualStep>::Getter s(*e, ENTER); s(); s++)
-					p.push(*s);
+				for(auto s: ENTER.all(e))
+					p.push(s);
 				todo.put(pair(e->sink(), p));
+				done.set(e->sink()->index());
 			}
 	}
 }

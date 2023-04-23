@@ -67,19 +67,24 @@ static Inst *bundleEnd(Inst *i) {
 // ODec application class
 class ODec: public Application {
 public:
-	ODec(void):
+	ODec():
 		Application("ODec", Version(1, 1, 0),
 			"Test the decoding of instruction of a program", "H. Cassé <casse@irit.fr>",
-			"Copyright (c) 2012 - IRIT UPS")
+			"Copyright (c) 2012 - IRIT UPS"),
+		only_start(option::SwitchOption::Make(this)
+			.cmd("--only-start").help("Dump only from the _start symbol.")),
+		bytes(option::SwitchOption::Make(this)
+			.cmd("-b").cmd("--bytes").help("Dump instruction bytes."))
 	{
 	}
 
 protected:
-	virtual void work(PropList &props) {
+	void work(PropList &props) override {
 		WorkSpace *ws = workspace();
 
+		ws->require(LABEL_FEATURE);
 		// put the symbols
-		for(Process::FileIter file(workspace()->process()); file(); file++)
+		/*for(Process::FileIter file(workspace()->process()); file(); file++)
 			for(File::SymIter sym(*file); sym(); sym++) {
 				if(sym->kind() == Symbol::FUNCTION || sym->kind() == Symbol::LABEL) {
 					Inst *inst = workspace()->findInstAt(sym->address());
@@ -99,7 +104,7 @@ protected:
 						}
 					}
 				}
-			}
+			}*/
 
 		// Look the _start
 		Inst *start = ws->start();
@@ -112,21 +117,22 @@ protected:
 			cerr << "no entry to process\n";
 
 		// Look the function symbols
-		for(Process::FileIter file(ws->process()); file(); file++)
-			for(File::SymIter sym(*file); sym(); sym++)
-				if(sym->kind() == Symbol::FUNCTION) {
-					if(IGNORE_ENTRY(*sym))
-						cerr << "INFO: ignoring function symbol \"" << sym->name() << "\"\n";
-					else {
-						cerr << "ENTRY: processing function \"" << sym->name() << " at " << sym->address() << io::endl;
-						Inst *inst = ws->findInstAt(sym->address());
-						if(inst)
-							processEntry(ws, sym->address());
-						else
-							cerr << "bad function symbol \"" << sym->name()
-								   << "\" no code segment at " << sym->address() << io::endl;
+		if(!only_start)
+			for(Process::FileIter file(ws->process()); file(); file++)
+				for(File::SymIter sym(*file); sym(); sym++)
+					if(sym->kind() == Symbol::FUNCTION) {
+						if(IGNORE_ENTRY(*sym))
+							cerr << "INFO: ignoring function symbol \"" << sym->name() << "\"\n";
+						else {
+							cerr << "ENTRY: processing function \"" << sym->name() << " at " << sym->address() << io::endl;
+							Inst *inst = ws->findInstAt(sym->address());
+							if(inst)
+								processEntry(ws, sym->address());
+							else
+								cerr << "bad function symbol \"" << sym->name()
+									<< "\" no code segment at " << sym->address() << io::endl;
+						}
 					}
-				}
 
 		// dump the instructions
 		for(Process::FileIter file(workspace()->process()); file(); file++) {
@@ -145,8 +151,13 @@ protected:
 							cout << "<unknown>:";
 							writeBytes(cout, inst->address(), inst->size());
 						}
-						else
+						else {
+							if(bytes) {
+								writeBytes(cout, inst->address(), inst->size());
+								cout << ' ';
+							}
 							cout << inst;
+						}
 						if(MARKER(inst)) {
 							bool fst = true;
 							for(Identifier<Inst *>::Getter from(inst, FROM); from(); from++) {
@@ -158,6 +169,7 @@ protected:
 						cout << io::endl;
 					}
 				}
+				cout << io::endl;
 			}
 			cout << "\n";
 		}
@@ -230,16 +242,20 @@ private:
 			// Follow the instruction until a branch
 			address_t next;
 			Inst *control = nullptr;
+			bool bundle = false;
 			while(inst && !MARKER(inst)) {
 				if(isVerbose()) {
 					cerr << "process " << inst->address() << " : ";
 					writeBytes(cerr, inst->address(), inst->size());
 					cerr << ": " << inst << io::endl;
 				}
-				if(inst->isControl())
-					control = inst;
-				if (control && inst->isBundleEnd())
+				if(inst->isBundle())
+					bundle = true;
+				if (control && inst->isBundleEnd()) {
+					if(isVerbose())
+						cerr << "branch found" << io::endl;
 					break;
+				}
 				next = inst->topAddress();
 				inst = getInst(ws, next, inst);
 			}
@@ -253,8 +269,11 @@ private:
 			}
 			bool marker_found = MARKER(inst);
 			MARKER(first_inst) = true;
-			if(marker_found)
+			if(marker_found) {
+				if(isVerbose())
+					cerr << "next sequence already fetched!" << io::endl;
 				continue;
+			}
 
 			// Record target and next
 			if(control->isConditional()) {
@@ -316,6 +335,7 @@ private:
 		}
 	}
 
+	option::SwitchOption only_start, bytes;
 };
 
  OTAWA_RUN(ODec)
