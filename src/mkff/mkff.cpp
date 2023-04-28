@@ -1376,15 +1376,6 @@ void FFOutput::scanFun(ContextTree *ctree) {
 		Vector<SynthBlock*> callContext;
 		scanLoop(ctree->cfg(), ctree, 0, callContext);
 
-		// scan the REPEAT instructions out of loops
-		for(ContextTree::BlockIterator b(ctree); b(); b++)
-			if(b->isBasic())
-				for(auto i: *b->toBasic())
-					if(i->isRepeat()) {
-						_printer.startLoop(out, ctree->cfg(), i, contextual, callContext);
-						_printer.endLoop(out, contextual, callContext);
-					}
-
 		// Displayer footer
 		_printer.endFunction(out);
 	}
