@@ -92,7 +92,12 @@ protected:
 			for(BasicBlock::InstIter insts = bb->begin(); insts != bb->end(); insts++) {
 				const auto& inst = insts.item();
 				Option<unsigned> c = inst->cycles();
-				ASSERTP(c, "cycles() undefined for instruction!")
+				if(!c) {
+					cerr << "WARNING: instruction ";
+					inst->dump(cerr);
+					cerr << ": cycles() undefined, using 8\n";
+					c = 8;
+				}
 				bb_cycles += *c;
 			}
 			ipet::TIME(b) = bb_cycles;
