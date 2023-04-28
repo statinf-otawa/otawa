@@ -188,6 +188,11 @@ namespace otawa {
  */
 
 /**
+ * @var Inst::IS_REPEAT
+ * This task denotes instructions that implements repetition on the next instruction.
+ */
+
+/**
  * @var Inst::IS_BUNDLE
  * Applied on a VLIW architecture, marks instructions part of a bundle but
  * not at end of the bundle.
@@ -200,7 +205,7 @@ namespace otawa {
  * @ref IS_COND, @ref IS_CONTROL, @ref IS_CALL, @ref IS_RETURN,
  * @ref IS_MEM, @ref IS_LOAD, @ref IS_STORE, @ref IS_INT, @ref IS_FLOAT, @ref IS_ALU,
  * @ref IS_MUL, @ref IS_DIV, @ref IS_SHIFT, @ref IS_TRAP, @ref IS_INTERN,
- * @ref IS_MULTI, @ref IS_SPECIAL, @ref IS_UNKNOWN.
+ * @ref IS_MULTI, @ref IS_SPECIAL, @ref IS_UNKNOWN, @ref IS_REPEAT.
  */
 
 
@@ -321,6 +326,14 @@ namespace otawa {
  * Test if an instruction is unknown.
  * @return	True if it is unknown, false else.
  * @see Inst::IS_UNKNOWN
+ */
+
+
+/**
+ * @fn bool Inst::isRepeat();
+ * Test if an instruction implements a repetition of the next instruction.
+ * @return	True if it is a repetition, false else.
+ * @see Inst::IS_REPEAT
  */
 
 
@@ -786,6 +799,7 @@ io::Output& operator<<(io::Output& out, Inst::Kind kind) {
 		"IS_UNKNOWN",
 		"IS_ATOMIC",
 		"IS_BUNDLE",
+		"IS_REPEAT",
 		""
 	};
 	bool fst = true;

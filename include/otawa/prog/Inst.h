@@ -64,27 +64,28 @@ public:
 
 	// Kind management
 	typedef elm::t::uint32 kind_t;
-	static const kind_t IS_COND		= 0x00001;
-	static const kind_t IS_CONTROL	= 0x00002;
-	static const kind_t IS_CALL		= 0x00004;
-	static const kind_t IS_RETURN	= 0x00008;
-	static const kind_t IS_MEM		= 0x00010;
-	static const kind_t IS_LOAD		= 0x00020;
-	static const kind_t IS_STORE	= 0x00040;
-	static const kind_t IS_INT		= 0x00080;
-	static const kind_t IS_FLOAT	= 0x00100;
-	static const kind_t IS_ALU		= 0x00200;
-	static const kind_t IS_MUL		= 0x00400;
-	static const kind_t IS_DIV		= 0x00800;
-	static const kind_t IS_SHIFT	= 0x01000;
-	static const kind_t IS_TRAP		= 0x02000;
-	static const kind_t IS_INTERN	= 0x04000;
-	static const kind_t IS_MULTI 	= 0x08000;
-	static const kind_t IS_SPECIAL 	= 0x10000;
-	static const kind_t IS_INDIRECT	= 0x10000;
-	static const kind_t IS_UNKNOWN	= 0x20000;
-	static const kind_t IS_ATOMIC	= 0x40000;
-	static const kind_t IS_BUNDLE	= 0x80000;
+	static const kind_t IS_COND		= 0x000001;
+	static const kind_t IS_CONTROL	= 0x000002;
+	static const kind_t IS_CALL		= 0x000004;
+	static const kind_t IS_RETURN	= 0x000008;
+	static const kind_t IS_MEM		= 0x000010;
+	static const kind_t IS_LOAD		= 0x000020;
+	static const kind_t IS_STORE	= 0x000040;
+	static const kind_t IS_INT		= 0x000080;
+	static const kind_t IS_FLOAT	= 0x000100;
+	static const kind_t IS_ALU		= 0x000200;
+	static const kind_t IS_MUL		= 0x000400;
+	static const kind_t IS_DIV		= 0x000800;
+	static const kind_t IS_SHIFT	= 0x001000;
+	static const kind_t IS_TRAP		= 0x002000;
+	static const kind_t IS_INTERN	= 0x004000;
+	static const kind_t IS_MULTI 	= 0x008000;
+	static const kind_t IS_SPECIAL 	= 0x010000;
+	static const kind_t IS_INDIRECT	= 0x010000;
+	static const kind_t IS_UNKNOWN	= 0x020000;
+	static const kind_t IS_ATOMIC	= 0x040000;
+	static const kind_t IS_BUNDLE	= 0x080000;
+	static const kind_t IS_REPEAT	= 0x100000;
 
 	// Kind class
 	class Kind {
@@ -115,6 +116,7 @@ public:
 		inline bool isSpecial()		{ return oneOf(IS_SPECIAL); }
 		inline bool isStore()		{ return oneOf(IS_STORE); }
 		inline bool isUnknown()		{ return oneOf(IS_UNKNOWN); }
+		inline bool isRepeat()		{ return oneOf(IS_REPEAT); }
 
 		// deprecated
 		inline bool isConditional()	{ return oneOf(IS_COND); }
@@ -156,6 +158,7 @@ public:
 	inline bool isSpecial()		{ return getKind().isSpecial(); }
 	inline bool isStore()		{ return getKind().isStore(); }
 	inline bool isUnknown()		{ return getKind().isUnknown(); }
+	inline bool isRepeat()		{ return getKind().isRepeat(); }
 
 	// other accessors
 	virtual Inst *target(void);
