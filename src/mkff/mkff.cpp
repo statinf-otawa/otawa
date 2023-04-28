@@ -220,12 +220,13 @@ public:
 	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) = 0;
 
 protected:
-	void printSourceLine(Output& out, Address address) {
+	bool printSourceLine(Output& out, Address address) {
 		if(!_debug)
-			return;
+			return false;
 		Option<Pair< cstring, int> > loc = _ws->process()->getSourceLine(address);
 		if(loc)
 			out << (*loc).fst << ":" << (*loc).snd;
+		return bool(loc);
 	}
 
 	void printIndent(Output& out, int n) {
@@ -383,13 +384,8 @@ public:
 		if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)) {
 			out << "// loop ";
 			addressOf(out, cfg, inst->address());
-			out << " (";
-			printSourceLine(out, inst->address());
-			if(inst->isRepeat())
-				out << ", repeat instruction";
-			out << ")\n";
 		}
-		else
+		else {
 			out << "loop ";
 			addressOf(out, cfg, inst->address());
 			out << " ? ";
@@ -411,11 +407,13 @@ public:
 			}
 
 
-			out << "; // 0x" << io::hex(inst->address().offset()) << " (";
-			printSourceLine(out, inst->address());
-			if(inst->isRepeat())
-				out << ", repeat instruction";
-			out << ")\n";
+			out << "; // 0x" << io::hex(inst->address().offset());
+		}
+		out << " (";
+		bool isFirst = ! printSourceLine(out, inst->address());
+		if(inst->isRepeat())
+			out << (isFirst ? "repeat instruction" : ", repeat instruction");
+		out << ")\n";
 	}
 
 	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) {
