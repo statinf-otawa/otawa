@@ -216,7 +216,7 @@ public:
 	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) = 0;
 	virtual void startFunction(Output& out, CFG *cfg) = 0;
 	virtual void endFunction(Output& out) = 0;
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) = 0;
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext, int bound = -1) = 0;
 	virtual void endLoop(Output& out, bool contextual, Vector<SynthBlock*>& callContext) = 0;
 
 protected:
@@ -378,7 +378,7 @@ public:
 		out << io::endl;
 	}
 
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) {
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext, int bound) {
 		indent++;
 		printIndent(out, indent);
 		if(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)) {
@@ -388,7 +388,10 @@ public:
 		else {
 			out << "loop ";
 			addressOf(out, cfg, inst->address());
-			out << " ? ";
+			if(bound == -1)
+				out << " ? ";
+			else
+				out << " " << bound << " ";
 
 			if(contextual) {
 				out << "in";
@@ -532,13 +535,17 @@ public:
 		out << "\t</function>\n\n";
 	}
 
-	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext) {
+	virtual void startLoop(Output& out, CFG *cfg, Inst *inst, bool contextual, Vector<SynthBlock*>& callContext, int bound) {
 		indent++;
 		printIndent(out, indent);
 		out << "<loop ";
 		addressOf(out, cfg, inst->address());
-		if(!(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst)))
-			out << " maxcount=\"NOCOMP\"";
+		if(!(RECORDED(inst) || MAX_ITERATION(inst) != -1 || CONTEXTUAL_LOOP_BOUND(inst))) {
+			if(bound == -1)
+				out << " maxcount=\"NOCOMP\"";
+			else
+				out << " maxcount=\"" << bound << "\"";
+		}
 		out << "> <!-- 0x" << inst->address() << " (";
 		printSourceLine(out, inst->address());
 		out << ") -->\n";
@@ -1457,7 +1464,7 @@ void FFOutput::scanLoop(CFG *cfg, ContextTree *ctree, int indent, Vector<SynthBl
 		if(b->isBasic())
 			for(auto i: *b->toBasic())
 				if(i->isRepeat()) {
-					_printer.startLoop(out, cfg, i, contextual, callContext);
+					_printer.startLoop(out, cfg, i, contextual, callContext, i->repeatCount());
 					_printer.endLoop(out, contextual, callContext);
 				}
 

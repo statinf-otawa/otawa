@@ -595,6 +595,10 @@ Option<unsigned> Inst::cycles(void) {
 	return elm::none;
 }
 
+int Inst::repeatCount(void) {
+    return -1; // not found
+}
+
 
 /**
  * Can only called for a VLIW archietcture.

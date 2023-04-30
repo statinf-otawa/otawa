@@ -30,6 +30,7 @@
 #include <otawa/proc/ProcessorPlugin.h>
 #include <otawa/stats/BBStatCollector.h>
 #include <otawa/trivial/features.h>
+#include "../../include/otawa/flowfact/FlowFactLoader.h"
 
 namespace otawa { namespace trivial {
 
@@ -92,13 +93,27 @@ protected:
 			for(BasicBlock::InstIter insts = bb->begin(); insts != bb->end(); insts++) {
 				const auto& inst = insts.item();
 				Option<unsigned> c = inst->cycles();
+				int computed_cycles;
 				if(!c) {
-					cerr << "WARNING: instruction ";
-					inst->dump(cerr);
-					cerr << ": cycles() undefined, using 8\n";
-					c = 8;
+					cerr << "WARNING: instruction "; inst->dump(cerr); cerr << ": cycles() undefined, using 8\n";
+					computed_cycles = 8;
 				}
-				bb_cycles += *c;
+				else
+					computed_cycles = *c;
+				if(inst->isRepeat()) {
+					int repeat_count = inst->repeatCount();
+					if(repeat_count < 0) {
+						// repeat count not found (variable loop), use flow facts
+						int rpt_bound = MAX_ITERATION(inst);
+						cerr << "ERROR: instruction "; inst->dump(cerr); cerr << ": is an unbounded REPEAT instruction.";
+						ASSERT(rpt_bound >= 0);
+						repeat_count = rpt_bound;
+					}
+					computed_cycles *= (repeat_count+1);
+					cout << "DEBUG: Repeat instruction \""; inst->dump(cout); cout << "\", identified as " << repeat_count << \
+						", new computed_cycles = " << computed_cycles << endl;
+				}
+				bb_cycles += computed_cycles;
 			}
 			ipet::TIME(b) = bb_cycles;
 		}
@@ -121,6 +136,7 @@ private:
 p::declare BlockTime::reg = p::init("otawa::trivial::BlockTime", Version(1, 0, 0))
 	.base(BBProcessor::reg)
 	.maker<BlockTime>()
+	.require(LOOP_HEADERS_FEATURE)
 	.provide(ipet::BB_TIME_FEATURE);
 
 /**

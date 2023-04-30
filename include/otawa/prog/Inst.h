@@ -173,6 +173,7 @@ public:
 	virtual int multiCount();
 	virtual void bundle(Vector<Inst *>& insts);
 	virtual Option<unsigned> cycles(void);
+	virtual int repeatCount(void);
 	
 	// ProgItem overload
 	Inst *toInst() override;
