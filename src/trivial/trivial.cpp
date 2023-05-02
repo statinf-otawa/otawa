@@ -105,7 +105,7 @@ protected:
 					if(repeat_count < 0) {
 						// repeat count not found (variable loop), use flow facts
 						int rpt_bound = MAX_ITERATION(inst);
-						cerr << "ERROR: instruction "; inst->dump(cerr); cerr << ": is an unbounded REPEAT instruction.";
+						cerr << "ERROR: instruction "; inst->dump(cerr); cerr << ": is an unbounded REPEAT instruction.\n";
 						ASSERT(rpt_bound >= 0);
 						repeat_count = rpt_bound;
 					}
