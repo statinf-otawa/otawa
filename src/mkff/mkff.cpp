@@ -433,7 +433,7 @@ private:
 		else {
 			t::uint32 offset = address - cfg->address();
 			out << '"' << label << '"';
-			if(offset > 0)
+			if(offset >= 0)
 				out << " + 0x" << io::hex(offset);
 			else
 				out << " - 0x" << io::hex(-offset);
