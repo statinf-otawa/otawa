@@ -90,30 +90,74 @@ protected:
 		else {
 			BasicBlock *bb = b->toBasic();
 			unsigned bb_cycles = 0;
+			RegSet owr; // orr and owr are the previous set
+			bool first_time = true;
 			for(BasicBlock::InstIter insts = bb->begin(); insts != bb->end(); insts++) {
 				const auto& inst = insts.item();
 				Option<unsigned> c = inst->cycles();
 				int computed_cycles;
+
+				RegSet rr, wr;
+				inst->readRegSet(rr);
+				inst->writeRegSet(wr);
+
+				// Compute base cycles for our instruction
 				if(!c) {
 					cerr << "WARNING: instruction "; inst->dump(cerr); cerr << ": cycles() undefined, using 8\n";
 					computed_cycles = 8;
 				}
 				else
 					computed_cycles = *c;
+
+				// Check if it is a repeat instruction and we'd have to add a factor
 				if(inst->isRepeat()) {
 					int repeat_count = inst->repeatCount();
 					if(repeat_count < 0) {
 						// repeat count not found (variable loop), use flow facts
-						int rpt_bound = MAX_ITERATION(inst);
-						cerr << "ERROR: instruction "; inst->dump(cerr); cerr << ": is an unbounded REPEAT instruction.\n";
-						ASSERT(rpt_bound >= 0);
-						repeat_count = rpt_bound;
+						repeat_count = MAX_ITERATION(inst);
+						if(repeat_count < 0) {
+							cerr << "ERROR: instruction "; inst->dump(cerr); cerr << ": is an unbounded REPEAT instruction.\n";
+							ASSERT(repeat_count >= 0);
+						}
 					}
 					computed_cycles *= (repeat_count+1);
 					cout << "DEBUG: Repeat instruction \""; inst->dump(cout); cout << "\", identified as " << repeat_count << \
 						", new computed_cycles = " << computed_cycles << endl;
 				}
+
+				// Load/Store penalties
+				if(inst->isLoad() || inst->isStore()) {
+					cout << "DEBUG: Load/Store instruction \""; inst->dump(cout); cout << "\", adding penalty 999" << endl;
+					computed_cycles += 999;
+				}
+
+				// Read-after-write penalties
+				bool read_after_write = false;
+				if(first_time) {
+					first_time = false;
+					read_after_write = true; // always assume RAW if we don't know what the previous instruction was
+				}
+				else {
+					for(int i = 0; i < rr.count() && !read_after_write; i++) {
+						hard::Register *reg = workspace()->platform()->findReg(rr[i]);
+						cout << "DEBUG: DEBUG: Reading on register "
+									<< reg->name() << " (" << reg->platformNumber() << ")" << endl;
+						for(int j = 0; j < owr.count() && !read_after_write; j++) {
+							if(rr[i] == rr[j]) {
+								hard::Register *reg = workspace()->platform()->findReg(rr[i]);
+								cout << "DEBUG: read-after-write on register "
+									<< reg->name() << " (" << reg->platformNumber() << ")"
+									<< ", penalty: 3" << endl;
+								read_after_write = true;
+							}
+						}
+					}
+				}
+				if(read_after_write)
+					computed_cycles += 3;
+				
 				bb_cycles += computed_cycles;
+				owr = wr;
 			}
 			ipet::TIME(b) = bb_cycles;
 		}
@@ -137,7 +181,8 @@ p::declare BlockTime::reg = p::init("otawa::trivial::BlockTime", Version(1, 0, 0
 	.base(BBProcessor::reg)
 	.maker<BlockTime>()
 	.require(LOOP_HEADERS_FEATURE)
-	.provide(ipet::BB_TIME_FEATURE);
+	.provide(ipet::BB_TIME_FEATURE)
+	.provide(REGISTER_USAGE_FEATURE);
 
 /**
  * This configuration property provides the time of an instruction in cycles.

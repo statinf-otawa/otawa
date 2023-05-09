@@ -314,7 +314,6 @@ private:
 
 		// display registers
 		if(regs) {
-
 			// display read registers
 			SortedList<string> srr;
 			RegSet rr;
@@ -329,7 +328,7 @@ private:
 				cout << *r << " ";
 			cout << io::endl;
 
-			// display read registers
+			// display written registers
 			SortedList<string> swr;
 			RegSet wr;
 			inst->writeRegSet(wr);
