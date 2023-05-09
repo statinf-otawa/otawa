@@ -127,8 +127,9 @@ protected:
 
 				// Load/Store penalties
 				if(inst->isLoad() || inst->isStore()) {
-					cout << "DEBUG: Load/Store instruction \""; inst->dump(cout); cout << "\", adding penalty 999" << endl;
-					computed_cycles += 999;
+					const int memory_latency_penalty = 0; // Assumed for Liebherr case
+					cout << "DEBUG: Load/Store instruction \""; inst->dump(cout); cout << "\", adding penalty: " << memory_latency_penalty << " cycles" << endl;
+					computed_cycles += memory_latency_penalty;
 				}
 
 				// Read-after-write penalties
@@ -140,8 +141,8 @@ protected:
 				else {
 					for(int i = 0; i < rr.count() && !read_after_write; i++) {
 						hard::Register *reg = workspace()->platform()->findReg(rr[i]);
-						cout << "DEBUG: DEBUG: Reading on register "
-									<< reg->name() << " (" << reg->platformNumber() << ")" << endl;
+						// cout << "DEBUG: DEBUG: Reading on register "
+						// 			<< reg->name() << " (" << reg->platformNumber() << ")" << endl;
 						for(int j = 0; j < owr.count() && !read_after_write; j++) {
 							if(rr[i] == rr[j]) {
 								hard::Register *reg = workspace()->platform()->findReg(rr[i]);
