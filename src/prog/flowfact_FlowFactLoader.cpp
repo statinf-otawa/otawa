@@ -1211,6 +1211,15 @@ void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets
 		}
 }
 
+void FlowFactLoader::onTiming(Address address, int cycles) {
+	if(address.isNull())
+		return;
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		STATISTICS_TIMING(inst) = cycles;
+}
 
 /**
  * This method is called each the production "loop ADDRESS ?" is found.
@@ -1390,6 +1399,8 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 				scanRegSet(element, state);
 			else if(name == "state")
 				scanXState(element);
+			else if(name == "timing")
+				scanTiming(element, cpath);
 			else if(name == "not-all") 	{		 	
 					if (intoConflictPath)  {
 						onWarning(_ << " Error of ffx not all into not all: " << xline(element));
@@ -1411,14 +1422,14 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 
 			
 void FlowFactLoader::scanXNotAll(xom::Element *element, ContextualPath& cpath){
- 	 
- 	intoConflictPath = true;
- 	if (element->getAttributeValue("seq").value() == "true"){
+	 
+	intoConflictPath = true;
+	if (element->getAttributeValue("seq").value() == "true"){
 		currentCteNum++;
 		numOfEdgeIntoCurrentCte=0;
 		scanXContent( element,   cpath);
 	} 
- 	intoConflictPath = false;
+	intoConflictPath = false;
 }
 
 /**
@@ -1563,6 +1574,43 @@ void FlowFactLoader::scanIgnoreControl(xom::Element *element, ContextualPath& cp
 	}
 
 	this->onIgnoreControl(inst->address());
+}
+
+void FlowFactLoader::scanTiming(xom::Element *element, ContextualPath& cpath) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "timing ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+
+	// JOR: I don't think we need this bit from ignorecontrol
+	// while (inst && !inst->isControl()
+	//      && inst->address() <= mem_area.lastAddress())
+	//  inst = workSpace()->process()->findInstAt(inst->topAddress());
+	// if (!inst || inst->address() > mem_area.lastAddress()) {
+	//  onWarning(_ << "timing ignored at " << xline(element) << " ... no control found");
+	//  return;
+	// }
+
+	// xom::Element *helem = element->getFirstChildElement("time");
+	// JOR: we're probably doing something superfluous here, but I cant be bothered to find out
+	long cycles;
+	Option<xom::String> source = element->getAttributeValue("time");
+	if(source) {
+		Option<long> time = scanInt(element, "time");
+		if(!time)
+			throw ProcessorException(*this,
+				_ << "no 'time' but a 'time' at " << xline(element));
+		cycles = *time;
+	}
+	else {
+		onWarning(_ << "timing ignored at " << xline(element) << " ... time cannot be determined");
+		return;
+	}
+
+	this->onTiming(inst->address(), cycles);
 }
 
 
@@ -1803,8 +1851,8 @@ void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path) {
 		int num = currentCteNum;
 		int nbE = numOfEdgeIntoCurrentCte;
 		for (int j=0; j<nb;j++) this->onInfeasablePath( inst->address(),   path);
-	    currentCteNum=num;
-	    numOfEdgeIntoCurrentCte=nbE;
+		currentCteNum=num;
+		numOfEdgeIntoCurrentCte=nbE;
 	}
 	
 
@@ -1999,13 +2047,13 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 	getQualifierAnd(element,   inst , &nbPath, false, path , *aaa);
  
 	if (aaa->length() > 0)path(LOOP_OF_INFEASABLE_PATH_I, inst) = aaa;  
-    int nb =containsNotALL	 (element);
+	int nb =containsNotALL	 (element);
 	if (nb>0) { 
 		int nbE = numOfEdgeIntoCurrentCte;
 		int num = currentCteNum;
 		for (int j=0; j<nb;j++) this->onInfeasablePath( inst->address(),   path);
-	    currentCteNum=num;
-	    numOfEdgeIntoCurrentCte = nbE;
+		currentCteNum=num;
+		numOfEdgeIntoCurrentCte = nbE;
 		 
 	} 	
 	if (aaa->length() == 0) {
@@ -2018,7 +2066,7 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 			
 		onLoop(addr, (max ? *max : -1), (total ? *total : -1), (min ? *min : -1), path);
 	}
- 	//END ADD
+	//END ADD
 
 	// look for content
 	scanXContent(element, path);
@@ -2289,20 +2337,20 @@ MemArea FlowFactLoader::addressOf(const string& file, int line) {
 		onError("the current loader does not provide source line information");
 
 	Vector<Pair<Address, Address> > addresses;
- 	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
- 	if(!addresses) {
+	workSpace()->process()->getAddresses(file.toCString(), line, addresses);
+	if(!addresses) {
 		warn(_ << "cannot find the source line " << file << ":" << line);
 		return MemArea::null;
 	}
 
- 	MemArea area(addresses[0].fst, addresses[0].snd);
- 	for (int i = 1; i < addresses.length(); ++i)
- 		area.join(MemArea(addresses[i].fst, addresses[i].snd));
+	MemArea area(addresses[0].fst, addresses[0].snd);
+	for (int i = 1; i < addresses.length(); ++i)
+		area.join(MemArea(addresses[i].fst, addresses[i].snd));
 
 	if (logFor(LOG_DEPS))
 		log << "\t" << file << ":" << line << " is " << area << io::endl;
 
- 	return area;
+	return area;
 }
 
 
@@ -2470,6 +2518,17 @@ Identifier<Address> BRANCH_TARGET("otawa::BRANCH_TARGET", Address());
  * @ingroup ff
  */
 Identifier<Address> CALL_TARGET("otawa::CALL_TARGET", Address());
+
+
+/**
+ * Put on instruction that we have a statistics timing for
+ * @par Features
+ * @li @ref FLOW_fACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<long> STATISTICS_TIMING("otawa::STATISTICS_TIMING", 0);
 
 
 /**

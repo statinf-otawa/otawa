@@ -79,6 +79,7 @@ protected:
 	virtual void onMultiBranch(Address control, const Vector<Address>& target);
 	virtual void onMultiCall(Address control, const Vector<Address>& target);
 	virtual void onPreserve(Address address);
+	virtual void onTiming(Address address, int cycles);
 	virtual void onIgnoreEntry(string name);
 	virtual void onInfeasablePath( address_t addr,const ContextualPath& path);  
     virtual int containsNotALL(xom::Element *element); 
@@ -151,6 +152,7 @@ private:
 	void scanRegSet(xom::Element *element, dfa::State* state);
 	void scanMemSet(xom::Element *element, dfa::State* state);
 	void scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy);
+	void scanTiming(xom::Element *element, ContextualPath& cpath);
 };
 } // otawa
 

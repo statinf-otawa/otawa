@@ -21,6 +21,7 @@
 
 #include <otawa/cache/features.h>
 #include <otawa/cfg.h>
+#include <otawa/flowfact/features.h>
 #include <otawa/hard/CacheConfiguration.h>
 #include <otawa/hard/Memory.h>
 #include <otawa/icache/features.h>
@@ -80,6 +81,10 @@ protected:
 	virtual void processBB(WorkSpace *fw, CFG *cfg, Block *bb) {
 		if(!bb->isBasic())
 			ipet::TIME(bb) = 0;
+		else if(long statistics_cycles = otawa::STATISTICS_TIMING(bb->toBasic()->first())) {
+			cerr << "DEBUG: Block timing identified dynamically, inserting timing of " << statistics_cycles << endl;
+			ipet::TIME(bb) = statistics_cycles;
+		}
 		else
 			ipet::TIME(bb) = itime * bb->toBasic()->count();
 	}

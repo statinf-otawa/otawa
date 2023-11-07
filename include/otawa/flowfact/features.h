@@ -71,6 +71,8 @@ extern Identifier<bool> EXIST_PROVIDED_STATE;
 // flow fact administration
 extern Identifier<bool> PRESERVED;
 
+extern Identifier<long> STATISTICS_TIMING;
+
 } // otawa
 
 #endif /* OTAWA_FLOWFACT_FEATURES_H_ */
