@@ -1974,6 +1974,18 @@ gliss-attr mips.irg -o target.c -a target -f -t target.tpl -d "return 0\\;"
 As `target` attribute is already available in the original NMP file, we do not
 add extension fill with option `-e`.
 
+## Note on building & installing the loader
+
+Otawa is able to list the available loaders using the following command. The config tool
+scan the librairies (*.so) present in the install folder lib/otawa/loaders.
+```sh
+otawa-config --list-loaders
+```
+But for a loader to be actually usable by the otawa tools, the librairies need to be
+installed in the install folder lib/otawa/otawa.
+
+We therefore recommend to install the library of your loader in lib/otawa/otawa and then
+create a symlink of the .so file into lib/otawa/loaders using either make or cmake.
 
 # Analyzer Development 
 
