@@ -596,7 +596,8 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		fetch->process(ws, bb);
 
 		// process data stage L1
-		data->process(ws, bb);
+		if (data)
+			data->process(ws, bb);
 	}
 
 	// process branch prediction
