@@ -28,6 +28,7 @@
 #include <otawa/util/SymAddress.h>
 #include <otawa/prog/Manager.h>
 #include <otawa/view/features.h>
+#include <otawa/prog/File.h>
 
 #include "../../include/otawa/flowfact/FlowFactLoader.h"
 
@@ -299,6 +300,7 @@ Application::Application(const Make& make):
 	log_for(option::ListOption<string>::Make(this).cmd("--log-for").help("only apply logging to the given processor")),
 	dump_for(option::ListOption<string>::Make(this).cmd("--dump-for").help("dump results of the named analyzes").arg("ANALYSIS NAME")),
 	view(option::SwitchOption::Make(*this).cmd("-W").cmd("--view").description("Dump views of the executable.")),
+	all_cfgs(option::SwitchOption::Make(*this).cmd("--all_cfgs").description("Apply to all functions/CFGs.")),
 	log_level(*this),
 	props2(0),
 	ws(0)
@@ -408,6 +410,15 @@ void Application::run() {
 		if(work_dir)
 			ws->workDir(*work_dir);
 
+		if(all_cfgs) {
+			_args.clear();
+			for(auto symb : ws->process()->program()->symbols())  {
+				if(symb->kind() == Symbol::FUNCTION) {
+					_args.add(symb->name());
+				}
+			}
+		}
+
 		// if required, load the flowfacts
 		if(ff)
 			for(int i = 0; i < ff.count(); i++)
@@ -472,6 +483,10 @@ void Application::startTask(const string& entry) {
 	TASK_ADDRESS(props) = addr;
 	if(record_stats)
 		Processor::COLLECT_STATS(props) = true;
+
+	// Allow to reload the entry point to a new address
+	if(workspace()->isProvided(TASK_INFO_FEATURE))
+		workspace()->invalidate(TASK_INFO_FEATURE);
 
 	// prepare properties
 	props2 = new PropList(props);

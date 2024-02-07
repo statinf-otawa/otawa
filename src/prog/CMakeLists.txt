@@ -226,7 +226,7 @@ set(libotawa_SOURCES
 	"BBTimeSimulator.cpp"
 
 	"loader_arm.cpp"
-
+	"loader_aarch64.cpp"
 )
 
 

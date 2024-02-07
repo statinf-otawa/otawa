@@ -19,6 +19,7 @@ add_custom_command(
 	DEPENDS ${MANUALS}
 	COMMAND python 
 	"${THOT_PATH}" -t html manual.thot -o manual.html -DHTML_ONE_FILE_PER=chapter
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
 	COMMENT "Making manual.")
 add_custom_target(all-manual ALL DEPENDS manual.html)
 
