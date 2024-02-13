@@ -150,6 +150,7 @@ public:
 	cond    (option::SwitchOption::Make(this).cmd("-c").cmd("--condition")	.description("for architecture supporting conditional instructions, display the condition")),
 	exec    (option::SwitchOption::Make(this).cmd("-e").cmd("--exec")		.description("display the steps used to execute the instruction in the microarchitecture")),
 	pipeline(option::Value<string>::Make(this).cmd("-p").cmd("--pipeline")	.description("display execution pipeline of instructions for the given processor").argDescription("PROCESSOR_NAME").def("")),
+	littleendian	(option::SwitchOption::Make(this).cmd("-l").cmd("--littleendian")		.description("if elf is in little endian to correctly display bytes")),
 	max_size(0), proc(NULL)
 	{ }
 
@@ -255,10 +256,19 @@ private:
 		// display bytes of instruction (if required)
 		if(bytes) {
 			cout << "  ";
-			for(t::uint32 i = 0; i < inst->size(); i++) {
-				t::uint8 b;
-				workspace()->process()->get(inst->address() + i, b);
-				cout << io::hex(b).pad('0').width(2);
+			if(littleendian) {
+				for(t::int32 i = inst->size()-1 ; i >= 0; i--) {
+					t::uint8 b;
+					workspace()->process()->get(inst->address() + i, b);
+					cout << io::hex(b).pad('0').width(2);
+				}
+			}
+			else {
+				for(t::uint32 i = 0; i < inst->size(); i++) {
+					t::uint8 b;
+					workspace()->process()->get(inst->address() + i, b);
+					cout << io::hex(b).pad('0').width(2);
+				}
 			}
 			if(inst->size() > max_size)
 				max_size = inst->size();
@@ -349,7 +359,7 @@ private:
 		out << endl;
 	}
 
-	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond, exec;
+	option::SwitchOption regs, kind, sem, target, bytes, ksem, cond, exec, littleendian;
 	option::Value<string> pipeline;
 	t::uint32 max_size;
 	const hard::Processor *proc;
