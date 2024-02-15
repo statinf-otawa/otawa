@@ -42,7 +42,8 @@ protected:
 		cfg_raw,
 		cfg_virtualize,
 		cfg_unroll,
-		no_cfg_tune;
+		no_cfg_tune,
+		cfg_reduceloop;
 };
 
 } // otawa

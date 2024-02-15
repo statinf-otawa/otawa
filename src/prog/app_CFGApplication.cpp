@@ -52,6 +52,7 @@ CFGApplication::CFGApplication(const Make& make)
 		cfg_raw(make_switch().cmd("--cfg-raw").help("do not perform any CFG transformation to support architecture features")),
 		cfg_virtualize(make_switch().cmd("--cfg-virtualize").help("duplicate called CFG according to their call sites")),
 		cfg_unroll(make_switch().cmd("--cfg-unroll").help("unroll the first iteration of each loop")),
+		cfg_reduceloop(make_switch().cmd("--cfg-reduceloop").help("reduce loop or something")),
 		no_cfg_tune(option::SwitchOption::Make(*this).cmd("--cfg-no-tune").description("disable tuning of CFGs for more user friendly work"))
 { }
 
@@ -98,7 +99,8 @@ void CFGApplication::prepareCFG(const string& entry, PropList& props) {
 		if(workspace()->isProvided(CONDITIONAL_INSTRUCTIONS_FEATURE))
 			require(CONDITIONAL_RESTRUCTURED_FEATURE);
 	}
-	require(otawa::REDUCED_LOOPS_FEATURE);
+	if(cfg_reduceloop)
+		require(otawa::REDUCED_LOOPS_FEATURE);
 	if(cfg_unroll)
 		require(UNROLLED_LOOPS_FEATURE);
 	if(cfg_virtualize)
