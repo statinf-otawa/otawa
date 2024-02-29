@@ -98,7 +98,7 @@ void CFGApplication::prepareCFG(const string& entry, PropList& props) {
 		if(workspace()->isProvided(CONDITIONAL_INSTRUCTIONS_FEATURE))
 			require(CONDITIONAL_RESTRUCTURED_FEATURE);
 	}
-	require(otawa::REDUCED_LOOPS_FEATURE);
+	//require(otawa::REDUCED_LOOPS_FEATURE);
 	if(cfg_unroll)
 		require(UNROLLED_LOOPS_FEATURE);
 	if(cfg_virtualize)
