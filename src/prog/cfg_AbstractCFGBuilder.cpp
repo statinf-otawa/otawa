@@ -147,6 +147,15 @@ static void targets(Inst *i, Vector<Inst *>& t, WorkSpace *ws, Identifier<Addres
 	}
 }
 
+static bool isNewSeqFuncStart(Inst *i, WorkSpace *ws) {
+	for(auto symb : ws->process()->program()->symbols())  {
+		if(symb->kind() == Symbol::FUNCTION) {
+			if(i->address() == symb->address())
+				return true;
+		}
+	}
+	return false;
+}
 
 /**
  * Scan the CFG to find all BBs.
@@ -188,7 +197,7 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
 			while(!n->isBundleEnd())
 				n = workspace()->findInstAt(n->topAddress());
 			n = workspace()->findInstAt(n->topAddress());
-			if(n)
+			if(n && !isNewSeqFuncStart(n, workspace()))
 				todo.push(n);
 		}
 
@@ -251,8 +260,8 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
  */
 void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *b, Block *src, t::uint32 flags) {
 	Inst *ni = b->last()->nextInst();
-	if(ni) {
-		ASSERT(ni->hasProp(BB));
+	if(ni && ni->hasProp(BB)) { /*if it doesn't have the property it means we didn't visit in before, so most likely not part of this CFG*/
+		// ASSERT(ni->hasProp(BB));
 		m.add(src, BB(ni), new Edge(flags));
 	}
 }
