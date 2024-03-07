@@ -43,7 +43,7 @@ ProgItem::~ProgItem(void) {
  */
 ProgItem *ProgItem::next(void) const {
 	ProgItem *result = (ProgItem *)inhstruct::DLNode::next(); 
-	if(result->atEnd())
+	if(!result || result->atEnd())
 		return 0;
 	else
 		return result;
@@ -56,7 +56,7 @@ ProgItem *ProgItem::next(void) const {
  */
 ProgItem *ProgItem::previous(void) const {
 	ProgItem *result = (ProgItem *)inhstruct::DLNode::previous(); 
-	if(result->atBegin())
+	if(!result || result->atBegin())
 		return 0;
 	else
 		return result;
