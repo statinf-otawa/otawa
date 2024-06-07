@@ -289,8 +289,11 @@ void DumpCFG::dump(PropList& props) {
 	}
 
 	// view used
-	else if(view)
+	else if(view) {
+		if(out)
+			CFG_DUMP_PATH(props) = elm::sys::Path(out);
 		workspace()->require(CFG_DUMP_FEATURE, props);
+	}
 	
 	// Dump the CFG
 	else {
