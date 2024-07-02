@@ -48,6 +48,7 @@ extern Identifier<bool> IGNORE_ENTRY;
 extern Identifier<bool> IGNORE_SEQ;
 extern Identifier<bool> IS_RETURN;
 extern Identifier<bool> NO_CALL;
+extern Identifier<bool> NO_BLOCK;
 extern Identifier<bool> NO_RETURN;
 
 extern Identifier<Inst::kind_t> ALT_KIND;

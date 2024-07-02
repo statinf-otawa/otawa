@@ -84,6 +84,7 @@ SYM [?;,+-/:@=\[\]()]
 "multibranch"	return KW_MULTIBRANCH;
 "multicall"		return KW_MULTICALL;
 "nocall"		return KW_NOCALL;
+"noblock"		return KW_NOBLOCK;
 "noinline"		return KW_NOINLINE;
 "preserve"		return KW_PRESERVE;
 "no"			return KW_NO;
