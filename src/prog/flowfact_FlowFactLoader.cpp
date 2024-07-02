@@ -69,6 +69,7 @@ extern int fft_line;
  * @li @ref MAX_ITERATION
  * @li @ref MIN_ITERATION
  * @li @ref NO_CALL
+ * @li @ref NO_BLOCK
  * @li @ref NO_RETURN
  * @li @ref TOTAL_ITERATION
  * @li @ref PRESERVED
@@ -395,6 +396,11 @@ extern int fft_line;
  * Process each call to the given function as a non-control instruction.
  * It may be useful to remove call to intrusive initialization function like
  * "__eabi" in main.
+ * (function pointer call).
+ *
+ * @li <b><tt>noblock FUNCTION_ADDRESS ;</tt></b> @n
+ * Remove this block from the CFG, and those that post-dominate it.
+ * Removing a block that is post-dominated by the EXIT node is an error.
  *
  * @li <b><tt>doinline FUNCTION_ADDRESS ;</tt></b> @n
  * When virtualizing, calls to the given function will be inlined.
@@ -1026,6 +1032,22 @@ void FlowFactLoader::onNoCall(Address address) {
 
 
 /**
+ * Called for the F4 production: "noblock ADDRESS".
+ * @param address	Address of the instruction to work on.
+ * @throw ProcessorException	If the instruction cannot be found.
+ */
+void FlowFactLoader::onNoBlock(Address address) {
+	if(address.isNull())
+		return;
+	Inst *inst = _fw->process()->findInstAt(address);
+	if(!inst)
+		onError(_ << " no instruction at  " << address << ".");
+	else
+		NO_BLOCK(inst) = true;
+}
+
+
+/**
  * Called for the F4 production: "force-branch ADDRESS".
  * @param address	Address of the instruction to work on.
  * @throw ProcessorException	If the instruction cannot be found.
@@ -1332,7 +1354,7 @@ void FlowFactLoader::loadXML(const string& path) {
 /**
  * Supports an XML flow fact content.
  * Supported elements includes "loop", "function", "noreturn", "return",
- * "nocall", "doinline", "noinline", "inlining-on", "inlining-off",
+ * "nocall", "noblock", "doinline", "noinline", "inlining-on", "inlining-off",
  * "flowfacts", "ignore-entry", "multibranch", "multicall", "ignorecontrol",
  * "ignoreseq", "mem-access", "mem-set", "reg-set".
  * @param body	Content of the file.
@@ -1366,6 +1388,14 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 				Address addr = scanAddress(element, cpath).address();
 				if(!addr.isNull())
 					onNoCall(addr);
+				else
+					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
+			}
+			}
+			else if(name == "noblock") {
+				Address addr = scanAddress(element, cpath).address();
+				if(!addr.isNull())
+					onNoBlock(addr);
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
@@ -2427,7 +2457,7 @@ Identifier<bool> FLOW_FACTS_IGNORE_UNKNOWN("otawa::FLOW_FACTS_IGNORE_UNKNOWN", f
 
 
 /**
- * Put on the first instruction of a function that must be no called.
+ * Put on the first instruction of a function that must not be called.
  * @par Features
  * @li @ref FLOW_FACTS_FEATURE
  * @par Hooks
@@ -2435,6 +2465,17 @@ Identifier<bool> FLOW_FACTS_IGNORE_UNKNOWN("otawa::FLOW_FACTS_IGNORE_UNKNOWN", f
  * @ingroup ff
  */
 Identifier<bool> NO_CALL("otawa::NO_CALL", false);
+
+
+/**
+ * Put on the first instruction of a block that musst not be executed
+ * @par Features
+ * @li @ref FLOW_FACTS_FEATURE
+ * @par Hooks
+ * @li @ref Inst
+ * @ingroup ff
+ */
+Identifier<bool> NO_BLOCK("otawa::NO_BLOCK", false);
 
 
 /**
