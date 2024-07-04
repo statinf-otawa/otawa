@@ -87,6 +87,7 @@ protected:
 	option::ListOption<string> sets;
 	option::ListOption<string> params;
 	option::ListOption<string> ff;
+	option::SwitchOption ff_ignore_incomplete;
 	option::Value<string> work_dir;
 	option::Value<string> dump_to;
 	option::SwitchOption record_stats;

@@ -35,6 +35,7 @@ namespace otawa {
 extern Identifier<Path> FLOW_FACTS_PATH;
 extern Identifier<xom::Element *> FLOW_FACTS_NODES;
 extern Identifier<bool> FLOW_FACTS_MANDATORY;
+extern Identifier<bool> FLOW_FACTS_IGNORE_UNKNOWN;
 
 // features
 extern p::feature FLOW_FACTS_FEATURE;

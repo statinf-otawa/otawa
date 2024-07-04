@@ -293,6 +293,7 @@ Application::Application(const Make& make):
 	sets(option::ListOption<string>::Make(*this).cmd("--add-prop").description("set a configuration property").argDescription("ID=VALUE")),
 	params(option::ListOption<string>::Make(*this).cmd("--load-param").description("add a load parameter").argDescription("ID=VALUE")),
 	ff(option::ListOption<string>::Make(*this).cmd("--flowfacts").cmd("-f").description("select the flowfacts to load").argDescription("PATH")),
+	ff_ignore_incomplete(option::SwitchOption::Make(*this).cmd("--flowfacts-ignore-incomplete").description("ignore incomplete flowfacts (marked with '?')")),
 	work_dir(option::Value<string>::Make(*this).cmd("--work-dir").description("change the working directory").arg("PATH")),
 	dump_to(option::Value<string>::Make(*this).cmd("--dump-to").description("dump the results of analyzes to PATH").arg("PATH")),
 	record_stats(option::SwitchOption::Make(this).cmd("--stats").help("outputs available statistics in work directory")),
@@ -412,6 +413,8 @@ void Application::run() {
 		if(ff)
 			for(int i = 0; i < ff.count(); i++)
 				otawa::FLOW_FACTS_PATH(props).add(Path(ff[i]));
+		if(ff_ignore_incomplete)
+			otawa::FLOW_FACTS_IGNORE_UNKNOWN(props) = true;
 
 		// do the work
 		Monitor::configure(props);
