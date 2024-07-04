@@ -544,6 +544,8 @@ extern int fft_line;
  * 		by replacing extension or by appending ".ff" or ".ffx").
  * @li @ref otawa::FLOW_FACTS_MANDATORY -- if set to true, the processing fails if one loop bound is not available
  * 		(default to false).
+ * @li @ref otawa::FLOW_FACTS_IGNORE_UNKNOWN -- if set to true, the processing will not fails if one flow fact is unknown type
+ * 		(default to false).
  *
  * @see
  * 		@ref f4 for more details on the flow facts files.
@@ -568,6 +570,7 @@ FlowFactLoader::FlowFactLoader(p::declare& r):
 	
 	
 	mandatory(false),
+	ignore_unknown(false),
 	lines_available(false),
 	state(0),
 	lib(false),
@@ -589,6 +592,7 @@ void FlowFactLoader::configure (const PropList &props) {
 		nodes.add(*node);
 
 	mandatory = FLOW_FACTS_MANDATORY(props);
+	ignore_unknown = FLOW_FACTS_IGNORE_UNKNOWN(props);
 }
 
 
@@ -1218,7 +1222,8 @@ void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets
  * @param addr	Address of the loop entry.
  */
 void FlowFactLoader::onUnknownLoop(Address addr) {
-	onError(_ << "no bound for loop at " << addr);
+	if(!ignore_unknown)
+		onError(_ << "no bound for loop at " << addr);
 }
 
 
@@ -1228,7 +1233,8 @@ void FlowFactLoader::onUnknownLoop(Address addr) {
  * @param control	Address of the control instruction.
  */
 void FlowFactLoader::onUnknownMultiBranch(Address control) {
-	onError(_ << "undefined targets for multi-branch at " << control);
+	if(!ignore_unknown)
+		onError(_ << "undefined targets for multi-branch at " << control);
 }
 
 
@@ -1238,7 +1244,8 @@ void FlowFactLoader::onUnknownMultiBranch(Address control) {
  * @param control	Address of the control instruction.
  */
 void FlowFactLoader::onUnknownMultiCall(Address control) {
-	onError(_ << "undefined targets for multi-call at " << control);
+	if(!ignore_unknown)
+		onError(_ << "undefined targets for multi-call at " << control);
 }
 
 /** 
@@ -2411,6 +2418,12 @@ Identifier<bool> EXIST_PROVIDED_STATE("otawa::EXISTPROVIDED_STATE", false);
  * @ingroup ff
  */
 Identifier<bool> FLOW_FACTS_MANDATORY("otawa::FLOW_FACTS_MANDATORY", false);
+
+/**
+ * In configuration of the FlowFactLoader, makes it ignore unknown flow facts
+ * @ingroup ff
+ */
+Identifier<bool> FLOW_FACTS_IGNORE_UNKNOWN("otawa::FLOW_FACTS_IGNORE_UNKNOWN", false);
 
 
 /**
