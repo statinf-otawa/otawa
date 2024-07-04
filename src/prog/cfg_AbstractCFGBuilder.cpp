@@ -311,6 +311,9 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						ts.clear();
 						targets(i, ts, workspace(), otawa::BRANCH_TARGET);
 
+						// clear NO_BLOCK marked targets
+						// TODO JRU
+
 						// no target: unresolved branch
 						if(!ts)
 							m.add(bb, m.unknown(), new Edge(Edge::TAKEN));
