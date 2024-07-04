@@ -108,6 +108,7 @@ private:
 	Vector<xom::Element *> nodes;
 	Path current;
 	bool mandatory;
+	bool ignore_unknown;
 	bool lines_available;
 	dfa::State *state;
 	bool lib;
