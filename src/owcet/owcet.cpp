@@ -26,6 +26,7 @@
 #include <otawa/cfg/features.h>
 #include <otawa/ilp/System.h>
 #include <otawa/ipet/IPET.h>
+#include <otawa/ipet/WCETComputation.h>
 #include <otawa/script/Script.h>
 #include <otawa/stats/StatInfo.h>
 #include <otawa/util/BBRatioDisplayer.h>
@@ -149,6 +150,8 @@ public:
 protected:
 	virtual void work (const string &entry, PropList &props) {
 
+		otawa::ipet::WCETComputation::STATS_TYPE(props) = "block";
+
 		// set statistics option
 		if(display_stats)
 			Processor::COLLECT_STATS(props) = true;
@@ -230,6 +233,9 @@ protected:
 				OutStream *out = elm::sys::System::createFile(entry + ".lp");
 				sys->dumpLPSolve(*out);
 				delete out;
+				OutStream *out2 = elm::sys::System::createFile(entry + ".clp");
+				sys->dumpCPlex(*out2);
+				delete out2;
 			}
 		}
 

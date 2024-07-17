@@ -82,6 +82,32 @@ extern p::feature CACHE_SUPPORT_FEATURE;
 extern p::feature WCET_COUNT_RECORDED_FEATURE;
 
 // statistics
+// AbstractTotalTimeStat class
+class AbstractTotalTimeStat: public BBStatCollector {
+public:
+	AbstractTotalTimeStat(WorkSpace *ws);
+
+	cstring id() const override { return "ipet/total_time"; }
+	cstring name() const override { return "Total Execution Time"; }
+	cstring unit() const override { return "cycle"; }
+	int total() override { return WCET(ws()); }
+	cstring description() const override
+		{ return "Represents the total number of cycles the code takes during the execution of the worst case execution path."; }
+	void definitions(ListMap<cstring, string> & defs) const override;
+	void keywords(Vector<cstring>& kws) { kws.add("time"); kws.add("block"); kws.add("cfg"); }
+		
+protected:
+	ilp::System *system;
+	p::id<ot::time>& LTS_TIME;
+};
+/*
+class TimeStat: public AbstractTotalTimeStat {
+public:
+	TimeStat(WorkSpace *ws);
+protected:
+	virtual int getStat(BasicBlock *bb);
+};
+*/
 class TimeStat: public BBStatCollector {
 public:
 	TimeStat(WorkSpace *ws);

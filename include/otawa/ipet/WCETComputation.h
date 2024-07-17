@@ -33,6 +33,7 @@ public:
 	WCETComputation(void);
 	static p::declare reg;
 	static p::id<bool> DO_DISPLAY;
+	static p::id<string> STATS_TYPE;
 
 	void configure(const PropList& props = PropList::EMPTY) override;
 
@@ -44,6 +45,7 @@ protected:
 private:
 	ilp::System *system;
 	bool do_display;
+	string stat_type;
 };
 
 } } // otawa::ipet

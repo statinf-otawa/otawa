@@ -49,43 +49,40 @@ p::declare WCETComputation::reg = p::init("otawa::ipet::WCETComputation", Versio
  */
 p::id<bool> WCETComputation::DO_DISPLAY("otawa::ipet::WCETComputation::DO_DISPLAY", false);
 
+/**
+ * @brief Type of stats
+ * if "edge" and ws->provides("otawa::etime::EDGE_TIME_FEATURE") -> EdgeTotalTimeStat
+ * if "total_block" -> TotalTimeStat
+ * if "block" -> TimeStat
+ * if "pipeline" and ws->provides(ipet::PIPELINE_TIME_FEATURE) -> TotalPipelineTimeStat
+ */
+p::id<string> WCETComputation::STATS_TYPE("otawa::ipet::WCETComputation::STATS_TYPE", "edge");
+
 
 // AbstractTotalTimeStat class
-class AbstractTotalTimeStat: public BBStatCollector {
-public:
-	AbstractTotalTimeStat(WorkSpace *ws): BBStatCollector(ws) {
-		system = SYSTEM(ws);
-		ASSERT(system);
-	}
+AbstractTotalTimeStat::AbstractTotalTimeStat(WorkSpace *ws): BBStatCollector(ws), LTS_TIME(p::get_id<ot::time>("otawa::etime::LTS_TIME")) {
+	system = SYSTEM(ws);
+	ASSERT(system);
+}
 
-	cstring id() const override { return "ipet/total_time"; }
-	cstring name() const override { return "Total Execution Time"; }
-	cstring unit() const override { return "cycle"; }
-	int total() override { return WCET(ws()); }
-	cstring description() const override
-		{ return "Represents the total number of cycles the code takes during the execution of the worst case execution path."; }
-	void definitions(ListMap<cstring, string> & defs) const override {
-		auto w = WCET(ws());
-		defs.put("WCET", _ << w << " cycles");
-		if(ws()->provides(hard::PROCESSOR_FEATURE)) {
-			auto proc = hard::PROCESSOR_FEATURE.get(ws());
-			if(proc != nullptr && proc->getFrequency() != 0) {
-				auto t = double(w) / proc->getFrequency();
-				cstring u = " s";
-				static cstring units[] = { " ms", " us", " ns", "" };
-				for(int i = 0; units[i] != "" && t < 1; i++) {
-					u = units[i];
-					t = t * 1000;
-				}
-				defs.put("Time", _ << t << u);
+void AbstractTotalTimeStat::definitions(ListMap<cstring, string> & defs) const {
+	auto w = WCET(ws());
+	defs.put("WCET", _ << w << " cycles");
+	if(ws()->provides(hard::PROCESSOR_FEATURE)) {
+		auto proc = hard::PROCESSOR_FEATURE.get(ws());
+		if(proc != nullptr && proc->getFrequency() != 0) {
+			auto t = double(w) / proc->getFrequency();
+			cstring u = " s";
+			static cstring units[] = { " ms", " us", " ns", "" };
+			for(int i = 0; units[i] != "" && t < 1; i++) {
+				u = units[i];
+				t = t * 1000;
 			}
+			defs.put("Time", _ << t << u);
 		}
 	}
+}
 		
-protected:
-	ilp::System *system;
-};
-
 // total time statistics
 class TotalTimeStat: public AbstractTotalTimeStat {
 public:
@@ -94,8 +91,12 @@ public:
 
 	int getStat(BasicBlock *bb) override {
 		ot::time time = TIME(bb);
-		if(time < 0)
-			return 0;
+		if(time < 0) {
+			if(bb->hasProp(LTS_TIME))
+				time = LTS_TIME(bb);
+			if(time < 0)
+				return 0;
+		}
 		ilp::Var *var = VAR(bb);
 		ASSERTP(var != nullptr, "no variable for " << bb);
 		int cnt = int(system->valueOf(var));
@@ -116,7 +117,6 @@ public:
 	EdgeTotalTimeStat(WorkSpace *ws):
 		AbstractTotalTimeStat(ws),
 		sys(nullptr),
-		LTS_TIME(p::get_id<ot::time>("otawa::etime::LTS_TIME")),
 		HTS_CONFIG(p::get_id<Pair<ot::time, ilp::Var *>>("otawa::etime::HTS_CONFIG"))
 	{ }
 
@@ -157,11 +157,45 @@ protected:
 
 private:
 	ilp::System *sys;
-	p::id<ot::time>& LTS_TIME;
 	p::id<Pair<ot::time, ilp::Var *>>& HTS_CONFIG;
 };
 
+/**
+ * Total time statistics in the frame of etime module.
+ * @ingroup ipet
+ */
+class EdgeTimeStat: public AbstractTotalTimeStat {
+public:
+	EdgeTimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws), sys(nullptr)
+	{ }
 
+protected:
+
+	int getStat(BasicBlock *bb) override {
+		int t = -1;
+
+		// ensure ILP system
+		if(sys == nullptr) {
+			sys = ipet::SYSTEM(ws());
+			if(sys == nullptr)
+				return 0;
+		}
+
+		// compute time
+		BasicBlock::basic_preds_t ps;
+		bb->basicPreds(ps);
+		for(auto p: ps)
+			if(p.snd->hasProp(LTS_TIME))
+				// compute low time
+				return LTS_TIME(p.snd);
+
+		// return time
+		return t;
+	}
+
+private:
+	ilp::System *sys;
+};
 
 /**
  * Total time statistics for @ref PIPELINE_TIME_FEATURE .
@@ -252,7 +286,7 @@ private:
 /**
  * Build a new WCET computer.
  */
-WCETComputation::WCETComputation(): Processor(reg), system(0), do_display(false) {
+WCETComputation::WCETComputation(): Processor(reg), system(0), do_display(false), stat_type("") {
 }
 
 
@@ -261,6 +295,7 @@ WCETComputation::WCETComputation(): Processor(reg), system(0), do_display(false)
 void WCETComputation::configure(const PropList& props) {
 	Processor::configure(props);
 	do_display = DO_DISPLAY(props);
+	stat_type = STATS_TYPE(props);
 }
 
 
@@ -290,12 +325,19 @@ void WCETComputation::processWorkSpace(WorkSpace *ws) {
  */
 void WCETComputation::collectStats(WorkSpace *ws) {
 	record(new TotalCountStat(ws));
-	if(ws->provides(ipet::PIPELINE_TIME_FEATURE))
+	
+	if(stat_type == "pipeline" && ws->provides(ipet::PIPELINE_TIME_FEATURE))
 		record(new TotalPipelineTimeStat(ws));
-	else if(ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
+	else if(stat_type == "total_edge" && ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
 		record(new EdgeTotalTimeStat(ws));
-	else
+	else if(stat_type == "edge" && ws->provides("otawa::etime::EDGE_TIME_FEATURE"))
+		record(new EdgeTimeStat(ws));
+	else if(stat_type == "total_block")
 		record(new TotalTimeStat(ws));
+	else if(stat_type == "block")
+		record(new TimeStat(ws));
+	else
+		throw ProcessorException(*this, _ << "Unknown stat_type: " << stat_type);
 }
 
 
@@ -330,6 +372,20 @@ cstring TimeStat::unit() const { return "cycle"; }
 /** */
 int TimeStat::getStat(BasicBlock *bb) { return TIME(bb); }
 
+/*
+TimeStat::TimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) { }
+
+int TimeStat::getStat(BasicBlock *bb) { 
+	ot::time time = TIME(bb);
+	if(time < 0) {
+		if(bb->hasProp(LTS_TIME))
+			time = LTS_TIME(bb);
+		if(time < 0)
+			return 0;
+	}
+	return time;
+}
+*/
 
 /**
  * This feature ensures that the WCET has been computed using IPET approach.
