@@ -195,6 +195,14 @@ void FlowFactLoader::transferConflict(Inst *source, otawa::Block *b, const Conte
 		if (hasSomething)	  EDGE_OF_INFEASABLE_PATH_I(bb)= edgeInfo;
 		if (intoLoop && hasLoop)	   LOOP_OF_INFEASABLE_PATH_I(bb)= loopInfo;
 	}
+
+	long force_wcet = path(FORCE_WCET, source);
+	if(force_wcet >= 0) {
+		FORCE_WCET(bb) = force_wcet;
+		TIME(bb) = force_wcet;
+		if(logFor(LOG_BB))
+			log << "\t\t\tFORCE_WCET(" << path << ":" << bb << ") = " << force_wcet << io::endl;
+	}
 } 
 
 
