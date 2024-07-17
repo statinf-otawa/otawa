@@ -500,6 +500,7 @@ void System::dumpCPlex(OutStream& _out) {
 	// dump the constraints
 	out << "\\* Constraints *\\\n";
 	out << "Subject To\n";
+	size_t constcounter = 0;
 	for (ConstIterator cons2(this); cons2(); cons2++) {
 		bool bound = true;
 		int numvar = 0;
@@ -514,6 +515,8 @@ void System::dumpCPlex(OutStream& _out) {
 		if (bound)
 			continue;
 
+		++constcounter;
+		out << "lbl" << constcounter << ": ";
 		for (Constraint::TermIterator term(*cons2); term(); term++) {
 			t::int32 val = lrint((*term).snd);
 			if (!rename.hasKey((*term).fst)) {
@@ -610,8 +613,9 @@ void System::dumpCPlex(OutStream& _out) {
 		String *str = *item;
 		out << " ";
 		out << *str;
-		delete str;
+		out << "//";
 		out << "\n";
+		delete str;
 	}
 	out << "\n\n";
 
