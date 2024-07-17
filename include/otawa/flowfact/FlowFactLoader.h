@@ -152,6 +152,7 @@ private:
 	void scanRegSet(xom::Element *element, dfa::State* state);
 	void scanMemSet(xom::Element *element, dfa::State* state);
 	void scanSetInlining(xom::Element *element, ContextualPath& cpath, bool policy);
+	void scanBlock(xom::Element* edge,  ContextualPath& cpath  ); 
 };
 } // otawa
 

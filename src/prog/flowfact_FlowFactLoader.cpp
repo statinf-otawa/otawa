@@ -955,11 +955,13 @@ void FlowFactLoader::onReturn(address_t addr) {
 	if(addr.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-		onError(_ << "no instruction at " << addr);
-	if(logFor(LOG_INST))
-		log << "\treturn at " << addr << io::endl;
-	IS_RETURN(inst) = true;
+	if(!inst) 
+		onWarning(_ << "no instruction at " << addr);
+	else {
+		if(logFor(LOG_INST))
+			log << "\treturn at " << addr << io::endl;
+		IS_RETURN(inst) = true;
+	}
 }
 
 
@@ -971,9 +973,10 @@ void FlowFactLoader::onNoReturn(address_t addr) {
 	if(addr.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-	  onError(_ << "no instruction at " << addr);
-	NO_RETURN(inst) = true;
+	if(!inst) 
+	  onWarning(_ << "no instruction at " << addr);
+	else
+		NO_RETURN(inst) = true;
 }
 
 
@@ -1019,7 +1022,7 @@ void FlowFactLoader::onNoCall(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else
 		NO_CALL(inst) = true;
 }
@@ -1035,7 +1038,7 @@ void FlowFactLoader::onForceBranch(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else {
 		Inst::kind_t k;
 		if(!inst->hasProp(ALT_KIND))
@@ -1056,7 +1059,7 @@ void FlowFactLoader::onForceCall(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else {
 		Inst::kind_t k;
 		if(!inst->hasProp(ALT_KIND))
@@ -1078,12 +1081,12 @@ void FlowFactLoader::onForceCall(Address address) {
 void FlowFactLoader::onNoInline(Address address, bool no_inline, const ContextualPath& path) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
-	else
+		onWarning(_ << " no instruction at  " << address << ".");
+	else {
 		path.ref(NO_INLINE, inst) = no_inline;
-
-	if(logFor(LOG_BB))
-		log << "\t" << path << "(NO_INLINE," << address << ") = " << no_inline << io::endl;
+		if(logFor(LOG_BB))
+			log << "\t" << path << "(NO_INLINE," << address << ") = " << no_inline << io::endl;
+	}
 }
 
 
@@ -1098,12 +1101,12 @@ void FlowFactLoader::onNoInline(Address address, bool no_inline, const Contextua
 void FlowFactLoader::onSetInlining(Address address, bool policy, const ContextualPath& path) {
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
-	else
+		onWarning(_ << " no instruction at  " << address << ".");
+	else {
 		path.ref(INLINING_POLICY, inst) = policy;
-
-	if(logFor(LOG_BB))
-		log << "\t" << path << "(INLINING_POLICY," << address << ") = " << policy << io::endl;
+		if(logFor(LOG_BB))
+			log << "\t" << path << "(INLINING_POLICY," << address << ") = " << policy << io::endl;
+	}
 }
 
 
@@ -1117,7 +1120,7 @@ void FlowFactLoader::onPreserve(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else
 		PRESERVED(inst) = true;
 }
@@ -1132,7 +1135,7 @@ void FlowFactLoader::onIgnoreControl(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else
 		IGNORE_CONTROL(inst) = true;
 }
@@ -1147,7 +1150,7 @@ void FlowFactLoader::onIgnoreSeq(Address address) {
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
-		onError(_ << " no instruction at  " << address << ".");
+		onWarning(_ << " no instruction at  " << address << ".");
 	else
 		IGNORE_SEQ(inst) = true;
 }
@@ -1163,8 +1166,10 @@ void FlowFactLoader::onMultiBranch(Address control, const Vector<Address>& targe
 
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
-	if(!inst)
-		onError(_ << " no instruction at  " << control << ".");
+	if(!inst) {
+		onWarning(_ << " no instruction at  " << control << ".");
+		return;
+	}
 
 	// List of targets
 	if(logFor(LOG_BB))
@@ -1195,8 +1200,10 @@ void FlowFactLoader::onMultiCall(Address control, const Vector<Address>& targets
 
 	// Find the instruction
 	Inst *inst = _fw->process()->findInstAt(control);
-	if(!inst)
-		onError(_ << " no instruction at  " << control << ".");
+	if(!inst) {
+		onWarning(_ << " no instruction at  " << control << ".");
+		return;
+	}
 
 	// List of targets
 	if(logFor(LOG_BB))
@@ -1278,8 +1285,10 @@ void FlowFactLoader::scanEdge(xom::Element* edge,  ContextualPath& cpath  ){
 				edgeInfo->setTarget(MemArea(dest, 4).address());
 				// Find the instruction
  				Inst *inst = _fw->process()->findInstAt(edgeInfo->getSource());
-				if(!inst)
-					onError(_ << " no instruction at  " << edgeInfo->getSource() << ".");
+				if(!inst) {
+					onWarning(_ << " no instruction at  " << edgeInfo->getSource() << ".");
+					return;
+				}
 				LockPtr<ListOfEdgeConflict > max  = cpath(EDGE_OF_INFEASABLE_PATH_I, inst);
 				
  				int trouve =false;
@@ -1302,6 +1311,33 @@ void FlowFactLoader::scanEdge(xom::Element* edge,  ContextualPath& cpath  ){
 			}
 		}  				 
 } 
+
+/** 
+ * Scan a block XML element.
+ * @param element	... element
+ * @param cpath		contextual path
+ */
+ 
+void FlowFactLoader::scanBlock(xom::Element* element,  ContextualPath& cpath  ) {
+	// get the address
+	Address addr = scanAddress(element, cpath).address();
+	if(addr.isNull()) {
+		onWarning(_ << "ignoring this loop whose address cannot be computed: " << xline(element));
+		return;
+	}
+
+	// find the instruction
+	Inst *inst = _fw->process()->findInstAt(addr);
+	if(!inst)
+		onError(_ << "unmarked loop because instruction at " << addr << " not found");
+
+	Option<long> time = scanBound(element, "time");
+	if(time) {
+		cpath.ref(FORCE_WCET, inst) = *time;
+		if(logFor(LOG_BB))
+			log << "\t" << cpath << "(FORCE_WCET," << inst->address() << ") = " << *time << io::endl;
+	}
+}
 	
 
 /**
@@ -1783,9 +1819,11 @@ void FlowFactLoader::scanXFun(xom::Element *element, ContextualPath& path) {
 
 	// get the address
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << " from " << xline(element));
+	if(!inst) {
+		onWarning(_ << "FlowFactLoader::scanXFun"
+			<< " no instruction at  " << addr << " from " << xline(element));
+		return;
+	}
 	path.push(ContextualStep::FUNCTION, addr);
 	
 	
@@ -1858,8 +1896,11 @@ void FlowFactLoader::scanXCall(xom::Element *element, ContextualPath& path) {
 			return;
 		}
 		Inst *inst = _fw->process()->findInstAt(addr);
-		if(!inst)
-			throw ProcessorException(*this, _ << " no instruction at  " << addr << " from " << xline(element));
+		if(!inst) {
+			onWarning(_ << "FlowFactLoader::scanXCall"
+			<< " no instruction at  " << addr << " from " << xline(element));
+			return;
+		}
 		path.push(ContextualStep::CALL, addr);
 
 		// scan the content
@@ -1924,9 +1965,11 @@ void FlowFactLoader::scanXState(xom::Element *element, ContextualPath& path) {
 		return;
 	}
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << " from " << xline(element));
+	if(!inst) {
+		onWarning(_ << "FlowFactLoader::scanXState"
+			<< " no instruction at  " << addr << " from " << xline(element));
+		return;
+	}
 
 	for(int i = 0; i < element->getChildCount(); i++) {
 		xom::Node *child = element->getChild(i);
@@ -1956,9 +1999,11 @@ void FlowFactLoader::scanXState(xom::Element *element) {
 		return;
 	}
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << " from " << xline(element));
+	if(!inst) {
+		onWarning(_ << "FlowFactLoader::scanXState"
+			<<  " no instruction at  " << addr << " from " << xline(element));
+		return;
+	}
 
 	for(int i = 0; i < element->getChildCount(); i++) {
 		xom::Node *child = element->getChild(i);
@@ -1992,9 +2037,11 @@ void FlowFactLoader::scanXLoop(xom::Element *element, ContextualPath& path) {
 		return;
 	}
 	Inst *inst = _fw->process()->findInstAt(addr);
-	if(!inst)
-		throw ProcessorException(*this,
-			_ << " no instruction at  " << addr << " from " << xline(element));
+	if(!inst) {
+		onWarning(_ << "FlowFactLoader::scanXLoop"
+			 << " no instruction at  " << addr << " from " << xline(element));
+		return;
+	}
 
 	// get the information
 	int nbPath =currentCteNum ;
@@ -2236,6 +2283,9 @@ void FlowFactLoader::scanXContent(xom::Element *element, ContextualPath& path) {
 			}
 			else if(intoConflictPath&&name == "edge") 	{	 				
 					scanEdge(element, path);  
+			}
+			else if(name == "block") {
+				scanBlock(element, path);
 			}
 		}
 	}
@@ -2592,5 +2642,14 @@ Identifier <LockPtr <ListOfLoopConflict > >    LOOP_OF_INFEASABLE_PATH_I ("otawa
  */
 
 Identifier<LockPtr<ListOfEdgeConflict > > EDGE_OF_INFEASABLE_PATH_I ("otawa::EDGE_OF_INFEASABLE_PATH_I", NULL) ;
+
+/**
+ * Put on the first instruction of a bb, it gives the WCET of this bb
+ * @ingroup ff
+ *
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<long> FORCE_WCET("otawa::FORCE_WCET", -1);
 
 } // otawa

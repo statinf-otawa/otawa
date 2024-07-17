@@ -72,6 +72,8 @@ extern Identifier<bool> EXIST_PROVIDED_STATE;
 // flow fact administration
 extern Identifier<bool> PRESERVED;
 
+// force WCET
+extern Identifier<long> FORCE_WCET;
 } // otawa
 
 #endif /* OTAWA_FLOWFACT_FEATURES_H_ */
