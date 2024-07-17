@@ -12,6 +12,8 @@ if(CMAKE_VERSION LESS "3.1")
 else()
 	set(CMAKE_CXX_STANDARD 11)
 endif()
+#avoid warnings with newer GCC version (13)
+add_compile_options(-Wno-c++20-compat)
 
 # get version
 file(READ "VERSION" VERSION)

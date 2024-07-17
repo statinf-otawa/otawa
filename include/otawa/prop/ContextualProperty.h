@@ -133,7 +133,7 @@ public:
 	public:
 		inline Ref(const ContextualPath& _cp, PropList& _p, const Identifier<T>& _i): cp(_cp), p(_p), i(_i) { }
 		inline Ref(const Ref<T>& r): cp(r.cp), p(r.p), i(r.i) { }
-		inline Ref<T>& operator=(const Ref<T>& r) { cp = r.cp; p = r.p; i = r.i; return *this; }
+		inline Ref<T>& operator=(const Ref<T>& r) { const_cast<T>(cp) = r.cp; p = r.p; i = r.i; return *this; }
 
 		// immutable part
 		inline const ContextualPath& path(void) const { return cp; }
