@@ -139,7 +139,7 @@ void CFGChecker::processCFG(WorkSpace *ws, CFG *cfg) {
 	BasicBlock::EdgeIter e = cfg->exit()->ins();
 	if(!e) {
 		failed = true;
-		warn(_ << "CFG " << cfg->label() << " is not connected (this may be due to infinite or unresolved branches).");
+		warn(_ << "CFG " << cfg->label() << "(" << cfg->address() << ") is not connected (this may be due to infinite or unresolved branches).");
 	}
 }
 

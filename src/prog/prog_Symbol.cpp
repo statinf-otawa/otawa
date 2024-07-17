@@ -116,7 +116,7 @@ Inst *Symbol::findInst(void) const {
 
 // GenericIdentifier<Symbol_t *>::print Specialization
 void Symbol::print(elm::io::Output& out) const {
-	out << "symbol(" << name() << ")";
+	out << "symbol(" << _address << ", " << _name << ", " << _size << ", " << _kind << ")";
 }
 
 

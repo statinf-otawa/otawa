@@ -132,7 +132,7 @@ protected:
 			entry_inst = workspace()->process()->findInstAt(entry_name);
 			if(entry_inst == nullptr)
 				throw ProcessorException(*this,
-					_ << "entry instruction at " << entry_name << "cannot be found!");
+					_ << "entry instruction at " << entry_name << " cannot be found!");
 			entry_addr = entry_inst->address();
 		}
 	}
