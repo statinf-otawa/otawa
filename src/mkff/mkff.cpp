@@ -206,6 +206,7 @@ public:
 	virtual ~Printer(void) { }
 	virtual void printNoReturn(Output& out, string label) = 0;
 	virtual void printNoCall(Output& out, string label) = 0;
+	virtual void printNoCall(Output& out, Address addr) = 0;
 	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
@@ -257,6 +258,10 @@ public:
 
 	virtual void printNoCall(Output& out, string label) {
 		out << "nocall \"" << label << "\";\n";
+	}
+
+	virtual void printNoCall(Output& out, Address addr) {
+		out << "nocall 0x" << addr << ";\n";
 	}
 
 	/**
@@ -454,6 +459,10 @@ public:
 		out << "\t<nocall label=\"" << label << "\"/>\n";
 	}
 
+	virtual void printNoCall(Output& out, Address addr) {
+		out << "\t<nocall address=\"0x" << addr << "\"/>\n";
+	}
+
 	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		if(va)
 			for(Vector<Address>::Iter vai(*va); vai(); vai++) {
@@ -571,17 +580,20 @@ private:
 
 
 // ControlOutput processor
+class QuestFlowFactLoader;
 class ControlOutput: public CFGProcessor {
 public:
-	ControlOutput(Printer&);
+	ControlOutput(Printer&, QuestFlowFactLoader *ffl);
 protected:
 	void setup(WorkSpace *ws) override;
 	void cleanup(WorkSpace *ws) override;
+	void processAll(WorkSpace *ws) override;
 	void processCFG(WorkSpace *ws, CFG *cfg) override;
 private:
 	void prepare(WorkSpace *ws, CFG *cfg);
 	bool one;
 	Printer& _printer;
+	QuestFlowFactLoader *init_state;
 };
 
 
@@ -627,6 +639,8 @@ public:
 
 	inline bool checkSummed(void) const { return check_summed; }
 
+	Vector<Address>& getRecordedNoCall() { return recorded_nocall; }
+
 protected:
 
 	virtual void onCheckSum(const String& name, unsigned long sum) {
@@ -652,17 +666,28 @@ protected:
 		FlowFactLoader::onReturn(addr);
 		record(addr);
 	}
+	virtual void onNoCall(Address addr) {
+		FlowFactLoader::onNoCall(addr);
+		record(addr);
+		recorded_nocall.add(addr);
+	}
 
 private:
 
 	void record(Address addr) {
 		Inst *inst = workSpace()->findInstAt(addr);
 		if(!inst)
-			onError(_ << "no instruction at " << addr);
-		RECORDED(inst) = true;
+			onWarning(_ << "no instruction at " << addr);
+		else
+			RECORDED(inst) = true;
 	}
 
 	bool check_summed;
+
+	//required as ControlOutput::processCFG only runs through the processed CFG, and so not the marked as nocall
+	//  without it the further generated flowfact file is missing some nocall directives and reports errors where there
+	//  shouldn't be
+	Vector<Address> recorded_nocall;
 };
 
 
@@ -1094,13 +1119,12 @@ void Command::work(PropList &props) {
 
 	Printer *p = nullptr;
 
+	// Load flow facts and record unknown values
+	workspace()->require(DynFeature("otawa::dfa::INITIAL_STATE_FEATURE"), props);
+	QuestFlowFactLoader *ffl = workspace()->run<QuestFlowFactLoader>(props);
+
 	if(!debugging) {
-		// Load flow facts and record unknown values
-		workspace()->require(DynFeature("otawa::dfa::INITIAL_STATE_FEATURE"), props);
-		QuestFlowFactLoader *ffl = workspace()->run<QuestFlowFactLoader>(props);
-
 		// determine printer
-
 		if(xml)
 			p = new FFXPrinter(workspace(), true);
 		else
@@ -1143,7 +1167,7 @@ void Command::work(PropList &props) {
 	if(!debugging) {
 
 		// display low-level flow facts
-		ControlOutput *ctrl = new ControlOutput(*p);
+		ControlOutput *ctrl = new ControlOutput(*p, ffl);
 		workspace()->run(ctrl, props);
 
 		// display the context tree
@@ -1497,8 +1521,8 @@ bool FFOutput::checkLoop(ContextTree *ctree) {
 /**
  * Constructor.
  */
-ControlOutput::ControlOutput(Printer& printer)
-: CFGProcessor("ControlOutput", Version(1, 1, 0)), one(false), _printer(printer) {
+ControlOutput::ControlOutput(Printer& printer, QuestFlowFactLoader *ffl)
+: CFGProcessor("ControlOutput", Version(1, 1, 0)), one(false), _printer(printer), init_state(ffl) {
 }
 
 
@@ -1506,6 +1530,12 @@ ControlOutput::ControlOutput(Printer& printer)
  */
 void ControlOutput::setup(WorkSpace *ws) {
 	one = false;
+}
+
+void ControlOutput::processAll(WorkSpace *ws) {
+	for(Address addr : init_state->getRecordedNoCall())
+		_printer.printNoCall(out, addr);
+	CFGProcessor::processAll(ws);
 }
 
 
