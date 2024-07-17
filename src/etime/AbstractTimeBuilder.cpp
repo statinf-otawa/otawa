@@ -190,7 +190,7 @@ void AbstractTimeBuilder::configure(const PropList& props) {
 	_explicit = ipet::EXPLICIT(props);
 	_predump = PREDUMP(props);
 	_event_th = EVENT_THRESHOLD(props);
-	_record = RECORD_TIME(props);
+	_record = Processor::COLLECT_STATS(props);
 	_dir = GRAPHS_OUTPUT_DIRECTORY(props);
 	if(_dir != sys::Path(""))
 		_explicit = true;

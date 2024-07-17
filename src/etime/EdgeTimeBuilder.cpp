@@ -25,6 +25,7 @@
 #include <elm/data/quicksort.h>
 #include <otawa/etime/Config.h>
 #include <otawa/etime/EventCollector.h>
+#include <otawa/flowfact/features.h>
 
 namespace otawa { namespace etime {
 
@@ -362,7 +363,7 @@ void EdgeTimeBuilder::configure(const PropList& props) {
 	_explicit = ipet::EXPLICIT(props);
 	predump = PREDUMP(props);
 	event_th = EVENT_THRESHOLD(props);
-	record = RECORD_TIME(props);
+	record = Processor::COLLECT_STATS(props);
 	_props = props;
 }
 
@@ -549,6 +550,13 @@ void EdgeTimeBuilder::clean(ParExeGraph *graph) {
 void EdgeTimeBuilder::processEdge(WorkSpace *ws, CFG *cfg) {
 	if(logFor(Processor::LOG_BLOCK))
 		log << "\t\t\t" << source << ", " << edge << ", " << target << io::endl;
+
+	ot::time cost = FORCE_WCET(target);
+	if(cost >= 0) {
+		event_list_t noevents;
+		genForOneCost(cost, edge, noevents);
+		return;
+	}
 
 	// initialize the sequence
 	bnode = 0;
@@ -1746,7 +1754,6 @@ void EdgeTimeBuilder::contributeConst(void) {
  * @li @ref GRAPHS_OUTPUT_DIRECTORY
  * @li @ref ONLY_START
  * @li @ref PREDUMP
- * @li @ref RECORD_TIME
  *
  * @p Properties
  * @li @ref LTS_TIME
@@ -1755,15 +1762,9 @@ void EdgeTimeBuilder::contributeConst(void) {
  */
 p::feature EDGE_TIME_FEATURE("otawa::etime::EDGE_TIME_FEATURE", new Maker<EdgeTimeBuilder>());
 
-/**
- * Configuration property of EDGE_TIME_FEATURE, if true, enable the production
- * of LTS_TIME and HTS_OFFSET on the edge.
- * @ingroup etime
- */
-p::id<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
 
 /**
- * Produced only if the RECORD_TIME configuration is set,
+ * Produced only if the COLLECT_STATS configuration is set,
  * record for each edge the low-time-set maximum time in cycles.
  *
  * @par Hooks
@@ -1773,7 +1774,7 @@ p::id<bool> RECORD_TIME("otawa::etime::RECORD_TIME", false);
 p::id<ot::time> LTS_TIME("otawa::etime::LTS_TIME", -1);
 
 /**
- * Produced only if the RECORD_TIME configuration is set,
+ * Produced only if the COLLECT_STATS configuration is set,
  * record for each edge a pair(t, x) where (a) t the difference between maximum time
  * of low-time-set and the maximum time of high-time-set (in cycles)
  * (b) x is an ILP variable that represents the occurrences of this time.

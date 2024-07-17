@@ -124,7 +124,6 @@ extern p::alias<Event *> PREFIX_EVENT;
 // configuration feature
 extern p::id<bool> PREDUMP;
 extern p::id<int> EVENT_THRESHOLD;
-extern p::id<bool> RECORD_TIME;
 extern p::feature EDGE_TIME_FEATURE;
 extern p::id<ot::time> LTS_TIME;
 extern p::id<Pair<ot::time, ilp::Var *> > HTS_CONFIG;
