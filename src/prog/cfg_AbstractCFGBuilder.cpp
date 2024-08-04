@@ -219,6 +219,11 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
  */
 void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs) {
 	for(FragTable<Inst *>::Iter e(bbs); e(); e++) {
+		if(NO_BLOCK(e.item())) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\tskipping BB at " << e->address() << " (NO_BLOCK)" << io::endl;
+			continue;
+		}
 
 		// build list of instructions
 		Vector<Inst *> insts;
@@ -226,6 +231,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 		if(!e->isControl())
 			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
 				insts.add(i);
+				// Control instruction reached: add conditional bundle and finish
 				if(isControl(i)) {
 					while(!i->isBundleEnd()) {
 						i = i->nextInst();
@@ -235,6 +241,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 				}
 			}
 		else {
+			// Control instruction reached: add conditional bundle and finish
 			Inst *i = *e;
 			while (!i->isBundleEnd()) {
 				i = i->nextInst();
@@ -311,17 +318,21 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 						ts.clear();
 						targets(i, ts, workspace(), otawa::BRANCH_TARGET);
 
-						// clear NO_BLOCK marked targets
-						// TODO JRU
-
 						// no target: unresolved branch
 						if(!ts)
 							m.add(bb, m.unknown(), new Edge(Edge::TAKEN));
 
 						// create edges target edges
 						else
-							for(Vector<Inst *>::Iter t(ts); t(); t++)
+							for(Vector<Inst *>::Iter t(ts); t(); t++) {
+								// clear NO_BLOCK marked targets
+								if(NO_BLOCK(t.item())) {
+									if(logFor(LOG_BB))
+										log << "\t\tignoring NO_BLOCK at " << t->address() << io::endl;
+									continue;
+								}
 								m.add(bb, BB(*t), new Edge(Edge::TAKEN));
+							}
 					}
 
 					// a call
