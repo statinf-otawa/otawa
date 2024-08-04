@@ -1391,7 +1391,6 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
-			}
 			else if(name == "noblock") {
 				Address addr = scanAddress(element, cpath).address();
 				if(!addr.isNull())
