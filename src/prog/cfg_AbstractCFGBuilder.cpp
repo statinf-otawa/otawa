@@ -303,8 +303,17 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 				Inst *i = bb->control();
 
 				// conditional or call case -> sequential edge (not taken)
-				if(!i || (i->isConditional() && !IGNORE_SEQ(i)))
+				if(!i)
 					seq(m, bb, bb);
+				else if(i->isConditional() && !IGNORE_SEQ(i)) {
+					if(NO_BLOCK(i->nextInst())) {
+						// we also need to check the target of the seq branch is not NO_BLOCK
+						if(logFor(LOG_BB))
+							log << "\t\tskipping sequential edge " << i << " because " << i->nextInst()->address() << " is marked as NO_BLOCK\n";
+					}
+					else
+						seq(m, bb, bb);
+				}
 
 				// branch cases
 				if(i && !IGNORE_CONTROL(i)) {
