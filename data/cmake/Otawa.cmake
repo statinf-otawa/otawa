@@ -136,6 +136,13 @@ function(OTAWA_ILP _PLUGIN _NAMESPACE _SOURCES)
 	install(FILES	ilp.eld
 		DESTINATION "${OTAWA_PLUGDIR}/ilp"
 		RENAME "${PLUGIN}.eld")
+
+	install(CODE "execute_process( \
+		COMMAND ${CMAKE_COMMAND} -E create_symlink \
+		${OTAWA_PLUGDIR}/${_NAMESPACE}/${_PLUGIN}.so \
+		${OTAWA_PLUGDIR}/ilp/${_PLUGIN}.so   \
+		)"
+	)
 endfunction()
 
 function(OTAWA_INSTALL_INCLUDE _DIR)
