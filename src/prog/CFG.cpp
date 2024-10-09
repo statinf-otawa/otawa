@@ -130,6 +130,7 @@ namespace otawa {
  * @li @ref IS_RETURN -- consider the marked instruction as a return,
  * @li @ref NO_RETURN -- mark the function as not returning,
  * @li @ref NO_CALL -- avoid to involve in the CFGs the function whose first instruction is marked,
+ * @li @ref NO_BLOCK -- avoid to involve in the CFGs the block whose first instruction is marked,
  * @li @ref IGNORE_CONTROL -- ignore the control effect of the marked instruction,
  * @li @ref IGNORE_SEQ -- only on a conditional branching instruction, ignore the sequential path,
  * @li @ref BRANCH_TARGET -- gives the target(s) of an indirect branch instruction,

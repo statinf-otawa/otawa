@@ -219,6 +219,11 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
  */
 void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs) {
 	for(FragTable<Inst *>::Iter e(bbs); e(); e++) {
+		if(NO_BLOCK(e.item())) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\tskipping BB at " << e->address() << " (NO_BLOCK)" << io::endl;
+			continue;
+		}
 
 		// build list of instructions
 		Vector<Inst *> insts;
@@ -226,6 +231,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 		if(!e->isControl())
 			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
 				insts.add(i);
+				// Control instruction reached: add conditional bundle and finish
 				if(isControl(i)) {
 					while(!i->isBundleEnd()) {
 						i = i->nextInst();
@@ -235,6 +241,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 				}
 			}
 		else {
+			// Control instruction reached: add conditional bundle and finish
 			Inst *i = *e;
 			while (!i->isBundleEnd()) {
 				i = i->nextInst();
@@ -296,8 +303,17 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 				Inst *i = bb->control();
 
 				// conditional or call case -> sequential edge (not taken)
-				if(!i || (i->isConditional() && !IGNORE_SEQ(i)))
+				if(!i)
 					seq(m, bb, bb);
+				else if(i->isConditional() && !IGNORE_SEQ(i)) {
+					if(NO_BLOCK(i->nextInst())) {
+						// we also need to check the target of the seq branch is not NO_BLOCK
+						if(logFor(LOG_BB))
+							log << "\t\tskipping sequential edge " << i << " because " << i->nextInst()->address() << " is marked as NO_BLOCK\n";
+					}
+					else
+						seq(m, bb, bb);
+				}
 
 				// branch cases
 				if(i && !IGNORE_CONTROL(i)) {
@@ -317,8 +333,15 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 						// create edges target edges
 						else
-							for(Vector<Inst *>::Iter t(ts); t(); t++)
+							for(Vector<Inst *>::Iter t(ts); t(); t++) {
+								// clear NO_BLOCK marked targets
+								if(NO_BLOCK(t.item())) {
+									if(logFor(LOG_BB))
+										log << "\t\tignoring NO_BLOCK at " << t->address() << io::endl;
+									continue;
+								}
 								m.add(bb, BB(*t), new Edge(Edge::TAKEN));
+							}
 					}
 
 					// a call

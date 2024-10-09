@@ -87,6 +87,7 @@ otawa::Address checked_add(otawa::Address a, elm::t::int32 off) {
 %token KW_MULTICALL
 %token KW_NO
 %token KW_NOCALL
+%token KW_NOBLOCK
 %token KW_NOINLINE
 %token KW_PRESERVE
 %token KW_REG
@@ -141,6 +142,8 @@ command:
 		{ loader->onNoCall(*$2); delete $2; }
 |	KW_NO KW_CALL id_or_address ';'
 		{ loader->onNoCall(*$3); delete $3; }
+|	KW_NOBLOCK id_or_address ';'
+		{ loader->onNoBlock(*$2); delete $2; }
 |	KW_DOINLINE id_or_address opt_in ';'
 		{ loader->onNoInline(*$2, false, path); delete $2; path.clear(); }
 |	KW_FORCE KW_BRANCH full_address ';'
