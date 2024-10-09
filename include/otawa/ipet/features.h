@@ -100,17 +100,21 @@ protected:
 	ilp::System *system;
 	p::id<ot::time>& LTS_TIME;
 };
-/*
-class TimeStat: public AbstractTotalTimeStat {
-public:
-	TimeStat(WorkSpace *ws);
-protected:
-	virtual int getStat(BasicBlock *bb);
-};
-*/
+
 class TimeStat: public BBStatCollector {
 public:
 	TimeStat(WorkSpace *ws);
+	virtual cstring id(void) const;
+	virtual void keywords(Vector<cstring>& kws);
+	virtual cstring name(void) const;
+	virtual cstring unit(void) const;
+protected:
+	virtual int getStat(BasicBlock *bb);
+};
+
+class BlockTimeStat: public AbstractTotalTimeStat {
+public:
+	BlockTimeStat(WorkSpace *ws);
 	virtual cstring id(void) const;
 	virtual void keywords(Vector<cstring>& kws);
 	virtual cstring name(void) const;

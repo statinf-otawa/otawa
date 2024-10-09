@@ -335,7 +335,7 @@ void WCETComputation::collectStats(WorkSpace *ws) {
 	else if(stat_type == "total_block")
 		record(new TotalTimeStat(ws));
 	else if(stat_type == "block")
-		record(new TimeStat(ws));
+		record(new BlockTimeStat(ws));
 	else
 		throw ProcessorException(*this, _ << "Unknown stat_type: " << stat_type);
 }
@@ -348,6 +348,41 @@ void WCETComputation::dump(otawa::WorkSpace *ws, elm::io::Output & out) {
 }
 
 
+/**
+ * @class TimeStat
+ * Statistics producing the execution of each basic block.
+ * @ingroup ipet
+ */
+
+/** */
+BlockTimeStat::BlockTimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) { }
+
+/** */
+cstring BlockTimeStat::id() const { return "ipet/time"; }
+
+/** */
+void BlockTimeStat::keywords(Vector<cstring>& kws) { kws.add("time"); kws.add("block"); kws.add("cfg"); }
+
+/** */
+cstring BlockTimeStat::name() const { return "Block Execution Time"; }
+
+/** */
+cstring BlockTimeStat::unit() const { return "cycle"; }
+
+/** */
+int BlockTimeStat::getStat(BasicBlock *bb) {
+	ot::time time = TIME(bb);
+	if(time < 0) {
+		if(bb->hasProp(LTS_TIME))
+			time = LTS_TIME(bb);
+		if(time < 0) {
+			ilp::Var *var = VAR(bb);
+			if(var != nullptr)
+				time = system->valueOf(var);
+		}
+	}
+	return time;
+ }
 /**
  * @class TimeStat
  * Statistics producing the execution of each basic block.
@@ -371,21 +406,6 @@ cstring TimeStat::unit() const { return "cycle"; }
 
 /** */
 int TimeStat::getStat(BasicBlock *bb) { return TIME(bb); }
-
-/*
-TimeStat::TimeStat(WorkSpace *ws): AbstractTotalTimeStat(ws) { }
-
-int TimeStat::getStat(BasicBlock *bb) { 
-	ot::time time = TIME(bb);
-	if(time < 0) {
-		if(bb->hasProp(LTS_TIME))
-			time = LTS_TIME(bb);
-		if(time < 0)
-			return 0;
-	}
-	return time;
-}
-*/
 
 /**
  * This feature ensures that the WCET has been computed using IPET approach.
