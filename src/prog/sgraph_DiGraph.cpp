@@ -172,6 +172,22 @@ void DiGraphBuilder::add(Vertex *v) {
 	_g->v.add(v);
 }
 
+/**
+ * Add a vertex to the graph.
+ * @param v	Vertex to add.
+ */
+void DiGraphBuilder::remove(Vertex *v) {
+	ASSERTP(_g, "graph is not yet built!");
+	for(DiGraph::VertexIter iter = _g->begin() ; iter != _g->end() ; iter++) {
+		Vertex* vv = *iter;
+		if(vv->idx > v->idx)
+			--vv->idx;
+	}
+	--c;
+	_g->v.remove(v);
+}
+
+
 
 /**
  * Add an edge.

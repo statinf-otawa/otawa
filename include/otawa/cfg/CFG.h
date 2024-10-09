@@ -282,6 +282,7 @@ public:
 	Block *unknown();
 	CFG *build();
 	void add(Block *v);
+	void remove(Block *v);
 	void call(SynthBlock *v, CFG *cfg);
 	void call(SynthBlock *v, CFGMaker& cfg);
 	inline void add(Block *v, Block *w, Edge *e) { graph::GenDiGraphBuilder<Block, Edge>::add(v, w, e); }

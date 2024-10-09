@@ -944,6 +944,10 @@ void CFGMaker::add(Block *v) {
 	v->_cfg = cfg;
 }
 
+void CFGMaker::remove(Block *v) {
+	graph::GenDiGraphBuilder<Block, Edge>::remove(v);
+}
+
 
 /**
  * Add a synthetic block.

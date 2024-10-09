@@ -55,7 +55,7 @@ private:
 	void scanCFG(Inst *i, FragTable<Inst *>& bbs);
 	void buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs);
 	void buildEdges(CFGMaker& maker);
-	void cleanBBs(const FragTable<Inst *>& bbs);
+	void cleanBBs(const FragTable<Inst *>& bbs, CFGMaker& m);
 	void seq(CFGMaker& m, BasicBlock *b, Block *src, t::uint32 flags = Edge::NOT_TAKEN);
 
 	makers_t makers;
