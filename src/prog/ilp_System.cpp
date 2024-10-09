@@ -30,11 +30,11 @@ namespace otawa { namespace ilp {
  */
 class Dumper {
 public:
-	Dumper(void): vcnt(0) { }
+	Dumper(bool fr=false): vcnt(0), force_rename(fr) { }
 
 	string name(ilp::Var *var) {
 		string r = var->name();
-		if(!r) {
+		if(!r || force_rename) {
 			r = map.get(var, "");
 			if(!r) {
 				r = _ << "x" << vcnt;
@@ -45,9 +45,12 @@ public:
 		return r;
 	}
 
+	HashMap<Var *, string> renamed_map() {return map;}
+
 private:
 	int vcnt;
 	HashMap<Var *, string> map;
+	bool force_rename = false;
 };
 
 
@@ -235,13 +238,13 @@ static void printTerm(io::Output& out, Term term, Dumper& dumper, bool fst) {
 	if(val < 0) {
 		out << "- ";
 		if(val != -1)
-			out << -val << ' ';
+			out.format("%.0f ", -val); //avoid using the scientific notation when having a double, and keep an integer
 	}
 	else {
 		if(!fst)
 			out << "+ ";
 		if(val != 1)
-			out << val << ' ';
+			out.format("%.0f ", val); //avoid using the scientific notation when having a double, and keep an integer
 	}
 	out << CID(dumper.name(term.fst));
 }
@@ -254,19 +257,19 @@ static void printTerm(io::Output& out, Term term, Dumper& dumper, bool fst) {
 void System::dumpLPSolve(io::OutStream& _out) {
 	Dumper dumper;
 	io::Output out(_out);
-	out << "/* IPET system */\n";
 	avl::Set<Var *> vars;
 
 	// Output the objective function
-	out << "max:";
+	out << "max:\n";
 	bool fst = true;
 	for (ObjTermIterator term(this); term(); term++) {
 		out << ' ';
 		printTerm(out, *term, dumper, fst);
 		vars.add((*term).fst);
 		fst = false;
+		out << "\n";
 	}
-	out << ";\n";
+	out << ";\n\n";
 
 	// Output the constraints
 	for(dyndata::Iter<Constraint *> cons(constraints()); cons(); cons++) {
@@ -325,6 +328,7 @@ void System::dumpLPSolve(io::OutStream& _out) {
 			out << "\t/* " << label << "*/";
 		out << io::endl;
 	}
+	out << "\n\n";
 
 	// Output int constraints
 	for(avl::Set<Var *>::Iter var(vars); var(); var++)
@@ -466,102 +470,42 @@ void System::dumpMOSEK(OutStream& _out) {
  * @param _out	Output stream to use.
  */
 void System::dumpCPlex(OutStream& _out) {
+	Dumper dumper(true);
 	io::Output out(_out);
-	HashMap<Var*, String*> rename;
-	int idx = 0;
 	/* Rename the variables for cplex */
 
 
-	out << "\\* Objective function *\\\n";
+	// Output the objective function
 	out << "Maximize\n";
-	/* dump the objective function */
-
 	for (ObjTermIterator term(this); term(); term++) {
-		t::int32 val = lrint((*term).snd);
-		if (!rename.hasKey((*term).fst)) {
-			rename.put((*term).fst, new String((_ << "x" << idx)));
-			idx++;
-		}
-		if (val == 0)
-			continue;
-
-		out << " ";
-		if (val == 1) {
-			out << "+" << *rename.get((*term).fst, 0);
-		} else if (val == -1) {
-			out << "-" << *rename.get((*term).fst, 0);
-		} else {
-			out << io::sign(val) << " " << *rename.get((*term).fst, 0);
-		}
+		out << ' ';
+		printTerm(out, *term, dumper, false);
 		out << "\n";
 	}
 	out << "\n\n";
 
-	// dump the constraints
-	out << "\\* Constraints *\\\n";
+	// Output the constraints
 	out << "Subject To\n";
 	size_t constcounter = 0;
-	for (ConstIterator cons2(this); cons2(); cons2++) {
-		bool bound = true;
-		int numvar = 0;
-		for (Constraint::TermIterator term(*cons2); term(); term++) {
-			if ((*term).snd != 1)
-				bound = false;
-			numvar++;
-		}
-		if (numvar != 1)
-			bound = false;
-
-		if (bound)
-			continue;
-
+	for(dyndata::Iter<Constraint *> cons(constraints()); cons(); cons++) {
 		++constcounter;
 		out << "lbl" << constcounter << ": ";
-		for (Constraint::TermIterator term(*cons2); term(); term++) {
-			t::int32 val = lrint((*term).snd);
-			if (!rename.hasKey((*term).fst)) {
-				rename.put((*term).fst, new String((_ << "x" << idx)));
-				idx++;
-			}
-			if (val == 0)
-				continue;
-
-			out << " ";
-			if (val == 1) {
-				out << "+" << *rename.get((*term).fst, 0);
-			} else if (val == -1) {
-				out << "-" << *rename.get((*term).fst, 0);
-			} else {
-				out << io::sign(val) << " " << *rename.get((*term).fst, 0);
-			}
-
-		}
-		switch(cons2->comparator()) {
-			case Constraint::LT:
-				out << " < ";
-				break;
-			case Constraint::LE:
-				out << " <= ";
-				break;
-			case Constraint::EQ:
-				out << " = ";
-				break;
-			case Constraint::GE:
-				out << " >= ";
-				break;
-			case Constraint::GT:
-				out << " > ";
-				break;
-			default:
-				out << " ?? ";;
-				break;
+		for(dyndata::Iter<Term> term(cons->terms()); term(); term++) {
+			out << ' ';
+			printTerm(out, *term, dumper, false);
 		}
 
-		out << cons2->constant() << "\n";
+		// print comparator
+		out << ' ' << cons->comparator() << ' ' << cons->constant();
+
+		const string& label = cons->label();
+		if(label)
+			out << "\t\\* " << label << "*\\";
+		out << "\n";
 	}
 	out << "\n\n";
 
-	// dump the bounds
+	HashMap<Var*, String> rename = dumper.renamed_map();
 	out << "\\* Variable bounds *\\\n";
 	out << "Bounds\n";
 	for (ConstIterator cons2(this); cons2(); cons2++) {
@@ -580,7 +524,7 @@ void System::dumpCPlex(OutStream& _out) {
 		if (!bound)
 			continue;
 
-		out << " " << *rename.get(var, 0);
+		out << " " << rename.get(var, 0);
 		switch(cons2->comparator()) {
 			case Constraint::LT:
 				out << " < ";
@@ -608,21 +552,17 @@ void System::dumpCPlex(OutStream& _out) {
 
 	// dump the integer variable definition
 	out << "\\* Integer definitions *\\\n";
-	out << "Integer\n";
-	for(HashMap<Var*, String*>::Iter item(rename); item(); item++) {
-		String *str = *item;
+	out << "General\n";
+	for(HashMap<Var*, String>::Iter item(rename); item(); item++) {
 		out << " ";
-		out << *str;
-		out << "//";
+		out << *item << "\t\\*" << item.key()->name() << "\\*";
 		out << "\n";
-		delete str;
 	}
 	out << "\n\n";
 
 	// dump end
 	out << "End\n";
 }
-
 
 /**
  * Tests if it is possible to dump in the given format.
