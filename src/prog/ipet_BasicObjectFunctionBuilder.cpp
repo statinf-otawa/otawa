@@ -55,6 +55,7 @@ p::declare BasicObjectFunctionBuilder::reg = p::init("otawa::ipet::BasicObjectFu
 	.require(ASSIGNED_VARS_FEATURE)
 	.require(BB_TIME_FEATURE)
 	.require(ILP_SYSTEM_FEATURE)
+	.require(FLOW_FACTS_FEATURE)
 	.provide(OBJECT_FUNCTION_FEATURE)
 	.maker<BasicObjectFunctionBuilder>();
 
