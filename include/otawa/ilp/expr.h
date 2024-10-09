@@ -32,7 +32,7 @@ public:
 	inline explicit var(System *sys, Var::type_t t = Var::INT, string name = ""): _v(sys->newVar(name)) { }
 	inline var(Var *v): _v(v) { }
 	inline operator Var *(void) const { return _v; }
-	inline operator Term(void) const { return Term(1, _v); }
+	inline operator Term(void) const { return Term(_v); }
 private:
 	Var *_v;
 };
