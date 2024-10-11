@@ -932,7 +932,7 @@ void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 			summer.put(buf);
 			t::uint32 sum2 = summer.sum();
 			if(sum2 != sum)
-				onError(_ << "bad checksum: flow facts and executable does not match\nff checksum: " << io::hex(sum) << "\nexecutable checksum: " << io::hex(sum2));
+				onWarning(_ << "bad checksum: flow facts and executable does not match\nff checksum: " << io::hex(sum) << "\nexecutable checksum: " << io::hex(sum2));
 			checksummed = true;
 			return;
 		}
