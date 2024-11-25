@@ -25,6 +25,7 @@
 #include <otawa/cfg/CFGChecker.h>
 #include <otawa/cfg/features.h>
 #include <otawa/prog/WorkSpace.h>
+#include <otawa/flowfact/features.h>
 
 namespace otawa {
 
