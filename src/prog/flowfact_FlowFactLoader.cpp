@@ -1039,14 +1039,17 @@ void FlowFactLoader::onNoCall(Address address) {
  * @param address	Address of the instruction to work on.
  * @throw ProcessorException	If the instruction cannot be found.
  */
-void FlowFactLoader::onNoBlock(Address address) {
+void FlowFactLoader::onNoBlock(Address address, bool ignore_seq) {
 	if(address.isNull())
 		return;
 	Inst *inst = _fw->process()->findInstAt(address);
 	if(!inst)
 		onError(_ << " no instruction at  " << address << ".");
-	else
+	else {
 		NO_BLOCK(inst) = true;
+		if(ignore_seq)
+			IGNORE_SEQ(inst) = true;
+	}
 }
 
 
@@ -1429,8 +1432,9 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 			}
 			else if(name == "noblock") {
 				Address addr = scanAddress(element, cpath).address();
+				Option<xom::String> ignore_seq = element->getAttributeValue("ignore-seq");
 				if(!addr.isNull())
-					onNoBlock(addr);
+					onNoBlock(addr, ignore_seq ? *ignore_seq == "true" : true);
 				else
 					onWarning(_ << "ignoring this because its address cannot be determined: " << xline(element));
 			}
