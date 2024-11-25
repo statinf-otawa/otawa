@@ -1605,6 +1605,10 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 		}
 	}
 
+	if(NO_RETURN(inst)) {
+		_printer.printNoReturn(out, cfg->label());
+	}
+
 	// Look in BB
 	//for(CFG::BBIterator bb(cfg); bb; bb++)
 	for(CFG::BlockIter bi = cfg->blocks(); bi(); bi++) {
