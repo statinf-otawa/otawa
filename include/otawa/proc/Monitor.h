@@ -56,12 +56,25 @@ public:
 
 	// output and logging
 	elm::io::Output out;
-	elm::io::Output log;
+	elm::io::Output log;//@deprecated, use logm() instead
 	inline bool isVerbose() const { return flags & IS_VERBOSE; }
 	inline bool isQuiet() const { return flags & IS_QUIET; }
 	inline bool logFor(log_level_t tested) const { return tested <= log_level; }
 	inline log_level_t logLevel(void) const { return log_level; }
 	void configure(const PropList& props, string name = "");
+
+	/**
+	 * @brief Log a message if log level is appropriate
+	 * 
+	 * ex: logm(LOB_BB, _ << "msg");
+	 * 
+	 * @param lvl 
+	 * @param msg 
+	 */
+	inline void logm(log_level_t lvl, const String &msg) {
+		if(logFor(lvl))
+			log << msg;
+	}
 
 protected:
 	void setWorkspace(WorkSpace *workspace);
