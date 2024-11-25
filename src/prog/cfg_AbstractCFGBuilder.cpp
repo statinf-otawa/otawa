@@ -163,8 +163,7 @@ static bool isNewSeqFuncStart(Inst *i, WorkSpace *ws) {
  * @param bbs	To store found basic blocks.
  */
 void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
-	if(logFor(Processor::LOG_FUN))
-		log << "\tscanning CFG at " << e->address() << io::endl;
+	logm(LOG_FUN, _ << "\tscanning CFG at " << e->address() << io::endl);
 
 	// traverse all instruction sequences until end
 	Vector<Inst *> ts;
@@ -220,10 +219,9 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
 void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs) {
 	for(FragTable<Inst *>::Iter e(bbs); e(); e++) {
 		// Let's build it, but then it won't be added to the CFG, and in the end cleanup
-		//	This allows blocks to be skipped in the middle of a sequence, e.g. Instrumentation blocks
+		//	This allows blocks to be skipped in the middle of a sequence, e.g. Instrumentation blocks, and so to have the BB() property on 1st instr
 		// if(NO_BLOCK(e.item())) {
-		// 	if(logFor(LOG_BLOCK))
-		// 		log << "\t\tskipping BB at " << e->address() << " (NO_BLOCK)" << io::endl;
+		// 	logm(LOG_BLOCK, _ << "\t\tskipping BB at " << e->address() << " (NO_BLOCK)" << io::endl);
 		// 	continue;
 		// }
 
@@ -255,9 +253,24 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 		BasicBlock *v = new BasicBlock(insts.detach());
 		maker.add(v);
 		BB(*e) = v;
-		if(logFor(LOG_BLOCK))
-			log << "\t\tmaking BB at " << e->address() << ":" << v->topAddress() << io::endl;
+		logm(LOG_BLOCK, _ << "\t\tmaking BB at " << e->address() << ":" << v->topAddress() << io::endl);
 	}
+}
+
+void AbstractCFGBuilder::add_edge(CFGMaker &m, Block *src, Block *sink, t::uint32 flags) {
+	if(sink->isBasic()) {
+		BasicBlock * bbsink = sink->toBasic();
+		Inst *i = bbsink->first();
+		if(i && NO_BLOCK(i)) {
+			//If next instruction is a skipped block, then recurs, we are skipping a block within a sequence
+			logm(LOG_BB, _ << "\t\t\tskipping sink BB for its successor. " << i->address() << " replaced by " << bbsink->last()->nextInst()->address() << io::endl);
+			seq(m, bbsink, src, flags);
+		}
+		else
+			m.add(src, sink, new Edge(flags));
+	}
+	else
+		m.add(src, sink, new Edge(flags));
 }
 
 /**
@@ -267,14 +280,10 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
  * @param src	Source block.
  * @param flags	Flags for the sequential edge (default to Edge::NOT_TAKEN).
  */
-void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *sink, Block *src, t::uint32 flags) {
-	Inst *ni = sink->last()->nextInst();
+void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *cur, Block *src, t::uint32 flags) {
+	Inst *ni = cur->last()->nextInst();
 	if(ni && ni->hasProp(BB)) { /*if it doesn't have the property it means we didn't visit in before, so most likely not part of this CFG*/
-		BasicBlock *sink = BB(ni);
-		if(NO_BLOCK(ni))
-			seq(m, sink, src, flags);
-		else
-			m.add(src, BB(ni), new Edge(flags));
+		add_edge(m, src, BB(ni), flags);
 	}
 }
 
@@ -285,51 +294,39 @@ void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *sink, Block *src, t::uint3
 void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 	Vector<Inst *> ts;
 	bool first = true;
-	for(CFG::BlockIter v(m.blocks()); v(); v++)
+	for(CFG::BlockIter v(m.blocks()); v(); v++) {
 
 		// nothing to do with entry
 		if(v->isEntry())
 			continue;
 
 		// explore BB
-		else if(v->isBasic()) {
+		if(v->isBasic()) {
 			BasicBlock *bb = **v;
-			if(!bb)
-				continue;
-			if(NO_BLOCK(bb->first()))
+			if(!bb || NO_BLOCK(bb->first()))
 				continue;
 
 			// first block: do not forget edge with entry!
 			if(first) {
 				first = false;
-				m.add(m.entry(), bb, new Edge(Edge::NOT_TAKEN));
+				add_edge(m, m.entry(), bb);
 			}
 
 			// process basic block
-			if(logFor(LOG_BB))
-				log << "\t\tmake edge for BB " << v->address() << io::endl;
+			logm(LOG_BB, _ << "\t\tmake edge for BB " << v->address() << io::endl);
 
 			Inst *i = bb->control();
 
 			// conditional or call case -> sequential edge (not taken)
-			if(!i)
+			if(!i || (i->isConditional() && !IGNORE_SEQ(i)))
 				seq(m, bb, bb);
-			else if(i->isConditional() && !IGNORE_SEQ(i)) {
-				if(NO_BLOCK(i->nextInst())) {
-					// we also need to check the target of the seq branch is not NO_BLOCK
-					if(logFor(LOG_BB))
-						log << "\t\tskipping sequential edge " << i << " because " << i->nextInst()->address() << " is marked as NO_BLOCK\n";
-				}
-				else
-					seq(m, bb, bb);
-			}
 
 			// branch cases
 			if(i && !IGNORE_CONTROL(i)) {
 
 				// return case
 				if(isReturn(i))
-					m.add(bb, m.exit(), new Edge(Edge::TAKEN));
+					add_edge(m, bb, m.exit(), Edge::TAKEN);
 
 				// not a call: build simple edges
 				else if(!isCall(i)) {
@@ -338,19 +335,13 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 					// no target: unresolved branch
 					if(!ts)
-						m.add(bb, m.unknown(), new Edge(Edge::TAKEN));
+						add_edge(m, bb, m.unknown(), Edge::TAKEN);
 
 					// create edges target edges
 					else
-						for(Vector<Inst *>::Iter t(ts); t(); t++) {
-							// clear NO_BLOCK marked targets
-							if(NO_BLOCK(t.item())) {
-								if(logFor(LOG_BB))
-									log << "\t\tignoring NO_BLOCK at " << t->address() << io::endl;
-								continue;
-							}
-							m.add(bb, BB(*t), new Edge(Edge::TAKEN));
-						}
+						for(Vector<Inst *>::Iter t(ts); t(); t++)
+							add_edge(m, bb, BB(*t), Edge::TAKEN);
+							//seq(m, BB(*t), bb, Edge::TAKEN);
 				}
 
 				// a call
@@ -362,7 +353,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 					if(!ts) {
 						Block *b = new SynthBlock();
 						m.add(b);
-						m.add(bb, b, new Edge(Edge::TAKEN | Edge::CALL));
+						add_edge(m, bb, b, Edge::TAKEN | Edge::CALL);
 						seq(m, bb, b, Edge::NOT_TAKEN | Edge::RETURN);
 					}
 
@@ -370,22 +361,23 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 					else {
 						bool no_return = false;
 						bool one = false;
-						for(Vector<Inst *>::Iter c(ts); c(); c++)
+						for(Vector<Inst *>::Iter c(ts); c(); c++) {
 							if(NO_RETURN(*c)) {
 								if(!no_return) {
 									no_return = true;
-									m.add(bb, m.exit(), new Edge(Edge::TAKEN | Edge::CALL));
+									add_edge(m, bb, m.exit(), Edge::TAKEN | Edge::CALL);
 									one = true;
 								}
 							}
 							else if(!NO_CALL(*c)) {
-								SynthBlock *cb = new SynthBlock();
+								SynthBlock *cb = new SynthBlock(Block::IS_CALL);
 								CFGMaker& cm = maker(*c);
 								m.call(cb, cm);
-								m.add(bb, cb, new Edge(Edge::TAKEN | Edge::CALL));
+								add_edge(m, bb, cb, Edge::TAKEN | Edge::CALL);
 								seq(m, bb, cb, Edge::NOT_TAKEN | Edge::RETURN);
 								one = true;
 							}
+						}
 						if(!one && !i->isConditional())
 							seq(m, bb, bb, Edge::NOT_TAKEN | Edge::RETURN | Edge::CALL);
 					}
@@ -393,6 +385,7 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 			} // end if(i && !IGNORE_CONTROL(i)) {
 		}
+	}
 }
 
 
@@ -486,11 +479,10 @@ void AbstractCFGBuilder::process(WorkSpace *ws) {
 	for(int i = 0; i < bounds.count(); i++) {
 		Inst *inst = ws->findInstAt(bounds[i]);
 		if(!inst)
-			log << "no instruction at " << bounds[i];
+			logm(LOG_INST, _ << "no instruction at " << bounds[i]);
 		else {
 			BB(inst) = 0;
-			if(logFor(LOG_BB))
-				log << "\tset BB bound at " << bounds[i] << io::endl;
+			logm(LOG_BB, _ << "\tset BB bound at " << bounds[i] << io::endl);
 		}
 	}
 
