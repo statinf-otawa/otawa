@@ -143,7 +143,7 @@ command:
 |	KW_NO KW_CALL id_or_address ';'
 		{ loader->onNoCall(*$3); delete $3; }
 |	KW_NOBLOCK id_or_address ';'
-		{ loader->onNoBlock(*$2); delete $2; }
+		{ loader->onNoBlock(*$2, false); delete $2; }
 |	KW_DOINLINE id_or_address opt_in ';'
 		{ loader->onNoInline(*$2, false, path); delete $2; path.clear(); }
 |	KW_FORCE KW_BRANCH full_address ';'
