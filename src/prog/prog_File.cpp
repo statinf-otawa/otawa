@@ -85,6 +85,38 @@ Symbol *File::findSymbol(String name) {
 	return syms.get(name, 0);
 }
 
+/**
+ * Find a symbol  by its address
+ * @param name	Symbol address.
+ * @return		Found symbol or null.
+ */
+Symbol *File::findSymbol(address_t addr) {
+	Symbol *s = nullptr;
+	for(auto sym : syms) {
+		if(sym->address() == addr) {
+			s = sym;
+			break;
+		}
+	}
+	return s;
+}
+
+/**
+ * Find a symbol which contains an address
+ * @param name	Symbol address.
+ * @return		Found symbol or null.
+ */
+Symbol *File::findContainingSymbol(address_t addr) {
+	Symbol *s = nullptr;
+	for(auto sym : syms) {
+		if(sym->address() <= addr && sym->address()+sym->size() > addr) {
+			s = sym;
+			break;
+		}
+	}
+	return s;
+}
+
 
 /**
  * @class SegIter

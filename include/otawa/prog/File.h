@@ -62,6 +62,8 @@ public:
 	inline void removeSymbol(Symbol *sym) { syms.remove(sym->name()); }
 	address_t findLabel(const String& label);
 	Symbol *findSymbol(String name);
+	Symbol *findSymbol(address_t addr);
+	Symbol *findContainingSymbol(address_t addr);
 	class SymIter: public syms_t::Iter {
 	public:
 		inline SymIter(const File *file): syms_t::Iter(file->syms) { }
