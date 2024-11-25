@@ -202,7 +202,7 @@ inline string makeAddress(CFG *cfg, Address addr) {
  */
 class Printer {
 public:
-	Printer(WorkSpace *ws, bool debug): _debug(debug), _ws(ws) { }
+	Printer(WorkSpace *ws, bool debug, bool use_only_addresses): _debug(debug), _ws(ws), _use_only_addresses(use_only_addresses) { }
 	virtual ~Printer(void) { }
 	virtual void printNoReturn(Output& out, string label) = 0;
 	virtual void printNoCall(Output& out, string label) = 0;
@@ -237,6 +237,8 @@ protected:
 			out << '\t';
 	}
 
+	bool _use_only_addresses;
+
 private:
 	bool _debug;
 	WorkSpace *_ws;
@@ -252,7 +254,7 @@ bool k(Inst* i) {
  */
 class FFPrinter: public Printer {
 public:
-	FFPrinter(WorkSpace *ws, bool debug): Printer(ws, debug), indent(0) { }
+	FFPrinter(WorkSpace *ws, bool debug, bool use_only_addresses): Printer(ws, debug, use_only_addresses), indent(0) { }
 
 	virtual void printNoReturn(Output& out, string label) {
 		out << "noreturn \"" << label << "\";\n";
@@ -459,7 +461,7 @@ private:
  */
 class FFXPrinter: public Printer {
 public:
-	FFXPrinter(WorkSpace *ws, bool debug): Printer(ws, debug), indent(0) { }
+	FFXPrinter(WorkSpace *ws, bool debug, bool use_only_addresses): Printer(ws, debug, use_only_addresses), indent(0) { }
 
 	virtual void printNoReturn(Output& out, string label) {
 		out << "\t<noreturn label=\"" << label << "\"/>\n";
@@ -582,17 +584,17 @@ private:
 
 	void addressOf(io::Output& out, CFG *cfg, Address address) {
 		string label = cfg->label();
-		// if(!label)
+		if(!label || _use_only_addresses)
 			out << "address=\"0x" << address << "\"";
-		// else {
-		// 	t::uint32 offset = address - cfg->address();
-		// 	out << "label=\"" << label << "\" offset=\"";
-		// 	if(offset > 0)
-		// 		out << "0x" << io::hex(offset);
-		// 	else
-		// 		out << "-0x" << io::hex(-offset);
-		// 	out << "\"";
-		// }
+		else {
+			t::uint32 offset = address - cfg->address();
+			out << "label=\"" << label << "\" offset=\"";
+			if(offset > 0)
+				out << "0x" << io::hex(offset);
+			else
+				out << "-0x" << io::hex(-offset);
+			out << "\"";
+		}
 	}
 };
 
@@ -753,7 +755,8 @@ private:
 	void analyzeBranches(PropList& props);
 
 	option::Switch contextual, xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
-		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML, outputSimpleCFGXML;
+		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML, outputSimpleCFGXML,
+		opt_use_only_addresses;
 	option::Value<string> output_file;
 };
 
@@ -1167,9 +1170,9 @@ void Command::work(PropList &props) {
 	if(!debugging) {
 		// determine printer
 		if(xml)
-			p = new FFXPrinter(workspace(), true);
+			p = new FFXPrinter(workspace(), true, opt_use_only_addresses);
 		else
-			p = new FFPrinter(workspace(), true);
+			p = new FFPrinter(workspace(), true, opt_use_only_addresses);
 
 		// printer header
 		p->printHeader(out);
@@ -1352,7 +1355,8 @@ Command::Command():
 		debugSlicing			(make_switch().cmd("-DS").cmd("--debug_slicing")		.help("show the debugging message of slicing")),
 		outputCFGXML			(make_switch().cmd("-X").cmd("--xml_output")			.help("generate XML files of each CFG for the initial, the iterations, and the final phases")),
 		outputSimpleCFGXML		(make_switch().cmd("-Y").cmd("--simple_xml_output")		.help("generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs")),
-		output_file 			(make_value<String>().cmd("-o").cmd("--output")				.help("Output file path"))
+		output_file 			(make_value<String>().cmd("-o").cmd("--output")				.help("Output file path")),
+		opt_use_only_addresses (make_switch().cmd("-q").help("Force using only hexa addresses in generated file, either it can be label+offset"))
 {
 }
 
