@@ -210,6 +210,8 @@ public:
 	virtual void printMultiBranch(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
+	virtual void printNoBlock(Output& out, Address addr) = 0;
+	virtual void printIsReturn(Output& out, Address addr) = 0;
 	virtual void startComment(Output& out) = 0;
 	virtual void endComment(Output& out) = 0;
 	virtual void printHeader(Output& out) = 0;
@@ -347,6 +349,14 @@ public:
 		out << "ignorecontrol ";
 		addressOf(out, cfg, inst->address());
 		out << ";\t// " << nameOf(cfg) << " function\n";
+	}
+
+	virtual void printNoBlock(Output& out, Address addr) {
+		out << "noblock 0x" << addr << ";\n";
+	}
+
+	virtual void printIsReturn(Output& out, Address addr) {
+		out << "return 0x" << addr << ";\n";
 	}
 
 	virtual void startComment(Output& out) {
@@ -501,6 +511,14 @@ public:
 		out << "/>\n";
 	}
 
+	virtual void printNoBlock(Output& out, Address addr) {
+		out << "\t<noblock address=\"0x" << addr << "\"/>\n";
+	}
+
+	virtual void printIsReturn(Output& out, Address addr) {
+		out << "\t<return address=\"0x" << addr << "\"/>\n";
+	}
+
 	virtual void startComment(Output& out) {
 		out << "\t<!-- ";
 	}
@@ -510,14 +528,14 @@ public:
 	}
 
 	virtual void printHeader(Output& out) {
-		cout << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
+		out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 				"<flowfacts\n"
 				"	xmlns:xi=\"http://www.w3.org/2001/XInclude\"\n"
 				"	xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">\n\n";
 	}
 
 	virtual void printFooter(Output& out) {
-		cout << "</flowfacts>\n";
+		out << "</flowfacts>\n";
 	}
 
 	virtual void printCheckSum(Output& out, Path path, t::uint32 sum) {
@@ -640,6 +658,7 @@ public:
 	inline bool checkSummed(void) const { return check_summed; }
 
 	Vector<Address>& getRecordedNoCall() { return recorded_nocall; }
+	Vector<Address>& getRecordedNoBlock() { return recorded_noblock; }
 
 protected:
 
@@ -671,6 +690,11 @@ protected:
 		record(addr);
 		recorded_nocall.add(addr);
 	}
+	virtual void onNoBlock(address_t addr, bool ignore_seq) {
+		FlowFactLoader::onNoBlock(addr, ignore_seq);
+		record(addr);
+		recorded_noblock.add(addr);
+	}
 
 private:
 
@@ -688,11 +712,18 @@ private:
 	//  without it the further generated flowfact file is missing some nocall directives and reports errors where there
 	//  shouldn't be
 	Vector<Address> recorded_nocall;
+
+	//required as ControlOutput::processCFG only runs through BB that don't have the NO_BLOCK attribute, and so BB marked
+	//  as NO_BLOCK are not part of the CFG, and these attributes can't be rewritten in the new FF(X)
+	Vector<Address> recorded_noblock;
 };
 
 
 p::declare QuestFlowFactLoader::reg = p::init("QuestFlowFactLoader", Version(1, 0, 0))
-	.maker<FlowFactLoader>();
+	.maker<FlowFactLoader>()
+	.require(dfa::INITIAL_STATE_FEATURE)
+	.provide(FLOW_FACTS_FEATURE)
+	.provide(MKFF_PRESERVATION_FEATURE);
 
 
 // Command class
@@ -1120,8 +1151,8 @@ void Command::work(PropList &props) {
 	Printer *p = nullptr;
 
 	// Load flow facts and record unknown values
-	workspace()->require(DynFeature("otawa::dfa::INITIAL_STATE_FEATURE"), props);
-	QuestFlowFactLoader *ffl = workspace()->run<QuestFlowFactLoader>(props);
+	QuestFlowFactLoader ffl;
+	workspace()->run(&ffl, props);
 
 	if(!debugging) {
 		// determine printer
@@ -1134,7 +1165,7 @@ void Command::work(PropList &props) {
 		p->printHeader(cout);
 
 		// Build the checksums of the binary files
-		if(!ffl->checkSummed()) {
+		if(!ffl.checkSummed()) {
 			for(Process::FileIter file(workspace()->process()); file(); file++) {
 				checksum::Fletcher sum;
 				io::InFileStream stream(file->name());
@@ -1167,12 +1198,12 @@ void Command::work(PropList &props) {
 	if(!debugging) {
 
 		// display low-level flow facts
-		ControlOutput *ctrl = new ControlOutput(*p, ffl);
+		ControlOutput *ctrl = new ControlOutput(*p, &ffl);
 		workspace()->run(ctrl, props);
 
 		// display the context tree
-		FFOutput *out = new FFOutput(*p, removeDuplicatedTarget, contextual);
-		workspace()->run(out, props);
+		FFOutput *ffout = new FFOutput(*p, removeDuplicatedTarget, contextual);
+		workspace()->run(ffout, props);
 
 		// output footer for XML
 		p->printFooter(cout);
@@ -1278,6 +1309,7 @@ void Command::work(PropList &props) {
 
 	mkfftime = clock() - mkfftime;
 	elm::cerr << "mkff: " << mkfftime << " micro-seconds" << io::endl;
+
 }
 
 
@@ -1535,6 +1567,8 @@ void ControlOutput::setup(WorkSpace *ws) {
 void ControlOutput::processAll(WorkSpace *ws) {
 	for(Address addr : init_state->getRecordedNoCall())
 		_printer.printNoCall(out, addr);
+	for(Address addr : init_state->getRecordedNoBlock())
+		_printer.printNoBlock(out, addr);
 	CFGProcessor::processAll(ws);
 }
 
