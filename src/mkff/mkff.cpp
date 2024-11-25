@@ -582,17 +582,17 @@ private:
 
 	void addressOf(io::Output& out, CFG *cfg, Address address) {
 		string label = cfg->label();
-		if(!label)
+		// if(!label)
 			out << "address=\"0x" << address << "\"";
-		else {
-			t::uint32 offset = address - cfg->address();
-			out << "label=\"" << label << "\" offset=\"";
-			if(offset > 0)
-				out << "0x" << io::hex(offset);
-			else
-				out << "-0x" << io::hex(-offset);
-			out << "\"";
-		}
+		// else {
+		// 	t::uint32 offset = address - cfg->address();
+		// 	out << "label=\"" << label << "\" offset=\"";
+		// 	if(offset > 0)
+		// 		out << "0x" << io::hex(offset);
+		// 	else
+		// 		out << "-0x" << io::hex(-offset);
+		// 	out << "\"";
+		// }
 	}
 };
 
@@ -601,7 +601,7 @@ private:
 class QuestFlowFactLoader;
 class ControlOutput: public CFGProcessor {
 public:
-	ControlOutput(Printer&, QuestFlowFactLoader *ffl);
+	ControlOutput(Printer&, QuestFlowFactLoader *ffl, OutFileStream *fout);
 protected:
 	void setup(WorkSpace *ws) override;
 	void cleanup(WorkSpace *ws) override;
@@ -612,17 +612,20 @@ private:
 	bool one;
 	Printer& _printer;
 	QuestFlowFactLoader *init_state;
+	OutFileStream *_fout=nullptr;
 };
 
 
 // FFOutput processor
 class FFOutput: public CFGProcessor {
 public:
-	FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context);
+	FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context, OutFileStream *fout);
 
 protected:
 	void setup(WorkSpace *ws) override {
 		has_debug = ws->isProvided(otawa::SOURCE_LINE_FEATURE);
+		if(_fout)
+			out.setStream(*_fout);
 	}
 
 	void processCFG(WorkSpace *ws, CFG *cfg) override;
@@ -646,6 +649,7 @@ private:
 	Vector<Address> displayedInstructions; // used to prevent same instruction being displayed twice.
 	bool _removeDuplicatedTarget;
 	bool contextual;
+	OutFileStream *_fout=nullptr;
 };
 
 
@@ -750,6 +754,7 @@ private:
 
 	option::Switch contextual, xml, dynbranch, /* modularized in the future */ outputCFG, outputInlinedCFG, outputVirtualizedCFG, removeDuplicatedTarget,
 		showBlockProps, rawoutput, forFun, slicing, cfg4PS, cfg4LR, lightSlicing, debugging, nosource, debugSlicing, outputCFGXML, outputSimpleCFGXML;
+	option::Value<string> output_file;
 };
 
 
@@ -1126,6 +1131,11 @@ void Command::analyzeBranches(PropList& props) {
 /**
  */
 void Command::work(PropList &props) {
+	OutFileStream *sout = nullptr;
+	if(!output_file.get().isEmpty()) {
+		sout = new OutFileStream(output_file.get());
+		out.setStream(*sout);
+	}
 
 	clock_t mkfftime = clock();
 
@@ -1162,7 +1172,7 @@ void Command::work(PropList &props) {
 			p = new FFPrinter(workspace(), true);
 
 		// printer header
-		p->printHeader(cout);
+		p->printHeader(out);
 
 		// Build the checksums of the binary files
 		if(!ffl.checkSummed()) {
@@ -1171,9 +1181,9 @@ void Command::work(PropList &props) {
 				io::InFileStream stream(file->name());
 				sum.put(stream);
 				elm::sys::Path path = file->name();
-				p->printCheckSum(cout, path, sum.sum());
+				p->printCheckSum(out, path, sum.sum());
 			}
-			cout << io::endl;
+			out << io::endl;
 		}
 	}
 
@@ -1198,15 +1208,15 @@ void Command::work(PropList &props) {
 	if(!debugging) {
 
 		// display low-level flow facts
-		ControlOutput *ctrl = new ControlOutput(*p, &ffl);
+		ControlOutput *ctrl = new ControlOutput(*p, &ffl, sout);
 		workspace()->run(ctrl, props);
 
 		// display the context tree
-		FFOutput *ffout = new FFOutput(*p, removeDuplicatedTarget, contextual);
+		FFOutput *ffout = new FFOutput(*p, removeDuplicatedTarget, contextual, sout);
 		workspace()->run(ffout, props);
 
 		// output footer for XML
-		p->printFooter(cout);
+		p->printFooter(out);
 
 		// cleanup at end
 		delete p;
@@ -1310,6 +1320,8 @@ void Command::work(PropList &props) {
 	mkfftime = clock() - mkfftime;
 	elm::cerr << "mkff: " << mkfftime << " micro-seconds" << io::endl;
 
+	if(sout)
+		sout->close();
 }
 
 
@@ -1339,7 +1351,8 @@ Command::Command():
 		nosource				(make_switch().cmd("-NS").cmd("--no_source")			.help("do not output source code in the generated CFGs")),
 		debugSlicing			(make_switch().cmd("-DS").cmd("--debug_slicing")		.help("show the debugging message of slicing")),
 		outputCFGXML			(make_switch().cmd("-X").cmd("--xml_output")			.help("generate XML files of each CFG for the initial, the iterations, and the final phases")),
-		outputSimpleCFGXML		(make_switch().cmd("-Y").cmd("--simple_xml_output")		.help("generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs"))
+		outputSimpleCFGXML		(make_switch().cmd("-Y").cmd("--simple_xml_output")		.help("generate simpler XML file for each CFG, this option generates empty blocks for understanding the structure of the CFGs")),
+		output_file 			(make_value<String>().cmd("-o").cmd("--output")				.help("Output file path"))
 {
 }
 
@@ -1347,7 +1360,7 @@ Command::Command():
 /**
  * Display the flow facts.
  */
-FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget), contextual(context) {
+FFOutput::FFOutput(Printer& printer, bool removeDuplicatedTarget, bool context, OutFileStream *fout): CFGProcessor("FFOutput", Version(1, 0, 0)), has_debug(false), _printer(printer), _removeDuplicatedTarget(removeDuplicatedTarget), contextual(context), _fout(fout) {
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
@@ -1553,8 +1566,8 @@ bool FFOutput::checkLoop(ContextTree *ctree) {
 /**
  * Constructor.
  */
-ControlOutput::ControlOutput(Printer& printer, QuestFlowFactLoader *ffl)
-: CFGProcessor("ControlOutput", Version(1, 1, 0)), one(false), _printer(printer), init_state(ffl) {
+ControlOutput::ControlOutput(Printer& printer, QuestFlowFactLoader *ffl, OutFileStream *fout)
+: CFGProcessor("ControlOutput", Version(1, 1, 0)), one(false), _printer(printer), init_state(ffl), _fout(fout) {
 }
 
 
@@ -1562,6 +1575,8 @@ ControlOutput::ControlOutput(Printer& printer, QuestFlowFactLoader *ffl)
  */
 void ControlOutput::setup(WorkSpace *ws) {
 	one = false;
+	if(_fout)
+		out.setStream(*_fout);
 }
 
 void ControlOutput::processAll(WorkSpace *ws) {
@@ -1571,7 +1586,6 @@ void ControlOutput::processAll(WorkSpace *ws) {
 		_printer.printNoBlock(out, addr);
 	CFGProcessor::processAll(ws);
 }
-
 
 /**
  */
