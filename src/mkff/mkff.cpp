@@ -1587,6 +1587,29 @@ void ControlOutput::processAll(WorkSpace *ws) {
 	CFGProcessor::processAll(ws);
 }
 
+void populate_call_chain(CFG *cfg, HashTable<address_t> *call_sites_next_addr, uint16_t depth) {
+	//Avoid to recurs for too much. How much function can be skipped by a br/ret optimisation? I'd say no more than 2 or 3 but let's go to 10
+	if(depth > 10)
+		return;
+
+	List<SynthBlock*> calls = cfg->callers();
+	
+	for(SynthBlock *c : calls) {
+		// cout << c->cfg()->name() << "\n";
+		for( BasicBlock::EdgeIter outs = c->outs(); outs(); outs++) {
+			Edge *oe = *outs;
+			if(oe->target() && oe->target()->isBasic()) {
+				Inst *i = oe->target()->toBasic()->first();
+				if(i) {
+					call_sites_next_addr->add(i->address());
+					// cout << "\t<< " << i->address() << "\n";
+				}
+			}
+		}
+		populate_call_chain(c->cfg(), call_sites_next_addr, depth+1);
+	}
+}
+
 /**
  */
 void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
@@ -1608,6 +1631,9 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 	if(NO_RETURN(inst)) {
 		_printer.printNoReturn(out, cfg->label());
 	}
+
+	HashTable<address_t> call_sites_next_addr;
+	populate_call_chain(cfg, &call_sites_next_addr, 0);
 
 	// Look in BB
 	//for(CFG::BBIterator bb(cfg); bb; bb++)
@@ -1640,6 +1666,34 @@ void ControlOutput::processCFG(WorkSpace *ws, CFG *cfg) {
 			&& inst->target()->address() == inst->topAddress()) {
 				prepare(ws, cfg);
 				_printer.printIgnoreControl(out, cfg, inst);
+			}
+		}
+
+		if(!bb->isExit()) {
+			BasicBlock::EdgeIter e = bb->outs();
+			//no output edge
+			if(!e) {
+				Inst *li = bb->last();
+				//and last instruction is a call, most likely some optimisation are doing the ret 
+				if(li && li->isCall()) {
+					warn(_ << bb << " has no successor but last instruction is a call. This is probably due to some optimisation where the ret will be done by the callee. Please check, in the meantime we add a 'is return' property on the call instruction " << ws->format(li->address()) << ")");
+					_printer.printIsReturn(out, li->address());
+				}
+			}
+			else {
+				//if control is not a ret
+				//	iterate over output edges
+				//		if any of the target of the edge goes back to the caller of the current CFG
+				//		then the control is a ret, due to some optimisation a regular branch can be a ret
+				Inst *li = bb->control();
+				if(li && !li->isReturn()) {
+					for( ; e() ; e++) {
+						Edge *ee = *e;
+						if(ee->target()->isBasic() && call_sites_next_addr.contains(ee->target()->toBasic()->first()->address())) {
+							_printer.printIsReturn(out, li->address());
+						}
+					}
+				}
 			}
 		}
 	}
