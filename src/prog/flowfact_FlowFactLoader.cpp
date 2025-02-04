@@ -1466,6 +1466,10 @@ void FlowFactLoader::scanXBody(xom::Element *body, ContextualPath& cpath) {
 				scanRegSet(element, state);
 			else if(name == "state")
 				scanXState(element);
+			else if(name == "force-call")
+				scanForceCall(element, cpath);
+			else if(name == "force-branch")
+				scanForceBranch(element, cpath);
 			else if(name == "not-all") 	{		 	
 					if (intoConflictPath)  {
 						onWarning(_ << " Error of ffx not all into not all: " << xline(element));
@@ -1560,7 +1564,7 @@ void FlowFactLoader::scanMultiBranch(xom::Element *element, ContextualPath& cpat
 	}
 
 	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
-	while (inst && !inst->isBranch()
+	while (inst && !inst->isBranch() && !(ALT_KIND(inst) & Inst::IS_CONTROL)
 			&& inst->address() <= mem_area.lastAddress())
 		inst = workSpace()->process()->findInstAt(inst->topAddress());
 	if (!inst || inst->address() > mem_area.lastAddress()) {
@@ -1595,11 +1599,11 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 	}
 
 	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
-	while (inst && !inst->isCall()
+	while (inst && !inst->isCall() && !(ALT_KIND(inst) & Inst::IS_CALL)
 			&& inst->address() <= mem_area.lastAddress())
 		inst = workSpace()->process()->findInstAt(inst->topAddress());
 	if (!inst || inst->address() > mem_area.lastAddress()) {
-		onWarning(_ << "multicall ignored at " << xline(element) << " ... no call found");
+		onWarning(_ << "multicall ignored at " << xline(element) << " - addr: " << mem_area.address() << " ... no call found");
 		return;
 	}
 
@@ -1614,6 +1618,46 @@ void FlowFactLoader::scanMultiCall(xom::Element *element, ContextualPath& cpath)
 	}
 	delete items;
 	this->onMultiCall(inst->address(), targets);
+}
+
+/**
+ * Scan a force-call XML element composed of items with a different location each.
+ * @param element	force-call element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanForceCall(xom::Element *element, ContextualPath& cpath) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "force-call ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	if(inst) {
+		this->onForceCall(inst->address());
+		// onWarning(_ << "Forced call at " << mem_area.address() << " -- " << *inst);
+	}
+	else 
+		onWarning(_ << "force-call can't find instruction at " << mem_area.address());
+}
+
+/**
+ * Scan a force-branch XML element composed of items with a different location each.
+ * @param element	force-call element
+ * @param cpath		contextual path
+ */
+void FlowFactLoader::scanForceBranch(xom::Element *element, ContextualPath& cpath) {
+	MemArea mem_area = scanAddress(element, cpath);
+	if(mem_area.isNull()) {
+		onWarning(_ << "force-call ignored at " << xline(element) << " ... address cannot be determined");
+		return;
+	}
+
+	Inst *inst = workSpace()->process()->findInstAt(mem_area.address());
+	if(inst)
+		this->onForceBranch(inst->address());
+	else 
+		onWarning(_ << "force-call can't find instruction at " << mem_area.address());
 }
 
 

@@ -211,6 +211,8 @@ public:
 	virtual void printMultiCall(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va = 0) = 0;
 	virtual void printIgnoreControl(Output& out, CFG *cfg, Inst *inst) = 0;
 	virtual void printNoBlock(Output& out, Address addr) = 0;
+	virtual void printForceCall(Output& out, Address addr) = 0;
+	virtual void printForceBranch(Output& out, Address addr) = 0;
 	virtual void printIsReturn(Output& out, Address addr) = 0;
 	virtual void startComment(Output& out) = 0;
 	virtual void endComment(Output& out) = 0;
@@ -266,6 +268,14 @@ public:
 
 	virtual void printNoCall(Output& out, Address addr) {
 		out << "nocall 0x" << addr << ";\n";
+	}
+
+	virtual void printForceCall(Output& out, Address addr) {
+		out << "force call 0x" << addr << ";\n";
+	}
+
+	virtual void printForceBranch(Output& out, Address addr) {
+		out << "force branch 0x" << addr << ";\n";
 	}
 
 	/**
@@ -475,6 +485,14 @@ public:
 		out << "\t<nocall address=\"0x" << addr << "\"/>\n";
 	}
 
+	virtual void printForceCall(Output& out, Address addr) {
+		out << "\t<force-call address=\"0x" << addr << "\"/>\n";
+	}
+
+	virtual void printForceBranch(Output& out, Address addr) {
+		out << "\t<force-branch address=\"0x" << addr << "\"/>\n";
+	}
+
 	virtual void printMulti(Output& out, CFG *cfg, Inst *inst, Vector<Address>* va) {
 		if(va)
 			for(Vector<Address>::Iter vai(*va); vai(); vai++) {
@@ -665,6 +683,8 @@ public:
 
 	Vector<Address>& getRecordedNoCall() { return recorded_nocall; }
 	Vector<Address>& getRecordedNoBlock() { return recorded_noblock; }
+	Vector<Address>& getRecordedForcedCall() { return recorded_forcecall; }
+	Vector<Address>& getRecordedForcedBranch() { return recorded_forcebranch; }
 
 protected:
 
@@ -701,6 +721,16 @@ protected:
 		record(addr);
 		recorded_noblock.add(addr);
 	}
+	virtual void onForceCall(address_t addr) {
+		FlowFactLoader::onForceCall(addr);
+		record(addr);
+		recorded_forcecall.add(addr);
+	}
+	virtual void onForceBranch(address_t addr) {
+		FlowFactLoader::onForceBranch(addr);
+		record(addr);
+		recorded_forcebranch.add(addr);
+	}
 
 private:
 
@@ -722,6 +752,9 @@ private:
 	//required as ControlOutput::processCFG only runs through BB that don't have the NO_BLOCK attribute, and so BB marked
 	//  as NO_BLOCK are not part of the CFG, and these attributes can't be rewritten in the new FF(X)
 	Vector<Address> recorded_noblock;
+
+	Vector<Address> recorded_forcecall;
+	Vector<Address> recorded_forcebranch;
 };
 
 
@@ -1145,8 +1178,11 @@ void Command::work(PropList &props) {
 	// configure the CFG collection
 	Application::parseAddress(arguments()[0]); // make sure the entry symbol is valid
 	TASK_ENTRY(props) = arguments()[0];
-	for(int i = 1; i < arguments().length(); i++)
+	for(int i = 1; i < arguments().length(); i++) {
 		ADDED_FUNCTION(props).add(arguments()[i].toCString());
+		cout << "=====================> " << arguments()[i].toCString() << "\n";
+	}
+	cout.flush();
 	CFGChecker::NO_EXCEPTION(props) = true;
 
 	// outputing the original CFG when required
@@ -1588,12 +1624,16 @@ void ControlOutput::processAll(WorkSpace *ws) {
 		_printer.printNoCall(out, addr);
 	for(Address addr : init_state->getRecordedNoBlock())
 		_printer.printNoBlock(out, addr);
+	for(Address addr : init_state->getRecordedForcedCall())
+		_printer.printForceCall(out, addr);
+	for(Address addr : init_state->getRecordedForcedBranch())
+		_printer.printForceBranch(out, addr);
 	CFGProcessor::processAll(ws);
 }
 
 void populate_call_chain(CFG *cfg, HashTable<address_t> *call_sites_next_addr, uint16_t depth) {
-	//Avoid to recurs for too much. How much function can be skipped by a br/ret optimisation? I'd say no more than 2 or 3 but let's go to 10
-	if(depth > 10)
+	//Avoid to recurs for too much. How much function can be skipped by a br/ret optimisation? I'd say no more than 2 or 3
+	if(depth > 3)
 		return;
 
 	List<SynthBlock*> calls = cfg->callers();

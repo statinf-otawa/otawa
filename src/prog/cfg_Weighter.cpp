@@ -80,7 +80,8 @@ private:
 					if(max >= 0)
 						WEIGHT(bb) = max;
 					else
-						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << bb);
+						WEIGHT(bb) = 1;
+						// throw ProcessorException(*this, _ << "cannot compute weight for loop at " << bb << " -- " << bb->cfg()->name());
 				}
 			}
 
@@ -104,7 +105,8 @@ private:
 					if(max >= 0)
 						WEIGHT(bb) = max * WEIGHT(parent);
 					else
-						throw ProcessorException(*this, _ << "cannot compute weight for loop at " << workspace()->format(bb->toBasic()->address()));
+						WEIGHT(bb) = 1;
+						// throw ProcessorException(*this, _ << "cannot compute weight from parent for loop at " << workspace()->format(bb->toBasic()->address()));
 				}
 			}
 		}
