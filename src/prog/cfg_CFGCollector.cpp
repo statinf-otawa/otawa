@@ -232,10 +232,6 @@ void CFGCollector::processWorkSpace(WorkSpace *ws) {
 	}
 	setCollection(coll);
 	
-	// if needed, set task name to the workspace
-	if(ws->name() == "")
-		ws->name(coll->entry()->name());
-
 	// destroy builder
 	delete builder;
 	builder = nullptr;
@@ -249,7 +245,6 @@ void CFGCollector::configure(const PropList& props) {
 	added_cfgs.add(Address::null);
 	for(auto g: ADDED_CFG.all(props)) {
 		added_cfgs.add(g);
-		cout << "=======> " << g << endl;
 	}
 	for(auto f: ADDED_FUNCTION.all(props)) {
 		added_funs.add(f);
