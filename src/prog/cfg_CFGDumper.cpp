@@ -36,7 +36,6 @@ protected:
 	
 	void configure(const PropList& props) override {
 		Processor::configure(props);
-		path = CFG_DUMP_PATH(props); 
 	}
 	
 	void processWorkSpace(WorkSpace * ws) override {
@@ -119,22 +118,7 @@ p::declare CFGDumper::reg
 
 	
 /**
- * Configuration property to select where to dump the CFG representation;
- * If not defined, the task working directory is used.
- * 
- * Features:
- * * @ref CFG_DUMP_FEATURE
- * 
- * @ingroup cfg
- */
-p::id<Path> CFG_DUMP_PATH("otawa::CFG_DUMP_PATH");
-
-
-/**
  * Feature ensuring that the CFG representation has been dumped.
- * 
- * Configuration:
- * * @ref CFG_DUMP_PATH
  * 
  * @ingroup cfg
  */

@@ -157,11 +157,6 @@ Identifier<bool> Displayer::SOURCE("", false);
 Identifier<bool> Displayer::ALL("", false);
 
 /**
- * Display all CFGs.
- */
-Identifier<string> Displayer::OUT("");
-
-/**
  * If possible, launch a viewer of the produced output.
  */
 Identifier<bool> Displayer::VIEW("");
@@ -173,7 +168,6 @@ void Displayer::configure(const PropList& props) {
 	display_assembly = DISASSEMBLE(props);
 	source_info = SOURCE(props);
 	display_all = ALL(props);
-	out = OUT(props);
 	perform_view = VIEW(props);
 }
 
@@ -206,7 +200,6 @@ public:
 				display_regs,
 				display_target,
 				display_bytes;
-	opt::Value<string> out;
 
 	Displayer *displayer;
 
@@ -266,7 +259,6 @@ DumpCFG::DumpCFG(void):
 	display_regs	(make_switch()			.cmd("--display-regs")			.help("display used registers")),
 	display_target	(make_switch()			.cmd("--display-target")		.help("display branch instruction targets")),
 	display_bytes	(make_switch()			.cmd("--display-bytes")			.help("display instruction bytes")),
-	out				(make_value<string>()	.cmd("-o").cmd("--output")		.description("select the output file or directory (-M option)")),
 
 	displayer(nullptr)
 {
@@ -290,8 +282,6 @@ void DumpCFG::dump(PropList& props) {
 
 	// view used
 	else if(view) {
-		if(out)
-			CFG_DUMP_PATH(props) = elm::sys::Path(out);
 		workspace()->require(CFG_DUMP_FEATURE, props);
 	}
 	
@@ -307,8 +297,6 @@ void DumpCFG::dump(PropList& props) {
 			Displayer::ALL(props) = true;
 		/*if(view)
 			Displayer::VIEW(props) = view;*/
-		if(out)
-			Displayer::OUT(props) = out;
 		displayer->display_sem = display_sem;
 		displayer->display_kind = display_kind;
 		displayer->display_regs = display_regs;

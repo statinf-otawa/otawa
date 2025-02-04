@@ -75,26 +75,20 @@ public:
 	
 	Path workDirectory() override {
 
-		// if needed, compute the working directory name
-		if(work_dir.isEmpty()) {
-			task_name = LABEL_FEATURE.get(workspace())->labelFor(entry_inst);
-			Path p = workspace()->process()->program()->name();
-			auto pn = p.withoutExt().namePart();
-			auto pd = p.dirPart();
-			work_dir = pd / (pn + "-otawa") / task_name;
-		}
-		
+		workspace()->makeWorkDir();
+		Path work_dir = workspace()->workDir();
+		task_name = LABEL_FEATURE.get(workspace())->labelFor(entry_inst);
+		work_dir = work_dir / task_name;
+
 		// if needed, make the directory
-		if(work_dir.exists()) {
-			if(!work_dir.isDir())
-				throw otawa::Exception(_ << "file " << work_dir << " and is not a directory!");
+		if(work_dir.exists() && !work_dir.isDir())
+			throw otawa::Exception(_ << "file " << work_dir << " and is not a directory!");
+		
+		try {
+			sys::System::makeDirs(work_dir);
 		}
-		else 
-			try {
-				sys::System::makeDirs(work_dir);
-			}
-			catch(sys::SystemException& e)
-				{ throw otawa::Exception(_ << "cannot create " << work_dir << ": " << e.message()); }
+		catch(sys::SystemException& e)
+		{ throw otawa::Exception(_ << "cannot create " << work_dir << ": " << e.message()); }
 
 		// return it at end
 		return work_dir;
@@ -142,7 +136,6 @@ private:
 	string entry_name;
 	Inst *entry_inst = nullptr;
 	string task_name;
-	Path work_dir;
 };	
 
 

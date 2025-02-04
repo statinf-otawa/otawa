@@ -220,7 +220,6 @@ io::Output& operator<<(io::Output& out, const location_t& loc);
 extern p::feature NORMALIZED_CFGS_FEATURE;
 
 // Dumping CFG
-extern p::id<Path> CFG_DUMP_PATH;
 extern p::feature CFG_DUMP_FEATURE;
 
 } // otawa

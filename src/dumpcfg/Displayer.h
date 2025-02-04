@@ -19,7 +19,6 @@ public:
 	static Identifier<bool> DISASSEMBLE;
 	static Identifier<bool> SOURCE;
 	static Identifier<bool> ALL;
-	static Identifier<string> OUT;
 	static Identifier<bool> VIEW;
 	Displayer(cstring name, const Version version);
 protected:
