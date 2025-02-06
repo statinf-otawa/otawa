@@ -6,6 +6,7 @@ install_manifest.txt
 doxygen.err
 .kdev4
 otawa.kdev4
+.vscode
 
 
 *.so

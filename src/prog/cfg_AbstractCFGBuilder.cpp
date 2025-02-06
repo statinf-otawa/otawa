@@ -147,6 +147,15 @@ static void targets(Inst *i, Vector<Inst *>& t, WorkSpace *ws, Identifier<Addres
 	}
 }
 
+static bool isNewSeqFuncStart(Inst *i, WorkSpace *ws) {
+	for(auto symb : ws->process()->program()->symbols())  {
+		if(symb->kind() == Symbol::FUNCTION) {
+			if(i->address() == symb->address())
+				return true;
+		}
+	}
+	return false;
+}
 
 /**
  * Scan the CFG to find all BBs.
@@ -188,7 +197,7 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
 			while(!n->isBundleEnd())
 				n = workspace()->findInstAt(n->topAddress());
 			n = workspace()->findInstAt(n->topAddress());
-			if(n)
+			if(n && !isNewSeqFuncStart(n, workspace()))
 				todo.push(n);
 		}
 
@@ -210,6 +219,11 @@ void AbstractCFGBuilder::scanCFG(Inst *e, FragTable<Inst *>& bbs) {
  */
 void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs) {
 	for(FragTable<Inst *>::Iter e(bbs); e(); e++) {
+		if(NO_BLOCK(e.item())) {
+			if(logFor(LOG_BLOCK))
+				log << "\t\tskipping BB at " << e->address() << " (NO_BLOCK)" << io::endl;
+			continue;
+		}
 
 		// build list of instructions
 		Vector<Inst *> insts;
@@ -217,6 +231,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 		if(!e->isControl())
 			for(Inst *i = e->nextInst(); i && !isBlockStart(i); i = i->nextInst()) {
 				insts.add(i);
+				// Control instruction reached: add conditional bundle and finish
 				if(isControl(i)) {
 					while(!i->isBundleEnd()) {
 						i = i->nextInst();
@@ -226,6 +241,7 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
 				}
 			}
 		else {
+			// Control instruction reached: add conditional bundle and finish
 			Inst *i = *e;
 			while (!i->isBundleEnd()) {
 				i = i->nextInst();
@@ -251,8 +267,8 @@ void AbstractCFGBuilder::buildBBs(CFGMaker& maker, const FragTable<Inst *>& bbs)
  */
 void AbstractCFGBuilder::seq(CFGMaker& m, BasicBlock *b, Block *src, t::uint32 flags) {
 	Inst *ni = b->last()->nextInst();
-	if(ni) {
-		ASSERT(ni->hasProp(BB));
+	if(ni && ni->hasProp(BB)) { /*if it doesn't have the property it means we didn't visit in before, so most likely not part of this CFG*/
+		// ASSERT(ni->hasProp(BB));
 		m.add(src, BB(ni), new Edge(flags));
 	}
 }
@@ -287,8 +303,17 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 				Inst *i = bb->control();
 
 				// conditional or call case -> sequential edge (not taken)
-				if(!i || (i->isConditional() && !IGNORE_SEQ(i)))
+				if(!i)
 					seq(m, bb, bb);
+				else if(i->isConditional() && !IGNORE_SEQ(i)) {
+					if(NO_BLOCK(i->nextInst())) {
+						// we also need to check the target of the seq branch is not NO_BLOCK
+						if(logFor(LOG_BB))
+							log << "\t\tskipping sequential edge " << i << " because " << i->nextInst()->address() << " is marked as NO_BLOCK\n";
+					}
+					else
+						seq(m, bb, bb);
+				}
 
 				// branch cases
 				if(i && !IGNORE_CONTROL(i)) {
@@ -308,8 +333,15 @@ void AbstractCFGBuilder::buildEdges(CFGMaker& m) {
 
 						// create edges target edges
 						else
-							for(Vector<Inst *>::Iter t(ts); t(); t++)
+							for(Vector<Inst *>::Iter t(ts); t(); t++) {
+								// clear NO_BLOCK marked targets
+								if(NO_BLOCK(t.item())) {
+									if(logFor(LOG_BB))
+										log << "\t\tignoring NO_BLOCK at " << t->address() << io::endl;
+									continue;
+								}
 								m.add(bb, BB(*t), new Edge(Edge::TAKEN));
+							}
 					}
 
 					// a call

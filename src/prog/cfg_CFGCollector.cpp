@@ -247,10 +247,13 @@ void CFGCollector::configure(const PropList& props) {
 	CFGProvider::configure(props);
 	builder->configure(props);
 	added_cfgs.add(Address::null);
-	for(auto g: ADDED_CFG.all(props))
+	for(auto g: ADDED_CFG.all(props)) {
 		added_cfgs.add(g);
-	for(auto f: ADDED_FUNCTION.all(props))
+		cout << "=======> " << g << endl;
+	}
+	for(auto f: ADDED_FUNCTION.all(props)) {
 		added_funs.add(f);
+	}
 }
 
 

@@ -73,6 +73,7 @@ protected:
 	virtual void onNoReturn(address_t addr);
 	virtual void onNoReturn(String name);
 	virtual void onNoCall(Address address);
+	virtual void onNoBlock(Address address);
 	virtual void onNoInline(Address address, bool no_inline, const ContextualPath& path);
 	virtual void onIgnoreSeq(Address address);
 	virtual void onIgnoreControl(Address address);

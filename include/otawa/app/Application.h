@@ -94,6 +94,7 @@ protected:
 	option::ListOption<string> log_for;
 	option::ListOption<string> dump_for;
 	option::SwitchOption view;
+	option::SwitchOption all_cfgs;
 
 private:
 	LogOption log_level;

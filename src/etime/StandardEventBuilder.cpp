@@ -548,11 +548,13 @@ void StandardEventBuilder::setup(WorkSpace *ws) {
 			log << "\tevents for straight instruction fetch\n";
 	}
 	else {
+        #if 0
 		if(!ws->isProvided(ICACHE_ONLY_CONSTRAINT2_FEATURE))
 			throw ProcessorException(*this, "L1 instruction cache but no cache analysis!");
 		fetch = new CacheFetchBuilder(*this, mem);
 		if(logFor(LOG_CFG))
 			log << "\tevents for instruction cache L1\n";
+        #endif
 	}
 
 	// look for data cache L1
@@ -593,10 +595,12 @@ void StandardEventBuilder::processBB(WorkSpace *ws, CFG *cfg, Block *b) {
 		auto bb = b->toBasic();
 
 		// process instruction stage L1
-		fetch->process(ws, bb);
+        if (fetch)
+		    fetch->process(ws, bb);
 
 		// process data stage L1
-		data->process(ws, bb);
+		if (data)
+			data->process(ws, bb);
 	}
 
 	// process branch prediction
