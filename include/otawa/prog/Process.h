@@ -32,6 +32,7 @@
 #include <otawa/instruction.h>
 #include <otawa/proc/Feature.h>
 #include <otawa/prog/features.h>
+#include <otawa/prog/File.h>
 
 namespace elm { namespace xom {
 	class Element;
@@ -145,7 +146,6 @@ public:
 	virtual Inst *findInstAt(address_t addr);
 	virtual address_t findLabel(const string& label);
 	virtual Inst *findInstAt(const string& label);
-	inline File *program(void) const { return prog; }
 	virtual int instSize(void) const = 0;
 	virtual Processor *decoder(void);
 	virtual Loader *loader(void) const;
@@ -194,6 +194,8 @@ public:
 	public:
 		inline FileIter(const Process *process): Vector<File *>::Iter(process->_files) { }
 	};
+	cstring program_name() {return (prog) ? prog->name() : "unknown";}
+	File::syms_t symbols();
 
 protected:
 	friend class WorkSpace;

@@ -76,7 +76,7 @@ public:
 	Manager(void);
 	~Manager(void);
 	Loader *findLoader(string name);
-	WorkSpace *load(const elm::sys::Path& path, const PropList& props = PropList::EMPTY);
+	WorkSpace *load(const Vector<elm::sys::Path>& paths, const PropList& props = PropList::EMPTY);
 	ilp::System *newILPSystem(String plugin = "", bool max = true);
 
 	// deprecated
@@ -89,7 +89,7 @@ public:
 private:
 	static Manager _def;
 
-	WorkSpace *loadBin(const elm::sys::Path& path, const PropList& props);
+	WorkSpace *loadBin(const Vector<elm::sys::Path>& path, const PropList& props);
 	WorkSpace *loadXML(const elm::sys::Path& path, const PropList& props);
 
 	Vector<hard::Platform *> platforms;

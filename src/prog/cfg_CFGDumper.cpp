@@ -53,7 +53,7 @@ protected:
 			
 			// dump definitions
 			out << "#Task: " << TASK_INFO_FEATURE.get(ws)->entryName() << io::endl;
-			out << "#Exec: " << ws->process()->program()->name() << io::endl;
+			out << "#Exec: " << ws->process()->program_name() << io::endl;
 			
 			// dump the CFGs
 			for(auto g: *COLLECTED_CFG_FEATURE.get(ws)) {

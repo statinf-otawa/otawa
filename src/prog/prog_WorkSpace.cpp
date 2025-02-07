@@ -233,18 +233,6 @@ namespace otawa {
 
 
 /**
- * Build a workspace for the given binary file using the default manager.
- * @param path					Path to the file.
- * @param props					Configuration properties (optional).
- * @return						Built workspace.
- * @throw otawa::Exception		In case of error.
- */
-WorkSpace *WorkSpace::load(sys::Path path, const PropList& props) {
-	return MANAGER.load(path, props);
-}
-
-
-/**
  * Build a new wokspace with the given process.
  * @param _proc	Process to use.
  */
@@ -1059,8 +1047,8 @@ sys::Path WorkSpace::workDir() {
 		if(_name != "")
 			task = _name;
 		else
-			task = sys::Path(process()->program()->name()).withoutExt().namePart();
-		wdir = sys::Path(process()->program()->name()).parent() / (task + "-otawa");
+			task = sys::Path(process()->program_name()).withoutExt().namePart();
+		wdir = sys::Path(process()->program_name()).parent() / (task + "-otawa");
 	}
 	return wdir;
 }

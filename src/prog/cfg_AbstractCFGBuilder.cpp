@@ -148,7 +148,7 @@ static void targets(Inst *i, Vector<Inst *>& t, WorkSpace *ws, Identifier<Addres
 }
 
 static bool isNewSeqFuncStart(Inst *i, WorkSpace *ws) {
-	for(auto symb : ws->process()->program()->symbols())  {
+	for(auto symb : ws->process()->symbols())  {
 		if(symb->kind() == Symbol::FUNCTION) {
 			if(i->address() == symb->address())
 				return true;

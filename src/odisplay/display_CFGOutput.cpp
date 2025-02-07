@@ -307,7 +307,7 @@ void CFGOutput::setup(WorkSpace *ws) {
 
 	// get a valid path
 	if(path.isEmpty())
-		path = sys::Path(ws->process()->program()->name()).setExtension("cfg");
+		path = sys::Path(ws->process()->program_name()).setExtension("cfg");
 
 	// remove existing one
 	if(path.exists()) {

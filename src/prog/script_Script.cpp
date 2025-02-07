@@ -349,7 +349,7 @@ void Script::work(WorkSpace *ws) {
 
 	// find the script
 	if(!path) {
-		path = ws->process()->program()->name();
+		path = ws->process()->program_name();
 		path.setExtension("osx");
 	}
 	if(!path.exists())

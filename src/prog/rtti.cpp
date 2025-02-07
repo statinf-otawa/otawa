@@ -63,7 +63,7 @@ rtti::Type& File::__type = file_class;
 
 // Process class
 static rtti::Class<Process, PropList, rtti::no_inst> process_class(rtti::make("otawa::Process")
-	.op("program", &Process::program)
+	.op("program_name", &Process::program_name)
 	.iter<File *, Process::FileIter, Process>("files"));
 rtti::Type& Process::__type = process_class;
 

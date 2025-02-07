@@ -210,8 +210,6 @@ void SimState::setReg(hard::Register *r, t::uint32 v) {
 Process::Process(Manager *manager, const PropList& props, File *program)
 : prog(0), man(manager), smap(0) {
 	addProps(props);
-	if(prog)
-		addFile(prog);
 }
 
 
@@ -325,10 +323,9 @@ Segment *Process::findSegmentAt(Address addr) const {
  * Load the program file
  */
 File *Process::loadProgram(elm::CString path) {
-	ASSERT(!prog);
 	File *file = loadFile(path);
 	ASSERT(file);
-	if(file)
+	if(!prog)
 		prog = file;
 	return file;
 }
@@ -383,7 +380,7 @@ sim::Simulator *Process::simulator(void) {
  */
 void Process::addFile(File *file) {
 	ASSERT(file);
-	if(!_files)
+	if(!prog)
 		prog = file;
 	_files.add(file);
 }
@@ -499,6 +496,16 @@ Symbol *Process::findSymbolAt(const Address& address) {
 }
 
 
+File::syms_t Process::symbols() {
+	File::syms_t symbols;
+	for(File *file : _files) {
+		const File::syms_t s = file->symbols();
+		for(auto it=s.begin() ; it != s.end() ; it++) {
+			symbols.add(it.key(), it.item());
+		}
+	}
+	return symbols;
+}
 
 /**
  * Get a signed byte value from the process.
@@ -742,9 +749,7 @@ Address Process::initialSP(void) const {
  */
 elm::io::Output& operator<<(elm::io::Output& out, Process *proc) {
 	out << "process";
-	File *file = proc->program();
-	if(file)
-		out << "[progam=\"" << file->name() << "\"]";
+	out << "[progam=\"" << proc->program_name() << "\"]";
 	return out;
 }
 
@@ -810,14 +815,8 @@ void Process::getAddresses(cstring file, int line, Vector<Pair<Address, Address>
 String ProcessException::message(void) {
 	if(process() == nullptr)
 		return "";
-	else {
-		string name;
-		if(process()->program())
-			name = process()->program()->name();
-		else
-			name = "unknown";
-		return _ << name << ": ";
-	}
+	else
+		return _ << process()->program_name() << ": ";
 }
 
 

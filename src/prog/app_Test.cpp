@@ -89,7 +89,7 @@ Test::Test(cstring name)
 void Test::work(const string& entry, PropList &props) {
 
 	// compute the paths
-	sys::Path elf_path = workspace()->process()->program()->name();
+	sys::Path elf_path = workspace()->process()->program_name();
 	sys::Path out_path = sys::Path(elf_path.withoutExt().namePart() + ".out");
 	sys::Path ref_path = sys::Path(elf_path.withoutExt().namePart() + ".ref");
 

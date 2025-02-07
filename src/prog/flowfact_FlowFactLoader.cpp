@@ -656,27 +656,27 @@ void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
 
 		// replace suffix with "ff"
 		if(!done) {
-			path = ws->process()->program()->name();
+			path = ws->process()->program_name();
 			path = path.setExtension("ff");
 			done = path.isReadable();
 		}
 
 		// add suffix ".ff"
 		if(!done) {
-			path = ws->process()->program()->name() + ".ff";
+			path = ws->process()->program_name() + ".ff";
 			done = path.isReadable();
 		}
 
 		// replace suffix with ".ffx"
 		if(!done) {
-			path = ws->process()->program()->name();
+			path = ws->process()->program_name();
 			path = path.setExtension("ffx");
 			done = path.isReadable();
 		}
 
 		// add suffix ".ffx"
 		if(!done) {
-			path = ws->process()->program()->name() + ".ffx";
+			path = ws->process()->program_name() + ".ffx";
 			done = path.isReadable();
 		}
 
@@ -684,7 +684,7 @@ void FlowFactLoader::processWorkSpace(WorkSpace *ws) {
 		if(done)
 			load(ws, path);
 		else {
-			warn(_ << "no flow fact file for " << ws->process()->program()->name());
+			warn(_ << "no flow fact file for " << ws->process()->program_name());
 		}
 	}
 

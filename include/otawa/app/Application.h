@@ -98,7 +98,7 @@ protected:
 
 private:
 	LogOption log_level;
-	elm::sys::Path path;
+	Vector<elm::sys::Path> binaries_paths;
 	Vector<string> _args;
 	PropList props;
 	PropList *props2;

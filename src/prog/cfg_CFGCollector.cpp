@@ -199,7 +199,7 @@ void CFGCollector::setup(WorkSpace *ws) {
 
 	// find address of label
 	for(int i = 0; i < added_funs.count(); i++) {
-		Address addr = ws->process()->program()->findLabel(added_funs[i]);
+		Address addr = ws->process()->findLabel(added_funs[i]);
 		if(addr.isNull())
 			throw ProcessorException(*this, _ << "cannot find label \"" << added_funs[i] << "\"");
 		Inst *inst = ws->findInstAt(addr);

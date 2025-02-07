@@ -409,7 +409,7 @@ void ConstraintLoader::processCFG(WorkSpace *_fw, CFG *cfg) {
 	// Select the file
 	if(!path) {
 		elm::StringBuffer buffer;
-		buffer <<_fw->process()->program()->name() << ".ipet";
+		buffer <<_fw->process()->program_name() << ".ipet";
 		path = buffer.toString();
 		if(logFor(LOG_DEPS))
 			log << "\tno file provided: trying with " << path << io::endl;

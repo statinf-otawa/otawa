@@ -29,6 +29,7 @@
 #include <otawa/prog/Manager.h>
 #include <otawa/view/features.h>
 #include <otawa/prog/File.h>
+#include <elm/utility.h>
 
 #include "../../include/otawa/flowfact/FlowFactLoader.h"
 
@@ -344,9 +345,8 @@ Application::~Application(void) {
  * @li call the work() method.
  */
 void Application::run() {
-
 		// process arguments
-		if(!path)
+		if(!binaries_paths.length())
 			throw option::OptionException("no PROGRAM given");
 		if(!_args)
 			_args.add("main");
@@ -407,13 +407,13 @@ void Application::run() {
 		prepare(props);
 
 		// load the program
-		ws = MANAGER.load(path, props);
+		ws = MANAGER.load(binaries_paths, props);
 		if(work_dir)
 			ws->workDir(*work_dir);
 
 		if(all_cfgs) {
 			_args.clear();
-			for(auto symb : ws->process()->program()->symbols())  {
+			for(auto symb : ws->process()->symbols())  {
 				if(symb->kind() == Symbol::FUNCTION) {
 					_args.add(symb->name());
 				}
@@ -656,8 +656,11 @@ void Application::info(string msg) {
  * @param arg	Current argument.
  */
 void Application::process(string arg) {
-	if(!path)
-		path = arg;
+	if(!binaries_paths.length()) {
+		Vector<String> tmp = elm::split(arg, ",");
+		for(String p : tmp) 
+			binaries_paths.add(p);
+	}
 	else
 		_args.add(arg);
 }

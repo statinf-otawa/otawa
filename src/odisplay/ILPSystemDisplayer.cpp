@@ -152,7 +152,7 @@ void ILPSystemDisplayer::processWorkSpace(WorkSpace *ws) {
 
 	// header
 	cout << "<html>\n\t<head>\n\t\t<title>ILP system of " << ENTRY_CFG(ws)->label()
-		 << " (" << ws->process()->program()->name() << ")</title>\n\t</head>\n\t<body>\n"
+		 << " (" << ws->process()->program_name() << ")</title>\n\t</head>\n\t<body>\n"
 		 << "\t\t<h1>Content</h1>\n"
 			"\t\t\t<ul>\n"
 			"\t\t\t\t<li><a href=\"#__objective\">objective function</a></li>\n"

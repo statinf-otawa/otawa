@@ -278,16 +278,17 @@ elm::sys::Path Manager::retrieveConfig(const elm::sys::Path& path) {
  * The two first cases let the user to provide their own plugin for, as an
  * example, to develop a new loader plugin.
  */
-WorkSpace *Manager::load(const elm::sys::Path&  path, const PropList& props) {
+WorkSpace *Manager::load(const Vector<elm::sys::Path>&  paths, const PropList& props) {
 	setVerbosity(props);
 
+	if(paths.length() == 1 && paths[0].extension() == "xml") {
+		// Load the XML file
+		loadXML(paths[0], props);
+		return load(CONFIG_ELEMENT(props), props);
+	}
+	
 	// Just load binary ?
-	if(path.extension() != "xml")
-		return loadBin(path, props);
-
-	// Load the XML file
-	loadXML(path, props);
-	return load(CONFIG_ELEMENT(props), props);
+	return loadBin(paths, props);
 }
 
 
@@ -340,7 +341,7 @@ Loader *Manager::findFileLoader(const elm::sys::Path& path) {
  * @throws	LoadException	Error during load.
  */
 WorkSpace *Manager::loadBin(
-	const elm::sys::Path& path,
+	const Vector<elm::sys::Path>& paths,
 	const PropList& props)
 {
 	PropList used_props(props);
@@ -367,30 +368,40 @@ WorkSpace *Manager::loadBin(
 	else if(isVerbose())
 		log << "INFO: got loader from proplist: " << loader << io::endl;
 
-	// try with gel
+
 	if(loader == nullptr) {
-		int mach;
-		try {
-			auto file = gel::Manager::open(path);
-			mach = file->elfMachine();
-			delete file;
+		// try with gel
+		String prev_name="";
+		for(elm::sys::Path path : paths) {
+			int mach;
+			try {
+				auto file = gel::Manager::open(path);
+				mach = file->elfMachine();
+				delete file;
+			}
+			catch(gel::Exception& e) {
+				resetVerbosity();
+				throw LoadException(e.message());			
+			}
+			string name = _ << "elf_" << mach;
+			if(!prev_name.isEmpty() && prev_name == name) {
+				continue;
+			}
+			if(!prev_name.isEmpty() && prev_name != name)
+				throw LoadException("Can't multiple binaries from different architectures");
+			if(isVerbose()) {
+				log << "INFO: looking for loader \"" << name << "\"\n";
+				log << "INFO: prefix path = " << prefixPath() << io::endl;
+				log << "INFO: searchpaths:\n";
+				for(elm::sys::Plugger::PathIterator path(loader_plugger); path(); path++)
+					log << "INFO:	- " << *path << io::endl;
+				log << "INFO: available loaders\n";
+				for(elm::sys::Plugger::Iter plugin(loader_plugger); plugin(); plugin++)
+					log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
+			}
+			loader = findLoader(name.toCString());
+			prev_name = name;
 		}
-		catch(gel::Exception& e) {
-			resetVerbosity();
-			throw LoadException(e.message());			
-		}
-		string name = _ << "elf_" << mach;
-		if(isVerbose()) {
-			log << "INFO: looking for loader \"" << name << "\"\n";
-			log << "INFO: prefix path = " << prefixPath() << io::endl;
-			log << "INFO: searchpaths:\n";
-			for(elm::sys::Plugger::PathIterator path(loader_plugger); path(); path++)
-				log << "INFO:	- " << *path << io::endl;
-			log << "INFO: available loaders\n";
-			for(elm::sys::Plugger::Iter plugin(loader_plugger); plugin(); plugin++)
-				log << "INFO:\t- " << *plugin << " (" << plugin.path() << ")\n";
-		}
-		loader = findLoader(name.toCString());
 	}
 
 	// post-process
@@ -398,6 +409,9 @@ WorkSpace *Manager::loadBin(
 		cerr << "INFO: selected loader: " << loader->name() << " (" << loader->pluginVersion() << ") ( " << loader->path() << ")\n";
 	if(!loader) {
 		resetVerbosity();
+		String path = "";
+		for(String tmp : paths)
+			path = path.concat(tmp);
 		throw LoadException(_ << "no loader for \"" << path << "\".");
 	}
 
@@ -417,7 +431,14 @@ WorkSpace *Manager::loadBin(
 
 	// Try to load the binary
 	resetVerbosity();
-	return new WorkSpace(loader->load(this, path.asSysString(), used_props));
+
+	Process *process = loader->create(this, used_props);
+	for(String path : paths) {
+		if(!process->loadProgram(path.toCString())) {
+			throw LoadException(_ << "Can't load " << path << " with loader " << loader->name());
+		}
+	}
+	return new WorkSpace(process);
 }
 
 
@@ -456,7 +477,9 @@ WorkSpace *Manager::loadXML(
 	PropList new_config;
 	new_config.addProps(props);
 	CONFIG_ELEMENT(new_config) = elem;
-	return loadBin(path, new_config);
+	Vector<elm::sys::Path> paths;
+	paths.add(path);
+	return loadBin(paths, new_config);
 }
 
 
@@ -479,7 +502,9 @@ WorkSpace *Manager::load(xom::Element *elem, const PropList& props) {
 		resetVerbosity();
 		throw LoadException("no binary available.");
 	}
-	return loadBin(bin_path, props);
+	Vector<elm::sys::Path> paths;
+	paths.add(bin_path);
+	return loadBin(paths, props);
 }
 
 
@@ -498,8 +523,11 @@ WorkSpace *Manager::load(const PropList& props) {
 
 	// Look for a file name
 	elm::sys::Path path = CONFIG_PATH(props);
-	if(path)
-		return load(path, props);
+	if(path) {
+		Vector<elm::sys::Path> paths;
+		paths.add(path);
+		return load(paths, props);
+	}
 
 	// Nothing to do
 	resetVerbosity();

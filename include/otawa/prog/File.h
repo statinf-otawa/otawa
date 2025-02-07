@@ -37,8 +37,8 @@ class ProgItem;
 
 // File class
 class File: public PropList {
-	typedef HashMap<String, Symbol *> syms_t;
 public:
+	typedef HashMap<String, Symbol *> syms_t;
 	static rtti::Type& __type;
 
 	inline File(String name): _name(name) { }
