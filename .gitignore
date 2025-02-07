@@ -54,3 +54,4 @@ test/props/test_props
 test/reg/test_reg
 test/steps/
 test/test_MemorySet
+build/
