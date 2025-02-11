@@ -388,7 +388,7 @@ WorkSpace *Manager::loadBin(
 				continue;
 			}
 			if(!prev_name.isEmpty() && prev_name != name)
-				throw LoadException("Can't multiple binaries from different architectures");
+				throw LoadException(_ << "Can't have multiple binaries from different architectures " << prev_name << "!=" << name);
 			if(isVerbose()) {
 				log << "INFO: looking for loader \"" << name << "\"\n";
 				log << "INFO: prefix path = " << prefixPath() << io::endl;
