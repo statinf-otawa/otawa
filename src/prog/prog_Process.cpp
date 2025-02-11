@@ -499,7 +499,7 @@ Symbol *Process::findSymbolAt(const Address& address) {
 File::syms_t Process::symbols() {
 	File::syms_t symbols;
 	for(File *file : _files) {
-		const File::syms_t s = file->symbols();
+		const File::syms_t &s = file->symbols();
 		for(auto it=s.begin() ; it != s.end() ; it++) {
 			symbols.add(it.key(), it.item());
 		}
