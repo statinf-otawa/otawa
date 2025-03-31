@@ -45,6 +45,7 @@ protected:
 		Path path = this->path;
 		if(path.isEmpty())
 			path = TASK_INFO_FEATURE.get(ws)->workDirectory();
+		rota_csv_path = path / "rota.csv";
 		path = path / "cfg.csv";
 		
 		try {
@@ -52,6 +53,10 @@ protected:
 			auto stream = path.write();
 			io::Output out(*stream);
 			
+			// open rota file
+			auto rota_stream = rota_csv_path.write();
+            io::Output rota_out(*rota_stream);
+
 			// dump definitions
 			out << "#Task: " << TASK_INFO_FEATURE.get(ws)->entryName() << io::endl;
 			out << "#Exec: " << ws->process()->program()->name() << io::endl;
@@ -61,6 +66,7 @@ protected:
 				out << "G\t" << g->name()
 					<< '\t' << g->address()
 					<< '\t' << *CONTEXT(g) << io::endl;
+				rota_out << "G\t" << g->name() << "\t0\t0" << io::endl;
 				for(auto v: g->vertices()) {
 					
 					// dump blocks
@@ -70,16 +76,32 @@ protected:
 					}
 					else if(v->isSynth()) {
 						auto cb = v->toSynth();
-						out << 'C';
-						if(cb->callee() != nullptr)
+						out << 'C'; 
+						if(cb->callee() != nullptr) {
 							out << '\t' << cb->callee()->index();
+							Inst* call_inst = cb->callInst();
+							if (call_inst) {
+								Inst* link_inst = cb->callInst()->nextInst();
+								if (link_inst)
+									rota_out << "C\t" << cb->callee()->name() << "\t" << call_inst->address() << "\t" << link_inst->address()<< io::endl;
+							}							
+						}
 						out << io::endl;
 					}
 					else {
-						if(v->isEntry())
+						if(v->isEntry()) {
 							out << 'N' << io::endl;
-						else if(v->isExit())
+							const auto& succ = v->succs().begin();
+							if (!(succ.ended()))
+								rota_out << 'N' << '\t' << succ.item()->toBasic()->address() << "\t0\t0" << io::endl;
+						}
+						else if(v->isExit()) {
 							out << 'X' << io::endl;
+							for (const auto& pred : v->preds()) {
+								if (pred->isBasic())
+									rota_out << 'X' << '\t' << pred->toBasic()->last()->address() << "\t0\t0" << io::endl;
+							}
+						}
 						else if(v->isUnknown())
 							out << 'U' << io::endl;
 						else
@@ -98,6 +120,7 @@ protected:
 			
 			// close the file
 			delete stream;
+			delete rota_stream;
 		}
 		catch(sys::SystemException& e) {
 			throw ProcessorException(*this, _ << "cannot create " << path << ": " << e.message());
@@ -106,6 +129,7 @@ protected:
 
 private:
 	Path path;
+	Path rota_csv_path;
 };
 
 
