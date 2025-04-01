@@ -567,6 +567,12 @@ Inst *Inst::toInst(void) {
 }
 
 
+Inst::Kind Inst::getKind() {
+	if (hasProp(ALT_KIND))
+		return Inst::Kind(ALT_KIND(this));
+	return kind(); 
+}
+
 /**
  * Return the condition associated with the current instruction.
  * In its default implementation, return a no-condition for
@@ -751,6 +757,16 @@ void Inst::bundle(Vector<Inst *>& insts) {
 p::feature VLIW_FEATURE("otawa::VLIW_FEATURE");
 
 
+/**
+ * Provide an alternative kind for an instruction, superseding
+ * the current kind of the instruction.
+ * @ingroup ff
+ *
+ * @par Hooks
+ * @li @ref Inst (@ref otawa::util::FlowFactLoader)
+ */
+Identifier<Inst::kind_t> ALT_KIND("otawa::ALT_KIND", 0);
+
 
 // NullInst class
 class NullInst: public Inst {
@@ -817,4 +833,3 @@ io::Output& operator<<(io::Output& out, Inst::Kind kind) {
 }
 
 }	// otawa
-

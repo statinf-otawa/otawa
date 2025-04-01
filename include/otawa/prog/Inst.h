@@ -100,7 +100,7 @@ public:
 		inline bool isAtomic()		{ return oneOf(IS_ATOMIC); }
 		inline bool isBranch()		{ return oneOf(IS_CONTROL) && noneOf(IS_RETURN | IS_CALL | IS_TRAP); }
 		inline bool isBundleEnd()	{ return !oneOf(IS_BUNDLE); }
-		inline bool isCall()		{ return oneOf(IS_CALL); }
+		inline bool isCall()		{ return oneOf(IS_CALL | IS_TRAP); }
 		inline bool isCond()		{ return oneOf(IS_COND); }
 		inline bool isControl()		{ return oneOf(IS_CONTROL); }
 		inline bool isDiv()			{ return oneOf(IS_DIV); }
@@ -137,7 +137,7 @@ public:
 
 	// Kind access
 	virtual kind_t kind() = 0;
-	inline Kind getKind() { return kind(); }
+	Kind getKind();
 
 	inline bool isAtomic()		{ return getKind().isAtomic(); }
 	inline bool isBranch()		{ return getKind().isBranch(); }
@@ -191,6 +191,7 @@ protected:
 
 // instruction features
 extern p::feature VLIW_FEATURE;
+extern Identifier<Inst::kind_t> ALT_KIND;
 
 // output
 io::Output& operator<<(elm::io::Output& out, Inst *inst);

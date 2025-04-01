@@ -2398,17 +2398,6 @@ Identifier<bool> IS_RETURN("otawa::IS_RETURN", false);
 
 
 /**
- * Provide an alternative kind for an instruction, superseding
- * the current kind of the instruction.
- * @ingroup ff
- *
- * @par Hooks
- * @li @ref Inst (@ref otawa::util::FlowFactLoader)
- */
-Identifier<Inst::kind_t> ALT_KIND("otawa::ALT_KIND", 0);
-
-
-/**
  * This annotation is put on the first instruction of functions that does not
  * never return. It is usually put on the C library "_exit" function.
  * @ingroup ff
