@@ -1167,12 +1167,6 @@ void Command::analyzeBranches(PropList& props) {
 /**
  */
 void Command::work(PropList &props) {
-	OutFileStream *sout = nullptr;
-	if(!output_file.get().isEmpty()) {
-		sout = new OutFileStream(output_file.get());
-		out.setStream(*sout);
-	}
-
 	clock_t mkfftime = clock();
 
 	// configure the CFG collection
@@ -1245,6 +1239,11 @@ void Command::work(PropList &props) {
 		generateXMLs(String("") << "final_xml_s", 1, props);
 
 	if(!debugging) {
+		OutFileStream *sout = nullptr;
+		if(!output_file.get().isEmpty()) {
+			sout = new OutFileStream(output_file.get());
+			out.setStream(*sout);
+		}
 
 		// display low-level flow facts
 		ControlOutput *ctrl = new ControlOutput(*p, &ffl, sout);
@@ -1259,6 +1258,8 @@ void Command::work(PropList &props) {
 
 		// cleanup at end
 		delete p;
+		if(sout)
+			sout->close();
 	}
 	else {
 
@@ -1358,9 +1359,6 @@ void Command::work(PropList &props) {
 
 	mkfftime = clock() - mkfftime;
 	elm::cerr << "mkff: " << mkfftime << " micro-seconds" << io::endl;
-
-	if(sout)
-		sout->close();
 }
 
 
