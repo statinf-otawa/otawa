@@ -1197,7 +1197,12 @@ void Command::work(PropList &props) {
 	QuestFlowFactLoader ffl;
 	workspace()->run(&ffl, props);
 
+	OutFileStream *sout = nullptr;
 	if(!debugging) {
+		if(!output_file.get().isEmpty()) {
+			sout = new OutFileStream(output_file.get());
+			out.setStream(*sout);
+		}
 		// determine printer
 		if(xml)
 			p = new FFXPrinter(workspace(), true, opt_use_only_addresses);
@@ -1239,12 +1244,7 @@ void Command::work(PropList &props) {
 		generateXMLs(String("") << "final_xml_s", 1, props);
 
 	if(!debugging) {
-		OutFileStream *sout = nullptr;
-		if(!output_file.get().isEmpty()) {
-			sout = new OutFileStream(output_file.get());
-			out.setStream(*sout);
-		}
-
+		
 		// display low-level flow facts
 		ControlOutput *ctrl = new ControlOutput(*p, &ffl, sout);
 		workspace()->run(ctrl, props);
