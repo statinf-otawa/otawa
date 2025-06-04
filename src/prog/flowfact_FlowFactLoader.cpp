@@ -932,7 +932,7 @@ void FlowFactLoader::onCheckSum(const String& name, t::uint32 sum) {
 			summer.put(buf);
 			t::uint32 sum2 = summer.sum();
 			if(sum2 != sum)
-				onError(_ << "bad checksum: flow facts and executable does not match\nff checksum: " << io::hex(sum) << "\nexecutable checksum: " << io::hex(sum2));
+				onWarning(_ << "bad checksum: flow facts and executable does not match\nff checksum: " << io::hex(sum) << "\nexecutable checksum: " << io::hex(sum2));
 			checksummed = true;
 			return;
 		}
@@ -2493,17 +2493,6 @@ p::feature MKFF_PRESERVATION_FEATURE("otawa::MKFF_PRESERVATION_FEATURE", new Mak
  * @li @ref Inst (@ref otawa::util::FlowFactLoader)
  */
 Identifier<bool> IS_RETURN("otawa::IS_RETURN", false);
-
-
-/**
- * Provide an alternative kind for an instruction, superseding
- * the current kind of the instruction.
- * @ingroup ff
- *
- * @par Hooks
- * @li @ref Inst (@ref otawa::util::FlowFactLoader)
- */
-Identifier<Inst::kind_t> ALT_KIND("otawa::ALT_KIND", 0);
 
 
 /**

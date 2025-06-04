@@ -52,7 +52,6 @@ extern Identifier<bool> NO_CALL;
 extern Identifier<bool> NO_BLOCK;
 extern Identifier<bool> NO_RETURN;
 
-extern Identifier<Inst::kind_t> ALT_KIND;
 
 // loop bounds
 extern Identifier<int> MAX_ITERATION;
