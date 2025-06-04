@@ -7,6 +7,7 @@ set(dumpcfg_SOURCES
 	"DisassemblerDisplayer.cpp"
 	"DotDisplayer.cpp"
 	"MultipleDotDisplayer.cpp"
+	"HeptaneDisplayer.cpp"
 )
 
 add_executable(dumpcfg ${dumpcfg_SOURCES})

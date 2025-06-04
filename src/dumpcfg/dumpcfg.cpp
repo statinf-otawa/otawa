@@ -35,6 +35,7 @@
 #include "DisassemblerDisplayer.h"
 #include "DotDisplayer.h"
 #include "MultipleDotDisplayer.h"
+#include "HeptaneDisplayer.h"
 
 using namespace elm;
 using namespace otawa;
@@ -205,7 +206,8 @@ public:
 				display_kind,
 				display_regs,
 				display_target,
-				display_bytes;
+				display_bytes,
+				heptane;
 	opt::Value<string> out;
 
 	Displayer *displayer;
@@ -234,6 +236,8 @@ void DumpCFG::prepare(PropList &props) {
 		displayer = new DotDisplayer();
 	else if(mult)
 		displayer = new MultipleDotDisplayer();
+	else if(heptane)
+		displayer = new HeptaneDisplayer();
 	else
 		displayer = new SimpleDisplayer();
 }
@@ -267,6 +271,7 @@ DumpCFG::DumpCFG(void):
 	display_target	(make_switch()			.cmd("--display-target")		.help("display branch instruction targets")),
 	display_bytes	(make_switch()			.cmd("--display-bytes")			.help("display instruction bytes")),
 	out				(make_value<string>()	.cmd("-o").cmd("--output")		.description("select the output file or directory (-M option)")),
+	heptane			(make_switch()			.cmd("--heptane")				.help("Heptane compatible XML format")),
 
 	displayer(nullptr)
 {

@@ -61,6 +61,7 @@ public:
 		BlockIter(const Loop *loop);
 		inline bool ended(void) const { return !_todo.isEmpty(); }
 		inline Block *item(void) const { return _todo.first(); }
+		bool equals(const BlockIter& i) { return _todo.count() == i._todo.count();}
 		void next(void);
 	private:
 		const Loop *_loop;
