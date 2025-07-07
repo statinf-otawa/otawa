@@ -223,6 +223,9 @@ extern p::feature NORMALIZED_CFGS_FEATURE;
 extern p::id<Path> CFG_DUMP_PATH;
 extern p::feature CFG_DUMP_FEATURE;
 
+// Exporting CFG as database
+extern p::feature CFG_AS_SQL_FEATURE;
+
 } // otawa
 
 #endif /* OTAWA_CFG_FEATURES_H_ */

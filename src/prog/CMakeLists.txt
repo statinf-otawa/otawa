@@ -22,6 +22,7 @@ set(libotawa_SOURCES
 	"CFG.cpp"
 	"cfg_CFGCollector.cpp"
 	"cfg_CFGDumper.cpp"
+	"cfg_CFGAsSQL.cpp"
 	"pcg_PCG.cpp"
 	"pcg_PCGBuilder.cpp"
 	"cfg_AbstractCFGBuilder.cpp"
@@ -247,9 +248,12 @@ list(APPEND libotawa_SOURCES
 	${FLEX_util_fft_lexer_OUTPUTS})
 
 # build
+find_package(SQLite3 REQUIRED)
+
 add_library(otawa SHARED ${libotawa_SOURCES})
 target_link_libraries(otawa "${LIBELM}")
 target_link_libraries(otawa "${LIBGELPP}")
+target_link_libraries(otawa "${SQLite3_LIBRARIES}")
 
 # look for libgel (for loader plug-in compatibility)
 target_link_libraries(otawa "${LIBGEL}")

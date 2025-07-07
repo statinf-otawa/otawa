@@ -200,6 +200,7 @@ public:
 				dot,
 				source,
 				xml,
+				db,
 				mult,
 				display_sem,
 				display_kind,
@@ -260,6 +261,7 @@ DumpCFG::DumpCFG(void):
 	dot				(make_switch()			.cmd("-D").cmd("--dot")			.description("Select DOT output.")),
 	source			(make_switch()			.cmd("-s").cmd("--source")		.description("enable source debugging information output")),
 	xml				(make_switch()			.cmd("-x").cmd("--xml")			.description("output the CFG as an XML file")),
+	db				(make_switch()			.cmd("--db")			        .description("output the CFG as an SQL database file")),
 	mult			(make_switch()			.cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
 	display_sem		(make_switch()			.cmd("--display-sem")			.help("display semantic instructions")),
 	display_kind	(make_switch()			.cmd("--display-kind")			.help("display instruction kind")),
@@ -316,6 +318,8 @@ void DumpCFG::dump(PropList& props) {
 		displayer->display_bytes = display_bytes;
 		run(displayer);
 	}
+	if(db)
+		workspace()->require(CFG_AS_SQL_FEATURE, props);
 }
 
 
@@ -331,4 +335,3 @@ void DumpCFG::dump(PropList& props) {
 }*/
 //ELM_RUN(DumpCFG);
 OTAWA_RUN(DumpCFG);
-
