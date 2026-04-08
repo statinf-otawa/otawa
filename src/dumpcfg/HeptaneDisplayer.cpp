@@ -31,6 +31,48 @@ HeptaneDisplayer::HeptaneDisplayer(void): Displayer("HeptaneDisplayer", Version(
 	require(CONTEXT_TREE_BY_CFG_FEATURE);
 }
 
+void test(ContextTree *tree, HashMap<BasicBlock*, t::uint32> *loop_id, t::uint32 *glob_id) {
+	for(ContextTree::ChildrenIterator child(tree); child(); child++) {
+		if(child->kind() == ContextTree::LOOP) {
+			loop_id->add(child->bb(), (*glob_id)++);
+			test(*child, loop_id, glob_id);
+		}
+	}
+}
+
+Vector<Block*> test2(CFG *cfg, ContextTree *tree, HashMap<BasicBlock*, t::uint32> &loop_id, HashMap<Block*, t::uint32> &node_id, HashMap<Edge*, t::uint32> &edge_id) {
+	Vector<Block*> parent_nested;
+	for(ContextTree::ChildrenIterator child(tree); child(); child++) {
+		if(child->kind() == ContextTree::LOOP) {
+			ContextualPath path;
+			path.push(ContextualStep::FUNCTION, cfg->address());
+			int maxiter = path(MAX_ITERATION, child->bb()->first()).get();
+
+			Vector<Block*> nested = test2(cfg, *child, loop_id, node_id, edge_id);
+
+			Loop *loop = Loop::of(child->bb());
+			cout << "\t\t<LOOP id=\""<<loop_id[child->bb()].get()<<"\" head=\""<<node_id.get(child->bb(), -1)<<"\" nodes=\"";
+			for(Block *b : loop->blocks()) {
+				cout << node_id[b].get() << ", ";
+				parent_nested.add(b);
+			}
+			for(Block *b : nested) {
+				cout << node_id[b].get() << ", ";
+				parent_nested.add(b);
+			}
+			cout << "\" backedges=\"";
+			for(Edge *e : loop->backs())
+				cout << edge_id[e].get() << ", ";
+			cout << "\">\n";
+			cout << "\t\t\t<ATTRS_LIST>\n";
+			cout << "\t\t\t\t<ATTR type=\"integer\" name=\"maxiter\" value=\""<<maxiter<<"\" />\n";
+			cout << "\t\t\t</ATTRS_LIST>\n";
+			cout << "\t\t</LOOP>\n";
+		}
+	}
+	return parent_nested;
+}
+
 /**
  */
 void HeptaneDisplayer::processWorkSpace(WorkSpace *ws) {
@@ -42,7 +84,7 @@ void HeptaneDisplayer::processWorkSpace(WorkSpace *ws) {
 	HashMap<Edge*, t::uint32> edge_id;
 	HashMap<Block*, HashMap<address_t, t::uint32>*> inst_id;
 	HashMap<BasicBlock*, t::uint32> loop_id;
-	for(auto cfg : *cfgs) {
+	for(CFG* cfg : *cfgs) {
 		cfg_id.add(cfg, glob_id++);
 		for(Block* v: cfg->vertices()) {
 			node_id.add(v, glob_id++);
@@ -66,11 +108,12 @@ void HeptaneDisplayer::processWorkSpace(WorkSpace *ws) {
 			}
 		}
 		ContextTree *ctree = CONTEXT_TREE(cfg);
-		for(ContextTree::ChildrenIterator child(ctree); child(); child++) {
-			if(child->kind() == ContextTree::LOOP) {
-				loop_id.add(child->bb(), glob_id++);
-			}
-		}
+		// for(ContextTree::ChildrenIterator child(ctree); child(); child++) {
+		// 	if(child->kind() == ContextTree::LOOP) {
+		// 		loop_id.add(child->bb(), glob_id++);
+		// 	}
+		// }
+		test(ctree, &loop_id, &glob_id);
 	}
 	
 	int entry = -1;
@@ -126,7 +169,11 @@ void HeptaneDisplayer::processWorkSpace(WorkSpace *ws) {
 				auto prevnode = v->inEdges().begin();
 				BasicBlock *prevbb = prevnode->source()->toBasic();
 				Inst *i = prevbb->control();
-				cout << "\t\t<NODE id=\"" << node_id[v].get() << "\" type=\"FunctionCall\" called=\""<<bb->callee()<<"\">\n";
+				if(bb->callee())
+					cout << "\t\t<NODE id=\"" << node_id[v].get() << "\" type=\"FunctionCall\" called=\""<<(bb->callee() ? bb->callee()->name() : "<unknown>") <<"\">\n";
+				else //indirect call
+					cout << "\t\t<NODE id=\"" << node_id[v].get() << "\" type=\"BasicBlock\">\n";
+					
 				cout << "\t\t\t<INSTRUCTION id=\""<<inst_id[v].get()->get(i->address()).value()<<"\" asm_type=\"Code\" code=\"";
 				i->dump(cout);
 				cout << "\">\n";
@@ -155,26 +202,7 @@ void HeptaneDisplayer::processWorkSpace(WorkSpace *ws) {
 		}
 
 		ContextTree *ctree = CONTEXT_TREE(cfg);
-		for(ContextTree::ChildrenIterator child(ctree); child(); child++) {
-			if(child->kind() == ContextTree::LOOP) {
-				ContextualPath path;
-				path.push(ContextualStep::FUNCTION, cfg->address());
-				int maxiter = path(MAX_ITERATION, child->bb()->first()).get();
-
-				Loop *loop = Loop::of(child->bb());
-				cout << "\t\t<LOOP id=\""<<loop_id[child->bb()].get()<<"\" head=\""<<node_id.get(child->bb(), -1)<<"\" nodes=\"";
-				for(Block *b : loop->blocks())
-					cout << node_id[b].get() << ", ";
-				cout << "\" backedges=\"";
-				for(Edge *e : loop->backs())
-					cout << edge_id[e].get() << ", ";
-				cout << "\">\n";
-				cout << "\t\t\t<ATTRS_LIST>\n";
-				cout << "\t\t\t\t<ATTR type=\"integer\" name=\"maxiter\" value=\""<<maxiter<<"\" />\n";
-				cout << "\t\t\t</ATTRS_LIST>\n";
-				cout << "\t\t</LOOP>\n";
-			}
-		}
+		test2(cfg, ctree, loop_id, node_id, edge_id);
 
 	// 	// generate blocks
 	// 	for(CFG::BlockIter v(cfg->blocks()); v(); v++)

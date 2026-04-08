@@ -74,6 +74,7 @@ public:
 	inline void logm(log_level_t lvl, const String &msg) {
 		if(logFor(lvl))
 			log << msg;
+		log.flush();
 	}
 
 protected:

@@ -149,7 +149,7 @@ protected:
 	virtual void processWorkSpace(WorkSpace *ws) {
 		LBlockSet **lblocks = LBLOCKS(ws);
 		ASSERT(lblocks);
-		for(int i = 0; i < cache->setCount(); i++)
+		for(int i = 0; i < cache->setCount(); i++) {
 			for(LBlockSet::Iterator lb(*lblocks[i]); lb(); lb++)
 				if(lb->bb()) {
 					var x(ipet::VAR(lb->bb()));
@@ -158,6 +158,7 @@ protected:
 					if(logFor(LOG_INST))
 						log << "\tadded miss for " << lb->address() << " (time = " << miss_t << ")\n";
 				}
+		}
 	}
 
 private:
