@@ -50,7 +50,9 @@ public:
 	virtual void addObjectFunction(double coef, Var *var = 0) = 0;
 	virtual double valueOf(Var *var) = 0;
 	virtual double value(void) = 0;
-	virtual Var *newVar(const string& name = "") = 0;
+	virtual Var *newVar() = 0;
+	virtual Var *newVar(const string& name) = 0;
+	virtual Var *newVar(const string& name, const string &label) = 0;
 	virtual int countVars(void) = 0;
 	virtual int countConstraints(void) = 0;
 	virtual dyndata::AbstractIter<ilp::Constraint*> *constraints(void) = 0;
@@ -64,7 +66,8 @@ public:
 	virtual bool solve(WorkSpace *ws, otawa::Monitor& mon);
 	virtual string lastErrorMessage(void);
 	virtual ILPPlugin *plugin(void);
-	virtual Var *newVar(Var::type_t type, const string& name = "") = 0;
+	virtual Var *newVar(Var::type_t type, const string& name) = 0;
+	virtual Var *newVar(Var::type_t type, const string& name, const string &label) = 0;
 
 	// 1.2.1 interface
 	virtual void resetObjectFunction(void) = 0;

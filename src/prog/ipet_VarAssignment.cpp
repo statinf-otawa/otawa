@@ -106,7 +106,8 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 			        name = makeNodeVar(bb, cfg);
                         }
                 }
-		VAR(bb) = sys->newVar(name);
+		string label = _<<cfg->name()<<"(BB"<<bb->id()<<")";
+		VAR(bb) = sys->newVar(name, label);
 	}
 
 	// Check out edges
@@ -120,7 +121,9 @@ void VarAssignment::processBB(WorkSpace *ws, CFG *cfg, Block *bb) {
 				      name = makeEdgeVar(*edge, cfg);
                                 }
                         }
-			VAR(*edge) = sys->newVar(name);
+			string label = _<<edge->source()->cfg()->name()<<"(BB"<<edge->source()->id()<<") -> " << 
+							edge->sink()->cfg()->name()<<"(BB"<<edge->sink()->id()<<")";
+			VAR(*edge) = sys->newVar(name, label);
 		}
 	}
 

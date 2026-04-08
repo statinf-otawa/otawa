@@ -823,8 +823,11 @@ void EdgeTimeBuilder::processSequence(void) {
 	}
 
 	//if(isVerbose())
-	if(logFor(LOG_BB))
+	if(logFor(LOG_BB)) {
+		log << "\t\t\t\t\tConfs:\n"; 
 		displayConfs(confs, events);
+		log << "\t\t\t\t\t==========\n";
+	}
 	delete graph;
 
 	// trivial case: 1 time

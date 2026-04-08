@@ -48,15 +48,17 @@ public:
 	virtual void print(io::Output& out);
 	virtual Alias *toAlias(void);
 	virtual double eval(System *sys);
+	inline const string& label() const { return _label;}
 
 protected:
-	inline Var(type_t type = INT): _type(type) { }
-	inline Var(cstring name, type_t type = INT): _name(name), _type(type) { }
-	inline Var(const string& name, type_t type = INT): _name(name), _type(type) { }
+	Var(type_t type=INT, const string &label=""): _type(type), _label(label) {  }
+	Var(cstring name, type_t type = INT, const string &label=""): _name(name), _type(type), _label(label) {  }
+	Var(const string& name, type_t type = INT, const string &label=""): _name(name), _type(type), _label(label) {  }
 
 private:
 	string _name;
 	type_t _type;
+	string _label;
 };
 
 // Alias class
