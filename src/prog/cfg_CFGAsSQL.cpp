@@ -30,6 +30,72 @@
 #include <elm/sys/System.h>
 #include <elm/string/StringBuffer.h>
 
+//
+// demangle.hpp — C++ symbol demangler
+//
+// Uses platform-provided library calls only:
+//   • GCC / Clang (Linux, macOS, MinGW): abi::__cxa_demangle  (libstdc++ / libc++)
+//   • MSVC (Windows):                    UnDecorateSymbolName  (DbgHelp.lib)
+//
+// Usage:
+//   std::string name = demangle("_ZN3Foo3barEv");    // GCC/Clang mangling
+//   std::string name = demangle("?bar@Foo@@QEAAXXZ"); // MSVC mangling
+//
+
+// -------------------------------------------------------------------------
+// GCC / Clang  (also covers MinGW on Windows)
+// -------------------------------------------------------------------------
+#if defined(__GNUC__) || defined(__clang__)
+
+#include <cstdlib>
+#include <cxxabi.h>
+
+inline elm::string demangle(const char* mangled) {
+    if (!mangled) return {};
+    int status = 0;
+    char* buf = abi::__cxa_demangle(mangled, nullptr, nullptr, &status);
+    if (status == 0 && buf) {
+        elm::string result(buf);
+        free(buf);
+        return result;
+    }
+    return mangled; // pass-through on failure
+}
+
+// -------------------------------------------------------------------------
+// MSVC  (Windows, native toolchain)
+// -------------------------------------------------------------------------
+#elif defined(_MSC_VER)
+
+#ifndef WIN32_LEAN_AND_MEAN
+#  define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <dbghelp.h>
+#pragma comment(lib, "dbghelp.lib")
+
+inline elm::string demangle(const char* mangled) {
+    if (!mangled) return {};
+    char buf[1024];
+    DWORD len = UnDecorateSymbolName(
+        mangled, buf, static_cast<DWORD>(sizeof(buf)),
+        UNDNAME_COMPLETE);
+    if (len > 0) return elm::string(buf, len);
+    return mangled; // pass-through on failure
+}
+
+// -------------------------------------------------------------------------
+// Unsupported platform — hard error at compile time
+// -------------------------------------------------------------------------
+#else
+#  error "demangle.hpp: unsupported compiler/platform"
+#endif
+
+// Convenience overload for std::string input
+inline elm::string demangle(const elm::string& mangled) {
+    return demangle(mangled.asSysString());
+}
+
 namespace otawa {
 
 class CFGAsSQL: public Processor {
@@ -64,33 +130,48 @@ protected:
             sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, nullptr);
         
             // Create tables
+            const char * sql_create_functions =
+                "CREATE TABLE IF NOT EXISTS functions ("
+                "id INTEGER UNIQUE PRIMARY KEY AUTOINCREMENT,"
+                "name TEXT NOT NULL,"
+                "demangled_name TEXT NOT NULL,"
+                "entry INTEGER"
+                ");";
+
             const char* sql_create_basic_blocks =
                 "CREATE TABLE IF NOT EXISTS basic_blocks ("
-                "address INTEGER PRIMARY KEY"
+                "address INTEGER PRIMARY KEY,"
+                "function INTEGER NOT NULL,"
+                "FOREIGN KEY (function) REFERENCES functions(id) ON DELETE CASCADE"
                 ");";
 
             const char* sql_create_sequences = 
                 "CREATE TABLE IF NOT EXISTS sequences ("
                 "address INTEGER UNIQUE, "
                 "address_next INTEGER UNIQUE, "
-                "FOREIGN KEY (address) REFERENCES basic_blocks(address), "
-                "FOREIGN KEY (address_next) REFERENCES basic_blocks(address)"
+                "is_control INTEGER,"
+                "FOREIGN KEY (address) REFERENCES basic_blocks(address) ON DELETE CASCADE, "
+                "FOREIGN KEY (address_next) REFERENCES basic_blocks(address) ON DELETE CASCADE"
                 ");";
 
             const char* sql_create_exit_points =
                 "CREATE TABLE IF NOT EXISTS exit_points ("
-                "address INTEGER"
+                "function INTEGER NOT NULL,"
+                "address INTEGER NOT NULL,"
+                "FOREIGN KEY(function) REFERENCES functions(id) ON DELETE CASCADE"
                 ");";
 
             const char* sql_static_analysis_info =
                 "CREATE TABLE IF NOT EXISTS binary_info ("
                 "binary_path TEXT NOT NULL PRIMARY KEY, "
                 "binary_digest TEXT NOT NULL, "
-                "function_name TEXT, "
                 "entry_point INTEGER NOT NULL, "
                 "generation_date DATETIME DEFAULT CURRENT_TIMESTAMP, "
-                "FOREIGN KEY (entry_point) REFERENCES basic_blocks(address)"
+                "FOREIGN KEY (entry_point) REFERENCES functions(id) ON DELETE CASCADE"
                 ");";
+                
+            if (sqlite3_exec(db, sql_create_functions, nullptr, nullptr, &err) != SQLITE_OK)
+                throw ProcessorException(*this, _ << "Error creating fucntions table: " << err);
 
             if (sqlite3_exec(db, sql_create_basic_blocks, nullptr, nullptr, &err) != SQLITE_OK)
                 throw ProcessorException(*this, _ << "Error creating basic_blocks table: " << err);
@@ -104,19 +185,20 @@ protected:
             if (sqlite3_exec(db, sql_static_analysis_info, nullptr, nullptr, &err) != SQLITE_OK)
                 throw ProcessorException(*this, _ << "Error creating static analysis table: " << err);
 
+            sqlite3_exec(db, "DELETE FROM binary_info;", nullptr, nullptr, &err);
+
             // Insert requests
-            sqlite3_stmt* stmt_bb;
-            sqlite3_stmt* stmt_seq;
-            sqlite3_stmt* stmt_exit;
-            sqlite3_stmt* stmt_static_info;
-            const char* insert_bb_sql = "INSERT OR IGNORE INTO basic_blocks (address) VALUES (?);";
-            const char* insert_seq_sql = "INSERT OR IGNORE INTO sequences (address, address_next) VALUES (?, ?);";
-            const char* insert_exit_sql = "INSERT INTO exit_points (address) VALUES (?);";
-            const char* insert_static_info_sql = 
-                "INSERT OR REPLACE INTO binary_info "
-                "(binary_path, binary_digest, function_name, entry_point) "
-                "VALUES (?, ?, ?, ?);";
+            sqlite3_stmt *stmt_fn, *stmt_bb, *stmt_seq, *stmt_exit, *stmt_static_info, *stmt_up_entry;
+            const char* insert_fn_sql = "INSERT OR IGNORE INTO functions (name, demangled_name) VALUES (?,?);";
+            const char* insert_bb_sql = "INSERT OR IGNORE INTO basic_blocks (function, address) VALUES (?, ?);";
+            const char* insert_seq_sql = "INSERT OR IGNORE INTO sequences (address, address_next, is_control) VALUES (?, ?, ?);";
+            const char* insert_exit_sql = "INSERT INTO exit_points (function, address) VALUES (?, ?);";
+            const char* insert_static_info_sql = "INSERT INTO binary_info (binary_path, binary_digest, entry_point) VALUES (?, ?, ?);";
+            const char* update_entry_sql = "UPDATE functions SET entry=? WHERE id=?;";
     
+            if (sqlite3_prepare_v2(db, insert_fn_sql, -1, &stmt_fn, nullptr) != SQLITE_OK)
+                throw ProcessorException(*this, _ << "Error preparing function insert: " << sqlite3_errmsg(db));
+
             if (sqlite3_prepare_v2(db, insert_bb_sql, -1, &stmt_bb, nullptr) != SQLITE_OK)
                 throw ProcessorException(*this, _ << "Error preparing basic_blocks insert: " << sqlite3_errmsg(db));
         
@@ -128,32 +210,39 @@ protected:
 
             if (sqlite3_prepare_v2(db, insert_static_info_sql, -1, &stmt_static_info, nullptr) != SQLITE_OK)
                 throw ProcessorException(*this, _ << "Error preparing binary_info insert: " << sqlite3_errmsg(db));
-            
+
+            if(sqlite3_prepare_v2(db, update_entry_sql, -1, &stmt_up_entry, nullptr) != SQLITE_OK)
+                throw ProcessorException(*this, _ << "Error preparing entry update: " << sqlite3_errmsg(db));
+
             /* Use an explicit transaction
             Wrapping all heavy INSERT operations inside a single BEGIN ... COMMIT block
             significantly improves performance */
             sqlite3_exec(db, "BEGIN TRANSACTION;", nullptr, nullptr, nullptr);
-            
+
+            int entrypoint_id = -1;
+            const char* function_name = TASK_INFO_FEATURE.get(workspace())->entryName().asNullTerminated();
+
             // Insert BBs first
             for(auto g: *COLLECTED_CFG_FEATURE.get(ws)) {
+                int fn_id = insert_fn(g->name(), stmt_fn, db);
+                if(g->name() == function_name)
+                    entrypoint_id = fn_id;
+
                 for(auto v: g->vertices()) {
+                    if (v->isEntry()) {
+                        const auto& succ = v->succs().begin();
+                        if (!(succ.ended())) {
+                            otawa::Address entry = succ.item()->toBasic()->address();
+                            update_entry_addr(address_to_uint64(entry), fn_id, stmt_up_entry, db);
+                        }
+                    }
+
                     if (!v->isBasic())
                         continue;
 
                     auto bb = v->toBasic();
                     uint64_t bb_addr = address_to_uint64(bb->address());
-                    
-                    insert_addr(bb_addr, stmt_bb, db);
-
-                    // Insert seq
-                    if (bb->control() == nullptr) {
-                        uint64_t next_bb_addr =  address_to_uint64(bb->last()->nextInst()->address());
-                        // Insert (or ignore) next BB first
-                        insert_addr(next_bb_addr, stmt_bb, db);
-                        
-                        // Now insert seq
-                        insert_sequence(bb_addr, next_bb_addr, stmt_seq, db);
-                    }
+                    insert_addr(bb_addr, fn_id, stmt_bb, db);
 
                     // Insert exit points
                     if (g->name() == TASK_INFO_FEATURE.get(workspace())->entryName()) {
@@ -162,9 +251,27 @@ protected:
                             // Exit addr
                             if (snk->isExit()) {
                                 uint64_t exit_bb_addr = address_to_uint64(v->toBasic()->last()->address());
-                                insert_addr(exit_bb_addr, stmt_exit, db);
+                                insert_exit(exit_bb_addr, fn_id, stmt_exit, db);
                             }
                         }
+                    }
+                }
+            }
+            for(auto g: *COLLECTED_CFG_FEATURE.get(ws)) {
+                for(auto v: g->vertices()) {
+                    if (!v->isBasic())
+                        continue;
+
+                    auto bb = v->toBasic();
+                    uint64_t bb_addr = address_to_uint64(bb->address());
+
+                    for(otawa::Block *succ : v->succs()) {
+                        if(succ->isCall())
+                            succ = *(succ->succs().begin());
+                        else if(!succ->isBasic())
+                            continue;
+                        uint64_t next_bb_addr =  address_to_uint64(succ->toBasic()->address());
+                        insert_sequence(bb_addr, next_bb_addr, bb->control(), stmt_seq, db);
                     }
                 }
             }
@@ -172,8 +279,6 @@ protected:
             // Insert binary info ...
             auto program = workspace()->process()->program()->name();
             const char* bin_path = program.chars();
-            const char* function_name = TASK_INFO_FEATURE.get(workspace())->entryName().asNullTerminated();
-            uint64_t entry_point = address_to_uint64(TASK_INFO_FEATURE.get(workspace())->entryInst()->address());
             // Calculate checksum
             checksum::MD5 md5;
             io::InStream *in = sys::System::readFile(program);
@@ -187,8 +292,7 @@ protected:
             // Insert binary infos
             sqlite3_bind_text(stmt_static_info, 1, bin_path, -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt_static_info, 2, checksum, -1, SQLITE_TRANSIENT);
-            sqlite3_bind_text(stmt_static_info, 3, function_name, -1, SQLITE_TRANSIENT);
-            sqlite3_bind_int64(stmt_static_info, 4, static_cast<sqlite3_int64>(entry_point));
+            sqlite3_bind_int(stmt_static_info, 3, entrypoint_id);
 
             if (sqlite3_step(stmt_static_info) != SQLITE_DONE)
                 throw ProcessorException(*this, _ << "Error inserting binary_info: " << sqlite3_errmsg(db));
@@ -216,19 +320,58 @@ private:
         return val;
     }
 
-    void insert_addr(uint64_t bb, sqlite3_stmt* stmt, sqlite3* db) {
-        sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(bb));
+    void insert_addr(uint64_t bb, int fn_id, sqlite3_stmt* stmt, sqlite3* db) {
+        sqlite3_bind_int(stmt, 1, fn_id);
+        sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(bb));
         if (sqlite3_step(stmt) != SQLITE_DONE)
             throw ProcessorException(*this, _ << "Error inserting basic_block: " << sqlite3_errmsg(db));
         sqlite3_reset(stmt);
     }
 
-    void insert_sequence(uint64_t src, uint64_t snk, sqlite3_stmt* stmt, sqlite3* db) {
+    void insert_exit(uint64_t bb, int fn_id, sqlite3_stmt* stmt, sqlite3* db) {
+        sqlite3_bind_int(stmt, 1, fn_id);
+        sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(bb));
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+            throw ProcessorException(*this, _ << "Error inserting basic_block: " << sqlite3_errmsg(db));
+        sqlite3_reset(stmt);
+    }
+
+    void insert_sequence(uint64_t src, uint64_t snk, bool is_control, sqlite3_stmt* stmt, sqlite3* db) {
         sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(src));
         sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(snk));
+        sqlite3_bind_int(stmt, 3, (is_control) ? 1 : 0);
         if (sqlite3_step(stmt) != SQLITE_DONE)
             throw ProcessorException(*this, _ << "Error inserting sequence: " << sqlite3_errmsg(db));
         sqlite3_reset(stmt);
+    }
+
+    sqlite3_int64 insert_fn(const string &name, sqlite3_stmt* stmt, sqlite3* db) {
+        const char *demangled_name = demangle(name).asSysString();
+        sqlite3_bind_text(stmt, 1, name.asSysString(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, demangled_name, -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+            throw ProcessorException(*this, _ << "Error inserting sequence: " << sqlite3_errmsg(db));
+
+        sqlite3_reset(stmt);
+        sqlite3_int64 id = sqlite3_last_insert_rowid(db);
+        if(id != 0)
+            return id;
+        
+        const char* sql = "SELECT id FROM functions WHERE name = ?;";
+        sqlite3_stmt* stmt2;
+        sqlite3_prepare_v2(db, sql, -1, &stmt2, nullptr);
+        sqlite3_bind_text(stmt, 1, name.asSysString(), -1, SQLITE_TRANSIENT);
+        if (sqlite3_step(stmt) != SQLITE_ROW)
+            throw ProcessorException(*this, _ << "Can't find the id of function " << name);
+        id = sqlite3_column_int64(stmt, 0);
+        sqlite3_finalize(stmt);
+        return id;
+    }
+    void update_entry_addr(uint64_t entry, size_t fn_id, sqlite3_stmt* stmt, sqlite3* db) {
+        sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(entry));
+        sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(fn_id));
+        if (sqlite3_step(stmt) != SQLITE_DONE)
+            throw ProcessorException(*this, _ << "Error inserting sequence: " << sqlite3_errmsg(db));
     }
 };
 
