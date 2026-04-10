@@ -108,15 +108,19 @@ protected:
     void configure(const PropList& props) override {
         Processor::configure(props);
         path = CFG_DUMP_PATH(props); 
+        dbpath = CFG_DUMP_PATH_DB(props); 
     }
     
     void processWorkSpace(WorkSpace * ws) override {
         
         // compute path
-        Path path = this->path;
-        if(path.isEmpty())
-            path = TASK_INFO_FEATURE.get(ws)->workDirectory();
-        path = path / "cfg.db";
+        Path path = this->dbpath;
+        if(path.isEmpty()) {
+            path = this->path;
+            if(path.isEmpty())
+               path = TASK_INFO_FEATURE.get(ws)->workDirectory();
+            path = path / "cfg.db";
+        }
         
         try {
             sqlite3* db = nullptr;
@@ -314,6 +318,7 @@ protected:
 
 private:
     Path path;
+    Path dbpath;
     
     uint64_t address_to_uint64(const Address& addr) {
         uint64_t val = (static_cast<uint64_t>(addr.page()) << 32) | addr.offset();
@@ -394,5 +399,16 @@ p::declare CFGAsSQL::reg
  * @ingroup cfg
  */
 p::feature CFG_AS_SQL_FEATURE("otawa::CFG_AS_SQL_FEATURE", p::make<CFGAsSQL>());
+
+/**
+ * Configuration property to select where to dump the CFG DB representation;
+ * If not defined, the task working directory is used.
+ * 
+ * Features:
+ * * @ref CFG_DUMP_FEATURE_DB
+ * 
+ * @ingroup cfg
+ */
+p::id<Path> CFG_DUMP_PATH_DB("otawa::CFG_DUMP_PATH_DB");
     
 } // otawa

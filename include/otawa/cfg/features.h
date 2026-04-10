@@ -222,6 +222,7 @@ extern p::feature NORMALIZED_CFGS_FEATURE;
 // Dumping CFG
 extern p::id<Path> CFG_DUMP_PATH;
 extern p::feature CFG_DUMP_FEATURE;
+extern p::id<Path> CFG_DUMP_PATH_DB;
 
 // Exporting CFG as database
 extern p::feature CFG_AS_SQL_FEATURE;

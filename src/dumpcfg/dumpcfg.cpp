@@ -200,7 +200,6 @@ public:
 				dot,
 				source,
 				xml,
-				db,
 				mult,
 				display_sem,
 				display_kind,
@@ -208,6 +207,7 @@ public:
 				display_target,
 				display_bytes;
 	opt::Value<string> out;
+	opt::Value<string> db;
 
 	Displayer *displayer;
 
@@ -261,7 +261,7 @@ DumpCFG::DumpCFG(void):
 	dot				(make_switch()			.cmd("-D").cmd("--dot")			.description("Select DOT output.")),
 	source			(make_switch()			.cmd("-s").cmd("--source")		.description("enable source debugging information output")),
 	xml				(make_switch()			.cmd("-x").cmd("--xml")			.description("output the CFG as an XML file")),
-	db				(make_switch()			.cmd("--db")			        .description("output the CFG as an SQL database file")),
+	db				(make_value<string>()	.cmd("--db")			        .description("output the CFG as an SQL database file in the given file")),
 	mult			(make_switch()			.cmd("-M").cmd("--multiple-dot").description("output multiple .dot file (one for each CFG) linked with URLs")),
 	display_sem		(make_switch()			.cmd("--display-sem")			.help("display semantic instructions")),
 	display_kind	(make_switch()			.cmd("--display-kind")			.help("display instruction kind")),
@@ -280,7 +280,7 @@ DumpCFG::DumpCFG(void):
  * @param name	Name of the function to process.
  */
 void DumpCFG::dump(PropList& props) {
-
+	
 	// get the CFG
 	require(COLLECTED_CFG_FEATURE);
 
@@ -318,8 +318,10 @@ void DumpCFG::dump(PropList& props) {
 		displayer->display_bytes = display_bytes;
 		run(displayer);
 	}
-	if(db)
+	if(db) {
+		CFG_DUMP_PATH_DB(props) = elm::sys::Path(db);
 		workspace()->require(CFG_AS_SQL_FEATURE, props);
+	}
 }
 
 
