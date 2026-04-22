@@ -146,6 +146,7 @@ protected:
                 "CREATE TABLE IF NOT EXISTS basic_blocks ("
                 "address INTEGER PRIMARY KEY,"
                 "function INTEGER NOT NULL,"
+                "size INTEGER NOT NULL,"
                 "FOREIGN KEY (function) REFERENCES functions(id) ON DELETE CASCADE"
                 ");";
 
@@ -194,7 +195,7 @@ protected:
             // Insert requests
             sqlite3_stmt *stmt_fn, *stmt_bb, *stmt_seq, *stmt_exit, *stmt_static_info, *stmt_up_entry;
             const char* insert_fn_sql = "INSERT OR IGNORE INTO functions (name, demangled_name) VALUES (?,?);";
-            const char* insert_bb_sql = "INSERT OR IGNORE INTO basic_blocks (function, address) VALUES (?, ?);";
+            const char* insert_bb_sql = "INSERT OR IGNORE INTO basic_blocks (function, address, size) VALUES (?, ?, ?);";
             const char* insert_seq_sql = "INSERT OR IGNORE INTO sequences (address, address_next, is_control) VALUES (?, ?, ?);";
             const char* insert_exit_sql = "INSERT INTO exit_points (function, address) VALUES (?, ?);";
             const char* insert_static_info_sql = "INSERT INTO binary_info (binary_path, binary_digest, entry_point) VALUES (?, ?, ?);";
@@ -246,7 +247,7 @@ protected:
 
                     auto bb = v->toBasic();
                     uint64_t bb_addr = address_to_uint64(bb->address());
-                    insert_addr(bb_addr, fn_id, stmt_bb, db);
+                    insert_addr(bb_addr, fn_id, bb->size(), stmt_bb, db);
 
                     // Insert exit points
                     if (g->name() == TASK_INFO_FEATURE.get(workspace())->entryName()) {
@@ -325,9 +326,10 @@ private:
         return val;
     }
 
-    void insert_addr(uint64_t bb, int fn_id, sqlite3_stmt* stmt, sqlite3* db) {
+    void insert_addr(uint64_t bb, int fn_id, int size, sqlite3_stmt* stmt, sqlite3* db) {
         sqlite3_bind_int(stmt, 1, fn_id);
         sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(bb));
+        sqlite3_bind_int(stmt, 3, size);
         if (sqlite3_step(stmt) != SQLITE_DONE)
             throw ProcessorException(*this, _ << "Error inserting basic_block: " << sqlite3_errmsg(db));
         sqlite3_reset(stmt);
